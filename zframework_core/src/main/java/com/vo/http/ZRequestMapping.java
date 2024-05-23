@@ -7,6 +7,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import com.vo.enums.MethodEnum;
+import com.votool.redis.mq.TETS_MQ_1;
 
 /**
  * 用在 @ZController 类的方法上，表示此方法是一个http接口
@@ -17,7 +18,7 @@ import com.vo.enums.MethodEnum;
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ ElementType.METHOD })
+@Target({ElementType.METHOD })
 public @interface ZRequestMapping {
 
 	public static final int DEFAULT_QPS = -11111111;
@@ -54,4 +55,10 @@ public @interface ZRequestMapping {
 	 */
 	int qps() default DEFAULT_QPS;
 
+	/**
+	 * API描述信息，非必填项，只为了展示API信息
+	 *
+	 * @return
+	 */
+	String description() default "";
 }
