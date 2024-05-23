@@ -9,6 +9,9 @@ package com.vo.starter;
  */
 public interface ZStarter {
 
-	Object[] start(final Object... arg);
+	/**
+	 * 自定义starter的启动逻辑，然后返回自定义的component
+	 */
+	void start();
 
 }
