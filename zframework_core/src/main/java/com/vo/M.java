@@ -1,4 +1,4 @@
-package com.vo.anno;
+package com.vo;
 
 /**
  *
