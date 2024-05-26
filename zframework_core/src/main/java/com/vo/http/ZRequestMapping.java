@@ -21,7 +21,20 @@ import com.votool.redis.mq.TETS_MQ_1;
 @Target({ElementType.METHOD })
 public @interface ZRequestMapping {
 
-	public static final int DEFAULT_QPS = -11111111;
+	/**
+	 * 本注解 qps 允许的最小值
+	 */
+	public static final int MIN_QPS = ZRequestMappingConfigurationProperties.MIN_VALUE;
+
+	/**
+	 * 本注解 qps 允许的最大值
+	 */
+	public static final int MAX_QPS = ZRequestMappingConfigurationProperties.MAX_VALUE;
+
+	/**
+	 * 本注解 qps 的默认值
+	 */
+	public static final int DEFAULT_QPS = ZRequestMappingConfigurationProperties.DEFAULT_VALUE;
 
 	/**
 	 * 请求路径，如： /index
@@ -48,7 +61,7 @@ public @interface ZRequestMapping {
 	MethodEnum method() default MethodEnum.GET;
 
 	/**
-	 * 此方法QPS限制
+	 * 此方法QPS限制，默认值
 	 *
 	 * @return
 	 *
