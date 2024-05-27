@@ -323,7 +323,7 @@ public class Task {
 
 		// 接口方法无返回值，直接返回 response对象
 		if (Task.VOID.equals(method.getReturnType().getCanonicalName())) {
-			method.invoke(zController, arraygP);
+			invoke0(method, arraygP, zController);
 			final ZResponse response = ZHttpContext.getZResponseAndRemove();
 			return response;
 		}
@@ -332,7 +332,7 @@ public class Task {
 		// 在此zhi执行
 		final List<ZHandlerInterceptor> zhiList = ZHandlerInterceptorScanner.match(request.getRequestURI());
 		if (CollUtil.isEmpty(zhiList)) {
-			r = method.invoke(zController, arraygP);
+			r = invoke0(method, arraygP, zController);
 		} else {
 			final ZResponse response = new ZResponse(this.socketChannel);
 			final InterceptorParameter interceptorParameter = new InterceptorParameter(method.getName(), method,
@@ -355,7 +355,7 @@ public class Task {
 
 			if (!stop) {
 
-				r = method.invoke(zController, arraygP);
+				r = invoke0(method, arraygP, zController);
 				final ZModelAndView modelAndView = isMethodAnnotationPresentZHtml(method)
 						? new ZModelAndView(true, String.valueOf(r), readHtmlContent(r), ZModel.get(),
 								(ZModel) Arrays.stream(arraygP).filter(arg -> arg.getClass().equals(ZModel.class))
@@ -382,6 +382,34 @@ public class Task {
 		}
 
 		return this.responseDefault_JSON(request, r);
+	}
+
+	/**
+	 * 真正的API目标方法执行，统一在本方法里面执行，方便统一处理
+	 *
+	 * @param method
+	 * @param arraygP
+	 * @param zController
+	 * @return
+	 * @throws IllegalAccessException
+	 * @throws InvocationTargetException
+	 */
+	private static Object invoke0(final Method method, final Object[] arraygP, final Object zController)
+			throws IllegalAccessException, InvocationTargetException {
+
+		// FIXME 2024年5月27日 下午1:13:41 zhangzhen: 这个要不要这么写死？或者直接用拦截器算了，定义一个内置的[API方法执行信息]拦截器，并且提供一个开关参数？
+		// admin页面要完成的功能有点复杂，包含排序/过滤等，要不要使用derby/h2?
+		final List<Object> al = Arrays.stream(arraygP)
+			.filter(a -> a.getClass() != ZRequest.class)
+			.filter(a -> a.getClass() != ZResponse.class)
+			.collect(Collectors.toList());
+
+		System.out.println("API开始执行,method = " + method.getName() + "\t\t" + "Controller = " + zController.getClass().getSimpleName()
+				+ "\t" + "arg = " + al
+				);
+
+		final Object r = method.invoke(zController, arraygP);
+		return r;
 	}
 
 	private ZResponse responseDefault_JSON(final ZRequest request, final Object r) {
