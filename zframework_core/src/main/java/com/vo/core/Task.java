@@ -399,6 +399,7 @@ public class Task {
 
 		// FIXME 2024年5月27日 下午1:13:41 zhangzhen: 这个要不要这么写死？或者直接用拦截器算了，定义一个内置的[API方法执行信息]拦截器，并且提供一个开关参数？
 		// admin页面要完成的功能有点复杂，包含排序/过滤等，要不要使用derby/h2?
+		// FIXME 2024年5月27日 下午3:50:39 zhangzhen: sb_zrepository 已支持sqlite，支持依赖进来使用sqlite吧
 		final List<Object> al = Arrays.stream(arraygP)
 			.filter(a -> a.getClass() != ZRequest.class)
 			.filter(a -> a.getClass() != ZResponse.class)
