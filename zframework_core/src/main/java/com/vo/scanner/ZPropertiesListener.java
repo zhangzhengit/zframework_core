@@ -61,6 +61,10 @@ public class ZPropertiesListener {
 				e1.printStackTrace();
 			}
 
+			if (watchService == null) {
+				return;
+			}
+
 			// 启动一个无限循环，等待文件变化事件
 			while (true) {
 				WatchKey key;
@@ -86,26 +90,26 @@ public class ZPropertiesListener {
 							// 在这里执行你的逻辑代码
 							try {
 								final String string = IoUtil.read(new FileReader(new File(filePath)));
-//								System.out.println("string = \n");
-//								System.out.println(string);
+								//								System.out.println("string = \n");
+								//								System.out.println(string);
 								final Properties  properties = new Properties();
 
 								final FileInputStream fileInputStream = new FileInputStream(new File(filePath));
 								final InputStreamReader isr = new InputStreamReader(fileInputStream,
 										Charset.defaultCharset().displayName());
 
-//							    properties.load(new FileInputStream(new File(filePath)));
-					    		properties.load(isr);
+								//							    properties.load(new FileInputStream(new File(filePath)));
+								properties.load(isr);
 
-//								System.out.println("properties = \n");
-//								System.out.println(properties);
+								//								System.out.println("properties = \n");
+								//								System.out.println(properties);
 								final Enumeration<Object> keys = properties.keys();
 								while(keys.hasMoreElements()) {
 									final Object k = keys.nextElement();
 
 									final Object v = properties.get(k);
-//									String v2 = new String
-//									System.out.println(k + "=" + v);
+									//									String v2 = new String
+									//									System.out.println(k + "=" + v);
 
 									try {
 										ZValueScanner.updateValue(String.valueOf(k), v);

@@ -78,6 +78,7 @@ public class ZValidator {
 		final Object v = ZValidator.getFieldValue(object, field);
 		if (v == null) {
 			ZValidator.throwZNotNullException(object, field);
+			return;
 		}
 
 		if (!ZValidator.isZMinZMaxSupported(v.getClass())) {
@@ -93,7 +94,7 @@ public class ZValidator {
 			final String t = object.getClass().getSimpleName() + "." + field.getName();
 			final String pName = field.isAnnotationPresent(ZValue.class)
 					? "[" + field.getAnnotation(ZValue.class).name() + "]"
-					: "";
+							: "";
 			final String format = String.format(message, t + pName, v);
 
 			throw new ValidatedException(format);
@@ -147,6 +148,7 @@ public class ZValidator {
 		final Object v = ZValidator.getFieldValue(object, field);
 		if (v == null) {
 			ZValidator.throwZNotNullException(object, field);
+			return;
 		}
 
 		if (!ZValidator.isString(v.getClass())) {
@@ -158,13 +160,13 @@ public class ZValidator {
 		if ((s.length() < zl.min()) || (s.length() > zl.max())) {
 
 			final String message = zl.message();
-//			final String message = ZLength.MESSAGE_DEFAULT.equals(zl.message())
-//					? ZContext.getBean(ZLengthMessageConfigurationProperties.class).getMessage()
-//					: zl.message();
+			//			final String message = ZLength.MESSAGE_DEFAULT.equals(zl.message())
+			//					? ZContext.getBean(ZLengthMessageConfigurationProperties.class).getMessage()
+			//					: zl.message();
 
 			final String pName = field.isAnnotationPresent(ZValue.class)
 					? "[" + field.getAnnotation(ZValue.class).name() + "]"
-					: "";
+							: "";
 			final String t = object.getClass().getSimpleName() + "." + field.getName();
 			final String format = String.format(message, t + pName, String.valueOf(zl.min()), String.valueOf(zl.max()),
 					String.valueOf(s.length()));
@@ -205,7 +207,7 @@ public class ZValidator {
 				final String t = object.getClass().getSimpleName() + "." + field.getName();
 				final String pName = field.isAnnotationPresent(ZValue.class)
 						? "[" + field.getAnnotation(ZValue.class).name() + "]"
-						: "";
+								: "";
 				final String format = String.format(message, t + pName, prefix);
 
 				throw new ValidatedException(format);
@@ -246,7 +248,7 @@ public class ZValidator {
 				final String t = object.getClass().getSimpleName() + "." + field.getName();
 				final String pName = field.isAnnotationPresent(ZValue.class)
 						? "[" + field.getAnnotation(ZValue.class).name() + "]"
-						: "";
+								: "";
 				final String format = String.format(message, t + pName, endsWith.suffix());
 
 				throw new ValidatedException(format);
@@ -330,6 +332,7 @@ public class ZValidator {
 
 			if (minFiledValue == null) {
 				ZValidator.throwZNotNullException(object, field);
+				return;
 			}
 
 			if (!ZValidator.isZMinZMaxSupported(minFiledValue.getClass())) {
@@ -400,6 +403,7 @@ public class ZValidator {
 			final Object value = field.get(object);
 			if (value == null) {
 				ZValidator.throwZNotNullException(object, field);
+				return;
 			}
 
 			if ((value instanceof List) || (value instanceof Set)) {
@@ -430,7 +434,7 @@ public class ZValidator {
 
 		final String pName = field.isAnnotationPresent(ZValue.class)
 				? "[" + field.getAnnotation(ZValue.class).name() + "]"
-				: "";
+						: "";
 
 		final String format = String.format(message, t + pName);
 		throw new ValidatedException(format);
@@ -450,6 +454,7 @@ public class ZValidator {
 
 			if (maxFiledValue == null) {
 				ZValidator.throwZNotNullException(object, field);
+				return;
 			}
 
 			if (!ZValidator.isZMinZMaxSupported(maxFiledValue.getClass())) {
@@ -534,10 +539,10 @@ public class ZValidator {
 
 	public static void validatedAll(final Object object, final Field field) {
 		// FIXME 2023年10月31日 下午10:13:39 zhanghen: 启动时是否验证注解值的合理性，如下声明：
-//		@ZStartWith(prefix = "ZH")
-//		@ZEndsWith(suffix = "G")
-//		@ZLength(max = 3)
-//		private String name;
+		//		@ZStartWith(prefix = "ZH")
+		//		@ZEndsWith(suffix = "G")
+		//		@ZLength(max = 3)
+		//		private String name;
 
 		// 显然是不合理，name怎么传值都不会通过验证。该怎么办？程序启动时就验证所有的注解的组合中不合理的情况？
 
@@ -577,7 +582,7 @@ public class ZValidator {
 		final String message = ZMin.MESSAGE;
 		final String pName = field.isAnnotationPresent(ZValue.class)
 				? "[" + field.getAnnotation(ZValue.class).name() + "]"
-				: "";
+						: "";
 		final String t = object.getClass().getSimpleName() + "." + field.getName();
 		final String format = String.format(message, t + pName, min, minFiledValue);
 		throw new ValidatedException(format);
@@ -596,7 +601,7 @@ public class ZValidator {
 
 		final String pName = field.isAnnotationPresent(ZValue.class)
 				? "[" + field.getAnnotation(ZValue.class).name() + "]"
-				: "";
+						: "";
 
 		final String format = String.format(message, t + pName);
 		throw new ValidatedException(format);
@@ -607,7 +612,7 @@ public class ZValidator {
 		final String message = ZMax.MESSAGE;
 		final String pName = field.isAnnotationPresent(ZValue.class)
 				? "[" + field.getAnnotation(ZValue.class).name() + "]"
-				: "";
+						: "";
 		final String t = object.getClass().getSimpleName() + "." + field.getName();
 		final String format = String.format(message, t + pName, max, maxFiledValue);
 		throw new ValidatedException(format);

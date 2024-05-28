@@ -42,13 +42,14 @@ public class StaticController {
 		final HeaderEnum cte = HeaderEnum.gType(resourceName.substring(i + 1));
 		if (cte == null) {
 			response.httpStatus(HttpStatus.HTTP_500.getCode()).body(CR.error(HttpStatus.HTTP_500.getMessage()));
+			return;
 		}
 
 		final byte[] loadByteArray = ResourcesLoader.loadStaticResourceByteArray(resourceName);
 		// FIXME 2023年7月19日 下午8:20:39 zhanghen: TODO 改为和Socket 一样，一边读取一边写入到OutStream
 		response.contentType(cte.getType()).body(loadByteArray);
 
-//		ResourcesLoader.writeResourceToOutputStreamThenClose(resourceName, cte, response);
+		//		ResourcesLoader.writeResourceToOutputStreamThenClose(resourceName, cte, response);
 	}
 
 	@ZRequestMapping(mapping = { "/.+\\.css$" }, isRegex = { true }, qps = 10000)
@@ -60,10 +61,10 @@ public class StaticController {
 		if (i <= -1) {
 
 			response
-				.httpStatus(HttpStatus.HTTP_500.getCode())
-				.body(CR.error("不支持无后缀的文件"))
-//				.write()
-				;
+			.httpStatus(HttpStatus.HTTP_500.getCode())
+			.body(CR.error("不支持无后缀的文件"))
+			//				.write()
+			;
 
 			return;
 		}

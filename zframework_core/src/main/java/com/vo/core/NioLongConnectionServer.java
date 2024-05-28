@@ -50,9 +50,9 @@ public class NioLongConnectionServer {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
-//	public static final Charset CHARSET = Charset.defaultCharset();
+	//	public static final Charset CHARSET = Charset.defaultCharset();
 	public static final Charset CHARSET = Charset.forName("UTF-8");
-//	public static final Charset CHARSET = Charset.forName("ISO-8859-1");
+	//	public static final Charset CHARSET = Charset.forName("ISO-8859-1");
 
 
 	public static final String SERVER = HttpHeaderEnum.SERVER.getValue();
@@ -105,6 +105,10 @@ public class NioLongConnectionServer {
 		}
 
 		LOG.trace("zNIOServer启动成功，等待连接,serverPort={}", serverPort);
+
+		if (selector == null) {
+			return;
+		}
 
 		while (true) {
 			try {
@@ -161,7 +165,7 @@ public class NioLongConnectionServer {
 		final SocketChannel socketChannel = (SocketChannel) key.channel();
 		final ZResponse response = new ZResponse(socketChannel);
 		response.contentType(HeaderEnum.JSON.getType()).httpStatus(HttpStatus.HTTP_429.getCode())
-				.body(J.toJSONString(CR.error(message), Include.NON_NULL));
+		.body(J.toJSONString(CR.error(message), Include.NON_NULL));
 		response.write();
 		closeSocketChannelAndKeyCancel(key, socketChannel);
 	}
@@ -212,6 +216,11 @@ public class NioLongConnectionServer {
 		} catch (final IOException e) {
 			e.printStackTrace();
 		}
+
+		if (socketChannel == null) {
+			return;
+		}
+
 		try {
 			socketChannel.configureBlocking(false);
 		} catch (final IOException e) {
@@ -311,16 +320,16 @@ public class NioLongConnectionServer {
 				// FIXME 2023年10月27日 下午9:54:50 zhanghen: XXX postman form-data上传文件，一次请求会分两次发送？
 				// 导致 FormData.parse 解析出错。在此提示出来
 
-//				String m = ZControllerAdviceThrowable.findCausedby(e);
+				//				String m = ZControllerAdviceThrowable.findCausedby(e);
 
 				final ZControllerAdviceActuator a = ZContext.getBean(ZControllerAdviceActuator.class);
 
 				final Object r = a.execute(e);
 				new ZResponse(taskRequest.getSocketChannel())
-						.httpStatus(HttpStatus.HTTP_500.getCode())
-						.contentType(HeaderEnum.JSON.getType())
-						.body(J.toJSONString(r, Include.NON_NULL))
-						.write();
+				.httpStatus(HttpStatus.HTTP_500.getCode())
+				.contentType(HeaderEnum.JSON.getType())
+				.body(J.toJSONString(r, Include.NON_NULL))
+				.write();
 
 				closeSocketChannelAndKeyCancel(taskRequest.getSelectionKey(), taskRequest.getSocketChannel());
 			} finally {
@@ -347,11 +356,11 @@ public class NioLongConnectionServer {
 			final String methodString = Lists.newArrayList(values).stream().map(MethodEnum::getMethod).collect(Collectors.joining(","));
 			final CR<Object> error = CR.error(HttpStatus.HTTP_405.getCode(), HttpStatus.HTTP_405.getMessage());
 			new ZResponse(socketChannel)
-				.header(ZRequest.ALLOW, methodString)
-				.httpStatus(HttpStatus.HTTP_405.getCode())
-				.contentType(HeaderEnum.JSON.getType())
-				.body(J.toJSONString(error, Include.NON_NULL))
-				.write();
+			.header(ZRequest.ALLOW, methodString)
+			.httpStatus(HttpStatus.HTTP_405.getCode())
+			.contentType(HeaderEnum.JSON.getType())
+			.body(J.toJSONString(error, Include.NON_NULL))
+			.write();
 			closeSocketChannelAndKeyCancel(key, socketChannel);
 			return;
 		}
