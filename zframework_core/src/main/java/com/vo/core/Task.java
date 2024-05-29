@@ -183,11 +183,11 @@ public class Task {
 		if (CollUtil.isNotEmpty(methodMap)) {
 			final String methodString = methodMap.keySet().stream().map(MethodEnum::getMethod).collect(Collectors.joining(","));
 			return new ZResponse(this.socketChannel)
-				.header(ZRequest.ALLOW, methodString)
-				.httpStatus(HttpStatus.HTTP_405.getCode())
-				.contentType(HeaderEnum.JSON.getType())
-				.body(J.toJSONString(CR.error(HttpStatus.HTTP_405.getCode(), "请求Method不支持："
-						+ requestLine.getMethodEnum().getMethod() + ", Method: " + methodString), Include.NON_NULL));
+					.header(ZRequest.ALLOW, methodString)
+					.httpStatus(HttpStatus.HTTP_405.getCode())
+					.contentType(HeaderEnum.JSON.getType())
+					.body(J.toJSONString(CR.error(HttpStatus.HTTP_405.getCode(), "请求Method不支持："
+							+ requestLine.getMethodEnum().getMethod() + ", Method: " + methodString), Include.NON_NULL));
 
 		}
 
@@ -205,7 +205,7 @@ public class Task {
 					final ZResponse invokeAndResponse = this.invokeAndResponse(methodTarget, arraygP, object, request);
 					return invokeAndResponse;
 				} catch (IllegalAccessException | InvocationTargetException | UnsupportedEncodingException e) {
-//					e.printStackTrace();
+					//					e.printStackTrace();
 					// 继续抛出，抛给默认的异常处理器来处理
 					throw e;
 				}
@@ -214,9 +214,9 @@ public class Task {
 
 		// 无匹配的正则表达式接口，返回404
 		return	new ZResponse(this.outputStream, this.socketChannel)
-					.httpStatus(HttpStatus.HTTP_404.getCode())
-					.contentType(DEFAULT_CONTENT_TYPE.getType())
-					.body(J.toJSONString(CR.error(HTTP_STATUS_404, "请求方法不存在 [" + path+"]"), Include.NON_NULL))	;
+				.httpStatus(HttpStatus.HTTP_404.getCode())
+				.contentType(DEFAULT_CONTENT_TYPE.getType())
+				.body(J.toJSONString(CR.error(HTTP_STATUS_404, "请求方法不存在 [" + path+"]"), Include.NON_NULL))	;
 	}
 
 	public static String gExceptionMessage(final Throwable e) {
@@ -236,8 +236,8 @@ public class Task {
 
 	private void close() {
 		// socketChannel 不关闭
-//		if (this.socketChannel != null) {
-//		}
+		//		if (this.socketChannel != null) {
+		//		}
 		if (this.inputStream != null) {
 			try {
 				this.inputStream.close();
@@ -282,8 +282,8 @@ public class Task {
 
 			final ZResponse response = new ZResponse(this.outputStream, this.socketChannel);
 			response.contentType(HeaderEnum.JSON.getType())
-					.httpStatus(HttpStatus.HTTP_403.getCode())
-					.body(J.toJSONString(CR.error(message), Include.NON_NULL));
+			.httpStatus(HttpStatus.HTTP_403.getCode())
+			.body(J.toJSONString(CR.error(message), Include.NON_NULL));
 
 			return response;
 		}
@@ -296,9 +296,9 @@ public class Task {
 			switch (zqpsLimitation.type()) {
 			case ZSESSIONID:
 				final String keyword = controllerName
-					+ "@" + method.getName()
-					+ "@ZQPSLimitation" + '_'
-					+ request.getSession().getId();
+				+ "@" + method.getName()
+				+ "@ZQPSLimitation" + '_'
+				+ request.getSession().getId();
 
 				// FIXME 2024年5月3日 下午8:01:22 zhangzhen: 这是很早之前写的，现在做其他的发现了传为null导致bug，
 				// 先用QPSEnum.API_METHOD，以后再看是否合适
@@ -308,8 +308,8 @@ public class Task {
 
 					final ZResponse response = new ZResponse(this.outputStream, this.socketChannel);
 					response.contentType(HeaderEnum.JSON.getType())
-							.httpStatus(HttpStatus.HTTP_403.getCode())
-							.body(J.toJSONString(CR.error(message), Include.NON_NULL));
+					.httpStatus(HttpStatus.HTTP_403.getCode())
+					.body(J.toJSONString(CR.error(message), Include.NON_NULL));
 					return response;
 				}
 				break;
@@ -359,9 +359,9 @@ public class Task {
 				final ZModelAndView modelAndView = isMethodAnnotationPresentZHtml(method)
 						? new ZModelAndView(true, String.valueOf(r), readHtmlContent(r), ZModel.get(),
 								(ZModel) Arrays.stream(arraygP).filter(arg -> arg.getClass().equals(ZModel.class))
-										.findAny().orElse(null),
+								.findAny().orElse(null),
 								null)
-						: new ZModelAndView(false, null, null, null, (ZModel) null, r);
+								: new ZModelAndView(false, null, null, null, (ZModel) null, r);
 
 				// 2 按从大到小执行post
 				for (int i = zhiList.size() - 1; i >= 0; i--) {
@@ -400,10 +400,19 @@ public class Task {
 		// FIXME 2024年5月27日 下午1:13:41 zhangzhen: 这个要不要这么写死？或者直接用拦截器算了，定义一个内置的[API方法执行信息]拦截器，并且提供一个开关参数？
 		// admin页面要完成的功能有点复杂，包含排序/过滤等，要不要使用derby/h2?
 		// FIXME 2024年5月27日 下午3:50:39 zhangzhen: sb_zrepository 已支持sqlite，支持依赖进来使用sqlite吧
+		// FIXME 2024年5月29日 下午6:02:36 zhangzhen : 试了还有点问题：
+		/*
+		 * 以来进来了 sb_zrepository 并且数据源配置为sqlite，单如果A工程依赖了本工程并且也依赖了sb_zrepository，
+		 * 则会导致 sb_zrepository 读取数据源时使用A的配置项，而不是本工程配置的sqlite。想好怎么做
+		 * 
+		 * 并且 sb_zrepository 中的log输出也有问题，比如：不希望本工程showsql，而要Ashowsql，zlog2也暂时不支持这么配置。
+		 * 
+		 */
+
 		final List<Object> al = Arrays.stream(arraygP)
-			.filter(a -> a.getClass() != ZRequest.class)
-			.filter(a -> a.getClass() != ZResponse.class)
-			.collect(Collectors.toList());
+				.filter(a -> a.getClass() != ZRequest.class)
+				.filter(a -> a.getClass() != ZResponse.class)
+				.collect(Collectors.toList());
 
 		System.out.println("API开始执行,method = " + method.getName() + "\t\t" + "Controller = " + zController.getClass().getSimpleName()
 				+ "\t" + "arg = " + al
@@ -455,9 +464,9 @@ public class Task {
 		} catch (final Exception e) {
 			e.printStackTrace();
 			return new ZResponse(this.outputStream, this.socketChannel)
-				.httpStatus(HttpStatus.HTTP_500.getCode())
-				.contentType(DEFAULT_CONTENT_TYPE.getType())
-				.body(CR.error(HTTP_STATUS_500 + INTERNAL_SERVER_ERROR));
+					.httpStatus(HttpStatus.HTTP_500.getCode())
+					.contentType(DEFAULT_CONTENT_TYPE.getType())
+					.body(CR.error(HTTP_STATUS_500 + INTERNAL_SERVER_ERROR));
 		}
 	}
 
@@ -474,7 +483,7 @@ public class Task {
 		final Parameter[] ps = method.getParameters();
 		if (ps.length < parametersArray.length) {
 			throw new IllegalArgumentException("方法参数个数小于数组length,method = " + method.getName()
-					+ " parametersArray.length = " + parametersArray.length);
+			+ " parametersArray.length = " + parametersArray.length);
 		}
 
 		int pI = 0;
@@ -571,7 +580,7 @@ public class Task {
 				} catch (final Exception e) {
 					e.printStackTrace();
 					// NumberFormatException
-//					final String message = Task.gExceptionMessage(e);
+					//					final String message = Task.gExceptionMessage(e);
 					final String causedby = ZControllerAdviceThrowable.findCausedby(e);
 					throw new PathVariableException(causedby);
 				}
@@ -938,7 +947,7 @@ public class Task {
 
 				final String contentType = requestLine.getHeaderMap().get(ZRequest.CONTENT_TYPE);
 
-//				System.out.println("contentType = " + contentType);
+				//				System.out.println("contentType = " + contentType);
 
 				if (contentType.equalsIgnoreCase(HeaderEnum.JSON.getType())
 						|| contentType.toLowerCase().contains(HeaderEnum.JSON.getType().toLowerCase())) {
@@ -951,7 +960,7 @@ public class Task {
 				} else if (contentType.equalsIgnoreCase(HeaderEnum.URLENCODED.getType())
 						|| contentType.toLowerCase().contains(HeaderEnum.URLENCODED.getType().toLowerCase())) {
 
-//					System.out.println("contentType = " + contentType);
+					//					System.out.println("contentType = " + contentType);
 					System.out.println("OKapplication/x-www-form-urlencoded");
 					// id=200&name=zhangsan 格式
 
@@ -977,7 +986,7 @@ public class Task {
 				} else if (contentType.toLowerCase().startsWith(HeaderEnum.FORM_DATA.getType().toLowerCase())) {
 
 					// FIXME 2023年8月11日 下午10:19:34 zhanghen: TODO 继续支持 multipart/form-data
-//					System.out.println("okContent-Type: multipart/form-data");
+					//					System.out.println("okContent-Type: multipart/form-data");
 
 					final ArrayList<String> body = Lists.newArrayList();
 					final StringBuilder formBu = new StringBuilder();
@@ -988,14 +997,14 @@ public class Task {
 
 
 					request.setBody(formBu.toString());
-//					System.out.println("formBu = \n" + formBu);
+					//					System.out.println("formBu = \n" + formBu);
 
 					final List<FormData> formList = FormData.parseFormData(body.toArray(new String[0]), body.get(0));
-//					System.out.println("---------formList.size = " + formList.size());
+					//					System.out.println("---------formList.size = " + formList.size());
 					for (final FormData form: formList) {
-//						System.out.println(form);
+						//						System.out.println(form);
 					}
-//					System.out.println("---------formList.size = " + formList.size());
+					//					System.out.println("---------formList.size = " + formList.size());
 				}
 
 
@@ -1029,7 +1038,7 @@ public class Task {
 			try {
 				read = this.bufferedInputStream.read(bs);
 			} catch (final IOException e) {
-//						e.printStackTrace();
+				//						e.printStackTrace();
 				break;
 			}
 			if (read <= 0) {
@@ -1059,8 +1068,8 @@ public class Task {
 			}
 		}
 
-//					bufferedInputStream.close();
-//					inputStream.close();
+		//					bufferedInputStream.close();
+		//					inputStream.close();
 
 		return request;
 

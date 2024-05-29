@@ -14,6 +14,7 @@ import com.vo.http.ZRequestMapping;
 // FIXME 2023年7月12日 下午12:30:38 zhanghen: TODO 使用用户名密码登录（见配置），可以查看运行时间
 // 各方法调用次数、执行时长、耗时排序、执行异常信息、可用内存等信息
 @ZController
+
 public class AdminController {
 
 
