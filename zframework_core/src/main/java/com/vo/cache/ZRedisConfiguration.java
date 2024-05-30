@@ -5,8 +5,10 @@ import com.vo.anno.ZBean;
 import com.vo.anno.ZCacheRedisCondition;
 import com.vo.anno.ZConditional;
 import com.vo.anno.ZConfiguration;
+import com.vo.core.Task;
 import com.vo.core.ZContext;
 import com.vo.core.ZLog2;
+import com.vo.exception.StartupException;
 
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
@@ -42,8 +44,8 @@ public class ZRedisConfiguration {
 
 	private JedisPool init() {
 		LOG.info("开始初始化jedisPool,host={},port={}",
-		this.redisConfigurationProperties.getHost(),
-			   this.redisConfigurationProperties.getPort());
+				this.redisConfigurationProperties.getHost(),
+				this.redisConfigurationProperties.getPort());
 
 		final JedisPoolConfig poolConfig = new JedisPoolConfig();
 		// 设置最大连接数
@@ -59,8 +61,16 @@ public class ZRedisConfiguration {
 
 		ZContext.addBean(jedisPool.getClass(), jedisPool);
 
-		// 测试一下，什么也不做，只为及时抛出异常
-		try (Jedis jedis = ZContext.getBean(JedisPool.class).getResource()) {
+
+		try {
+			// 测试一下，什么也不做，只为及时抛出异常
+			try (Jedis jedis = ZContext.getBean(JedisPool.class).getResource()) {
+			}
+		} catch (final Exception e) {
+			final String m1 = "初始化Redis连接失败,请检查配置项信息=" + redisConfigurationProperties;
+			final String message = m1 + Task.NEW_LINE + Task.gExceptionMessage(e);
+			final StartupException startupException = new StartupException(message);
+			throw startupException;
 		}
 
 		return jedisPool;
