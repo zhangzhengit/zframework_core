@@ -10,7 +10,7 @@
 
 	<groupId>com.vo</groupId>
 	<artifactId>zframework_core</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0-SNAPSHOT</version>
 	<name>zframework_core</name>
 	<description>zframework_core</description>
 
