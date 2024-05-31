@@ -1,8 +1,5 @@
 package com.vo.admin;
 
-import com.vo.ZID;
-import com.vo.anno.ZEntity;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -23,7 +20,7 @@ import lombok.NoArgsConstructor;
 //@ZEntity(tableName = "method_invocation_logs", dataSourceName = "zdatasource-sqlite.properties")
 public class MethodInvocationLogsEntity {
 
-	@ZID
+	//	@ZID
 	private Integer id;
 
 	/**

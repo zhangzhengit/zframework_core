@@ -1,6 +1,7 @@
 package com.vo.admin;
 
 import com.vo.anno.ZController;
+import com.vo.http.ZHtml;
 import com.vo.http.ZRequestMapping;
 import com.votool.common.CR;
 
@@ -20,8 +21,9 @@ public class AdminController {
 	//	@ZAutowired
 	//	private MethodInvocationLogsRepository methodInvocationLogsRepository;
 
+	@ZHtml
 	@ZRequestMapping(mapping = { "/admin" }, qps = ZRequestMapping.MIN_QPS)
-	public CR adminIndex() {
+	public String adminIndex() {
 
 		//		final MethodInvocationLogsEntity p = new MethodInvocationLogsEntity();
 		//		final Sort sort = Sort.create().descendingBy("id");
@@ -29,6 +31,7 @@ public class AdminController {
 		//		return CR.ok(page);
 
 
-		return CR.ok();
+		//		return CR.ok();
+		return "html/admin.html";
 	}
 }
