@@ -34,6 +34,8 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.vo.admin.MethodInvocationLogsEntity;
+import com.vo.admin.MethodInvocationLogsRepository;
 import com.vo.anno.ZCookieValue;
 import com.vo.anno.ZRequestBody;
 import com.vo.anno.ZRequestHeader;
@@ -409,6 +411,7 @@ public class Task {
 		 * 
 		 */
 
+
 		final List<Object> al = Arrays.stream(arraygP)
 				.filter(a -> a.getClass() != ZRequest.class)
 				.filter(a -> a.getClass() != ZResponse.class)
@@ -418,7 +421,18 @@ public class Task {
 				+ "\t" + "arg = " + al
 				);
 
+		//		final MethodInvocationLogsRepository mr = ZContext.getBean(MethodInvocationLogsRepository.class);
+		//
+		//		final long t1 = System.currentTimeMillis();
+
 		final Object r = method.invoke(zController, arraygP);
+		//		final long t2 = System.currentTimeMillis();
+		//
+		//		final MethodInvocationLogsEntity entity = new MethodInvocationLogsEntity();
+		//		entity.setMethodName(method.getName());
+		//		entity.setTimeConsuming((int) (t2 - t1));
+		//		mr.save(entity);
+
 		return r;
 	}
 
