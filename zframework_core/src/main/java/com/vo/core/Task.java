@@ -356,7 +356,7 @@ public class Task {
 			if (!stop) {
 
 				r = invoke0(method, arraygP, zController);
-				final ZModelAndView modelAndView = isMethodAnnotationPresentZHtml(method)
+				final ZModelAndView modelAndView = method.isAnnotationPresent(ZHtml.class)
 						? new ZModelAndView(true, String.valueOf(r), readHtmlContent(r), ZModel.get(),
 								(ZModel) Arrays.stream(arraygP).filter(arg -> arg.getClass().equals(ZModel.class))
 								.findAny().orElse(null),
@@ -377,7 +377,7 @@ public class Task {
 		}
 
 		// 响应
-		if (isMethodAnnotationPresentZHtml(method)) {
+		if (method.isAnnotationPresent(ZHtml.class)) {
 			return this.responseHtml(request, r);
 		}
 
@@ -404,9 +404,9 @@ public class Task {
 		/*
 		 * 以来进来了 sb_zrepository 并且数据源配置为sqlite，单如果A工程依赖了本工程并且也依赖了sb_zrepository，
 		 * 则会导致 sb_zrepository 读取数据源时使用A的配置项，而不是本工程配置的sqlite。想好怎么做
-		 * 
+		 *
 		 * 并且 sb_zrepository 中的log输出也有问题，比如：不希望本工程showsql，而要Ashowsql，zlog2也暂时不支持这么配置。
-		 * 
+		 *
 		 */
 
 
@@ -774,21 +774,6 @@ public class Task {
 		}
 	}
 
-
-	public static Boolean isMethodAnnotationPresentZHtml(final Method method) {
-		final String name = method.getName();
-		final Boolean boolean1 = (Boolean) CACHE_MAP.get(name);
-		if (boolean1 != null) {
-			return boolean1;
-		}
-
-		synchronized (name.intern()) {
-
-			final boolean annotationPresent = method.isAnnotationPresent(ZHtml.class);
-			CACHE_MAP.put(name, annotationPresent);
-			return annotationPresent;
-		}
-	}
 
 	public static ZRequest parseRequest(final ZRequest request) {
 
