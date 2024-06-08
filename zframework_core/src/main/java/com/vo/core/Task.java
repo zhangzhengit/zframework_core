@@ -61,6 +61,7 @@ import com.vo.scanner.ZHandlerInterceptorScanner;
 import com.vo.scanner.ZModelAndView;
 import com.vo.template.ZModel;
 import com.vo.template.ZTemplate;
+import com.vo.validator.ZFException;
 import com.vo.validator.ZMin;
 import com.vo.validator.ZPositive;
 import com.vo.validator.ZValidated;
@@ -229,9 +230,22 @@ public class Task {
 		final PrintWriter writer = new PrintWriter(stringWriter);
 		e.printStackTrace(writer);
 
-		final String eMessage = stringWriter.toString();
+		final String zfm = getZFMessage(e);
+		final String eMessage =  (StrUtil.isEmpty(zfm) ? "" : "\r\n\tmessage=" + zfm + "\r\n\t")
+				+stringWriter
+				;
 
 		return eMessage;
+	}
+
+	private static String getZFMessage(final Throwable e) {
+		if (e instanceof ZFException) {
+			final ZFException ev = (ZFException) e;
+			final String message2 = ev.getMessagezf();
+			final int x = 1;
+			return message2;
+		}
+		return "";
 	}
 
 	private void close() {

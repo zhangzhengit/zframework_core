@@ -11,14 +11,18 @@ package com.vo.validator;
 public class ZFException extends RuntimeException {
 	private static final long serialVersionUID = 1L;
 
-	private String message;
+	private String messagezf;
+
+	public String getMessagezf() {
+		return this.messagezf;
+	}
 
 	public ZFException() {
 
 	}
 
-	public ZFException(final String message) {
-		this.message = message;
+	public ZFException(final String messagezf) {
+		this.messagezf = messagezf;
 	}
 
 }
