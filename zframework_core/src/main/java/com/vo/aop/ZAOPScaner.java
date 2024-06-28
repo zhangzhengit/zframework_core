@@ -31,7 +31,7 @@ import com.vo.scanner.ClassMap;
 import com.vo.validator.ZValidated;
 import com.vo.validator.ZValidator;
 
-import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.collection.CollUtil;
 
 /**
  *
@@ -40,6 +40,12 @@ import cn.hutool.core.collection.CollectionUtil;
  * @date 2023年6月18日
  *
  */
+// FIXME 2024年6月28日 下午6:57:36 zhangzhen : AOP在多个自定义的情况下，还没有支持
+//  如下：代理类只生产了一个注解的
+//@ZTransaction
+//@ZSynchronously(key = "register")
+//public void register(final RegisterDTO registerDTO) {
+
 public class ZAOPScaner {
 
 	public static final String VOID = "void";
@@ -86,21 +92,23 @@ public class ZAOPScaner {
 				try {
 					f.setAccessible(true);
 					final ZField zf = new ZField();
-//					f.getType().getCanonicalName(), f.getName(), f.get(cls.newInstance())C
 
 					zf.setType(f.getType().getCanonicalName());
 					zf.setName(f.getName());
-					zf.setValue(f.get(cls.newInstance()));
+
+					ZFH.set(cls.getCanonicalName() + "@" + f.getType().getCanonicalName(), f.get(cls.newInstance()));
+					zf.setValue(ZFH.class.getCanonicalName() + ".get(\"" + cls.getCanonicalName() + "@"
+							+ f.getType().getCanonicalName() + "\")");
 
 					final Annotation[] fas = f.getAnnotations();
 					if (fas != null) {
 						for (final Annotation a : fas) {
-							final String value = getAnnoName(a).replaceAll("\"", "");
+							final String value = getAnnoName(a).replace("\"", "");
 							final String as = a.toString().replace("\"\"", "");
 							final String r2 = replaceLast(as, value, "\"" + value + "\"");
 							// FIXME 2023年11月6日 上午1:24:25 zhanghen: 此处addAnno貌似毫无用处
 							// 因为代理类都是直接super.xxx ，都是用的父类字段没用到本类的
-//							zf.addAnno(r2);
+							//							zf.addAnno(r2);
 						}
 					}
 					proxyZClass.addField(zf);
@@ -130,7 +138,7 @@ public class ZAOPScaner {
 				} else {
 					int k = i;
 					while (k > 0) {
-						if (ch[k] == ' ' || ch[k] == '=') {
+						if ((ch[k] == ' ') || (ch[k] == '=')) {
 							i = -1;
 							break;
 						}
@@ -150,7 +158,7 @@ public class ZAOPScaner {
 			final ZClass proxyZClass, final HashSet<ZMethod> zms, final Method m) {
 
 		final ArrayList<ZMethodArg> argList = ZMethod.getArgListFromMethod(m);
-		final String a = argList.stream().map(ma ->  ma.getName()).collect(Collectors.joining(","));
+		final String a = argList.stream().map(ZMethodArg::getName).collect(Collectors.joining(","));
 		final Class<?> returnType = m.getReturnType();
 
 		final Map<Method, Class<?>> row = table.row(cls);
@@ -164,7 +172,7 @@ public class ZAOPScaner {
 
 			final ZField zField = new ZField(ZIAOP.class.getCanonicalName(), "ziaop_" + m.getName(),
 					"(" + ZIAOP.class.getCanonicalName() + ")" + ZSingleton.class.getCanonicalName()
-							+ ".getSingletonByClassName(\"" + aopClass.getCanonicalName() + "\")",Lists.newArrayList());
+					+ ".getSingletonByClassName(\"" + aopClass.getCanonicalName() + "\")",Lists.newArrayList());
 			proxyZClass.addField(zField);
 
 			copyZAOPMethod.setgReturn(false);
@@ -186,7 +194,7 @@ public class ZAOPScaner {
 				final StringBuilder insert = new StringBuilder();
 				final Parameter[] ps = m.getParameters();
 				for (final Parameter p : ps) {
-					final boolean annotationPresent = p.getType().isAnnotationPresent(ZValidated.class);;
+					final boolean annotationPresent = p.getType().isAnnotationPresent(ZValidated.class);
 					if (!annotationPresent) {
 						continue;
 					}
@@ -205,7 +213,7 @@ public class ZAOPScaner {
 				final String body =
 						VOID.equals(returnType.getName())
 						? "super." + m.getName() + "(" + a + ");"
-						: "return super." + m.getName() + "(" + a + ");";
+								: "return super." + m.getName() + "(" + a + ");";
 
 				final ZMethod zm = ZMethod.copyFromMethod(m);
 				zm.setgReturn(false);
@@ -216,9 +224,9 @@ public class ZAOPScaner {
 			} else {
 
 				final String body =
-						  VOID.equals(returnType.getName())
+						VOID.equals(returnType.getName())
 						? "super." + m.getName() + "(" + a + ");"
-						: "return super." + m.getName() + "(" + a + ");";
+								: "return super." + m.getName() + "(" + a + ");";
 
 				final ZMethod zm = ZMethod.copyFromMethod(m);
 				zm.setgReturn(false);
@@ -233,28 +241,28 @@ public class ZAOPScaner {
 		final String body =
 				VOID.equals(returnTypeT)
 				?
-				"final "+AOPParameter.class.getCanonicalName()+" parameter = new "+AOPParameter.class.getCanonicalName()+"();" + "\n\t"
-			  + "parameter.setIsVOID(true);" + "\n\t"
-			  + "parameter.setTarget("+ZContext.class.getCanonicalName()+".getBean(this.getClass().getSuperclass().getCanonicalName() + "+ZAOPScaner.class.getCanonicalName() + ".PROXY_ZCLASS_NAME_SUFFIX));" + "\n\t"
-			  + "parameter.setMethodName(\"" + m.getName() + "\");" + "\n\t"
-			  +  Method.class.getCanonicalName() + " m = "+ZAOPScaner.class.getCanonicalName()+".cmap.get(\""+nnn+"\");" + "\n\t"
-			  + "parameter.setMethod(m);" + "\n\t"
-			  + "parameter.setParameterList("+Lists.class.getCanonicalName()+".newArrayList("+a+"));" + "\n\t"
-			  + "ziaop_"+m.getName()+".before(parameter);" + "\n\t"
-		      + "final Object v = this.ziaop_"+m.getName()+".around(parameter);" + "\n\t"
-		      + "ziaop_"+m.getName()+".after(parameter);" + "\n\t"
-		      :
-		    	 "final "+AOPParameter.class.getCanonicalName()+" parameter = new "+AOPParameter.class.getCanonicalName()+"();" + "\n\t"
-		      + "parameter.setIsVOID(false);" + "\n\t"
-		      + "parameter.setTarget("+ZContext.class.getCanonicalName()+".getBean(this.getClass().getSuperclass().getCanonicalName() + "+ZAOPScaner.class.getCanonicalName() + ".PROXY_ZCLASS_NAME_SUFFIX));" + "\n\t"
-		      + "parameter.setMethodName(\"" + m.getName() + "\");" + "\n\t"
-		      +  Method.class.getCanonicalName() + " m = "+ZAOPScaner.class.getCanonicalName()+".cmap.get(\""+nnn+"\");" + "\n\t"
-		      + "parameter.setMethod(m);" + "\n\t"
-		      + "parameter.setParameterList("+Lists.class.getCanonicalName()+".newArrayList("+a+"));" + "\n\t"
-		      + "ziaop_"+m.getName()+".before(parameter);" + "\n\t"
-			  + "final Object v = this.ziaop_"+m.getName()+".around(parameter);" + "\n\t"
-		      + "ziaop_"+m.getName()+".after(parameter);" + "\n\t"
-		      + "return (" + returnTypeT + ")v;" + "\n\t";
+						"final "+AOPParameter.class.getCanonicalName()+" parameter = new "+AOPParameter.class.getCanonicalName()+"();" + "\n\t"
+						+ "parameter.setIsVOID(true);" + "\n\t"
+						+ "parameter.setTarget("+ZContext.class.getCanonicalName()+".getBean(this.getClass().getSuperclass().getCanonicalName() + "+ZAOPScaner.class.getCanonicalName() + ".PROXY_ZCLASS_NAME_SUFFIX));" + "\n\t"
+						+ "parameter.setMethodName(\"" + m.getName() + "\");" + "\n\t"
+						+  Method.class.getCanonicalName() + " m = "+ZAOPScaner.class.getCanonicalName()+".cmap.get(\""+nnn+"\");" + "\n\t"
+						+ "parameter.setMethod(m);" + "\n\t"
+						+ "parameter.setParameterList("+Lists.class.getCanonicalName()+".newArrayList("+a+"));" + "\n\t"
+						+ "ziaop_"+m.getName()+".before(parameter);" + "\n\t"
+						+ "final Object v = this.ziaop_"+m.getName()+".around(parameter);" + "\n\t"
+						+ "ziaop_"+m.getName()+".after(parameter);" + "\n\t"
+						:
+							"final "+AOPParameter.class.getCanonicalName()+" parameter = new "+AOPParameter.class.getCanonicalName()+"();" + "\n\t"
+							+ "parameter.setIsVOID(false);" + "\n\t"
+							+ "parameter.setTarget("+ZContext.class.getCanonicalName()+".getBean(this.getClass().getSuperclass().getCanonicalName() + "+ZAOPScaner.class.getCanonicalName() + ".PROXY_ZCLASS_NAME_SUFFIX));" + "\n\t"
+							+ "parameter.setMethodName(\"" + m.getName() + "\");" + "\n\t"
+							+  Method.class.getCanonicalName() + " m = "+ZAOPScaner.class.getCanonicalName()+".cmap.get(\""+nnn+"\");" + "\n\t"
+							+ "parameter.setMethod(m);" + "\n\t"
+							+ "parameter.setParameterList("+Lists.class.getCanonicalName()+".newArrayList("+a+"));" + "\n\t"
+							+ "ziaop_"+m.getName()+".before(parameter);" + "\n\t"
+							+ "final Object v = this.ziaop_"+m.getName()+".around(parameter);" + "\n\t"
+							+ "ziaop_"+m.getName()+".after(parameter);" + "\n\t"
+							+ "return (" + returnTypeT + ")v;" + "\n\t";
 		return body;
 	}
 
@@ -299,7 +307,7 @@ public class ZAOPScaner {
 								+ " 只能只允许有一个AOP类!现在有 " + aL.size() + " 个 = " + aL);
 					}
 
-					if (CollectionUtil.isNotEmpty(aL)) {
+					if (CollUtil.isNotEmpty(aL)) {
 						table.put(c, m, aL.get(0));
 					}
 				}
@@ -325,11 +333,7 @@ public class ZAOPScaner {
 	 */
 	private static String replaceLast(final String string, final String replace, final String target) {
 
-		if (org.springframework.util.StringUtils.isEmpty(replace)) {
-			return string;
-		}
-
-		if ("".equals(replace.trim())) {
+		if (org.springframework.util.StringUtils.isEmpty(replace) || "".equals(replace.trim())) {
 			return string;
 		}
 
@@ -345,7 +349,7 @@ public class ZAOPScaner {
 
 		final String s1 = string.substring(0, i);
 		final String s2 = target;
-		final String s3 = string.substring(i + replace.length(), string.length());
+		final String s3 = string.substring(i + replace.length());
 
 		final String r = s1 + s2 + s3;
 
