@@ -722,10 +722,16 @@ public class Task {
 			return;
 		}
 
-		final Class<?> type = p.getType();
-		final Field[] fields = type.getDeclaredFields();
-		for (final Field field : fields) {
-			ZValidator.validatedAll(object, field);
+		Class<?> type = p.getType();
+		while (true) {
+			final Field[] fields = type.getDeclaredFields();
+			for (final Field field : fields) {
+				ZValidator.validatedAll(object, field);
+			}
+			type = type.getSuperclass();
+			if (type == Object.class) {
+				break;
+			}
 		}
 
 	}
