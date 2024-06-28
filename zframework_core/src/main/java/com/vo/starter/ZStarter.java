@@ -10,7 +10,7 @@ package com.vo.starter;
 public interface ZStarter {
 
 	/**
-	 * 自定义starter的启动逻辑，然后返回自定义的component
+	 * 自定义starter的启动逻辑
 	 */
 	void start();
 
