@@ -43,11 +43,11 @@ public class ZControllerAdviceThrowable {
 
 	public static String findCausedby(final Throwable e) {
 		if (e instanceof ZFException) {
-			return ((ZFException) e).getMessage();
+			return ((ZFException) e).getMessagezf();
 		}
 
-		if (e.getCause() != null && e.getCause() instanceof ZFException) {
-			return ((ZFException) e.getCause()).getMessage();
+		if ((e.getCause() != null) && (e.getCause() instanceof ZFException)) {
+			return ((ZFException) e.getCause()).getMessagezf();
 		}
 
 		if (e.getCause() != null) {
