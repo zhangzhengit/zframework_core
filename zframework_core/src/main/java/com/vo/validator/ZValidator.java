@@ -539,10 +539,10 @@ public class ZValidator {
 
 	public static void validatedAll(final Object object, final Field field) {
 		// FIXME 2023年10月31日 下午10:13:39 zhanghen: 启动时是否验证注解值的合理性，如下声明：
-		//		@ZStartWith(prefix = "ZH")
-		//		@ZEndsWith(suffix = "G")
-		//		@ZLength(max = 3)
-		//		private String name;
+		// @ZStartWith(prefix = "ZH")
+		// @ZEndsWith(suffix = "G")
+		// @ZLength(max = 3)
+		// private String name;
 
 		// 显然是不合理，name怎么传值都不会通过验证。该怎么办？程序启动时就验证所有的注解的组合中不合理的情况？
 

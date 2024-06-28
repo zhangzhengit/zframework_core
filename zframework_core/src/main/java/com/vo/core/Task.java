@@ -19,6 +19,7 @@ import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -722,18 +723,54 @@ public class Task {
 			return;
 		}
 
-		Class<?> type = p.getType();
+		final ArrayList<Class<?>> pl = Lists.newArrayList(object.getClass());
 		while (true) {
-			final Field[] fields = type.getDeclaredFields();
-			for (final Field field : fields) {
-				ZValidator.validatedAll(object, field);
-			}
-			type = type.getSuperclass();
-			if (type == Object.class) {
+			final Class<?> superclass = pl.get(pl.size() - 1).getSuperclass();
+			if (superclass == Object.class) {
 				break;
+			}
+			pl.add(superclass);
+		}
+
+		Collections.reverse(pl);
+
+		for (final Class<?> cls : pl) {
+			final Field[] fs = cls.getDeclaredFields();
+			for (final Field f1 : fs) {
+				ZValidator.validatedAll(object, f1);
+				checkT(object, f1);
 			}
 		}
 
+	}
+
+	/**
+	 * 校验对象的某个字段如果是List/Set类型，则继续校验里面的泛型T是否也带有[校验注解]有则递归校验
+	 *
+	 * @param object
+	 * @param field
+	 */
+	private static void checkT(final Object object, final Field field) {
+		final Class<?> ftype = field.getType();
+		// FIXME 2024年6月28日 下午5:44:43 zhangzhen : 忘了是否支持Map类型了，看@ZNotEmtpy的javadoc是支持Map的，记不清了是否支持了？
+		if ((ftype == List.class) || (ftype == Set.class)) {
+			try {
+				field.setAccessible(true);
+				final Iterable<?> it = (Iterable<?>) field.get(object);
+				if (it != null) {
+					for (final Object lv : it) {
+						final Field[] lvfs = lv.getClass().getDeclaredFields();
+						for (final Field lf : lvfs) {
+							ZValidator.validatedAll(lv, lf);
+							checkT(lv, lf);
+						}
+					}
+				}
+
+			} catch (IllegalArgumentException | IllegalAccessException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 	private static int setValue(final Object[] parametersArray, final int pI, final Parameter p, final Object value) {
