@@ -40,12 +40,6 @@ import cn.hutool.core.collection.CollUtil;
  * @date 2023年6月18日
  *
  */
-// FIXME 2024年6月28日 下午6:57:36 zhangzhen : AOP在多个自定义的情况下，还没有支持
-//  如下：代理类只生产了一个注解的
-//@ZTransaction
-//@ZSynchronously(key = "register")
-//public void register(final RegisterDTO registerDTO) {
-
 public class ZAOPScaner {
 
 	public static final String VOID = "void";
@@ -177,7 +171,7 @@ public class ZAOPScaner {
 				final ZField zField = new ZField(zFieldType, zFieldName,
 						"(" + zFieldType + ")" + ZSingleton.class.getCanonicalName()
 						+ ".getSingletonByClassName(\"" + aopClass.getCanonicalName() + "\")",Lists.newArrayList());
-				
+
 				proxyZClass.addField(zField);
 
 				copyZAOPMethod.setgReturn(false);
