@@ -135,6 +135,22 @@
 			2 声明AOP类ZNowAOP，指定代理注解 ZNow.class，同时实现 ZIAOP覆盖期方法，编码代码
 			3 支持使用ZService.now
 		
+		# 20240629 支持了在一个方法上使用多个自定义注解实现AOP功能，
+			按放在方法上的上下顺序来执行多个AOP类，如上方法改为多个AOP类：
+			
+			@ZLog
+			@ZNow
+			public Date now() {
+				return new Date();
+			}
+			
+			则执行顺序为：先执行ZLog功能，再执行ZNow功能
+			
+			注意：控制多个AOP类是否执行多次目标方法，
+				 正常情况下，目标方法应该只执行此意，因为需要控制多个AOP类中只有一个执行目标方法，方式为：
+					ZIAOP.xxx方法中只调用一次 aopParameter.invoke() 方法
+					
+				或者在目标方法内控制只执行一次
    		
    	返回html：
    		定义接口如下，即可返回 index.html静态页面.html存放在 ServerConfiguration.htmlPrefix 目录中.

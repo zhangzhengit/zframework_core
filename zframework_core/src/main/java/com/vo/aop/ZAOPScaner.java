@@ -68,7 +68,7 @@ public class ZAOPScaner {
 		final Map<String, ZClass> map = Maps.newHashMap();
 		final Set<Class<?>> cs = scanPackage_COM(packageName);
 
-		final HashBasedTable<Class, Method, Class<?>> table = extractedC(cs);
+		final HashBasedTable<Class, Method, List<Class<?>>> table = extractedC(cs);
 
 		final Set<Class> rowKeySet = table.rowKeySet();
 		for (final Class cls : rowKeySet) {
@@ -154,37 +154,43 @@ public class ZAOPScaner {
 		return nameBuilder.toString();
 	}
 
-	private static void addZMethod(final HashBasedTable<Class, Method, Class<?>> table, final Class cls,
+	private static void addZMethod(final HashBasedTable<Class, Method,List<Class<?>>> table, final Class cls,
 			final ZClass proxyZClass, final HashSet<ZMethod> zms, final Method m) {
 
 		final ArrayList<ZMethodArg> argList = ZMethod.getArgListFromMethod(m);
 		final String a = argList.stream().map(ZMethodArg::getName).collect(Collectors.joining(","));
 		final Class<?> returnType = m.getReturnType();
 
-		final Map<Method, Class<?>> row = table.row(cls);
+		final Map<Method, List<Class<?>>> row = table.row(cls);
 
 		// 如果：此方法有自定义注解并且有拦截此注解的AOP类
 		if (row.containsKey(m)) {
 
-			final ZMethod copyZAOPMethod = ZMethod.copyFromMethod(m);
+			final List<Class<?>> aopClassList = table.get(cls, m);
+			for (int i = 0; i < aopClassList.size(); i++) {
+				final Class<?> aopClass = aopClassList.get(i);
 
-			final Class<?> aopClass = table.get(cls, m);
+				final ZMethod copyZAOPMethod = ZMethod.copyFromMethod(m);
 
-			final ZField zField = new ZField(ZIAOP.class.getCanonicalName(), "ziaop_" + m.getName(),
-					"(" + ZIAOP.class.getCanonicalName() + ")" + ZSingleton.class.getCanonicalName()
-					+ ".getSingletonByClassName(\"" + aopClass.getCanonicalName() + "\")",Lists.newArrayList());
-			proxyZClass.addField(zField);
+				final String zFieldName = "ziaop_" + m.getName() + i;
+				final String zFieldType = ZIAOP.class.getCanonicalName();
+				final ZField zField = new ZField(zFieldType, zFieldName,
+						"(" + zFieldType + ")" + ZSingleton.class.getCanonicalName()
+						+ ".getSingletonByClassName(\"" + aopClass.getCanonicalName() + "\")",Lists.newArrayList());
+				
+				proxyZClass.addField(zField);
 
-			copyZAOPMethod.setgReturn(false);
+				copyZAOPMethod.setgReturn(false);
 
-			final String nnn = cls.getCanonicalName() + "@" + m.getName();
-			cmap.put(nnn, m);
+				final String nnn = cls.getCanonicalName() + "@" + m.getName();
+				cmap.put(nnn, m);
 
-			final String returnTypeT = getReturnTypeT(m);
-			final String body = gZMethodBody(m, a, nnn, returnTypeT);
+				final String returnTypeT = getReturnTypeT(m);
+				final String body = gZMethodBody(m, a, nnn, returnTypeT, aopClassList);
 
-			copyZAOPMethod.setBody(body);
-			zms.add(copyZAOPMethod);
+				copyZAOPMethod.setBody(body);
+				zms.add(copyZAOPMethod);
+			}
 
 		} else {
 			// 无自定义注解的情况：
@@ -237,7 +243,11 @@ public class ZAOPScaner {
 		}
 	}
 
-	private static String gZMethodBody(final Method m, final String a, final String nnn, final String returnTypeT) {
+	private static String gZMethodBody(final Method m, final String a, final String nnn, final String returnTypeT,
+			final List<Class<?>> aopClassList) {
+
+		final StringBuilder aop = aop(aopClassList, m);
+
 		final String body =
 				VOID.equals(returnTypeT)
 				?
@@ -248,10 +258,11 @@ public class ZAOPScaner {
 						+  Method.class.getCanonicalName() + " m = "+ZAOPScaner.class.getCanonicalName()+".cmap.get(\""+nnn+"\");" + "\n\t"
 						+ "parameter.setMethod(m);" + "\n\t"
 						+ "parameter.setParameterList("+Lists.class.getCanonicalName()+".newArrayList("+a+"));" + "\n\t"
-						+ "ziaop_"+m.getName()+".before(parameter);" + "\n\t"
-						+ "final Object v = this.ziaop_"+m.getName()+".around(parameter);" + "\n\t"
-						+ "ziaop_"+m.getName()+".after(parameter);" + "\n\t"
+						+ "\n\t"
+						+ aop + "\n\t"
+
 						:
+
 							"final "+AOPParameter.class.getCanonicalName()+" parameter = new "+AOPParameter.class.getCanonicalName()+"();" + "\n\t"
 							+ "parameter.setIsVOID(false);" + "\n\t"
 							+ "parameter.setTarget("+ZContext.class.getCanonicalName()+".getBean(this.getClass().getSuperclass().getCanonicalName() + "+ZAOPScaner.class.getCanonicalName() + ".PROXY_ZCLASS_NAME_SUFFIX));" + "\n\t"
@@ -259,13 +270,31 @@ public class ZAOPScaner {
 							+  Method.class.getCanonicalName() + " m = "+ZAOPScaner.class.getCanonicalName()+".cmap.get(\""+nnn+"\");" + "\n\t"
 							+ "parameter.setMethod(m);" + "\n\t"
 							+ "parameter.setParameterList("+Lists.class.getCanonicalName()+".newArrayList("+a+"));" + "\n\t"
-							+ "ziaop_"+m.getName()+".before(parameter);" + "\n\t"
-							+ "final Object v = this.ziaop_"+m.getName()+".around(parameter);" + "\n\t"
-							+ "ziaop_"+m.getName()+".after(parameter);" + "\n\t"
+							+ "\n\t"
+							+ aop + "\n\t"
 							+ "return (" + returnTypeT + ")v;" + "\n\t";
 		return body;
 	}
 
+	private static StringBuilder aop(final List<Class<?>> aopClassList, final Method m) {
+
+		final StringBuilder b = new StringBuilder();
+
+		for (int i = 0; i < aopClassList.size(); i++) {
+			final String aop =
+
+					"ziaop_" + (m.getName() + i) + ".before(parameter);" + "\n\t"
+							+ "final Object v"+(i)+" = this.ziaop_" + (m.getName() + i) + ".around(parameter);" + "\n\t"
+							+ "ziaop_" + (m.getName() + i) + ".after(parameter);" + "\n\t"
+							;
+
+			b.append(aop);
+			b.append("\n\t");
+
+		}
+
+		return b;
+	}
 
 	public static String getReturnTypeT(final Method method) {
 		final Type genericReturnType = method.getGenericReturnType();
@@ -288,8 +317,8 @@ public class ZAOPScaner {
 	 * @param cs
 	 * @return <类,方法，此类此方法的AOP类>
 	 */
-	public static HashBasedTable<Class, Method, Class<?>> extractedC(final Set<Class<?>> cs) {
-		final HashBasedTable<Class, Method, Class<?>> table = HashBasedTable.create();
+	public static HashBasedTable<Class, Method, List<Class<?>>> extractedC(final Set<Class<?>> cs) {
+		final HashBasedTable<Class, Method, List<Class<?>>> table = HashBasedTable.create();
 		for (final Class<?> c : cs) {
 			final Method[] ms = c.getDeclaredMethods();
 			for (final Method m : ms) {
@@ -308,7 +337,14 @@ public class ZAOPScaner {
 					}
 
 					if (CollUtil.isNotEmpty(aL)) {
-						table.put(c, m, aL.get(0));
+						final List<Class<?>> cl = table.get(c	, m);
+						if (CollUtil.isEmpty(cl)) {
+							table.put(c, m, Lists.newArrayList(aL.get(0)));
+						}else {
+							cl.add(aL.get(0));
+							table.put(c, m, cl);
+						}
+
 					}
 				}
 
