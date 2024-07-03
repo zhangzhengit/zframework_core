@@ -266,7 +266,7 @@ public class ZAOPScaner {
 							+ "parameter.setParameterList("+Lists.class.getCanonicalName()+".newArrayList("+a+"));" + "\n\t"
 							+ "\n\t"
 							+ aop + "\n\t"
-							+ "return (" + returnTypeT + ")v;" + "\n\t";
+							+ "return (" + returnTypeT + ")v"+(aopClassList.size()-1)+";" + "\n\t";
 		return body;
 	}
 
