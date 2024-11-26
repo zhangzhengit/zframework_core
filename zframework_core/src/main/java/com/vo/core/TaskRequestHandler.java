@@ -84,7 +84,7 @@ public final class TaskRequestHandler extends Thread {
 
 
 				boolean isWanzheng = false;
-				if ((contentType != null) && contentType.toLowerCase().contains(HeaderEnum.FORM_DATA.getType())) {
+				if ((contentType != null) && contentType.toLowerCase().contains(HeaderEnum.MULTIPART_FORM_DATA.getType())) {
 					final int bi = contentType.indexOf(BOUNDARY);
 					if (bi > -1) {
 						final String boundary = contentType.substring(bi + BOUNDARY.length());

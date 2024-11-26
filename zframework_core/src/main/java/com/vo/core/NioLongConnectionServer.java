@@ -164,7 +164,7 @@ public class NioLongConnectionServer {
 
 		final SocketChannel socketChannel = (SocketChannel) key.channel();
 		final ZResponse response = new ZResponse(socketChannel);
-		response.contentType(HeaderEnum.JSON.getType()).httpStatus(HttpStatus.HTTP_429.getCode())
+		response.contentType(HeaderEnum.APPLICATION_JSON.getType()).httpStatus(HttpStatus.HTTP_429.getCode())
 		.body(J.toJSONString(CR.error(message), Include.NON_NULL));
 		response.write();
 		closeSocketChannelAndKeyCancel(key, socketChannel);
@@ -305,7 +305,7 @@ public class NioLongConnectionServer {
 				final Task task = new Task(taskRequest.getSocketChannel());
 				final String contentType = request.getContentType();
 				if (StrUtil.isNotEmpty(contentType)
-						&& contentType.toLowerCase().startsWith(HeaderEnum.FORM_DATA.getType().toLowerCase())) {
+						&& contentType.toLowerCase().startsWith(HeaderEnum.MULTIPART_FORM_DATA.getType().toLowerCase())) {
 					// setOriginalRequestBytes方法会导致qps降低，FORM_DATA 才set
 					// 后续解析需要，或是不需要，再看.
 					request.setOriginalRequestBytes(taskRequest.getRequestData());
@@ -327,7 +327,7 @@ public class NioLongConnectionServer {
 				final Object r = a.execute(e);
 				new ZResponse(taskRequest.getSocketChannel())
 				.httpStatus(HttpStatus.HTTP_500.getCode())
-				.contentType(HeaderEnum.JSON.getType())
+				.contentType(HeaderEnum.APPLICATION_JSON.getType())
 				.body(J.toJSONString(r, Include.NON_NULL))
 				.write();
 
@@ -358,7 +358,7 @@ public class NioLongConnectionServer {
 			new ZResponse(socketChannel)
 			.header(ZRequest.ALLOW, methodString)
 			.httpStatus(HttpStatus.HTTP_405.getCode())
-			.contentType(HeaderEnum.JSON.getType())
+			.contentType(HeaderEnum.APPLICATION_JSON.getType())
 			.body(J.toJSONString(error, Include.NON_NULL))
 			.write();
 			closeSocketChannelAndKeyCancel(key, socketChannel);

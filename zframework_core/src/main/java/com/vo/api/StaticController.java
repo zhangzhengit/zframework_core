@@ -78,7 +78,7 @@ public class StaticController {
 		final ServerConfigurationProperties serverConfiguration = ZSingleton.getSingletonByClass(ServerConfigurationProperties.class);
 
 		final Boolean gzipEnable = serverConfiguration.getGzipEnable();
-		final boolean gzipContains = serverConfiguration.gzipContains(HeaderEnum.CSS.getType());
+		final boolean gzipContains = serverConfiguration.gzipContains(HeaderEnum.TEXT_CSS.getType());
 		if (gzipEnable && gzipContains && request.isSupportGZIP()) {
 
 			final String string = ResourcesLoader.loadStaticResourceString(resourceName);
@@ -120,7 +120,7 @@ public class StaticController {
 
 		final ServerConfigurationProperties serverConfiguration = ZSingleton.getSingletonByClass(ServerConfigurationProperties.class);
 		final Boolean gzipEnable = serverConfiguration.getGzipEnable();
-		final boolean gzipContains = serverConfiguration.gzipContains(HeaderEnum.HTML.getType());
+		final boolean gzipContains = serverConfiguration.gzipContains(HeaderEnum.TEXT_HTML.getType());
 		final String html = ResourcesLoader.loadStaticResourceString(resourceName);
 
 		if (gzipEnable && gzipContains && request.isSupportGZIP()) {

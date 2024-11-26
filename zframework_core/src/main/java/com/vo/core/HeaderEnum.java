@@ -14,37 +14,38 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum HeaderEnum {
 
-	TEXT("Content-Type: text/plain;charset=UTF-8", "text/plain"),
 
-	FORM_DATA("Content-Type: multipart/form-data", "multipart/form-data"),
+	TEXT_PLAIN("Content-Type: text/plain;charset=UTF-8", "text/plain"),
+
+	MULTIPART_FORM_DATA("Content-Type: multipart/form-data", "multipart/form-data"),
 
 	URLENCODED("Content-Type: application/x-www-form-urlencoded", "application/x-www-form-urlencoded"),
 
-	JSON("Content-Type: application/json;charset=UTF-8", "application/json"),
+	APPLICATION_JSON("Content-Type: application/json;charset=UTF-8", "application/json"),
 
-	PDF("Content-Type: application/pdf;", "application/pdf"),
+	APPLICATION_PDF("Content-Type: application/pdf;", "application/pdf"),
 
-	XML("Content-Type: application/xml;charset=UTF-8", "application/xml"),
-	HTML("Content-Type: text/html;charset=UTF-8", "text/html"),
+	APPLICATION_XML("Content-Type: application/xml;charset=UTF-8", "application/xml"),
+	TEXT_HTML("Content-Type: text/html;charset=UTF-8", "text/html"),
 
-	MP3("Content-Type: audio/mp3;", "audio/mp3"),
+	AUDIO_MP3("Content-Type: audio/mp3;", "audio/mp3"),
 
-	CSS("Content-Type: text/css;", "text/css"),
+	TEXT_CSS("Content-Type: text/css;", "text/css"),
 
-	GIF("Content-Type: image/gif;", "image/gif"),
+	IMAGE_GIF("Content-Type: image/gif;", "image/gif"),
 
-	JPGE("Content-Type: image/jpeg;", "image/jpeg"),
+	IMAGE_JPGE("Content-Type: image/jpeg;", "image/jpeg"),
 
-	PNG("Content-Type: image/png;", "image/png"),
+	IMAGE_PNG("Content-Type: image/png;", "image/png"),
 
-	MP4("Content-Type: video/mp4;", "video/mp4"),
+	VIDEO_MP4("Content-Type: video/mp4;", "video/mp4"),
 
 	WORD("Content-Type: application/msword;", "application/msword"),
-	JPG("Content-Type: image/jpg;", "image/jpg"),
+	IMAGE_JPG("Content-Type: image/jpg;", "image/jpg"),
 
 	JS("Content-Type: application/javascript;", "application/javascript"),
 
-	ICON("Content-Type: image/vnd.microsoft.icon;", "image/vnd.microsoft.ico"),
+	IMAGE_ICON("Content-Type: image/vnd.microsoft.icon;", "image/vnd.microsoft.ico"),
 
 	GZIP("Content-Encoding: gzip", ""),
 

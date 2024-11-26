@@ -129,7 +129,7 @@ public class ZServer extends Thread {
 
 					response
 							.httpStatus(HttpStatus.HTTP_403.getCode())
-							.contentType(HeaderEnum.JSON.getType())
+							.contentType(HeaderEnum.APPLICATION_JSON.getType())
 							.body(J.toJSONString(CR.error("zserver-超出QPS限制,qps = " + ZServer.SERVER_CONFIGURATION.getQps()), Include.NON_NULL))
 							.write();
 

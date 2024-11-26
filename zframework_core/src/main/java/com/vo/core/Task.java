@@ -94,7 +94,7 @@ public class Task {
 	public static final int HTTP_STATUS_500 = 500;
 	public static final int HTTP_STATUS_404 = 404;
 	public static final String INTERNAL_SERVER_ERROR = "Internal Server Error";
-	public static final HeaderEnum DEFAULT_CONTENT_TYPE = HeaderEnum.JSON;
+	public static final HeaderEnum DEFAULT_CONTENT_TYPE = HeaderEnum.APPLICATION_JSON;
 	public static final String NEW_LINE = "\r\n";
 	private static final Map<Object, Object> CACHE_MAP = new WeakHashMap<>(1024, 1F);
 
@@ -187,7 +187,7 @@ public class Task {
 			return new ZResponse(this.socketChannel)
 					.header(ZRequest.ALLOW, methodString)
 					.httpStatus(HttpStatus.HTTP_405.getCode())
-					.contentType(HeaderEnum.JSON.getType())
+					.contentType(HeaderEnum.APPLICATION_JSON.getType())
 					.body(J.toJSONString(CR.error(HttpStatus.HTTP_405.getCode(), "请求Method不支持："
 							+ requestLine.getMethodEnum().getMethod() + ", Method: " + methodString), Include.NON_NULL));
 
@@ -296,7 +296,7 @@ public class Task {
 			final String message = "访问频繁，请稍后再试";
 
 			final ZResponse response = new ZResponse(this.outputStream, this.socketChannel);
-			response.contentType(HeaderEnum.JSON.getType())
+			response.contentType(HeaderEnum.APPLICATION_JSON.getType())
 			.httpStatus(HttpStatus.HTTP_403.getCode())
 			.body(J.toJSONString(CR.error(message), Include.NON_NULL));
 
@@ -322,7 +322,7 @@ public class Task {
 					final String message = "接口访问频繁，请稍后再试";
 
 					final ZResponse response = new ZResponse(this.outputStream, this.socketChannel);
-					response.contentType(HeaderEnum.JSON.getType())
+					response.contentType(HeaderEnum.APPLICATION_JSON.getType())
 					.httpStatus(HttpStatus.HTTP_403.getCode())
 					.body(J.toJSONString(CR.error(message), Include.NON_NULL));
 					return response;
@@ -477,16 +477,16 @@ public class Task {
 
 			final ServerConfigurationProperties serverConfiguration = ZSingleton.getSingletonByClass(ServerConfigurationProperties.class);
 			if (serverConfiguration.getGzipEnable()
-					&& serverConfiguration.gzipContains(HeaderEnum.HTML.getType())
+					&& serverConfiguration.gzipContains(HeaderEnum.TEXT_HTML.getType())
 					&& request.isSupportGZIP()) {
 				final byte[] compress = ZGzip.compress(html);
 
-				return new ZResponse(this.outputStream, this.socketChannel).contentType(HeaderEnum.HTML.getType())
+				return new ZResponse(this.outputStream, this.socketChannel).contentType(HeaderEnum.TEXT_HTML.getType())
 						.header(StaticController.CONTENT_ENCODING, ZRequest.GZIP).body(compress);
 			}
 
 			return new ZResponse(this.outputStream, this.socketChannel)
-					.contentType(HeaderEnum.HTML.getType()).body(html);
+					.contentType(HeaderEnum.TEXT_HTML.getType()).body(html);
 
 		} catch (final Exception e) {
 			e.printStackTrace();
@@ -1003,8 +1003,8 @@ public class Task {
 
 				//				System.out.println("contentType = " + contentType);
 
-				if (contentType.equalsIgnoreCase(HeaderEnum.JSON.getType())
-						|| contentType.toLowerCase().contains(HeaderEnum.JSON.getType().toLowerCase())) {
+				if (contentType.equalsIgnoreCase(HeaderEnum.APPLICATION_JSON.getType())
+						|| contentType.toLowerCase().contains(HeaderEnum.APPLICATION_JSON.getType().toLowerCase())) {
 
 					final StringBuilder json = new StringBuilder();
 					for (int k = i + 1; k < x.size(); k++) {
@@ -1037,7 +1037,7 @@ public class Task {
 					}
 
 					// FORM_DATA 用getType
-				} else if (contentType.toLowerCase().startsWith(HeaderEnum.FORM_DATA.getType().toLowerCase())) {
+				} else if (contentType.toLowerCase().startsWith(HeaderEnum.MULTIPART_FORM_DATA.getType().toLowerCase())) {
 
 					// FIXME 2023年8月11日 下午10:19:34 zhanghen: TODO 继续支持 multipart/form-data
 					//					System.out.println("okContent-Type: multipart/form-data");
