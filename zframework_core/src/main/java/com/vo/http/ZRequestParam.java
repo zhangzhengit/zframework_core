@@ -11,9 +11,8 @@ import org.springframework.stereotype.Component;
 /**
  * 表示http请求的一个参数，用在参数字段上。如：
  *
- *	1、/test?name=zhang
- *		用法：@ZRequestParam final String name
- *	2、/test form-data 的参数，用法同上
+ * 1、/test?name=zhang 用法：@ZRequestParam final String name 2、/test form-data
+ * 的参数，用法同上
  *
  * @author zhangzhen
  * @date 2023年6月12日
@@ -25,4 +24,10 @@ import org.springframework.stereotype.Component;
 @Target({ ElementType.PARAMETER })
 public @interface ZRequestParam {
 
+	/**
+	 * 给的初始默认值，如果接口没传此值，则使用默认值
+	 *
+	 * @return
+	 */
+	String defaultValue() default "";
 }
