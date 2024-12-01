@@ -26,8 +26,11 @@ public class StaticController {
 
 	public static final String CONTENT_ENCODING = "Content-Encoding";
 
-	@ZRequestMapping(mapping = { "/favicon\\.ico", "/.+\\.js$", "/.+\\.jpg$", "/.+\\.mp3$", "/.+\\.mp4$", "/.+\\.pdf$",
-			"/.+\\.gif$", "/.+\\.doc$" }, isRegex = { true, true, true, true, true, true, true, true }, qps = 10000)
+	@ZRequestMapping(mapping = { "/favicon\\.ico",
+			"/.+\\.png$",
+			"/.+\\.js$", "/.+\\.jpg$", "/.+\\.mp3$", "/.+\\.mp4$", "/.+\\.pdf$",
+			"/.+\\.gif$", "/.+\\.doc$" },
+			isRegex = { true, true, true, true, true, true, true, true, true }, qps = 10000)
 
 	public void staticResources(final ZResponse response,final ZRequest request) {
 
