@@ -15,6 +15,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
@@ -31,6 +32,7 @@ import com.vo.enums.MethodEnum;
 import com.vo.exception.ZControllerAdviceActuator;
 import com.vo.http.HttpStatus;
 import com.vo.http.ZCookie;
+import com.vo.http.ZETag;
 import com.votool.common.CR;
 
 import cn.hutool.core.collection.CollUtil;
@@ -48,12 +50,15 @@ import lombok.NoArgsConstructor;
  */
 public class NioLongConnectionServer {
 
+
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
 	//	public static final Charset CHARSET = Charset.defaultCharset();
 	public static final Charset CHARSET = Charset.forName("UTF-8");
 	//	public static final Charset CHARSET = Charset.forName("ISO-8859-1");
 
+	public static final String E_TAG = "ETag";
+	public static final String IF_NONE_MATCH = "If-None-Match";
 
 	public static final String DATE = "Date";
 	public static final String SERVER = HttpHeaderEnum.SERVER.getValue();
@@ -402,6 +407,23 @@ public class NioLongConnectionServer {
 
 				response.header(SERVER, SERVER_VALUE);
 				response.header(DATE, ZDateUtil.gmt(new Date()));
+
+				final ZETag methodETag = Task.getMethodETag(request);
+				final String newETag = MD5.c(response.getBodyList());
+
+				// 执行目标方法前，先看请求头的ETag
+				final String requestIfNoneMatch = request.getHeader(IF_NONE_MATCH);
+				if (((requestIfNoneMatch != null) && (methodETag != null)) && Objects.equals(newETag, requestIfNoneMatch)) {
+					final ZResponse r304 = new ZResponse(socketChannel);
+					r304.header(DATE, ZDateUtil.gmt(new Date()));
+					r304.httpStatus(304);
+					r304.contentType(null);
+					r304.header(E_TAG, requestIfNoneMatch);
+					r304.write();
+					return;
+				}
+				response.header(E_TAG, newETag);
+
 				// 在此自动write，接口中可以不调用write
 				response.write();
 

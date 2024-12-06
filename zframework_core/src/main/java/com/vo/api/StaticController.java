@@ -10,6 +10,7 @@ import com.vo.core.ZResponse;
 import com.vo.core.ZSingleton;
 import com.vo.html.ResourcesLoader;
 import com.vo.http.HttpStatus;
+import com.vo.http.ZETag;
 import com.vo.http.ZRequestMapping;
 import com.votool.common.CR;
 
@@ -26,11 +27,12 @@ public class StaticController {
 
 	public static final String CONTENT_ENCODING = "Content-Encoding";
 
+	@ZETag
 	@ZRequestMapping(mapping = { "/favicon\\.ico",
 			"/.+\\.png$",
 			"/.+\\.js$", "/.+\\.jpg$", "/.+\\.mp3$", "/.+\\.mp4$", "/.+\\.pdf$",
 			"/.+\\.gif$", "/.+\\.doc$" },
-			isRegex = { true, true, true, true, true, true, true, true, true }, qps = 10000)
+	isRegex = { true, true, true, true, true, true, true, true, true }, qps = 10000)
 
 	public void staticResources(final ZResponse response,final ZRequest request) {
 

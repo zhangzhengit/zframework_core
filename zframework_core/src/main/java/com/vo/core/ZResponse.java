@@ -101,19 +101,13 @@ public class ZResponse {
 	private List<Byte> bodyList;
 
 	public synchronized ZResponse contentType(final String contentType) {
-		if (!this.setContentType.get()) {
-
-			if (StrUtil.isEmpty(contentType)) {
-				throw new IllegalArgumentException(ZRequest.CONTENT_TYPE + " 不能为空");
-			}
-
+		if (!this.setContentType.get() && (contentType != null)) {
 			if (!contentType.toLowerCase().contains(CHARSET.toLowerCase())) {
 				this.contentTypeAR.set(ZRequest.CONTENT_TYPE + ":" + contentType + ";" + CHARSET.toLowerCase() + "="
 						+ Charset.defaultCharset().displayName());
 			} else {
 				this.contentTypeAR.set(ZRequest.CONTENT_TYPE + ":" + contentType);
 			}
-
 		}
 		this.setContentType.set(true);
 		return this;
@@ -185,7 +179,7 @@ public class ZResponse {
 			this.writeOutputStream();
 		} else if (this.socketChannel != null) {
 			this.writeSocketChannel();
-			closeSocketChannelIfStatusNot200();
+			this.closeSocketChannelIfStatusNot200();
 		} else {
 			this.write.set(true);
 			throw new IllegalArgumentException(
@@ -209,20 +203,17 @@ public class ZResponse {
 	private void writeSocketChannel() {
 		try {
 			final ByteBuffer buffer = this.fillByteBuffer();
-			while (buffer.remaining() > 0 && this.socketChannel.isOpen()) {
+			while ((buffer.remaining() > 0) && this.socketChannel.isOpen()) {
 				this.socketChannel.write(buffer);
 			}
 		} catch (final IOException e) {
-//			e.printStackTrace();
+			//			e.printStackTrace();
 		}
 	}
 
 	private void writeOutputStream() {
 		try {
-			if (this.write.get()) {
-				return;
-			}
-			if (this.closed.get()) {
+			if (this.write.get() || this.closed.get()) {
 				return;
 			}
 			if (StrUtil.isEmpty(this.contentTypeAR.get())) {
@@ -244,9 +235,7 @@ public class ZResponse {
 			this.outputStream.write(Task.NEW_LINE.getBytes());
 
 			if (this.headerList != null) {
-				for (int i = 0; i < this.headerList.size(); i++) {
-					final ZHeader zHeader = this.headerList.get(i);
-
+				for (final ZHeader zHeader : this.headerList) {
 					this.outputStream.write((zHeader.getName() + ":" + zHeader.getValue()).getBytes());
 					this.outputStream.write(Task.NEW_LINE.getBytes());
 				}
@@ -300,8 +289,7 @@ public class ZResponse {
 		array.add(Task.NEW_LINE.getBytes());
 
 		if (this.headerList != null) {
-			for (int i = 0; i < this.headerList.size(); i++) {
-				final ZHeader zHeader = this.headerList.get(i);
+			for (final ZHeader zHeader : this.headerList) {
 				array.add((zHeader.getName() + ":" + zHeader.getValue()).getBytes());
 				array.add(Task.NEW_LINE.getBytes());
 			}
@@ -320,7 +308,7 @@ public class ZResponse {
 			array.add(Task.NEW_LINE.getBytes());
 
 		} else {
-//			array.add(JSON.toJSONString(CR.ok()).getBytes());
+			//			array.add(JSON.toJSONString(CR.ok()).getBytes());
 		}
 
 		final byte[] a = array.add(new byte[] {});

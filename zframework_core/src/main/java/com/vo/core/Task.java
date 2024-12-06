@@ -53,6 +53,7 @@ import com.vo.http.HttpStatus;
 import com.vo.http.LineMap;
 import com.vo.http.ZControllerMap;
 import com.vo.http.ZCookie;
+import com.vo.http.ZETag;
 import com.vo.http.ZHtml;
 import com.vo.http.ZPVTL;
 import com.vo.http.ZQPSLimitation;
@@ -136,6 +137,41 @@ public class Task {
 
 		final ZRequest parseRequest = Task.parseRequest(request);
 		return parseRequest;
+	}
+
+	/**
+	 * 根据请求头信息获取目标接口方法的 @ZETag 注解
+	 *
+	 * @param request
+	 * @return
+	 * @throws Exception
+	 */
+	public static ZETag getMethodETag(final ZRequest request) {
+
+		// 匹配path
+		final RequestLine requestLine = request.getRequestLine();
+		if (CollUtil.isEmpty(request.getLineList())) {
+			return null;
+		}
+
+		final String path = requestLine.getPath();
+		final Method method = ZControllerMap.getMethodByMethodEnumAndPath(requestLine.getMethodEnum(), path);
+		if (method == null) {
+
+			final Map<String, Method> rowMap = ZControllerMap.getByMethodEnum(requestLine.getMethodEnum());
+			final Set<Entry<String, Method>> entrySet = rowMap.entrySet();
+			for (final Entry<String, Method> entry : entrySet) {
+				final Method methodTarget = entry.getValue();
+				final String requestMapping = entry.getKey();
+				if (Boolean.TRUE.equals(ZControllerMap.getIsregexByMethodEnumAndPath(methodTarget, requestMapping))
+						&& path.matches(requestMapping)) {
+					return methodTarget.getAnnotation(ZETag.class);
+				}
+			}
+
+		}
+
+		return method.getAnnotation(ZETag.class);
 	}
 
 	/**
