@@ -20,6 +20,8 @@ public enum HeaderEnum {
 	MULTIPART_FORM_DATA("Content-Type: multipart/form-data", "multipart/form-data"),
 
 	URLENCODED("Content-Type: application/x-www-form-urlencoded", "application/x-www-form-urlencoded"),
+	
+	APPLICATION_OCTET_STREAM("Content-Type: application/octet-stream", "application/octet-stream"),
 
 	APPLICATION_JSON("Content-Type: application/json;charset=UTF-8", "application/json"),
 
