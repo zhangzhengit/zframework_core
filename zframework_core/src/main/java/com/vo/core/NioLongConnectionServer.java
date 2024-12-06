@@ -55,6 +55,7 @@ public class NioLongConnectionServer {
 	//	public static final Charset CHARSET = Charset.forName("ISO-8859-1");
 
 
+	public static final String DATE = "Date";
 	public static final String SERVER = HttpHeaderEnum.SERVER.getValue();
 
 	public static final String SERVER_VALUE = ZContext.getBean(ServerConfigurationProperties.class).getName();
@@ -253,11 +254,7 @@ public class NioLongConnectionServer {
 				break;
 			}
 			bytesRead += tR;
-			if (tR <= 0) {
-				break;
-			}
-
-			if (tR <= -1) {
+			if ((tR <= 0) || (tR <= -1)) {
 				break;
 			}
 
@@ -404,6 +401,7 @@ public class NioLongConnectionServer {
 				}
 
 				response.header(SERVER, SERVER_VALUE);
+				response.header(DATE, ZDateUtil.gmt(new Date()));
 				// 在此自动write，接口中可以不调用write
 				response.write();
 
