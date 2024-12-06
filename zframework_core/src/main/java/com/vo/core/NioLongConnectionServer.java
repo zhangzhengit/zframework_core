@@ -409,20 +409,23 @@ public class NioLongConnectionServer {
 				response.header(DATE, ZDateUtil.gmt(new Date()));
 
 				final ZETag methodETag = Task.getMethodETag(request);
-				final String newETag = MD5.c(response.getBodyList());
+				if (methodETag != null) {
 
-				// 执行目标方法前，先看请求头的ETag
-				final String requestIfNoneMatch = request.getHeader(IF_NONE_MATCH);
-				if (((requestIfNoneMatch != null) && (methodETag != null)) && Objects.equals(newETag, requestIfNoneMatch)) {
-					final ZResponse r304 = new ZResponse(socketChannel);
-					r304.header(DATE, ZDateUtil.gmt(new Date()));
-					r304.httpStatus(304);
-					r304.contentType(null);
-					r304.header(E_TAG, requestIfNoneMatch);
-					r304.write();
-					return;
+					final String newETag = MD5.c(response.getBodyList());
+
+					// 执行目标方法前，先看请求头的ETag
+					final String requestIfNoneMatch = request.getHeader(IF_NONE_MATCH);
+					if ((requestIfNoneMatch != null) && Objects.equals(newETag, requestIfNoneMatch)) {
+						final ZResponse r304 = new ZResponse(socketChannel);
+						r304.header(DATE, ZDateUtil.gmt(new Date()));
+						r304.httpStatus(304);
+						r304.contentType(null);
+						r304.header(E_TAG, requestIfNoneMatch);
+						r304.write();
+						return;
+					}
+					response.header(E_TAG, newETag);
 				}
-				response.header(E_TAG, newETag);
 
 				// 在此自动write，接口中可以不调用write
 				response.write();
