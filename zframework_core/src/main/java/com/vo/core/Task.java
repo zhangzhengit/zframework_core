@@ -7,6 +7,7 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -140,13 +141,14 @@ public class Task {
 	}
 
 	/**
-	 * 根据请求头信息获取目标接口方法的 @ZETag 注解
+	 * 根据请求头信息获取目标接口方法的特定注解
 	 *
 	 * @param request
+	 * @param annoClass TODO
 	 * @return
 	 * @throws Exception
 	 */
-	public static ZETag getMethodETag(final ZRequest request) {
+	public static <T extends Annotation> T getMethodETag(final ZRequest request, final Class<T> annoClass) {
 
 		// 匹配path
 		final RequestLine requestLine = request.getRequestLine();
@@ -165,13 +167,13 @@ public class Task {
 				final String requestMapping = entry.getKey();
 				if (Boolean.TRUE.equals(ZControllerMap.getIsregexByMethodEnumAndPath(methodTarget, requestMapping))
 						&& path.matches(requestMapping)) {
-					return methodTarget.getAnnotation(ZETag.class);
+					return methodTarget.getAnnotation(annoClass);
 				}
 			}
 
 		}
 
-		return method.getAnnotation(ZETag.class);
+		return method.getAnnotation(annoClass);
 	}
 
 	/**
@@ -466,9 +468,9 @@ public class Task {
 				.filter(a -> a.getClass() != ZResponse.class)
 				.collect(Collectors.toList());
 
-		System.out.println("API开始执行,method = " + method.getName() + "\t\t" + "Controller = " + zController.getClass().getSimpleName()
-				+ "\t" + "arg = " + al
-				);
+		//		System.out.println("API开始执行,method = " + method.getName() + "\t\t" + "Controller = " + zController.getClass().getSimpleName()
+		//				+ "\t" + "arg = " + al
+		//				);
 
 		//		final MethodInvocationLogsRepository mr = ZContext.getBean(MethodInvocationLogsRepository.class);
 		//

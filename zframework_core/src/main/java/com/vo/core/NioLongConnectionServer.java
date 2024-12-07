@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
+import java.util.StringJoiner;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -27,10 +28,12 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.google.common.collect.Lists;
 import com.vo.cache.J;
 import com.vo.configuration.ServerConfigurationProperties;
+import com.vo.core.ZRequest.ZHeader;
 import com.vo.enums.ConnectionEnum;
 import com.vo.enums.MethodEnum;
 import com.vo.exception.ZControllerAdviceActuator;
 import com.vo.http.HttpStatus;
+import com.vo.http.ZCacheControl;
 import com.vo.http.ZCookie;
 import com.vo.http.ZETag;
 import com.votool.common.CR;
@@ -50,6 +53,8 @@ import lombok.NoArgsConstructor;
  */
 public class NioLongConnectionServer {
 
+
+	private static final String CACHE_CONTROL = "Cache-Control";
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
@@ -397,35 +402,12 @@ public class NioLongConnectionServer {
 					SOCKET_CHANNEL_MAP.put((System.currentTimeMillis() / 1000) * 1000, new SS(socketChannel, key));
 				}
 
-				final Map<String, String> responseHeaders = SERVER_CONFIGURATION.getResponseHeaders();
-				if (CollUtil.isNotEmpty(responseHeaders)) {
-					final Set<Entry<String, String>> entrySet = responseHeaders.entrySet();
-					for (final Entry<String, String> entry : entrySet) {
-						response.header(entry.getKey(), entry.getValue());
-					}
-				}
+				setCustomHeader(response);
+				setServer(response);
+				setDate(response);
+				setCacheControl(request, response);
+				setETag(socketChannel, request, response);
 
-				response.header(SERVER, SERVER_VALUE);
-				response.header(DATE, ZDateUtil.gmt(new Date()));
-
-				final ZETag methodETag = Task.getMethodETag(request);
-				if (methodETag != null) {
-
-					final String newETag = MD5.c(response.getBodyList());
-
-					// 执行目标方法前，先看请求头的ETag
-					final String requestIfNoneMatch = request.getHeader(IF_NONE_MATCH);
-					if ((requestIfNoneMatch != null) && Objects.equals(newETag, requestIfNoneMatch)) {
-						final ZResponse r304 = new ZResponse(socketChannel);
-						r304.header(DATE, ZDateUtil.gmt(new Date()));
-						r304.httpStatus(304);
-						r304.contentType(null);
-						r304.header(E_TAG, requestIfNoneMatch);
-						r304.write();
-						return;
-					}
-					response.header(E_TAG, newETag);
-				}
 
 				// 在此自动write，接口中可以不调用write
 				response.write();
@@ -440,6 +422,68 @@ public class NioLongConnectionServer {
 			throw e;
 		}
 
+	}
+
+	private static void setCacheControl(final ZRequest request, final ZResponse response) {
+		final ZCacheControl cacheControl = Task.getMethodETag(request, ZCacheControl.class);
+		if (cacheControl != null) {
+
+			final CacheControlEnum[] vs = cacheControl.value();
+			final StringJoiner joiner = new StringJoiner(",");
+			for (final CacheControlEnum v : vs) {
+				joiner.add(v.getValue());
+			}
+
+			final int maxAge = cacheControl.maxAge();
+			if (maxAge != ZCacheControl.IGNORE_MAX_AGE) {
+				joiner.add(CacheControlEnum.MAX_AGE.getValue().toLowerCase() + "=" + maxAge);
+			}
+
+			response.header(CACHE_CONTROL, joiner.toString());
+		}
+	}
+
+	private static void setCustomHeader(final ZResponse response) {
+		final Map<String, String> responseHeaders = SERVER_CONFIGURATION.getResponseHeaders();
+		if (CollUtil.isNotEmpty(responseHeaders)) {
+			final Set<Entry<String, String>> entrySet = responseHeaders.entrySet();
+			for (final Entry<String, String> entry : entrySet) {
+				response.header(entry.getKey(), entry.getValue());
+			}
+		}
+	}
+
+	private static void setServer(final ZResponse response) {
+		response.header(SERVER, SERVER_VALUE);
+	}
+
+	private static void setDate(final ZResponse response) {
+		response.header(DATE, ZDateUtil.gmt(new Date()));
+	}
+
+	private static void setETag(final SocketChannel socketChannel, final ZRequest request,
+			final ZResponse response) {
+		final ZETag methodETag = Task.getMethodETag(request, ZETag.class);
+		if (methodETag != null) {
+
+			final String newETag = MD5.c(response.getBodyList());
+
+			// 执行目标方法前，先看请求头的ETag
+			final String requestIfNoneMatch = request.getHeader(IF_NONE_MATCH);
+			if ((requestIfNoneMatch != null) && Objects.equals(newETag, requestIfNoneMatch)) {
+				final ZResponse r304 = new ZResponse(socketChannel);
+				r304.httpStatus(304);
+				r304.contentType(null);
+				final List<ZHeader> rhl = response.getHeaderList();
+				for (final ZHeader zHeader : rhl) {
+					r304.header(zHeader.getName(),zHeader.getValue());
+				}
+				r304.header(E_TAG, requestIfNoneMatch);
+				r304.write();
+				return;
+			}
+			response.header(E_TAG, newETag);
+		}
 	}
 
 	@Data
