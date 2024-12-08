@@ -170,6 +170,7 @@ public class Task {
 				}
 			}
 
+			return null;
 		}
 
 		return method.getAnnotation(annoClass);
