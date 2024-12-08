@@ -33,6 +33,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ZRequest {
 
+	private static final String BOUNDARY = "boundary=";
+
+	private static final String MULTIPART_FORM_DATA = "multipart/form-data";
+
 	public static final String Z_SESSION_ID = "ZSESSIONID";
 
 	public static final String GZIP = "gzip";
@@ -94,16 +98,16 @@ public class ZRequest {
 		return this.body;
 	}
 
-    public String getServerName() {
-    	final String host = this.ppp().getHeaderMap().get(ZRequest.HOST);
+	public String getServerName() {
+		final String host = this.ppp().getHeaderMap().get(ZRequest.HOST);
 
 		final int i = host.indexOf(":");
 		if (i > -1) {
 			return host.substring(0, i);
 		}
 
-    	return host;
-    }
+		return host;
+	}
 
 	public int getServerPort() {
 
@@ -139,12 +143,25 @@ public class ZRequest {
 		return this.ppp().getHeaderMap().get(ZRequest.CONTENT_TYPE);
 	}
 
+	public String getBoundary() {
+		if (!this.isContentTypeFormData()) {
+			return null;
+		}
+		final String ct = this.ppp().getHeaderMap().get(ZRequest.CONTENT_TYPE);
+		final String[] a = ct.split(BOUNDARY);
+		return a[1].trim();
+	}
+
+	public boolean isContentTypeFormData() {
+		final String ct = this.getContentType();
+		return ct == null ? false : ct.contains(MULTIPART_FORM_DATA);
+	}
 
 	private static String gSessionID() {
 		final Hasher putString = Hashing.sha256()
 				.newHasher()
 				.putString(ZRequest.Z_SESSION_ID + System.currentTimeMillis() + ZRequest.GZSESSIONID.getAndDecrement(),
-				Charset.defaultCharset());
+						Charset.defaultCharset());
 
 		final HashCode hash = putString.hash();
 		return hash.toString();
@@ -233,7 +250,8 @@ public class ZRequest {
 			final String[] c1 = s.split("=");
 			final ZCookie zCookie = new ZCookie(c1[0].trim(),c1[1].trim());
 
-			c[cI++] = zCookie;
+			c[cI] = zCookie;
+			cI++;
 		}
 
 		return c;
@@ -281,7 +299,7 @@ public class ZRequest {
 		return this.lineList;
 	}
 
-// -------------------------------------------------------------------------------------------------
+	// -------------------------------------------------------------------------------------------------
 	/**
 	 *  请求头的 请求行
 	 *  如： GET / HTTP/1.1
