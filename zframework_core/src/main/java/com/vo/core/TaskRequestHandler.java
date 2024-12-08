@@ -70,8 +70,8 @@ public final class TaskRequestHandler extends Thread {
 				final TaskRequest taskRequest = this.queue.take();
 				final String requestString = new String(taskRequest.getRequestData(), NioLongConnectionServer.CHARSET)
 						.intern();
-//				System.out.println("取出一个任务-");
-//				System.	out.println(requestString);
+				//				System.out.println("取出一个任务-");
+				//				System.	out.println(requestString);
 
 
 				final Task task = new Task(taskRequest.getSocketChannel());

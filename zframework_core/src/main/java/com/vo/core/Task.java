@@ -54,7 +54,6 @@ import com.vo.http.HttpStatus;
 import com.vo.http.LineMap;
 import com.vo.http.ZControllerMap;
 import com.vo.http.ZCookie;
-import com.vo.http.ZETag;
 import com.vo.http.ZHtml;
 import com.vo.http.ZPVTL;
 import com.vo.http.ZQPSLimitation;
@@ -652,32 +651,50 @@ public class Task {
 
 				pI++;
 			} else if (p.getType().getCanonicalName().equals(ZMultipartFile.class.getCanonicalName())) {
+
 				// FIXME 2023年10月26日 下午9:28:39 zhanghen: 写这里
 				final String body = request.getBody();
 				if (StrUtil.isEmpty(body)) {
 					throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
 				}
-				final byte[] originalRequestBytes = request.getOriginalRequestBytes();
 
-				final List<FormData> fdList = FormData.parseFormData(originalRequestBytes);
-				if (CollUtil.isEmpty(fdList)) {
-					throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
-				}
-
-				final Optional<FormData> findAny = fdList.stream()
-						.filter(f -> StrUtil.isNotEmpty(f.getFileName()))
-						.filter(f -> f.getName().equals(p.getName()))
-						.findAny();
+				// FIXME 2024年12月8日 下午2:11:20 zhangzhen :
+				// 2 使用BR和FD2 的
+				final List<FD2> fdList = BodyReader.read(request, request.getOriginalRequestBytes());
+				final Optional<FD2> findAny = fdList.stream().filter(fd -> fd.getName().equals(p.getName())).findAny();
 				if (!findAny.isPresent()) {
 					throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
 				}
 
 				final ZMultipartFile file = new ZMultipartFile (findAny.get().getName(),
 						findAny.get().getFileName(),
-						findAny.get().getValue().getBytes(NioLongConnectionServer.CHARSET),
+						findAny.get().getBody(),
 						findAny.get().getContentType(), null);
 
 				pI = Task.setValue(parametersArray, pI, p, file);
+
+				// 1 有问题的
+				//				final byte[] originalRequestBytes = request.getOriginalRequestBytes();
+				//
+				//				final List<FormData> fdList = FormData.parseFormData(originalRequestBytes);
+				//				if (CollUtil.isEmpty(fdList)) {
+				//					throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
+				//				}
+				//
+				//				final Optional<FormData> findAny = fdList.stream()
+				//						.filter(f -> StrUtil.isNotEmpty(f.getFileName()))
+				//						.filter(f -> f.getName().equals(p.getName()))
+				//						.findAny();
+				//				if (!findAny.isPresent()) {
+				//					throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
+				//				}
+				//
+				//				final ZMultipartFile file = new ZMultipartFile (findAny.get().getName(),
+				//						findAny.get().getFileName(),
+				//						findAny.get().getValue().getBytes(NioLongConnectionServer.CHARSET),
+				//						findAny.get().getContentType(), null);
+				//
+				//				pI = Task.setValue(parametersArray, pI, p, file);
 			}
 
 		}

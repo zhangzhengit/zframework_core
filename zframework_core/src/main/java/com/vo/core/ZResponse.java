@@ -311,7 +311,7 @@ public class ZResponse {
 			//			array.add(JSON.toJSONString(CR.ok()).getBytes());
 		}
 
-		final byte[] a = array.add(new byte[] {});
+		final byte[] a = array.get();
 		final ByteBuffer buffer = ByteBuffer.wrap(a);
 
 		return buffer;
