@@ -19,9 +19,9 @@ import lombok.Data;
 @Data
 public class FormData {
 
-//	[Content-Disposition: form-data; name="img"; filename="anuo.jpg", Content-Type: image/jpeg, , xxx]
-//	[Content-Disposition: form-data; name="name", , zhangsan]
-//	[Content-Disposition: form-data; name="id", , 200]
+	//	[Content-Disposition: form-data; name="img"; filename="anuo.jpg", Content-Type: image/jpeg, , xxx]
+	//	[Content-Disposition: form-data; name="name", , zhangsan]
+	//	[Content-Disposition: form-data; name="id", , 200]
 
 	public static final String FILE_NAME = "filename";
 	public static final String NAME = "name";
@@ -58,7 +58,7 @@ public class FormData {
 				for (final String a : aa) {
 					final String[] bb = a.split("=");
 					if (FILE_NAME.equals(bb[0].trim())) {
-						return bb[1].trim().replaceAll("\"", "");
+						return bb[1].trim().replace("\"", "");
 					}
 				}
 			}
@@ -74,7 +74,7 @@ public class FormData {
 				for (final String a : aa) {
 					final String[] bb = a.split("=");
 					if (NAME.equals(bb[0].trim())) {
-						return bb[1].trim().replaceAll("\"", "");
+						return bb[1].trim().replace("\"", "");
 					}
 				}
 			}
@@ -147,28 +147,29 @@ public class FormData {
 				if ((i >= sp.length) || sp[end].startsWith(k)) {
 
 					final String[] one = Arrays.copyOfRange(sp, start + 1, end);
-//					System.out.println("one.length = " + one.length);
-//					System.out.println("one = " + Arrays.toString(one));
+					//					System.out.println("one.length = " + one.length);
+					//					System.out.println("one = " + Arrays.toString(one));
 
 					final FormData fff = new FormData(one);
 					final String contentType = fff.getContentType();
-//					System.out.println("contentType =  " + contentType);
+					//					System.out.println("contentType =  " + contentType);
 
 					final String name = fff.getName();
-//					System.out.println("name =  " + name);
+					//					System.out.println("name =  " + name);
 
-					final String value = fff.getValue();
-//					System.out.println("value.length =  " + value.length());
+					// FIXME 2024年12月8日 下午3:08:58 zhangzhen : 暂时不需getValue ，这里貌似走不到上传文件的逻辑，所有不取了
+					//					final String value = fff.getValue();
+					//					System.out.println("value.length =  " + value.length());
 
 					final String fileName = fff.getFileName();
-//					System.out.println("fileName =  " + fileName);
+					//					System.out.println("fileName =  " + fileName);
 
 					final boolean formData = fff.isFormData();
-//					System.out.println("formData =  " + formData);
+					//					System.out.println("formData =  " + formData);
 
 					r.add(fff);
 
-//					System.out.println();
+					//					System.out.println();
 
 					i--;
 					break;
@@ -187,7 +188,7 @@ public class FormData {
 					final int bi = x.indexOf("boundary=");
 					if (bi > -1) {
 						final String boundary = x.substring(bi + "boundary=".length());
-//						System.out.println("boundary = " + boundary);
+						//						System.out.println("boundary = " + boundary);
 
 						return boundary;
 					}

@@ -622,7 +622,7 @@ public class Task {
 				pI++;
 
 			} else if (p.isAnnotationPresent(ZRequestParam.class)) {
-				pI = this.hZRequestParam(parametersArray, request, requestLine, path, pI, p);
+				pI = Task.hZRequestParam(parametersArray, request, requestLine, path, pI, p);
 			} else if (p.isAnnotationPresent(ZPathVariable.class)) {
 				final List<Object> list = ZPVTL.get();
 				final Class<?> type = p.getType();
@@ -735,7 +735,7 @@ public class Task {
 		}
 	}
 
-	private int hZRequestParam(final Object[] parametersArray, final ZRequest request, final RequestLine requestLine,
+	private static int hZRequestParam(final Object[] parametersArray, final ZRequest request, final RequestLine requestLine,
 			final String path, final int pI, final Parameter p) {
 
 		int piR = 0;

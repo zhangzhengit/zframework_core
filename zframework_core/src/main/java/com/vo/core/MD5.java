@@ -13,17 +13,21 @@ import com.google.common.hash.Hashing;
  */
 public class MD5 {
 
+	public static String c(final byte[] ba) {
+		final byte[] b = ba;
+		final String md5 = Hashing.md5().newHasher().putBytes(b).hash().toString();
+		return md5;
+	}
+
 	public static String c(final List<Byte> bl) {
 		if ((bl == null) || bl.isEmpty()) {
 			return "";
 		}
-		
+
 		final byte[] b = new byte[bl.size()];
 		for (int i = 0; i < bl.size(); i++) {
 			b[i] = bl.get(i);
 		}
-
-		final String md5 = Hashing.md5().newHasher().putBytes(b).hash().toString();
-		return md5;
+		return c(b);
 	}
 }
