@@ -62,7 +62,7 @@ public class ZRequest {
 	 */
 	private byte[] originalRequestBytes;
 
-	private String body;
+	private byte[] body;
 	private RequestLine requestLine;
 
 	/**
@@ -94,7 +94,7 @@ public class ZRequest {
 		return this.ppp().getMethodEnum().getMethod();
 	}
 
-	public String getBody() {
+	public byte[] getBody() {
 		return this.body;
 	}
 
@@ -140,7 +140,9 @@ public class ZRequest {
 	}
 
 	public String getContentType() {
-		return this.ppp().getHeaderMap().get(ZRequest.CONTENT_TYPE);
+		final RequestLine ppp = this.ppp();
+		final Map<String, String> headerMap = ppp.getHeaderMap();
+		return headerMap.get(ZRequest.CONTENT_TYPE);
 	}
 
 	public String getBoundary() {
@@ -278,6 +280,8 @@ public class ZRequest {
 	}
 
 	public Object getParameter(final String name) {
+		// FIXME 2024年12月9日 下午6:30:42 zhangzhen : 这个方法是否要改
+		// 因为@ZRequestParam加入了默认值，用此方法取还是原值而非默认值
 		final Set<RequestParam> ps = this.ppp().getParamSet();
 		if (CollUtil.isEmpty(ps)) {
 			return null;

@@ -90,7 +90,6 @@ public class Task {
 
 	public static final String DEFAULT_CHARSET_NAME = Charset.defaultCharset().displayName();
 	public static final String VOID = "void";
-	public static final Charset DEFAULT_CHARSET = Charset.defaultCharset();
 	public static final String HTTP_200 = "HTTP/1.1 200";
 	public static final int HTTP_STATUS_500 = 500;
 	public static final int HTTP_STATUS_404 = 404;
@@ -122,6 +121,15 @@ public class Task {
 		} catch (final IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	public static ZRequest handleRead(final String[] headerArray) {
+		final ZRequest request = new ZRequest();
+		for (final String line : headerArray) {
+			request.addLine(line);
+		}
+		final ZRequest parseRequest = Task.parseRequest(request);
+		return parseRequest;
 	}
 
 	public ZRequest handleRead(final String requestString) {
@@ -604,13 +612,13 @@ public class Task {
 				parametersArray[pI] = model;
 				pI++;
 			} else if (p.isAnnotationPresent(ZRequestBody.class)) {
-				final String body = request.getBody();
-				if (StrUtil.isEmpty(body)) {
+				final byte[] body = request.getBody();
+				if (ArrayUtil.isEmpty(body)) {
 					final String simpleName = p.getType().getSimpleName();
 					throw new FormPairParseException("@" + ZRequestBody.class.getSimpleName() + " 参数 " + simpleName + " 不存在");
 				}
 
-				final Object object = J.parseObject(body, p.getType());
+				final Object object = J.parseObject(new String(body), p.getType());
 				if (object == null) {
 					final String simpleName = p.getType().getSimpleName();
 					throw new FormPairParseException("@" + ZRequestBody.class.getSimpleName() + " 参数 " + simpleName + " 错误");
@@ -653,15 +661,11 @@ public class Task {
 				pI++;
 			} else if (p.getType().getCanonicalName().equals(ZMultipartFile.class.getCanonicalName())) {
 
-				// FIXME 2024年12月8日 下午3:38:31 zhangzhen :此处似乎不需要request.getBody了，因为下面的parse
-				// 是从原始http报文解析的，下面的setBody会显得多余，记得查看哪里set的改掉,
-				// 某处的 new String(http原始报文byte[]) 也没必要了，只需要解析header就可以了
-				final String body = request.getBody();
-				if (StrUtil.isEmpty(body)) {
+				if (ArrayUtil.isEmpty(request.getOriginalRequestBytes())) {
 					throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
 				}
 
-				final List<FD2> fdList = BodyReader.read(request, request.getOriginalRequestBytes());
+				final List<FD2> fdList = BodyReader.readBody(request, request.getOriginalRequestBytes());
 				final Optional<FD2> findAny = fdList.stream().filter(fd -> fd.getName().equals(p.getName())).findAny();
 				if (!findAny.isPresent()) {
 					throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
@@ -738,9 +742,8 @@ public class Task {
 
 			piR = Task.setValue(parametersArray, pI, p, findAny.get().getValue());
 		} else {
-			final String body = request.getBody();
-
-			if (StrUtil.isEmpty(body)) {
+			final byte[] body = request.getBody();
+			if (ArrayUtil.isEmpty(body)) {
 				final String defaultValue = p.getAnnotation(ZRequestParam.class).defaultValue();
 				if (defaultValue != null) {
 					try {
@@ -938,7 +941,8 @@ public class Task {
 		paserHeader(request, requestLine);
 
 		// parseBody
-		parseBody(request, requestLine);
+		// FIXME 2024年12月9日 下午6:32:57 zhangzhen : 不需要parseBody了，在BodyReader里面已经setBody(byte[])了
+		//		parseBody(request, requestLine);
 
 		// clientIp
 		request.setClientIp(getClientIp());
@@ -998,6 +1002,8 @@ public class Task {
 									: java.net.URLDecoder.decode(p0[1], DEFAULT_CHARSET_NAME);
 							requestParam.setValue(v);
 						} catch (final UnsupportedEncodingException e) {
+							System.out.println("p0 = " + Arrays.toString(p0));
+							System.out.println("DEFAULT_CHARSET_NAME = " + DEFAULT_CHARSET_NAME);
 							e.printStackTrace();
 						}
 					} else {
@@ -1049,80 +1055,6 @@ public class Task {
 		requestLine.setHeaderMap(hm);
 	}
 
-	private static void parseBody(final ZRequest request, final ZRequest.RequestLine requestLine) {
-		final List<String> x = request.getLineList();
-		for (int i = 1; i < x.size(); i++) {
-			final String l2 = x.get(i);
-			if (EMPTY_STRING.equals(l2) && (i < x.size()) && ((i + 1) < x.size())) {
-
-				final String contentType = requestLine.getHeaderMap().get(ZRequest.CONTENT_TYPE);
-
-				//				System.out.println("contentType = " + contentType);
-
-				if (contentType.equalsIgnoreCase(HeaderEnum.APPLICATION_JSON.getType())
-						|| contentType.toLowerCase().contains(HeaderEnum.APPLICATION_JSON.getType().toLowerCase())) {
-
-					final StringBuilder json = new StringBuilder();
-					for (int k = i + 1; k < x.size(); k++) {
-						json.append(x.get(k));
-					}
-					request.setBody(json.toString());
-				} else if (contentType.equalsIgnoreCase(HeaderEnum.URLENCODED.getType())
-						|| contentType.toLowerCase().contains(HeaderEnum.URLENCODED.getType().toLowerCase())) {
-
-					//					System.out.println("contentType = " + contentType);
-					System.out.println("OKapplication/x-www-form-urlencoded");
-					// id=200&name=zhangsan 格式
-
-					final StringBuilder formBu = new StringBuilder();
-					for (int k = i + 1; k < x.size(); k++) {
-						formBu.append(x.get(k));
-					}
-
-					if (formBu.length() > 0) {
-						request.setBody(formBu.toString());
-
-						System.out.println("from = " + formBu);
-						final String fr = formBu.toString();
-						final String[] fA = fr.split("&");
-
-						for (final String v : fA) {
-							final String[] vA = v.split("=");
-						}
-
-					}
-
-					// FORM_DATA 用getType
-				} else if (contentType.toLowerCase().startsWith(HeaderEnum.MULTIPART_FORM_DATA.getType().toLowerCase())) {
-
-					// FIXME 2023年8月11日 下午10:19:34 zhanghen: TODO 继续支持 multipart/form-data
-					//					System.out.println("okContent-Type: multipart/form-data");
-
-					final ArrayList<String> body = Lists.newArrayList();
-					final StringBuilder formBu = new StringBuilder();
-					for (int k = i + 1; k < x.size(); k++) {
-						formBu.append(x.get(k)).append(Task.NEW_LINE);
-						body.add(x.get(k));
-					}
-
-
-					request.setBody(formBu.toString());
-					//					System.out.println("formBu = \n" + formBu);
-
-					final List<FormData> formList = FormData.parseFormData(body.toArray(new String[0]), body.get(0));
-					//					System.out.println("---------formList.size = " + formList.size());
-					for (final FormData form: formList) {
-						//						System.out.println(form);
-					}
-					//					System.out.println("---------formList.size = " + formList.size());
-				}
-
-
-				break;
-			}
-
-		}
-	}
 
 	public ZRequest readAndParse() {
 		final ZRequest r1 = this.read();
@@ -1148,7 +1080,6 @@ public class Task {
 			try {
 				read = this.bufferedInputStream.read(bs);
 			} catch (final IOException e) {
-				//						e.printStackTrace();
 				break;
 			}
 			if (read <= 0) {
@@ -1178,11 +1109,7 @@ public class Task {
 			}
 		}
 
-		//					bufferedInputStream.close();
-		//					inputStream.close();
-
 		return request;
-
 	}
 
 	public ZRequest parse(final ZRequest request) {

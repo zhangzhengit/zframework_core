@@ -1,6 +1,5 @@
 package com.vo.core;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -18,52 +17,74 @@ import java.util.Map;
  */
 public class BodyReader {
 
-	public static List<FD2> read(final ZRequest request, final byte[] ba) {
+	public static ZRequest readHeader(final byte[] ba) {
+
+		final int headerEndIndex = search(ba, "\r\n\r\n", 1, 0);
+
+		final byte[] hba = Arrays.copyOfRange(ba, 0, headerEndIndex);
+		final String h = new String(hba);
+		final String[] a = h.split("\r\n");
+
+		final ZRequest request = Task.handleRead(a);
+
+		final byte[] readFullBody = readFullBody(request, ba);
+		request.setBody(readFullBody);
+
+		return request;
+	}
+
+	public static byte[] readFullBody(final ZRequest request, final byte[] ba) {
+
+		final String contentType = request.getContentType();
+		final int contentTypeIndex = search(ba, contentType, 1, 0);
+
+		if (contentTypeIndex <= -1) {
+			return null;
+		}
+
+		final String boundary = request.getBoundary();
+		final int boundaryStartIndex = search(ba, boundary, 1, contentTypeIndex);
+		if ((boundaryStartIndex > -1)) {
+			final int boundaryEndIndex = search(ba, "\r\n--" + boundary + "--", 1, boundaryStartIndex);
+			if (boundaryEndIndex > boundaryStartIndex) {
+				final byte[] fullBodyBA = Arrays.copyOfRange(ba,
+						boundaryStartIndex + boundary.getBytes().length + "\r\n".getBytes().length, boundaryEndIndex);
+				return fullBodyBA;
+			}
+		}
+
+		return null;
+	}
+
+	public static List<FD2> readBody(final ZRequest request, final byte[] ba) {
 
 		final String boundary = request.getBoundary();
 		if (boundary == null) {
 			return Collections.emptyList();
 		}
 
-		//		System.out.println("http-ba.length = " + ba.length);
-		//		System.out.println("boundary = " + boundary);
-
-		//		System.out.println(Thread.currentThread().getName() + "\t" + LocalDateTime.now() + "\t" + "BR.read()");
-
-		final String body = new String(ba);
-		//		System.out.println("body = ");
-		//		System.out.println(body);
-
-		search(ba, "\r\n\r\n", 1, 0);
-
 		final String contentType = request.getContentType();
-		//		System.out.println("contentType = " + contentType);
+
 
 		final int contentTypeIndex = search(ba, contentType, 1, 0);
 
+		if (contentTypeIndex <= -1) {
+			return Collections.emptyList();
+		}
+
 		final int boundaryStartIndex = search(ba, boundary, 1, contentTypeIndex + contentType.getBytes().length);
-		//		System.out.println("boundaryStartIndex = " + boundaryStartIndex);
-
-		final int boundaryStartIndex2 = search(ba, "\r\n--" + boundary, 1, boundaryStartIndex);
-		//		System.out.println("boundaryStartIndex2 = " + boundaryStartIndex2);
-
-		final int boundaryEndINdex = search(ba, "\r\n--" + boundary + "--", 1, boundaryStartIndex2);
-		//		System.out.println("boundaryEndINdex = " + boundaryEndINdex);
 
 		final List<FD2> fd2l = new ArrayList<>();
 		// FIXME 2024年12月8日 下午2:57:14 zhangzhen : 继续循环解析，现在只支持仅有一个文件的
-		if ((boundaryStartIndex > -1) && (boundaryStartIndex2 > boundaryStartIndex)) {
-			final byte[] bodyBA = Arrays.copyOfRange(ba,
-					boundaryStartIndex + boundary.getBytes().length + "\r\n".getBytes().length, boundaryStartIndex2);
-			final String bodyBAS = new String(bodyBA);
-			//			System.out.println("oneItem-START");
-			//			System.out.println(bodyBAS);
-			//			System.out.println("oneItem-END");
+		if ((boundaryStartIndex > -1)) {
+			final int boundaryStartIndex2 = search(ba, "\r\n--" + boundary, 1, boundaryStartIndex);
+			if((boundaryStartIndex2 > boundaryStartIndex)) {
 
-			final FD2 fd2 = handleOneItem(bodyBA);
-			fd2l.add(fd2);
-			//			System.out.println("处理完了一个body项目");
-			//			System.out.println(fd2);
+				final byte[] bodyBA = Arrays.copyOfRange(ba,
+						boundaryStartIndex + boundary.getBytes().length + "\r\n".getBytes().length, boundaryStartIndex2);
+				final FD2 fd2 = handleOneItem(bodyBA);
+				fd2l.add(fd2);
+			}
 
 		}
 
@@ -124,7 +145,7 @@ public class BodyReader {
 								oneBA.length);
 						//						System.out.println("bodyFullBA.length = " + bodyFullBA.length);
 
-//						final String fullBodyS = new String(bodyFullBA);
+						//						final String fullBodyS = new String(bodyFullBA);
 						//						System.out.println("fullBodyS = ");
 						//						System.out.println(fullBodyS);
 
@@ -196,6 +217,12 @@ public class BodyReader {
 				find = false;
 			}
 			for (int k = 0; k < kb.length; k++) {
+				if ((i + k) < 0) {
+					System.out.println("i + k = " + (i + k));
+					System.out.println("i = " + (i ));
+					System.out.println("k = " + ( k));
+
+				}
 				if (ba[i + k] != kb[k]) {
 					find = false;
 					break;

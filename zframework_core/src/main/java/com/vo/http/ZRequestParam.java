@@ -29,5 +29,5 @@ public @interface ZRequestParam {
 	 *
 	 * @return
 	 */
-	String defaultValue() default "";
+	String defaultValue();
 }
