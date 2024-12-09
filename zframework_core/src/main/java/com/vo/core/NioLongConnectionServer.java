@@ -144,7 +144,7 @@ public class NioLongConnectionServer {
 							final ServerConfigurationProperties p = ZContext.getBean(ServerConfigurationProperties.class);
 							NioLongConnectionServer.response429Async(selectionKey,p.getQpsExceedMessage());
 						} else {
-							final ZArray array = this.handleRead(selectionKey);
+							final ZArray array = NioLongConnectionServer.handleRead(selectionKey);
 							if (array != null) {
 								final SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
 								final TaskRequest taskRequest = new TaskRequest(selectionKey, socketChannel,
@@ -245,15 +245,16 @@ public class NioLongConnectionServer {
 
 	}
 
-	private ZArray handleRead(final SelectionKey key) {
+	private static ZArray handleRead(final SelectionKey key) {
 		final SocketChannel socketChannel = (SocketChannel) key.channel();
 		if (!socketChannel.isOpen()) {
 			return null;
 		}
 
-		final ByteBuffer byteBuffer = ByteBuffer.allocate(BUFFER_SIZE);
+		final int bf = BUFFER_SIZE;
+		final ByteBuffer byteBuffer = ByteBuffer.allocate(bf);
 		int bytesRead = 0;
-		ZArray array = null;
+		final ZArray array = new ZArray();
 		boolean readFirst = true;
 		while (true) {
 			int tR = 0;
@@ -268,22 +269,19 @@ public class NioLongConnectionServer {
 				break;
 			}
 
-			if (readFirst && (tR < BUFFER_SIZE)) {
-				array = new ZArray(Arrays.copyOfRange(byteBuffer.array(), 0, tR));
+			if (readFirst && (tR < bf)) {
+				array.add(byteBuffer.array(), 0, tR);
 				break;
 			}
 
 			readFirst = false;
-			if (array == null) {
-				array = new ZArray();
-			}
 
 			final int position = byteBuffer.position();
 			byteBuffer.flip();
 
 			array.add(byteBuffer.array(), 0, position);
 
-			if (!readFirst && (tR < BUFFER_SIZE)) {
+			if (!readFirst && (tR < bf)) {
 				break;
 			}
 
