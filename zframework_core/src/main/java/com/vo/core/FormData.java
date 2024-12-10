@@ -26,6 +26,7 @@ public class FormData {
 	public static final String FILE_NAME = "filename";
 	public static final String NAME = "name";
 	public static final String CONTENT_TYPE= "Content-Type";
+	public static final String CONTENT_DISPOSITION = "Content-Disposition";
 	public static final String CONTENT_DISPOSITION_FORM_DATA = "Content-Disposition: form-data";
 
 	private String[] origin;
