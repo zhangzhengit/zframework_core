@@ -16,7 +16,6 @@ import java.lang.annotation.Target;
  *
  */
 // FIXME 2024年12月7日 上午12:10:46 zhangzhen : 补充javadoc，比如同时有次注解，方法里又手动设置etag头，会怎么样。等等
-// FIXME 2024年12月8日 下午3:36:32 zhangzhen : void自己用ZResponse返回响应的接口 即使设置header后浏览器也会再次请求，记得debug
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.METHOD })
