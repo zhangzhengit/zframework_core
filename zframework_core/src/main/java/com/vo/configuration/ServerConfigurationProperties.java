@@ -65,21 +65,6 @@ public class ServerConfigurationProperties {
 	private Integer byteBufferSize = 1024 * 2;
 
 	/**
-	 * 是否开启SSL
-	 */
-	@ZNotNull
-	private Boolean sslEnable = false;
-
-//	@ZNotNull
-	private String sslKeyStore;
-
-//	@ZNotNull
-	private String sslPassword;
-
-//	@ZNotNull
-	private String sslType;
-
-	/**
 	 * 处理http请求的最大线程数量
 	 */
 	@ZNotNull
@@ -115,7 +100,7 @@ public class ServerConfigurationProperties {
 
 	@ZNotNull
 	// FIXME 2023年7月1日 上午4:21:59 zhanghen:  @ZMin在此设为0作为一个feature？可以配置为0让应用拒绝一切服务
-//	@ZMin(min = 0)
+	//	@ZMin(min = 0)
 	@ZMin(min = ZServerQPSValidator.MIN_VALUE)
 	@ZMax(max = ZServerQPSValidator.MAX_VALUE)
 	@ZValue(name = "server.qps", listenForChanges = true)
@@ -141,7 +126,7 @@ public class ServerConfigurationProperties {
 	// FIXME 2024年1月30日 下午7:28:32 zhanghen: 此值按现在的代码逻辑不好实现自动更新，
 	// 因为 queue 是程序启动时就初始化了的，改变此值时，若直接set一个新的容量的queue，则有可能queue中有带处理的
 	// 考虑是否这么做？还是不用自动更新
-//	@ZValue(name = "server.pending.tasks", listenForChanges = true)
+	//	@ZValue(name = "server.pending.tasks", listenForChanges = true)
 	// XXX 考虑好默认为什么比较好
 	private Integer pendingTasks = Runtime.getRuntime().availableProcessors();
 

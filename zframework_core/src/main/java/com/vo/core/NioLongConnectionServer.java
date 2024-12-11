@@ -10,7 +10,6 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +27,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.google.common.collect.Lists;
 import com.vo.cache.J;
 import com.vo.configuration.ServerConfigurationProperties;
+import com.vo.configuration.TaskResponsiveModeEnum;
 import com.vo.core.ZRequest.ZHeader;
 import com.vo.enums.ConnectionEnum;
 import com.vo.enums.MethodEnum;
@@ -37,6 +37,9 @@ import com.vo.http.ZCacheControl;
 import com.vo.http.ZCookie;
 import com.vo.http.ZETag;
 import com.votool.common.CR;
+import com.votool.ze.ThreadModeEnum;
+import com.votool.ze.ZE;
+import com.votool.ze.ZES;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
@@ -53,20 +56,30 @@ import lombok.NoArgsConstructor;
  */
 public class NioLongConnectionServer {
 
+	private static final ZLog2 LOG = ZLog2.getInstance();
 
 	private static final String CACHE_CONTROL = "Cache-Control";
 
-	private static final ZLog2 LOG = ZLog2.getInstance();
+	public static final int DEFAULT_HTTP_PORT = 80;
 
-	//	public static final Charset CHARSET = Charset.defaultCharset();
 	public static final Charset CHARSET = Charset.forName("UTF-8");
 	//	public static final Charset CHARSET = Charset.forName("ISO-8859-1");
+
+	public static final String Z_SERVER_QPS = "ZServer_QPS";
 
 	public static final String E_TAG = "ETag";
 	public static final String IF_NONE_MATCH = "If-None-Match";
 
 	public static final String DATE = "Date";
 	public static final String SERVER = HttpHeaderEnum.SERVER.getValue();
+
+	public static final ServerConfigurationProperties SERVER_CONFIGURATIONPROPERTIES= ZContext.getBean(ServerConfigurationProperties.class);
+
+	public final static ZE ZE = ZES.newZE(SERVER_CONFIGURATIONPROPERTIES.getThreadCount(),
+			SERVER_CONFIGURATIONPROPERTIES.getThreadName(),
+			TaskResponsiveModeEnum.IMMEDIATELY.name().equals(SERVER_CONFIGURATIONPROPERTIES.getTaskResponsiveMode())
+			? ThreadModeEnum.IMMEDIATELY
+					: ThreadModeEnum.LAZY);
 
 	public static final String SERVER_VALUE = ZContext.getBean(ServerConfigurationProperties.class).getName();
 	public static final String CONNECTION = HttpHeaderEnum.CONNECTION.getValue();
@@ -139,7 +152,7 @@ public class NioLongConnectionServer {
 						handleAccept(selectionKey, selector);
 					} else if (selectionKey.isReadable()) {
 						if (Boolean.TRUE.equals(SERVER_CONFIGURATION.getQpsLimitEnabled())
-								&& !QPSCounter.allow(ZServer.Z_SERVER_QPS, SERVER_CONFIGURATION.getQps(),
+								&& !QPSCounter.allow(NioLongConnectionServer.Z_SERVER_QPS, SERVER_CONFIGURATION.getQps(),
 										QPSEnum.SERVER)) {
 							final ServerConfigurationProperties p = ZContext.getBean(ServerConfigurationProperties.class);
 							NioLongConnectionServer.response429Async(selectionKey,p.getQpsExceedMessage());
@@ -168,7 +181,7 @@ public class NioLongConnectionServer {
 	}
 
 	public static void response429Async(final SelectionKey key, final String message) {
-		ZServer.ZE.executeInQueue(() -> NioLongConnectionServer.response429(key, message));
+		NioLongConnectionServer.ZE.executeInQueue(() -> NioLongConnectionServer.response429(key, message));
 	}
 
 	public static void response429(final SelectionKey key, final String message) {

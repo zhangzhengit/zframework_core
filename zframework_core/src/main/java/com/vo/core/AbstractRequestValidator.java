@@ -35,7 +35,7 @@ abstract class AbstractRequestValidator {
 				.getTaskTimeoutMilliseconds();
 
 		final long now = System.currentTimeMillis();
-		if (now - taskRequest.getRequestTime().getTime() > taskTimeoutMilliseconds.intValue()) {
+		if ((now - taskRequest.getRequestTime().getTime()) > taskTimeoutMilliseconds.intValue()) {
 			return true;
 		}
 
@@ -80,7 +80,7 @@ abstract class AbstractRequestValidator {
 							.findAny();
 					if (findAny.isPresent()) {
 						// ua 包含在配置的，则[不]平滑处理
-//						return QPSCounter.allow(keyword, this.getSessionIdQps(), QPSEnum.UNEVEN);
+						//						return QPSCounter.allow(keyword, this.getSessionIdQps(), QPSEnum.UNEVEN);
 						final boolean allow = QPSCounter.allow(smoothUserAgentKeyword, this.getSessionIdQps(), QPSEnum.UNEVEN);
 						final RequestVerificationResult r = new RequestVerificationResult(allow,
 								allow ? "" : "SmoothUserAgent-ZSESSIONID访问频繁");
@@ -89,10 +89,10 @@ abstract class AbstractRequestValidator {
 				}
 
 				// ua 不包含在配置的，则平滑处理
-//				return QPSCounter.allow(smoothUserAgentKeyword, this.getSessionIdQps(), QPSEnum.Z_SESSION_ID);
+				//				return QPSCounter.allow(smoothUserAgentKeyword, this.getSessionIdQps(), QPSEnum.Z_SESSION_ID);
 				final boolean allow = QPSCounter.allow(smoothUserAgentKeyword, this.getSessionIdQps(), QPSEnum.Z_SESSION_ID);
-				 final RequestVerificationResult r = new RequestVerificationResult(allow,
-							allow ? "" : "ZSESSIONID访问频繁");
+				final RequestVerificationResult r = new RequestVerificationResult(allow,
+						allow ? "" : "ZSESSIONID访问频繁");
 				return r;
 			}
 		}
@@ -103,10 +103,10 @@ abstract class AbstractRequestValidator {
 		final String clientIp = request.getClientIp();
 		final String keyword = clientIp + "@" + userAgent;
 
-		 final boolean allow = QPSCounter.allow(keyword, this.getClientQps(), QPSEnum.CLIENT);
+		final boolean allow = QPSCounter.allow(keyword, this.getClientQps(), QPSEnum.CLIENT);
 
-		 final RequestVerificationResult r = new RequestVerificationResult(allow,
-					allow ? "" : "CLIENT访问频繁");
+		final RequestVerificationResult r = new RequestVerificationResult(allow,
+				allow ? "" : "CLIENT访问频繁");
 		return r;
 	}
 
@@ -124,7 +124,7 @@ abstract class AbstractRequestValidator {
 	 * 不放行怎么处理，默认实现为返回 429 并且关闭连接
 	 *
 	 * @param request
-	 * @param message 
+	 * @param message
 	 *
 	 */
 	public void failed(final ZRequest request, final TaskRequest taskRequest, final String message) {
@@ -143,14 +143,14 @@ abstract class AbstractRequestValidator {
 
 		if (TaskResponsiveModeEnum.QUEUE.name().equals(mode)) {
 			// 直接放入线程队列等待处理
-			ZServer.ZE.executeInQueue(() -> NioLongConnectionServer.response(request, taskRequest));
+			NioLongConnectionServer.ZE.executeInQueue(() -> NioLongConnectionServer.response(request, taskRequest));
 		} else if (TaskResponsiveModeEnum.IMMEDIATELY.name().equals(mode)) {
 
 			// 使用池中空闲线程处理，有空闲的则直接处理
 			// 无空闲的则先看此时是否超过任务等待毫秒数，超过则 提示 message
 			// 没超过则把请求重新放入队列等待后续继续使用空闲线程处理
 
-			final boolean executeImmediately = ZServer.ZE
+			final boolean executeImmediately = NioLongConnectionServer.ZE
 					.executeImmediately(() -> NioLongConnectionServer.response(request, taskRequest));
 			if (!executeImmediately) {
 				if (this.timeout(taskRequest)) {

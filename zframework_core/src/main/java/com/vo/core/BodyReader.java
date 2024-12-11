@@ -24,24 +24,43 @@ public class BodyReader {
 	public static final String RNRN = "\r\n\r\n";
 	public static final String RN = "\r\n";
 
+	/**
+	 * 从http请求报文中解析出header，是只解析header，不解析header下面的部分
+	 *
+	 * @param ba 完整的http请求报文
+	 * @return
+	 */
 	public static ZRequest readHeader(final byte[] ba) {
 		final int headerEndIndex = search(ba, RNRN, 1, 0);
+		if (headerEndIndex <= -1) {
+			// FIXME 2024年12月11日 下午3:15:18 zhangzhen : 看外面，这个异常跑不出去，考虑好怎么办
+			//			throw new ParseHTTPRequestException("");
+		}
 
 		final byte[] hba = Arrays.copyOfRange(ba, 0, headerEndIndex);
 		final String h = new String(hba);
 		final String[] a = h.split(RN);
 
-		final ZRequest request = Task.handleRead(a);
+		final ZRequest request1 = new ZRequest(a);
+		final ZRequest request = Task.parseRequest(request1);
 
-		final byte[] readFullBody = readFullBody(request, ba, headerEndIndex);
+		final byte[] readFullBody = readFullBody(ba, request.getContentType(), headerEndIndex, request.getBoundary());
 		request.setBody(readFullBody);
 
 		return request;
 	}
 
-	public static byte[] readFullBody(final ZRequest request, final byte[] ba, final int headerEndIndex) {
+	/**
+	 * 从完整的http请求报文中解析出完整的body部分，返回body部分的byte[]
+	 *
+	 * @param ba
+	 * @param contentType    header中的 Content-Type
+	 * @param headerEndIndex header截止符号(\r\n\r\n)在ba中的位置
+	 * @param boundary       header中的 Content-Type中的boundary值，有则传，无则传null
+	 * @return
+	 */
+	public static byte[] readFullBody(final byte[] ba, final String contentType, final int headerEndIndex, final String boundary) {
 
-		final String contentType = request.getContentType();
 		final int contentTypeIndex = search(ba, contentType, 1, 0);
 
 		if (contentTypeIndex <= -1) {
@@ -49,7 +68,6 @@ public class BodyReader {
 		}
 
 		// boundary 不为空表示formdata，则根据 boundary来截取body
-		final String boundary = request.getBoundary();
 		if (boundary != null) {
 			final int boundaryStartIndex = search(ba, boundary, 1, contentTypeIndex);
 			if ((boundaryStartIndex > -1)) {
@@ -63,7 +81,7 @@ public class BodyReader {
 			}
 		}
 
-		// headerEndIndex < ba.length 则说明header后面还有内容，此内容就是body
+		// 执行到此，headerEndIndex < ba.length 则说明header后面还有内容，此内容就是body
 		if (headerEndIndex < ba.length) {
 			final byte[] copyOfRange = Arrays.copyOfRange(ba, headerEndIndex + RNRN.getBytes().length, ba.length);
 			return copyOfRange;
@@ -72,15 +90,19 @@ public class BodyReader {
 		return null;
 	}
 
-	public static List<FD2> readBody(final ZRequest request, final byte[] ba) {
+	/**
+	 * 从http请求报文中解析出一个对象
+	 *
+	 * @param ba
+	 * @param contentType
+	 * @param boundary
+	 * @return
+	 */
+	public static List<FD2> readFormDate(final byte[] ba, final String contentType, final String boundary) {
 
-		final String boundary = request.getBoundary();
 		if (boundary == null) {
 			return Collections.emptyList();
 		}
-
-		final String contentType = request.getContentType();
-
 
 		final int contentTypeIndex = search(ba, contentType, 1, 0);
 
@@ -105,7 +127,6 @@ public class BodyReader {
 		}
 
 		return fd2l;
-
 	}
 
 	/**

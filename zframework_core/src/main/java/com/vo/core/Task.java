@@ -51,7 +51,6 @@ import com.vo.exception.PathVariableException;
 import com.vo.exception.ZControllerAdviceThrowable;
 import com.vo.html.ResourcesLoader;
 import com.vo.http.HttpStatus;
-import com.vo.http.LineMap;
 import com.vo.http.ZControllerMap;
 import com.vo.http.ZCookie;
 import com.vo.http.ZHtml;
@@ -83,8 +82,6 @@ import cn.hutool.core.util.StrUtil;
  */
 public class Task {
 
-	private static final int DEFAULT_BUFFER_SIZE = 8192;
-	private static final int READ_LENGTH = DEFAULT_BUFFER_SIZE / 2;
 	public static final String SP = "&";
 	public static final String EMPTY_STRING = "";
 
@@ -121,24 +118,6 @@ public class Task {
 		} catch (final IOException e) {
 			e.printStackTrace();
 		}
-	}
-
-	public static ZRequest handleRead(final String[] headerArray) {
-		final ZRequest request = new ZRequest(headerArray);
-		final ZRequest parseRequest = Task.parseRequest(request);
-		return parseRequest;
-	}
-
-	public static ZRequest handleRead(final String requestString) {
-
-		if (requestString.contains(NEW_LINE)) {
-			final String[] aa = requestString.split(NEW_LINE);
-			final ZRequest request = new ZRequest(aa);
-			final ZRequest parseRequest = Task.parseRequest(request);
-			return parseRequest;
-		}
-
-		return null;
 	}
 
 	/**
@@ -646,8 +625,6 @@ public class Task {
 
 				} catch (final Exception e) {
 					e.printStackTrace();
-					// NumberFormatException
-					//					final String message = Task.gExceptionMessage(e);
 					final String causedby = ZControllerAdviceThrowable.findCausedby(e);
 					throw new PathVariableException(causedby);
 				}
@@ -659,7 +636,8 @@ public class Task {
 					throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
 				}
 
-				final List<FD2> fdList = BodyReader.readBody(request, request.getOriginalRequestBytes());
+				final List<FD2> fdList = BodyReader.readFormDate(request.getOriginalRequestBytes(),
+						request.getContentType(), request.getBoundary());
 				final Optional<FD2> findAny = fdList.stream().filter(fd -> fd.getName().equals(p.getName())).findAny();
 				if (!findAny.isPresent()) {
 					throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
@@ -753,7 +731,10 @@ public class Task {
 
 			final byte[] originalRequestBytes = request.getOriginalRequestBytes();
 
+			// FIXME 2024年12月11日 下午3:38:12 zhangzhen : 这个和BodyReader中方法重复了，这个去掉，修改BR中的方法来支持一次性把所有的param和file
+			// 都一次性解析出来
 			final List<FormData> fdList = FormData.parseFormData(originalRequestBytes);
+
 			if (CollUtil.isEmpty(fdList)) {
 				throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
 			}
@@ -929,8 +910,6 @@ public class Task {
 		// version
 		parseVersion(requestLine, line);
 
-		LineMap.put(requestLine.getFullpath(), requestLine);
-
 		// paserHeader
 		paserHeader(request, requestLine);
 
@@ -996,8 +975,6 @@ public class Task {
 									: java.net.URLDecoder.decode(p0[1], DEFAULT_CHARSET_NAME);
 							requestParam.setValue(v);
 						} catch (final UnsupportedEncodingException e) {
-							System.out.println("p0 = " + Arrays.toString(p0));
-							System.out.println("DEFAULT_CHARSET_NAME = " + DEFAULT_CHARSET_NAME);
 							e.printStackTrace();
 						}
 					} else {
@@ -1047,62 +1024,6 @@ public class Task {
 		}
 
 		requestLine.setHeaderMap(hm);
-	}
-
-
-	public ZRequest readAndParse() {
-		final ZRequest r1 = this.read();
-		final ZRequest r2 = Task.parse(r1);
-		return r2;
-	}
-
-	public ZRequest read() {
-		final ZRequest request = this.handleRead();
-		return request;
-	}
-
-	private ZRequest handleRead() {
-
-		final int nk = READ_LENGTH;
-		final List<Byte> list = new ArrayList<>(nk);
-
-		while (true) {
-			final byte[] bs = new byte[nk];
-			int read = -4;
-			try {
-				read = this.bufferedInputStream.read(bs);
-			} catch (final IOException e) {
-				break;
-			}
-			if (read <= 0) {
-				break;
-			}
-
-			for (int i = 0; i < read; i++) {
-				list.add(bs[i]);
-			}
-			if (read <= nk) {
-				break;
-			}
-		}
-
-		final byte[] bsR = new byte[list.size()];
-		for (int x = 0; x < list.size(); x++) {
-			bsR[x] = list.get(x);
-		}
-
-		final String r = new String(bsR);
-
-		if (r.contains(NEW_LINE)) {
-			final ZRequest request = new ZRequest(r.split(NEW_LINE));
-			return request;
-		}
-
-		return null;
-	}
-
-	public static ZRequest parse(final ZRequest request) {
-		return Task.parseRequest(request);
 	}
 
 }
