@@ -88,7 +88,7 @@ public class ZRequest {
 	}
 
 	public String getMethod() {
-		return this.ppp().getMethodEnum().getMethod();
+		return this.parse().getMethodEnum().getMethod();
 	}
 
 	public byte[] getBody() {
@@ -96,7 +96,7 @@ public class ZRequest {
 	}
 
 	public String getServerName() {
-		final String host = this.ppp().getHeaderMap().get(ZRequest.HOST);
+		final String host = this.parse().getHeaderMap().get(ZRequest.HOST);
 
 		final int i = host.indexOf(":");
 		if (i > -1) {
@@ -108,7 +108,7 @@ public class ZRequest {
 
 	public int getServerPort() {
 
-		final String host = this.ppp().getHeaderMap().get(ZRequest.HOST);
+		final String host = this.parse().getHeaderMap().get(ZRequest.HOST);
 
 		final int i = host.indexOf(":");
 		if (i > -1) {
@@ -121,36 +121,55 @@ public class ZRequest {
 
 	public String getRequestURL() {
 		final String serverName = this.getServerName();
-		return serverName + this.ppp().getPath();
+		return serverName + this.parse().getPath();
 	}
 
 	public String getRequestURI() {
-		return this.ppp().getPath();
+		return this.parse().getPath();
 	}
 
 	public String getQueryString() {
-		return this.ppp().getQueryString();
+		return this.parse().getQueryString();
 	}
 
-	private RequestLine ppp() {
+	private RequestLine parse() {
 		return Task.parseRequest(this).getRequestLine();
 	}
 
+	/**
+	 * 获取Content-Type值
+	 *
+	 * @return
+	 */
 	public String getContentType() {
-		final RequestLine ppp = this.ppp();
+		final RequestLine ppp = this.parse();
 		final Map<String, String> headerMap = ppp.getHeaderMap();
 		return headerMap.get(ZRequest.CONTENT_TYPE);
 	}
 
+	/**
+	 * 获取Content-Type为multipart/form-data时的boundary值，非multipart/form-data则返回null
+	 * 如：
+	 * 		Content-Type: multipart/form-data; boundary=----WebKitFormBoundaryk6aoPrFv24xMcfUf
+	 * 则本方法返回内容为：
+	 * 		----WebKitFormBoundaryk6aoPrFv24xMcfUf
+	 *
+	 * @return
+	 */
 	public String getBoundary() {
 		if (!this.isContentTypeFormData()) {
 			return null;
 		}
-		final String ct = this.ppp().getHeaderMap().get(ZRequest.CONTENT_TYPE);
+		final String ct = this.parse().getHeaderMap().get(ZRequest.CONTENT_TYPE);
 		final String[] a = ct.split(BOUNDARY);
 		return a[1].trim();
 	}
 
+	/**
+	 * 判断Content-Type是否multipart/form-data
+	 *
+	 * @return
+	 */
 	public boolean isContentTypeFormData() {
 		final String ct = this.getContentType();
 		return ct == null ? false : ct.contains(MULTIPART_FORM_DATA);
@@ -231,13 +250,13 @@ public class ZRequest {
 	}
 
 	public int getContentLength() {
-		final String s = this.ppp().getHeaderMap().get(ZRequest.CONTENT_LENGTH);
+		final String s = this.parse().getHeaderMap().get(ZRequest.CONTENT_LENGTH);
 		return s == null ? -1 : Integer.parseInt(s);
 	}
 
 	public ZCookie[] getCookies() {
 
-		final String cookisString = this.ppp().getHeaderMap().get(ZRequest.COOKIE);
+		final String cookisString = this.parse().getHeaderMap().get(ZRequest.COOKIE);
 		if (StrUtil.isEmpty(cookisString)) {
 			return null;
 		}
@@ -272,14 +291,14 @@ public class ZRequest {
 	}
 
 	public String getHeader(final String name) {
-		final String header = this.ppp().getHeaderMap().get(name);
+		final String header = this.parse().getHeaderMap().get(name);
 		return header;
 	}
 
 	public Object getParameter(final String name) {
 		// FIXME 2024年12月9日 下午6:30:42 zhangzhen : 这个方法是否要改
 		// 因为@ZRequestParam加入了默认值，用此方法取还是原值而非默认值
-		final Set<RequestParam> ps = this.ppp().getParamSet();
+		final Set<RequestParam> ps = this.parse().getParamSet();
 		if (CollUtil.isEmpty(ps)) {
 			return null;
 		}
