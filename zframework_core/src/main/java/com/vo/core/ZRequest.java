@@ -29,7 +29,6 @@ import lombok.NoArgsConstructor;
  *
  */
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
 public class ZRequest {
 
@@ -57,6 +56,8 @@ public class ZRequest {
 	// -------------------------------------------------------------------------------------------------
 	private List<String> lineList;
 
+
+
 	/**
 	 * http完整的请求信息
 	 */
@@ -69,10 +70,6 @@ public class ZRequest {
 	 * 客户端IP
 	 */
 	private String clientIp;
-
-	public void addLine(final String line) {
-		this.getLineList().add(line);
-	}
 
 	public boolean isSupportGZIP() {
 		final String a = this.getHeader(ZRequest.ACCEPT_ENCODING);
@@ -301,6 +298,17 @@ public class ZRequest {
 			this.lineList = new ArrayList<>();
 		}
 		return this.lineList;
+	}
+
+	public ZRequest(final String[] lineArray) {
+		this.lineList = new ArrayList<>(lineArray.length);
+		for (final String line : lineArray) {
+			this.lineList.add(line);
+		}
+	}
+
+	public ZRequest(final List<String> lineList) {
+		this.lineList = lineList;
 	}
 
 	// -------------------------------------------------------------------------------------------------

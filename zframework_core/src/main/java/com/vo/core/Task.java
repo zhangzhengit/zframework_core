@@ -124,27 +124,21 @@ public class Task {
 	}
 
 	public static ZRequest handleRead(final String[] headerArray) {
-		final ZRequest request = new ZRequest();
-		for (final String line : headerArray) {
-			request.addLine(line);
-		}
+		final ZRequest request = new ZRequest(headerArray);
 		final ZRequest parseRequest = Task.parseRequest(request);
 		return parseRequest;
 	}
 
-	public ZRequest handleRead(final String requestString) {
-		final ZRequest request = new ZRequest();
+	public static ZRequest handleRead(final String requestString) {
 
-		final boolean contains = requestString.contains(NEW_LINE);
-		if (contains) {
+		if (requestString.contains(NEW_LINE)) {
 			final String[] aa = requestString.split(NEW_LINE);
-			for (final String string : aa) {
-				request.addLine(string);
-			}
+			final ZRequest request = new ZRequest(aa);
+			final ZRequest parseRequest = Task.parseRequest(request);
+			return parseRequest;
 		}
 
-		final ZRequest parseRequest = Task.parseRequest(request);
-		return parseRequest;
+		return null;
 	}
 
 	/**
@@ -1058,7 +1052,7 @@ public class Task {
 
 	public ZRequest readAndParse() {
 		final ZRequest r1 = this.read();
-		final ZRequest r2 = this.parse(r1);
+		final ZRequest r2 = Task.parse(r1);
 		return r2;
 	}
 
@@ -1068,8 +1062,6 @@ public class Task {
 	}
 
 	private ZRequest handleRead() {
-
-		final ZRequest request = new ZRequest();
 
 		final int nk = READ_LENGTH;
 		final List<Byte> list = new ArrayList<>(nk);
@@ -1101,18 +1093,15 @@ public class Task {
 
 		final String r = new String(bsR);
 
-		final boolean contains = r.contains(NEW_LINE);
-		if (contains) {
-			final String[] aa = r.split(NEW_LINE);
-			for (final String string : aa) {
-				request.addLine(string);
-			}
+		if (r.contains(NEW_LINE)) {
+			final ZRequest request = new ZRequest(r.split(NEW_LINE));
+			return request;
 		}
 
-		return request;
+		return null;
 	}
 
-	public ZRequest parse(final ZRequest request) {
+	public static ZRequest parse(final ZRequest request) {
 		return Task.parseRequest(request);
 	}
 
