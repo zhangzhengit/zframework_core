@@ -357,12 +357,17 @@ public class Task {
 
 		this.setZRequestAndZResponse(arraygP, request);
 
+
+		// FIXME 2024年12月12日 上午11:48:35 zhangzhen : 下面几行暂时注释了，因为发现在此return会导致
+		// void 的接口无法执行到自定义拦截器，并且直接注释掉让其走到zhiList的逻辑里也暂无bug发生。
+		// 就先这么看看，忘了当时写的时候怎么考虑的了
+
 		// 接口方法无返回值，直接返回 response对象
-		if (Task.VOID.equals(method.getReturnType().getCanonicalName())) {
-			invoke0(method, arraygP, zController);
-			final ZResponse response = ZHttpContext.getZResponseAndRemove();
-			return response;
-		}
+		//		if (Task.VOID.equals(method.getReturnType().getCanonicalName())) {
+		//			invoke0(method, arraygP, zController);
+		//			final ZResponse response = ZHttpContext.getZResponseAndRemove();
+		//			return response;
+		//		}
 
 		Object r = null;
 		// 在此zhi执行
