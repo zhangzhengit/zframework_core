@@ -116,7 +116,7 @@ public class ServerConfigurationProperties {
 	 */
 	@ZNotEmtpy
 	@ZValue(name = "server.qps.exceed.message", listenForChanges = true)
-	private String qpsExceedMessage = "访问频繁，请稍后再试";
+	private String qpsExceedMessage = "访问频繁,请稍后再试";
 
 	/**
 	 * 当前待处理的请求数最大值限制，来新请求时如果当前待处理请求数已经达到此值，则拒绝本次请求并返回错误码

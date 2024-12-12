@@ -7,7 +7,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import com.vo.enums.MethodEnum;
-import com.votool.redis.mq.TETS_MQ_1;
 
 /**
  * 用在 @ZController 类的方法上，表示此方法是一个http接口
@@ -37,7 +36,7 @@ public @interface ZRequestMapping {
 	public static final int DEFAULT_QPS = ZRequestMappingConfigurationProperties.DEFAULT_VALUE;
 
 	/**
-	 * 请求路径，如： /index
+	 * 请求路径，如：/index
 	 *
 	 * @return
 	 *
@@ -45,7 +44,7 @@ public @interface ZRequestMapping {
 	String[] mapping();
 
 	/**
-	 * mapping 是否正则表达式，与 mapping 按顺序对应 ，默认false
+	 * mapping 是否正则表达式，与 mapping 按顺序从左到右对应 ，默认false
 	 *
 	 * @return
 	 *
@@ -61,7 +60,7 @@ public @interface ZRequestMapping {
 	MethodEnum method() default MethodEnum.GET;
 
 	/**
-	 * 此方法QPS限制，默认值
+	 * 此方法最大QPS限制，所有请求共享此值，不管是浏览器/脚本/命令行都共享此值
 	 *
 	 * @return
 	 *
@@ -69,7 +68,7 @@ public @interface ZRequestMapping {
 	int qps() default DEFAULT_QPS;
 
 	/**
-	 * API描述信息，非必填项，只为了展示API信息
+	 * API描述信息，非必填项，只为了展示API信息(展示一个API文档)，和代码逻辑无关
 	 *
 	 * @return
 	 */

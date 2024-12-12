@@ -50,6 +50,7 @@ import com.vo.exception.FormPairParseException;
 import com.vo.exception.PathVariableException;
 import com.vo.exception.ZControllerAdviceThrowable;
 import com.vo.html.ResourcesLoader;
+import com.vo.http.AccessDeniedCodeEnum;
 import com.vo.http.HttpStatus;
 import com.vo.http.ZControllerMap;
 import com.vo.http.ZCookie;
@@ -316,12 +317,14 @@ public class Task {
 
 		final boolean allow = QC.allow("API" + controllerName + method.getName(), qps, handlingEnum);
 		if (!allow) {
-			final String message = "访问频繁，请稍后再试";
+
+			final CR<Object> error = CR.error(AccessDeniedCodeEnum.CLIENT.getCode(),
+					AccessDeniedCodeEnum.CLIENT.getMessageToClient());
 
 			final ZResponse response = new ZResponse(this.outputStream, this.socketChannel);
 			response.contentType(HeaderEnum.APPLICATION_JSON.getType())
-			.httpStatus(HttpStatus.HTTP_403.getCode())
-			.body(J.toJSONString(CR.error(message), Include.NON_NULL));
+			.httpStatus(HttpStatus.HTTP_429.getCode())
+			.body(J.toJSONString(error, Include.NON_NULL));
 
 			return response;
 		}
@@ -340,12 +343,11 @@ public class Task {
 
 				if (!QC.allow(keyword, zqpsLimitation.qps(), handlingEnum)) {
 
-					final String message = "接口访问频繁，请稍后再试";
-
+					final CR<Object> error = CR.error(AccessDeniedCodeEnum.ZSESSIONID.getCode(), AccessDeniedCodeEnum.ZSESSIONID.getMessageToClient());
 					final ZResponse response = new ZResponse(this.outputStream, this.socketChannel);
 					response.contentType(HeaderEnum.APPLICATION_JSON.getType())
-					.httpStatus(HttpStatus.HTTP_403.getCode())
-					.body(J.toJSONString(CR.error(message), Include.NON_NULL));
+					.httpStatus(HttpStatus.HTTP_429.getCode())
+					.body(J.toJSONString(error, Include.NON_NULL));
 					return response;
 				}
 				break;

@@ -62,7 +62,7 @@ public class ZControllerMap {
 					"接口qps必须大于0,method = " + method.getName() + ",\t" + "qps = " + qps);
 		}
 
-		if (qps % QPSEnum.API_METHOD.getMinValue() != 0) {
+		if ((qps % QPSEnum.API_METHOD.getMinValue()) != 0) {
 			throw new StartupException("接口qps必须可以被 " + QPSEnum.API_METHOD.getMinValue() + "整除,method = "
 					+ method.getName() + ",\t" + "qps = " + qps);
 		}
@@ -88,8 +88,12 @@ public class ZControllerMap {
 			}
 
 			if (qpsL > qps) {
-				throw new IllegalArgumentException("@" + ZQPSLimitation.class.getSimpleName() + ".qps 不能大于 @"
-						+ ZRequestMapping.class.getSimpleName() + ".qps" + ",method = " + method.getName());
+				throw new IllegalArgumentException(
+						object.getClass().getCanonicalName() + "." + method.getName()
+						+ " 配置错误：" +
+						"@" + ZQPSLimitation.class.getSimpleName() + ".qps 不能大于 @"
+						+ ZRequestMapping.class.getSimpleName() + ".qps"
+						);
 			}
 
 			methodZQPSLimitationTable.put(object.getClass().getCanonicalName(), method.getName(), zqpsl);
@@ -161,7 +165,7 @@ public class ZControllerMap {
 				}
 			}
 
-			if (pipei + pipeiM + empty == s.length) {
+			if ((pipei + pipeiM + empty) == s.length) {
 				ZPVTL.set(list);
 				return k;
 			}

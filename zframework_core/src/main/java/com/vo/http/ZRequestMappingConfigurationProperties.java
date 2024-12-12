@@ -22,9 +22,9 @@ import lombok.NoArgsConstructor;
 @ZConfigurationProperties(prefix = "request.mapping")
 public class ZRequestMappingConfigurationProperties {
 
-	public static final int MIN_VALUE = 100;
-	
-	public static final int MAX_VALUE = 10000 * 20;
+	public static final int MIN_VALUE = 1;
+
+	public static final int MAX_VALUE = 10000 * 100;
 
 	public static final int DEFAULT_VALUE = 10000 * 5;
 
@@ -35,7 +35,7 @@ public class ZRequestMappingConfigurationProperties {
 	// 使用此基础配置类时是在启动时就初始化好了的，没有在使用时每次都在本对象中取值，
 	// 所以 做不到 实时更新 @ZRequestMapping 的qps默认值。
 	// 如果要做到，需要修改 存取 @ZRequestMapping.qps的方法逻辑
-//	@ZValue(name = "request.mapping.qps", listenForChanges = true)
+	//	@ZValue(name = "request.mapping.qps", listenForChanges = true)
 	private Integer qps = DEFAULT_VALUE;
 
 }
