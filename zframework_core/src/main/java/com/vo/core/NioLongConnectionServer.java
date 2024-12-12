@@ -152,8 +152,10 @@ public class NioLongConnectionServer {
 						handleAccept(selectionKey, selector);
 					} else if (selectionKey.isReadable()) {
 						if (Boolean.TRUE.equals(SERVER_CONFIGURATION.getQpsLimitEnabled())
-								&& !QPSCounter.allow(NioLongConnectionServer.Z_SERVER_QPS, SERVER_CONFIGURATION.getQps(),
-										QPSEnum.SERVER)) {
+								&& !QC.allow(NioLongConnectionServer.Z_SERVER_QPS, SERVER_CONFIGURATION.getQps(), QPSHandlingEnum.UNEVEN)) {
+							//						if (Boolean.TRUE.equals(SERVER_CONFIGURATION.getQpsLimitEnabled())
+							//								&& !QPSCounter.allow(NioLongConnectionServer.Z_SERVER_QPS, SERVER_CONFIGURATION.getQps(),
+							//										QPSEnum.SERVER)) {
 							final ServerConfigurationProperties p = ZContext.getBean(ServerConfigurationProperties.class);
 							NioLongConnectionServer.response429Async(selectionKey,p.getQpsExceedMessage());
 						} else {

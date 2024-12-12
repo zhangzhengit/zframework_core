@@ -72,28 +72,35 @@ abstract class AbstractRequestValidator {
 			if (session != null) {
 				final String smoothUserAgentKeyword = ZRequest.Z_SESSION_ID + "@" + session.getId();
 
-				if (StrUtil.isNotEmpty(userAgent)) {
-					final RequestValidatorConfigurationProperties requestValidatorConfigurationProperties = ZContext
-							.getBean(RequestValidatorConfigurationProperties.class);
-					final Optional<String> findAny = requestValidatorConfigurationProperties.getSmoothUserAgent()
-							.parallelStream().filter(ua -> userAgent.toLowerCase().contains(ua.toLowerCase()))
-							.findAny();
-					if (findAny.isPresent()) {
-						// ua 包含在配置的，则[不]平滑处理
-						//						return QPSCounter.allow(keyword, this.getSessionIdQps(), QPSEnum.UNEVEN);
-						final boolean allow = QPSCounter.allow(smoothUserAgentKeyword, this.getSessionIdQps(), QPSEnum.UNEVEN);
-						final RequestVerificationResult r = new RequestVerificationResult(allow,
-								allow ? "" : "SmoothUserAgent-ZSESSIONID访问频繁");
-						return r;
-					}
-				}
+				final RequestValidatorConfigurationProperties requestValidatorConfigurationProperties = ZContext
+						.getBean(RequestValidatorConfigurationProperties.class);
+
+				final QPSHandlingEnum handlingEnum = requestValidatorConfigurationProperties.getHandlingEnum(userAgent);
+				final boolean allow2 = QC.allow(smoothUserAgentKeyword, this.getSessionIdQps(), handlingEnum);
+				final RequestVerificationResult r1 = new RequestVerificationResult(allow2,
+						allow2 ? "" : "ZSESSIONID访问频繁");
+				return r1;
+
+
+				//				if (StrUtil.isNotEmpty(userAgent)) {
+				//					final Optional<String> findAny = requestValidatorConfigurationProperties.getSmoothUserAgent()
+				//							.parallelStream().filter(ua -> userAgent.toLowerCase().contains(ua.toLowerCase()))
+				//							.findAny();
+				//					if (findAny.isPresent()) {
+				//						// ua 包含在配置的，则[不]平滑处理
+				//						final boolean allow = QPSCounter.allow(smoothUserAgentKeyword, this.getSessionIdQps(), QPSEnum.UNEVEN);
+				//						final RequestVerificationResult r = new RequestVerificationResult(allow,
+				//								allow ? "" : "SmoothUserAgent-ZSESSIONID访问频繁");
+				//						return r;
+				//					}
+				//				}
 
 				// ua 不包含在配置的，则平滑处理
 				//				return QPSCounter.allow(smoothUserAgentKeyword, this.getSessionIdQps(), QPSEnum.Z_SESSION_ID);
-				final boolean allow = QPSCounter.allow(smoothUserAgentKeyword, this.getSessionIdQps(), QPSEnum.Z_SESSION_ID);
-				final RequestVerificationResult r = new RequestVerificationResult(allow,
-						allow ? "" : "ZSESSIONID访问频繁");
-				return r;
+				//				final boolean allow = QPSCounter.allow(smoothUserAgentKeyword, this.getSessionIdQps(), QPSEnum.Z_SESSION_ID);
+				//				final RequestVerificationResult r = new RequestVerificationResult(allow,
+				//						allow ? "" : "ZSESSIONID访问频繁");
+				//				return r;
 			}
 		}
 
@@ -103,7 +110,14 @@ abstract class AbstractRequestValidator {
 		final String clientIp = request.getClientIp();
 		final String keyword = clientIp + "@" + userAgent;
 
-		final boolean allow = QPSCounter.allow(keyword, this.getClientQps(), QPSEnum.CLIENT);
+
+		final RequestValidatorConfigurationProperties requestValidatorConfigurationProperties = ZContext
+				.getBean(RequestValidatorConfigurationProperties.class);
+
+		final QPSHandlingEnum handlingEnum = requestValidatorConfigurationProperties.getHandlingEnum(userAgent);
+		final boolean allow = QC.allow(keyword, this.getClientQps(), handlingEnum);
+
+		//		final boolean allow = QPSCounter.allow(keyword, this.getClientQps(), QPSEnum.CLIENT);
 
 		final RequestVerificationResult r = new RequestVerificationResult(allow,
 				allow ? "" : "CLIENT访问频繁");

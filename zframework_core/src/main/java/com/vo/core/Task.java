@@ -309,9 +309,13 @@ public class Task {
 
 		final String controllerName = zController.getClass().getCanonicalName();
 		final Integer qps = ZControllerMap.getQPSByControllerNameAndMethodName(controllerName, method.getName());
-		// 是否超过 ZRequestMapping.qps
-		if (!QPSCounter.allow("API" + controllerName + method.getName(), qps, QPSEnum.API_METHOD)) {
 
+		final String userAgent = request.getHeader(TaskRequestHandler.USER_AGENT);
+		final QPSHandlingEnum handlingEnum = ZContext
+				.getBean(RequestValidatorConfigurationProperties.class).getHandlingEnum(userAgent);
+
+		final boolean allow = QC.allow("API" + controllerName + method.getName(), qps, handlingEnum);
+		if (!allow) {
 			final String message = "访问频繁，请稍后再试";
 
 			final ZResponse response = new ZResponse(this.outputStream, this.socketChannel);
@@ -334,9 +338,7 @@ public class Task {
 				+ "@ZQPSLimitation" + '_'
 				+ request.getSession().getId();
 
-				// FIXME 2024年5月3日 下午8:01:22 zhangzhen: 这是很早之前写的，现在做其他的发现了传为null导致bug，
-				// 先用QPSEnum.API_METHOD，以后再看是否合适
-				if (!QPSCounter.allow(keyword, zqpsLimitation.qps(), QPSEnum.API_METHOD)) {
+				if (!QC.allow(keyword, zqpsLimitation.qps(), handlingEnum)) {
 
 					final String message = "接口访问频繁，请稍后再试";
 
