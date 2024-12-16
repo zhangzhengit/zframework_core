@@ -60,9 +60,9 @@ public class ServerConfigurationProperties {
 	 * 读取http请求的ByteBuffer的容量大小
 	 */
 	@ZNotNull
-	@ZMin(min = 1)
-	@ZMax(max = 500000)
-	private Integer byteBufferSize = 1024 * 2;
+	@ZMin(min = 2)
+	@ZMax(max = 10240)
+	private Integer byteBufferSize = 1024 * 1;
 
 	/**
 	 * 处理http请求的最大线程数量

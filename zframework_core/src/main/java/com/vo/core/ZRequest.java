@@ -32,9 +32,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ZRequest {
 
-	private static final String BOUNDARY = "boundary=";
+	public static final String BOUNDARY = "boundary=";
 
-	private static final String MULTIPART_FORM_DATA = "multipart/form-data";
+	public static final String MULTIPART_FORM_DATA = "multipart/form-data";
 
 	public static final String Z_SESSION_ID = "ZSESSIONID";
 

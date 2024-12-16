@@ -249,8 +249,9 @@ java.io.IOException: 远程主机强迫关闭了一个现有的连接。
 		int findN = 0;
 		for (int i = fromBAIndex; i < ba.length; i++) {
 			boolean find = true;
-			if (i > (ba.length - kb.length)) {
+			if (i >= ((ba.length - kb.length) + 1)) {
 				find = false;
+				break;
 			}
 			for (int k = 0; k < kb.length; k++) {
 				if (ba[i + k] != kb[k]) {
