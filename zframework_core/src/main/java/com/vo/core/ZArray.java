@@ -3,6 +3,9 @@ package com.vo.core;
 import java.util.ArrayList;
 import java.util.List;
 
+import lombok.Getter;
+import lombok.Setter;
+
 /**
  * 动态数组
  *
@@ -15,8 +18,16 @@ public class ZArray {
 
 	private final List<Byte> ar = new ArrayList<>();
 
+	@Getter
+	@Setter
+	private boolean yichangle;
+
 	public ZArray() {
 
+	}
+
+	public boolean isEmpty() {
+		return this.ar.isEmpty();
 	}
 
 	public ZArray(final byte[] ba) {
@@ -31,8 +42,20 @@ public class ZArray {
 		}
 	}
 
+	public void add(final byte b) {
+		this.ar.add(b);
+	}
+
+	public void remove(final int index) {
+		this.ar.remove(index);
+	}
+
 	public void add(final byte[] ba) {
 		this.add(ba, 0, ba.length);
+	}
+
+	public int length() {
+		return this.ar.size();
 	}
 
 	public byte[] get() {

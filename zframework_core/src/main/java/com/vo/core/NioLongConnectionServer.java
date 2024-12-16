@@ -152,23 +152,23 @@ public class NioLongConnectionServer {
 						handleAccept(selectionKey, selector);
 					} else if (selectionKey.isReadable()) {
 						if (Boolean.TRUE.equals(SERVER_CONFIGURATION.getQpsLimitEnabled())
-								&& !QC.allow(NioLongConnectionServer.Z_SERVER_QPS, SERVER_CONFIGURATION.getQps(), QPSHandlingEnum.UNEVEN)) {
-							//						if (Boolean.TRUE.equals(SERVER_CONFIGURATION.getQpsLimitEnabled())
-							//								&& !QPSCounter.allow(NioLongConnectionServer.Z_SERVER_QPS, SERVER_CONFIGURATION.getQps(),
-							//										QPSEnum.SERVER)) {
-							final ServerConfigurationProperties p = ZContext.getBean(ServerConfigurationProperties.class);
-							NioLongConnectionServer.response429Async(selectionKey,p.getQpsExceedMessage());
+								&& !QC.allow(NioLongConnectionServer.Z_SERVER_QPS, SERVER_CONFIGURATION.getQps(),
+										QPSHandlingEnum.UNEVEN)) {
+							final ServerConfigurationProperties p = ZContext
+									.getBean(ServerConfigurationProperties.class);
+							NioLongConnectionServer.response429Async(selectionKey, p.getQpsExceedMessage());
 						} else {
 							final ZArray array = NioLongConnectionServer.handleRead(selectionKey);
 							if (array != null) {
 								final SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
 								final TaskRequest taskRequest = new TaskRequest(selectionKey, socketChannel,
-										array.get(),new Date());
+										array.get(), new Date());
 								final boolean responseAsync = this.requestHandler.add(taskRequest);
 								if (!responseAsync) {
 									final ServerConfigurationProperties p = ZContext
 											.getBean(ServerConfigurationProperties.class);
-									NioLongConnectionServer.response429Async(selectionKey, p.getPendingTasksExceedMessage());
+									NioLongConnectionServer.response429Async(selectionKey,
+											p.getPendingTasksExceedMessage());
 								}
 							}
 						}
@@ -268,39 +268,32 @@ public class NioLongConnectionServer {
 
 		final int bf = BUFFER_SIZE;
 		final ByteBuffer byteBuffer = ByteBuffer.allocate(bf);
+
 		int bytesRead = 0;
 		final ZArray array = new ZArray();
-		boolean readFirst = true;
 		while (true) {
 			int tR = 0;
 			try {
 				tR = socketChannel.read(byteBuffer);
+				if ((tR <= 0) || (tR <= -1)) {
+					break;
+				}
 			} catch (final IOException e) {
 				NioLongConnectionServer.closeSocketChannelAndKeyCancel(key, socketChannel);
 				break;
 			}
+
 			bytesRead += tR;
-			if ((tR <= 0) || (tR <= -1)) {
-				break;
-			}
-
-			if (readFirst && (tR < bf)) {
-				array.add(byteBuffer.array(), 0, tR);
-				break;
-			}
-
-			readFirst = false;
-
-			final int position = byteBuffer.position();
 			byteBuffer.flip();
 
-			array.add(byteBuffer.array(), 0, position);
+			final byte[] tempA = new byte[byteBuffer.remaining()];
+			byteBuffer.get(tempA);
+			array.add(tempA);
+			byteBuffer.clear();
 
-			if (!readFirst && (tR < bf)) {
+			if ((tR < bf)) {
 				break;
 			}
-
-			byteBuffer.clear();
 		}
 
 		if (bytesRead <= 0) {

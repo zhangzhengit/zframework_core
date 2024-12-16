@@ -37,6 +37,19 @@ public class BodyReader {
 			//			throw new ParseHTTPRequestException("");
 		}
 
+		// FIXME 2024年12月13日 下午5:07:00 zhangzhen : 本机测试终于重现了：
+		// TODO 处理为：直接close，因为至少下面这种情况是client close了
+		/**
+		 *
+		 * java.lang.IllegalArgumentException: 0 > -1
+	at java.util.Arrays.copyOfRange(Arrays.java:3519)
+	at com.vo.core.BodyReader.readHeader(BodyReader.java:48)
+	at com.vo.core.TaskRequestHandler.run(TaskRequestHandler.java:72)
+java.io.IOException: 远程主机强迫关闭了一个现有的连接。
+	at sun.nio.ch.SocketDispatcher.read0(Native Method)
+	at sun.nio.ch.SocketDispatcher.read(SocketDispatcher.java:43)
+		 */
+
 		final byte[] hba = Arrays.copyOfRange(ba, 0, headerEndIndex);
 		final String h = new String(hba);
 		final String[] a = h.split(RN);

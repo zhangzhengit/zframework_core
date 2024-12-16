@@ -68,47 +68,16 @@ public final class TaskRequestHandler extends Thread {
 		while (true) {
 			try {
 				final TaskRequest taskRequest = this.queue.take();
-				final String requestString = new String(taskRequest.getRequestData(), NioLongConnectionServer.CHARSET)
-						.intern();
 
 				final ZRequest request = BodyReader.readHeader(taskRequest.getRequestData());
 
-				final String contentType = request.getContentType();
-
-				// FIXME 2024年4月28日 下午10:05:40 zhangzhen: 这里在上传文件时，postman测试，一次请求可能会分为两次，还没查到原因，暂时如下处理：
-				// 判断如果是form-data，则看boundary值+--是否出现在最后，如果没有，则等待下次请求看，是则拼接为同一个请求
-
-
-				boolean isWanzheng = false;
-				if ((contentType != null) && contentType.toLowerCase().contains(HeaderEnum.MULTIPART_FORM_DATA.getType())) {
-					final int bi = contentType.indexOf(BOUNDARY);
-					if (bi > -1) {
-						final String boundary = contentType.substring(bi + BOUNDARY.length());
-						final String boundaryEnd = boundary + "--";
-						if (requestString.lastIndexOf(boundaryEnd) > -1) {
-							isWanzheng = true;
-						}
-					}
+				if (request == null) {
+					taskRequest.getSocketChannel().close();
+					taskRequest.getSelectionKey().cancel();
+					continue;
 				}
 
-				if (Boolean.TRUE.equals(p.getPrintHttp())) {
-					LOG.debug("httpRequest={}", System.lineSeparator() + requestString);
-				}
-
-				if (isWanzheng) {
-					this.requestValidator.handle(request, taskRequest);
-				} else {
-					// FIXME 2024年4月28日 下午10:14:39 zhangzhen:
-					// 这个放一个map，K为boundary，V为请求string，在此
-					// 根据K取出V和V组成一个请求来处理
-
-					// FIXME 2024年5月3日 下午8:06:11 zhangzhen: 暂时为了走通流程，也和wanzheng的逻辑一直，
-
-					// 加这2行防止save action 自动去掉ifelse导致以后看不懂
-					final ZRequest request2 = request;
-					final TaskRequest taskRequest2 = taskRequest;
-					this.requestValidator.handle(request2, taskRequest2);
-				}
+				this.requestValidator.handle(request, taskRequest);
 
 			} catch (final Exception e) {
 				e.printStackTrace();
