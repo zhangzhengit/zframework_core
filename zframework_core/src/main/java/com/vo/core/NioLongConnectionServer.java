@@ -314,6 +314,8 @@ public class NioLongConnectionServer {
 				final String cL = new String(copyOfRange);
 				final int contentLength = Integer.parseInt(cL.split(":")[1].trim());
 
+				// FIXME 2024年12月16日 下午10:56:59 zhangzhen : 考虑好：如果上传文件很大，要不要还是分批读取？
+				// 要不要添加一个server.XX配置项限制上传的文件大小？然后在此判断cl值大于cl就返回个错误
 				if (contentLength > 0) {
 					final ByteBuffer bbBody = ByteBuffer.allocate(contentLength);
 					try {
