@@ -66,6 +66,9 @@ public class ServerConfigurationProperties {
 	private Integer byteBufferSize = 1024 * 1;
 
 
+	/**
+	 * 上传文件时存放临时文件的目录
+	 */
 	@ZNotEmtpy
 	private String uploadTempDir;
 
