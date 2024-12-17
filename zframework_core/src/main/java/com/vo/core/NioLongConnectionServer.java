@@ -283,19 +283,19 @@ public class NioLongConnectionServer {
 		// 读header 时，使用1来读确保别读多了
 		final ByteBuffer byteBuffer = ByteBuffer.allocate(BYTE_BUFFER_BODY_CAPACITY);
 		final ZArray array = new ZArray();
-		while (true) {
+		while (socketChannel.isOpen()) {
 			try {
 				final int tR = socketChannel.read(byteBuffer);
+				if (tR == -1) {
+					NioLongConnectionServer.closeSocketChannelAndKeyCancel(key, socketChannel);
+					break;
+				}
+
 				if (tR > 0) {
 					add(byteBuffer, array);
 					if(httpHeaderEND(array.get())) {
 						break;
 					}
-				}
-
-				if (tR == -1) {
-					NioLongConnectionServer.closeSocketChannelAndKeyCancel(key, socketChannel);
-					break;
 				}
 
 			} catch (final IOException e) {
