@@ -650,6 +650,7 @@ public class Task {
 
 				final List<FD2> fdList = BodyReader.readFormDate(request.getOriginalRequestBytes(),
 						request.getContentType(), request.getBoundary());
+				request.clearOriginalRequestBytes();
 				final Optional<FD2> findAny = fdList.stream().filter(fd -> fd.getName().equals(p.getName())).findAny();
 				if (!findAny.isPresent()) {
 					//					System.out.println(Thread.currentThread().getName() + "\t" + LocalDateTime.now() + "\t"
@@ -803,21 +804,16 @@ public class Task {
 					}
 					return piR;
 				}
-
 				throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
 			}
 
-			final byte[] originalRequestBytes = request.getOriginalRequestBytes();
-
-			// FIXME 2024年12月11日 下午3:38:12 zhangzhen : 这个和BodyReader中方法重复了，这个去掉，修改BR中的方法来支持一次性把所有的param和file
-			// 都一次性解析出来
-			final List<FormData> fdList = FormData.parseFormData(originalRequestBytes);
-
+			final List<FD2> fdList = BodyReader.readFormDate(request.getOriginalRequestBytes(),
+					request.getContentType(), request.getBoundary());
 			if (CollUtil.isEmpty(fdList)) {
 				throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
 			}
 
-			final Optional<FormData> findAny = fdList.stream()
+			final Optional<FD2> findAny = fdList.stream()
 					.filter(f -> StrUtil.isEmpty(f.getFileName()))
 					.filter(f -> f.getName().equals(p.getName()))
 					.findAny();

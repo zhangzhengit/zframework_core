@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.WeakHashMap;
 
 /**
  *
@@ -104,7 +105,7 @@ java.io.IOException: 远程主机强迫关闭了一个现有的连接。
 	}
 
 	/**
-	 * 从http请求报文中解析出一个对象
+	 * 从 formdata的http请求报文中解析出所有对象
 	 *
 	 * @param ba
 	 * @param contentType
@@ -113,6 +114,31 @@ java.io.IOException: 远程主机强迫关闭了一个现有的连接。
 	 */
 	public static List<FD2> readFormDate(final byte[] ba, final String contentType, final String boundary) {
 
+		// final int hash = ba.hashCode();
+		// final int hash = Arrays.hashCode(ba);
+		final String k = "ba" + "-" + ba.length + "-" + boundary.hashCode();
+		final List<FD2> v1 = c.get(k);
+		if (v1 != null) {
+			return v1;
+		}
+
+		synchronized (k.intern()) {
+			final List<FD2> v2 = c.get(k);
+			if (v2 != null) {
+				return v2;
+			}
+
+			final List<FD2> v = readFormDate0(ba, contentType, boundary);
+			c.put(k, v);
+			final long t2 = System.currentTimeMillis();
+			return v;
+		}
+
+	}
+
+	static Map<String, List<FD2>> c = new WeakHashMap<>(16, 1F);
+
+	private static List<FD2> readFormDate0(final byte[] ba, final String contentType, final String boundary) {
 		if (boundary == null) {
 			return Collections.emptyList();
 		}
@@ -123,20 +149,27 @@ java.io.IOException: 远程主机强迫关闭了一个现有的连接。
 			return Collections.emptyList();
 		}
 
-		final int boundaryStartIndex = search(ba, boundary, 1, contentTypeIndex + contentType.getBytes().length);
+		int bI = 1;
+		final List<Integer> biList = new ArrayList<>(4);
+		while (true) {
+			final int boundaryIndex = search(ba, RN + BOUNDARY_PREFIX + boundary, bI,
+					contentTypeIndex + contentType.getBytes().length);
+			if (boundaryIndex <= -1) {
+				break;
+			}
+			biList.add(boundaryIndex);
+			bI++;
+		}
 
 		final List<FD2> fd2l = new ArrayList<>();
-		// FIXME 2024年12月8日 下午2:57:14 zhangzhen : 继续循环解析，现在只支持仅有一个文件的
-		if ((boundaryStartIndex > -1)) {
-			final int boundaryStartIndex2 = search(ba, RN + BOUNDARY_PREFIX + boundary, 1, boundaryStartIndex);
-			if((boundaryStartIndex2 > boundaryStartIndex)) {
 
-				final byte[] bodyBA = Arrays.copyOfRange(ba,
-						boundaryStartIndex + boundary.getBytes().length + RN.getBytes().length, boundaryStartIndex2);
-				final FD2 fd2 = handleOneItem(bodyBA);
-				fd2l.add(fd2);
-			}
-
+		for (int from = 0; from < (biList.size() - 1); from++) {
+			final int to = from + 1;
+			final byte[] oneBA = Arrays.copyOfRange(ba,
+					biList.get(from) + (RN + BOUNDARY_PREFIX + boundary).getBytes().length + RN.getBytes().length,
+					biList.get(to));
+			final FD2 one = handleOneItem(oneBA);
+			fd2l.add(one);
 		}
 
 		return fd2l;
@@ -154,43 +187,38 @@ java.io.IOException: 远程主机强迫关闭了一个现有的连接。
 
 		final byte[] ba = oneBA;
 		final List<Byte> bl = new ArrayList<>();
-		boolean findCT = false;
-		String ctLIne = null;
+		// FIXME 2024年12月17日 下午4:05:16 zhangzhen : 这个方法要改进，不要for循环了，直接search CD CT RNRN等等
+		final int ctIndex = search(oneBA, ZRequest.CONTENT_TYPE, 1, 0);
 		for (int i = 0; i < ba.length; i++) {
 			if (ba[i] == '\r') {
 				if ((i < (ba.length - 1)) && (ba[i + 1] == '\n')) {
 					final byte[] lineBA = listToArray(bl);
 					final String line = new String(lineBA);
 
-					if (line.startsWith(FormData.CONTENT_DISPOSITION)) {
+					if (line.startsWith(ZRequest.CONTENT_DISPOSITION)) {
 						fd2.setContentDisposition(line);
 						final Map<String, String> vMap = handleBodyContentDisposition(line);
 						fd2.setName(vMap.get(NAME));
 						fd2.setFileName(vMap.get(FILENAME));
 					}
-
-					final int ctIndex = search(oneBA, FormData.CONTENT_TYPE, 1, 0);
 					if (ctIndex > -1) {
-						findCT = true;
-					}
+						if (line.startsWith(ZRequest.CONTENT_TYPE)) {
+							final String[] ctA = line.split(":");
+							final String ct = ctA[1].trim();
+							fd2.setContentType(ct);
 
-					if (findCT && line.startsWith(FormData.CONTENT_TYPE)) {
-						final String[] ctA = line.split(":");
-						final String ct = ctA[1].trim();
-						ctLIne = line;
-						fd2.setContentType(ct);
-					}
-
-					if (ctLIne != null) {
-						final byte[] bodyFullBA = Arrays.copyOfRange(oneBA, ctIndex +
-								+ ctLIne.getBytes().length
-								+ RNRN.getBytes().length,
-								oneBA.length);
-						fd2.setBody(bodyFullBA);
-
+							final byte[] bodyFullBA = Arrays.copyOfRange(oneBA,
+									ctIndex + line.getBytes().length + RNRN.getBytes().length, oneBA.length);
+							fd2.setBody(bodyFullBA);
+							break;
+						}
+					} else {
+						final int bodyStartIndex = search(oneBA, RNRN, 1, i);
+						final byte[] bodyV = Arrays.copyOfRange(ba, bodyStartIndex + RNRN.getBytes().length, ba.length);
+						final String bV = new String(bodyV);
+						fd2.setValue(bV);
 						break;
 					}
-
 				}
 
 				bl.clear();

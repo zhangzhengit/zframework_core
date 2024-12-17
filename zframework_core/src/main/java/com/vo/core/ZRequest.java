@@ -40,14 +40,11 @@ public class ZRequest {
 
 	public static final String GZIP = "gzip";
 	public static final String ACCEPT_ENCODING = "Accept-Encoding";
-
 	public static final String COOKIE = "Cookie";
-
 	public static final String ALLOW = "Allow";
 	public static final String CONTENT_LENGTH = "Content-Length";
-
+	public static final String CONTENT_DISPOSITION = "Content-Disposition";
 	public static final String CONTENT_TYPE = "Content-Type";
-
 	public static final String HOST = "Host";
 
 	private static final AtomicLong GZSESSIONID = new AtomicLong(1L);
@@ -70,6 +67,10 @@ public class ZRequest {
 	 * 客户端IP
 	 */
 	private String clientIp;
+
+	public void clearOriginalRequestBytes() {
+		this.originalRequestBytes = null;
+	}
 
 	public boolean isSupportGZIP() {
 		final String a = this.getHeader(ZRequest.ACCEPT_ENCODING);

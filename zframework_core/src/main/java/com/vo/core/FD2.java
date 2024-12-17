@@ -49,4 +49,9 @@ public class FD2 {
 	 */
 	private byte[] body;
 
+	/**
+	 * 普通表单字段的value
+	 */
+	private String value;
+
 }
