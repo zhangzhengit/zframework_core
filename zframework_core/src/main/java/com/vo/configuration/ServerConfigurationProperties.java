@@ -1,7 +1,6 @@
 package com.vo.configuration;
 
 import java.util.Map;
-import java.util.WeakHashMap;
 
 import com.vo.anno.ZConfigurationProperties;
 import com.vo.anno.ZOrder;
@@ -65,6 +64,10 @@ public class ServerConfigurationProperties {
 	// FIXME 2024年12月16日 下午10:56:07 zhangzhen : 现在由于修改了handlRead方法，导致此值用不到了
 	// 是废弃掉？还是把此值改为循环读取body的配置项？
 	private Integer byteBufferSize = 1024 * 1;
+
+
+	@ZNotEmtpy
+	private String uploadTempDir;
 
 	/**
 	 * 处理http请求的最大线程数量

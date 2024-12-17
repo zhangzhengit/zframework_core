@@ -162,11 +162,12 @@ public class Task {
 	 * 执行目标方法（接口Method）
 	 *
 	 * @param request 请求体
+	 * @param socketChannel TODO
 	 * @return 响应结果，已根据具体的方法处理好header、cookie、body等内容，只是没write
 	 * @throws Exception
 	 *
 	 */
-	public ZResponse invoke(final ZRequest request) throws Exception {
+	public ZResponse invoke(final ZRequest request, final SocketChannel socketChannel) throws Exception {
 		// 匹配path
 		final RequestLine requestLine = request.getRequestLine();
 		if (CollUtil.isEmpty(request.getLineList())) {
@@ -182,7 +183,7 @@ public class Task {
 		}
 
 		try {
-			final Object[] p = this.generateParameters(method, request, requestLine, path);
+			final Object[] p = this.generateParameters(method, request, requestLine, path, socketChannel);
 			if (p == null) {
 				return null;
 			}
@@ -221,7 +222,7 @@ public class Task {
 			if (Boolean.TRUE.equals(ZControllerMap.getIsregexByMethodEnumAndPath(methodTarget, requestMapping)) &&path.matches(requestMapping)) {
 
 				final Object object = ZControllerMap.getObjectByMethod(methodTarget);
-				final Object[] arraygP = this.generateParameters(methodTarget, request, requestLine, path);
+				final Object[] arraygP = this.generateParameters(methodTarget, request, requestLine, path, this.socketChannel);
 				try {
 					ZMappingRegex.set(URLDecoder.decode(path, DEFAULT_CHARSET_NAME));
 					final ZResponse invokeAndResponse = this.invokeAndResponse(methodTarget, arraygP, object, request);
@@ -528,7 +529,7 @@ public class Task {
 	}
 
 	private Object[] generateParameters(final Method method, final Object[] parametersArray, final ZRequest request,
-			final RequestLine requestLine, final String path) {
+			final RequestLine requestLine, final String path, final SocketChannel socketChannel) {
 
 		final Parameter[] ps = method.getParameters();
 		if (ps.length < parametersArray.length) {
@@ -644,15 +645,81 @@ public class Task {
 						request.getContentType(), request.getBoundary());
 				final Optional<FD2> findAny = fdList.stream().filter(fd -> fd.getName().equals(p.getName())).findAny();
 				if (!findAny.isPresent()) {
+					//					System.out.println(Thread.currentThread().getName() + "\t" + LocalDateTime.now() + "\t"
+					//							+ "Task.generateParameters()");
+					//					// FIXME 2024年12月17日 上午11:09:05 zhangzhen : 在此再读取body
+					//
+					//					final SCSEnum currentStatus = SCS.getCurrentStatus(socketChannel);
+					//					System.out.println("currentStatus = " + currentStatus);
+					//
+					//					final int contentLength = request.getContentLength();
+					//					System.out.println("contentLength = " + contentLength);
+					//
+					//					final ByteBuffer bbBody = ByteBuffer.allocate(contentLength);
+					//					int cLR = 0;
+					//					while (socketChannel.isOpen()) {
+					//						//					while (socketChannel.isOpen() && (cLR < contentLength)) {
+					//						try {
+					//							final int read = socketChannel.read(bbBody);
+					//							cLR += read;
+					//						} catch (final IOException e) {
+					//							e.printStackTrace();
+					//						}
+					//
+					//						final int search = BodyReader.search(bbBody.array(), request.getBoundary() + "--", 1, 0);
+					//						if (search > -1) {
+					//							break;
+					//						}
+					//					}
+					//
+					//					SCS.setStatus(socketChannel, null);
+					//
+					//					final ZArray arrayAll = new ZArray(request.getOriginalRequestBytes());
+					//					bbBody.flip();
+					//					final byte[] bbBA = bbBody.array();
+					//
+					//					final byte[] bs = arrayAll.get();
+					//					final String headerS = new String(bs);
+					//					//					System.out.println("header = ");
+					//					//					System.out.println(headerS);
+					//
+					//					final String bbBS = new String(bbBA);
+					//					//					System.out.println("body = ");
+					//					//					System.out.println(bbBS);
+					//					while(bbBody.hasRemaining()) {
+					//						arrayAll.add(bbBody.get());
+					//					}
+					//					bbBody.clear();
+					//
+					//					SCS.setStatus(socketChannel, null);
+					//
+					//					final List<FD2> fdList2 = BodyReader.readFormDate(arrayAll.get(),
+					//							request.getContentType(), request.getBoundary());
+					//					final Optional<FD2> findAny2 = fdList2.stream().filter(fd -> fd.getName().equals(p.getName())).findAny();
+					//
+					//					if(findAny2.isPresent()) {
+					//
+					//						final ZMultipartFile file = new ZMultipartFile (findAny2.get().getName(),
+					//								findAny2.get().getFileName(),
+					//								findAny2.get().getBody(),
+					//								findAny2.get().getContentType(), null);
+					//
+					//						pI = Task.setValue(parametersArray, pI, p, file);
+					//					}else {
+					//						throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
+					//					}
 					throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
+
+				}else {
+
+					final ZMultipartFile file = new ZMultipartFile (findAny.get().getName(),
+							findAny.get().getFileName(),
+							findAny.get().getBody(),
+							findAny.get().getContentType(), null);
+
+					pI = Task.setValue(parametersArray, pI, p, file);
 				}
 
-				final ZMultipartFile file = new ZMultipartFile (findAny.get().getName(),
-						findAny.get().getFileName(),
-						findAny.get().getBody(),
-						findAny.get().getContentType(), null);
-
-				pI = Task.setValue(parametersArray, pI, p, file);
 			}
 
 		}
@@ -837,10 +904,11 @@ public class Task {
 		return nI.get();
 	}
 
-	private Object[] generateParameters(final Method method, final ZRequest request, final RequestLine requestLine, final String path) {
+	private Object[] generateParameters(final Method method, final ZRequest request, final RequestLine requestLine,
+			final String path, final SocketChannel socketChannel) {
 		final Object[] parametersArray = new Object[method.getParameters().length];
 
-		return this.generateParameters(method, parametersArray, request, requestLine, path);
+		return this.generateParameters(method, parametersArray, request, requestLine, path, socketChannel);
 	}
 
 	private void setZRequestAndZResponse(final Object[] arraygP, final ZRequest request) {

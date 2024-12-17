@@ -1,6 +1,11 @@
 package com.vo.core;
 
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
 import java.nio.ByteBuffer;
@@ -10,7 +15,6 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -114,7 +118,7 @@ public class NioLongConnectionServer {
 
 		keepAliveTimeoutJOB();
 
-		LOG.trace("zNIOServer开始启动,serverPort={}",serverPort);
+		LOG.trace("zNIOServer开始启动,serverPort={}", serverPort);
 
 		// 创建ServerSocketChannel
 		Selector selector = null;
@@ -151,7 +155,6 @@ public class NioLongConnectionServer {
 				if (!selectionKey.isValid()) {
 					continue;
 				}
-
 				try {
 					if (selectionKey.isAcceptable()) {
 						handleAccept(selectionKey, selector);
@@ -163,12 +166,13 @@ public class NioLongConnectionServer {
 									.getBean(ServerConfigurationProperties.class);
 							NioLongConnectionServer.response429Async(selectionKey, p.getQpsExceedMessage());
 						} else {
+
 							final ZArray array = NioLongConnectionServer.handleRead2(selectionKey);
 							if (array != null) {
-								final SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
-								final TaskRequest taskRequest = new TaskRequest(selectionKey, socketChannel,
+								final TaskRequest taskRequest = new TaskRequest(selectionKey, (SocketChannel) selectionKey.channel(),
 										array.get(), new Date());
-								final boolean responseAsync = this.requestHandler.add(taskRequest);
+								final boolean responseAsync = NioLongConnectionServer.this.requestHandler
+										.add(taskRequest);
 								if (!responseAsync) {
 									final ServerConfigurationProperties p = ZContext
 											.getBean(ServerConfigurationProperties.class);
@@ -272,8 +276,6 @@ public class NioLongConnectionServer {
 	 * @return
 	 */
 	private static ZArray handleRead2(final SelectionKey key) {
-		System.out.println(Thread.currentThread().getName() + "\t" + LocalDateTime.now() + "\t"
-				+ "NioLongConnectionServer.handleRead2()");
 
 		final SocketChannel socketChannel = (SocketChannel) key.channel();
 		if (!socketChannel.isOpen()) {
@@ -304,6 +306,7 @@ public class NioLongConnectionServer {
 				return null;
 			}
 		}
+		byteBuffer.clear();
 
 		final int cLIndex = BodyReader.search(array.get(), ZRequest.CONTENT_LENGTH, 1, 0);
 		if (cLIndex > -1) {
@@ -317,22 +320,56 @@ public class NioLongConnectionServer {
 				// FIXME 2024年12月16日 下午10:56:59 zhangzhen : 考虑好：如果上传文件很大，要不要还是分批读取？
 				// 要不要添加一个server.XX配置项限制上传的文件大小？然后在此判断cl值大于cl就返回个错误
 				if (contentLength > 0) {
-					final ByteBuffer bbBody = ByteBuffer.allocate(contentLength);
+					final ByteBuffer bbBody = ByteBuffer.allocateDirect(contentLength);
 					try {
 						int bodyL = 0;
 						while (bodyL < contentLength) {
 							final int cbllREad = socketChannel.read(bbBody);
 							bodyL += cbllREad;
 						}
-						array.add(bbBody.array());
+						
+						bbBody.flip();
+//						final BufferedOutputStream bos = saveToTempFile(System.currentTimeMillis() + ".temp");
+						while (bbBody.hasRemaining()) {
+							final byte b1 = bbBody.get();
+							array.add(b1);
+//							bos.write(b1);
+						}
+						bbBody.clear();
+//						bos.flush();
+//						bos.close();
 					} catch (final IOException e) {
 						e.printStackTrace();
 					}
+					bbBody.clear();
+					System.gc();
 				}
 			}
 		}
 
 		return array.length() > 0 ? array : null;
+	}
+
+
+	static BufferedOutputStream saveToTempFile(final String fileName) {
+		final File file = new File(SERVER_CONFIGURATION.getUploadTempDir() + fileName);
+		if (!file.exists()) {
+			try {
+				file.createNewFile();
+			} catch (final IOException e) {
+				e.printStackTrace();
+			}
+		}
+
+		try {
+			final OutputStream outputStream = new FileOutputStream(file);
+			final BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(outputStream);
+			return bufferedOutputStream;
+		} catch (final FileNotFoundException e) {
+			e.printStackTrace();
+		}
+
+		return null;
 	}
 
 	private static ZArray handleRead(final SelectionKey key) {
@@ -516,7 +553,7 @@ public class NioLongConnectionServer {
 
 		try {
 
-			final ZResponse response = task.invoke(request);
+			final ZResponse response = task.invoke(request, socketChannel);
 			if ((response != null) && !response.getWrite().get()) {
 
 				if (Boolean.TRUE.equals(SERVER_CONFIGURATION.getResponseZSessionId())) {
