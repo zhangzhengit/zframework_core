@@ -70,7 +70,6 @@ public final class TaskRequestHandler extends Thread {
 				final TaskRequest taskRequest = this.queue.take();
 
 				final ZRequest request = BodyReader.readHeader(taskRequest.getRequestData());
-
 				if (request == null) {
 					taskRequest.getSocketChannel().close();
 					taskRequest.getSelectionKey().cancel();

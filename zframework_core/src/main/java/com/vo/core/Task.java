@@ -15,6 +15,7 @@ import java.lang.reflect.Parameter;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketAddress;
 import java.net.URLDecoder;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
@@ -183,6 +184,12 @@ public class Task {
 		}
 
 		try {
+
+			final SocketAddress remoteAddress = socketChannel.getRemoteAddress();
+			final String ci = remoteAddress.toString();
+			final String clientIp = ci.substring(1, ci.indexOf(":"));
+			request.setClientIp(clientIp);
+
 			final Object[] p = this.generateParameters(method, request, requestLine, path, socketChannel);
 			if (p == null) {
 				return null;
