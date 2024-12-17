@@ -326,10 +326,6 @@ public class ZRequest {
 		}
 	}
 
-	public ZRequest(final List<String> lineList) {
-		this.lineList = lineList;
-	}
-
 	// -------------------------------------------------------------------------------------------------
 	/**
 	 *  请求头的 请求行
