@@ -301,7 +301,8 @@ public class NioLongConnectionServer {
 				}
 
 			} catch (final IOException e) {
-				e.printStackTrace();
+				// 不打印了
+				//				e.printStackTrace();
 				NioLongConnectionServer.closeSocketChannelAndKeyCancel(key, socketChannel);
 				return null;
 			}
@@ -327,17 +328,17 @@ public class NioLongConnectionServer {
 							final int cbllREad = socketChannel.read(bbBody);
 							bodyL += cbllREad;
 						}
-						
+
 						bbBody.flip();
-//						final BufferedOutputStream bos = saveToTempFile(System.currentTimeMillis() + ".temp");
+						//						final BufferedOutputStream bos = saveToTempFile(System.currentTimeMillis() + ".temp");
 						while (bbBody.hasRemaining()) {
 							final byte b1 = bbBody.get();
 							array.add(b1);
-//							bos.write(b1);
+							//							bos.write(b1);
 						}
 						bbBody.clear();
-//						bos.flush();
-//						bos.close();
+						//						bos.flush();
+						//						bos.close();
 					} catch (final IOException e) {
 						e.printStackTrace();
 					}
