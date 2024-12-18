@@ -61,10 +61,7 @@ public class ServerConfigurationProperties {
 	@ZNotNull
 	@ZMin(min = 2)
 	@ZMax(max = 10240)
-	// FIXME 2024年12月16日 下午10:56:07 zhangzhen : 现在由于修改了handlRead方法，导致此值用不到了
-	// 是废弃掉？还是把此值改为循环读取body的配置项？
-	private Integer byteBufferSize = 1024 * 1;
-
+	private Integer byteBufferSize = 1024 * 2;
 
 	/**
 	 * 上传文件时存放临时文件的目录

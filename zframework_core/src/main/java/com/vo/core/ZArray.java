@@ -16,14 +16,18 @@ import lombok.Setter;
 // FIXME 2023年10月26日 下午5:00:58 zhanghen: 这个类里所有方法都太差，需要改进
 public class ZArray {
 
-	private final List<Byte> ar = new ArrayList<>();
+	private final List<Byte> ar;
 
 	@Getter
 	@Setter
 	private boolean yichangle;
 
 	public ZArray() {
+		this.ar = new ArrayList<>();
+	}
 
+	public ZArray(final int initialCapacity) {
+		this.ar = new ArrayList<>(initialCapacity);
 	}
 
 	public boolean isEmpty() {
@@ -31,6 +35,7 @@ public class ZArray {
 	}
 
 	public ZArray(final byte[] ba) {
+		this.ar = new ArrayList<>(ba.length);
 		for (final byte b : ba) {
 			this.ar.add(b);
 		}

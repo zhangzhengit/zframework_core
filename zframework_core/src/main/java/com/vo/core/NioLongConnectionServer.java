@@ -295,11 +295,71 @@ public class NioLongConnectionServer {
 			return null;
 		}
 
-		// 读header 时，使用1来读确保别读多了
-		final ByteBuffer byteBuffer = ByteBuffer.allocate(BYTE_BUFFER_BODY_CAPACITY);
-		final ZArray array = new ZArray();
-		while (socketChannel.isOpen()) {
+		final AR ar = readHttpHeader(key, socketChannel);
+		final ZArray array = ar.getArray();
+
+		final int cLIndex = BodyReader.search(array.get(), ZRequest.CONTENT_LENGTH, 1, 0);
+		if (cLIndex <= -1) {
+			return array;
+		}
+
+		// 读header时读到的字节数比header截止符号(\r\n\r\n)的index还大，说明读到的不只有header还有下面的body部分
+		if (ar.getArray().length() > ar.getHeaderEndIndex()) {
+
+			final int cLIndexRN = BodyReader.search(array.get(), BodyReader.RN, 1, cLIndex);
+			if (cLIndexRN > cLIndex) {
+				final byte[] copyOfRange = Arrays.copyOfRange(array.get(), cLIndex, cLIndexRN);
+				final String contentTypeLine = new String(copyOfRange);
+				final int contentLength = Integer.parseInt(contentTypeLine.split(":")[1].trim());
+				if (contentLength <= 0) {
+					return array;
+				}
+
+				// 根据Content-Length和读header多出的部分，重新计算出body需要读的字节数
+				final int bodyReadC = contentLength - (array.length() - ar.getHeaderEndIndex()
+						- BodyReader.RN_BYTES_LENGTH - BodyReader.RN_BYTES_LENGTH);
+
+				// 无需再次读body了，读header时一起读出来了
+				if (bodyReadC <= 0) {
+					return array;
+				}
+
+				// 开始读取body部分
+				final ByteBuffer bbBody = ByteBuffer.allocateDirect(bodyReadC);
+				try {
+					int bodyLength = 0;
+					while (bodyLength < (bodyReadC - BodyReader.RN_BYTES_LENGTH)) {
+						final int cbllREad = socketChannel.read(bbBody);
+						bodyLength += cbllREad;
+					}
+
+					bbBody.flip();
+					while (bbBody.hasRemaining()) {
+						final byte b1 = bbBody.get();
+						array.add(b1);
+					}
+					bbBody.clear();
+				} catch (final IOException e) {
+					e.printStackTrace();
+				}
+				bbBody.clear();
+			}
+		}
+
+		return array;
+	}
+
+	private static AR readHttpHeader(final SelectionKey key, final SocketChannel socketChannel) {
+		final Integer byteBufferSize = SERVER_CONFIGURATIONPROPERTIES.getByteBufferSize();
+		final ByteBuffer byteBuffer = ByteBuffer.allocate(byteBufferSize);
+		final ZArray array = new ZArray(byteBufferSize);
+		int headerEndIndex = -1;
+		while (true) {
 			try {
+				if (!socketChannel.isOpen()) {
+					return null;
+				}
+
 				final int tR = socketChannel.read(byteBuffer);
 				if (tR == -1) {
 					NioLongConnectionServer.closeSocketChannelAndKeyCancel(key, socketChannel);
@@ -308,7 +368,8 @@ public class NioLongConnectionServer {
 
 				if (tR > 0) {
 					add(byteBuffer, array);
-					if(httpHeaderEND(array.get())) {
+					headerEndIndex = httpHeaderEND(array.get());
+					if (headerEndIndex > -1) {
 						break;
 					}
 				}
@@ -322,46 +383,7 @@ public class NioLongConnectionServer {
 		}
 		byteBuffer.clear();
 
-		final int cLIndex = BodyReader.search(array.get(), ZRequest.CONTENT_LENGTH, 1, 0);
-		if (cLIndex > -1) {
-
-			final int cLIndexRN = BodyReader.search(array.get(), BodyReader.RN, 1, cLIndex);
-			if (cLIndexRN > cLIndex) {
-				final byte[] copyOfRange = Arrays.copyOfRange(array.get(), cLIndex, cLIndexRN);
-				final String cL = new String(copyOfRange);
-				final int contentLength = Integer.parseInt(cL.split(":")[1].trim());
-
-				// FIXME 2024年12月16日 下午10:56:59 zhangzhen : 考虑好：如果上传文件很大，要不要还是分批读取？
-				// 要不要添加一个server.XX配置项限制上传的文件大小？然后在此判断cl值大于cl就返回个错误
-				if (contentLength > 0) {
-					final ByteBuffer bbBody = ByteBuffer.allocateDirect(contentLength);
-					try {
-						int bodyL = 0;
-						while (bodyL < contentLength) {
-							final int cbllREad = socketChannel.read(bbBody);
-							bodyL += cbllREad;
-						}
-
-						bbBody.flip();
-						//						final BufferedOutputStream bos = saveToTempFile(System.currentTimeMillis() + ".temp");
-						while (bbBody.hasRemaining()) {
-							final byte b1 = bbBody.get();
-							array.add(b1);
-							//							bos.write(b1);
-						}
-						bbBody.clear();
-						//						bos.flush();
-						//						bos.close();
-					} catch (final IOException e) {
-						e.printStackTrace();
-					}
-					bbBody.clear();
-					System.gc();
-				}
-			}
-		}
-
-		return array.length() > 0 ? array : null;
+		return new AR(array, headerEndIndex);
 	}
 
 
@@ -429,9 +451,10 @@ public class NioLongConnectionServer {
 		return array.length() > 0 ? array : null;
 	}
 
-	private static boolean httpHeaderEND(final byte[] ba) {
+	private static int httpHeaderEND(final byte[] ba) {
 		final int rnrnIndex = BodyReader.search(ba, BodyReader.RNRN, 1, 0);
-		return rnrnIndex >= 0;
+		//		return rnrnIndex >= 0;
+		return rnrnIndex;
 	}
 
 	/**

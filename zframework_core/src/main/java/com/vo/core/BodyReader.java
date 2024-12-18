@@ -24,6 +24,7 @@ public class BodyReader {
 	public static final String NAME = "name";
 	public static final String RNRN = "\r\n\r\n";
 	public static final String RN = "\r\n";
+	public static final int RN_BYTES_LENGTH = RN.getBytes().length;
 
 	/**
 	 * 从http请求报文中解析出header，是只解析header，不解析header下面的部分
