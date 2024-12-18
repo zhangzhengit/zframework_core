@@ -67,8 +67,10 @@ public class ZRedisConfiguration {
 			try (Jedis jedis = ZContext.getBean(JedisPool.class).getResource()) {
 			}
 		} catch (final Exception e) {
-			final String m1 = "初始化Redis连接失败,请检查配置项信息=" + redisConfigurationProperties;
+			final String m1 = "初始化Redis连接失败,请检查配置项信息=" + this.redisConfigurationProperties;
 			final String message = m1 + Task.NEW_LINE + Task.gExceptionMessage(e);
+			LOG.error("连接Redis失败,message={}", message);
+
 			final StartupException startupException = new StartupException(message);
 			throw startupException;
 		}

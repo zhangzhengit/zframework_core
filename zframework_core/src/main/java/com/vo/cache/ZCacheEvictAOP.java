@@ -1,9 +1,14 @@
 package com.vo.cache;
 
+import java.lang.reflect.Parameter;
+import java.time.LocalDateTime;
+import java.util.List;
+
 import com.vo.anno.ZAutowired;
 import com.vo.aop.AOPParameter;
 import com.vo.aop.ZAOP;
 import com.vo.aop.ZIAOP;
+import com.vo.exception.CacheKeyDeclarationException;
 
 /**
  * @ZCacheEvict 的实现类
@@ -28,6 +33,10 @@ public class ZCacheEvictAOP implements ZIAOP {
 
 	@Override
 	public Object around(final AOPParameter aopParameter) {
+		System.out.println(
+				Thread.currentThread().getName() + "\t" + LocalDateTime.now() + "\t" + "ZCacheEvictAOP.around()");
+		final String name = aopParameter.getMethod().getName();
+		System.out.println("target-method-name = " + name);
 
 		if (!Boolean.TRUE.equals(this.cacheConfigurationProperties.getEnable())) {
 			return aopParameter.invoke();
@@ -35,13 +44,42 @@ public class ZCacheEvictAOP implements ZIAOP {
 
 		final ZCacheEvict annotation = aopParameter.getMethod().getAnnotation(ZCacheEvict.class);
 		final String key = annotation.key();
-		final String cacheKey = ZCacheableAOP.gKey(aopParameter, key, annotation.group());
+		final String cacheKey = gKey(aopParameter, key, annotation.group());
 
-		this.cache.remove(cacheKey);
+		if (STU.isNullOrEmptyOrBlank(key)) {
+			this.cache.removePrefix(cacheKey);
+		}else {
+			this.cache.remove(cacheKey);
+		}
 
 		final Object v = aopParameter.invoke();
 		return v;
 	}
+
+	private static String gKey(final AOPParameter aopParameter, final String key, final String group) {
+		if (STU.isNullOrEmptyOrBlank(key)) {
+			return ZCacheableAOP.PREFIX + "@" + aopParameter.getTarget().getClass().getCanonicalName() + "@" + group;
+		}
+
+		final String canonicalName = aopParameter.getTarget().getClass().getCanonicalName();
+
+		final Parameter[] ps = aopParameter.getMethod().getParameters();
+		for (int i = 0; i < ps.length; i++) {
+			final Parameter parameter = ps[i];
+			if (parameter.getName().equals(key)) {
+
+				final List<Object> pl = aopParameter.getParameterList();
+				final String cacheKey = ZCacheableAOP.PREFIX + "@" + canonicalName + "@" + group + "@"
+						+ parameter.getName() + "=" + ZCacheableAOP.hash(pl.get(i));
+
+				return cacheKey;
+			}
+		}
+
+		throw new CacheKeyDeclarationException("key不存在,key = " + key + ",方法名称=" + aopParameter.getMethod().getName());
+	}
+
+
 
 	@Override
 	public Object after(final AOPParameter aopParameter) {

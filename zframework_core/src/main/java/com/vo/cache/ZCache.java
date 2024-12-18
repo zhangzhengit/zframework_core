@@ -19,16 +19,18 @@ public interface ZCache<V> {
 		private ZCache<ZCacheR> cache;
 
 	 */
-	public static final String CACHE_BBUILTIN_FOR_PACKAGE_CACHE = "cacheBbuiltinForPackageCache";
+	String CACHE_BBUILTIN_FOR_PACKAGE_CACHE = "cacheBbuiltinForPackageCache";
 
-	public void add(final String key, final V value, long expire);
+	void add(final String key, final V value, long expire);
 
-	public V get(final String key);
+	V get(final String key);
 
-	public void remove(final String key);
+	void remove(final String key);
 
-	public boolean contains(final String key);
+	void removePrefix(final String keyPreifx);
 
-	public Set<String> keySet();
+	boolean contains(final String key);
+
+	Set<String> keySet();
 
 }

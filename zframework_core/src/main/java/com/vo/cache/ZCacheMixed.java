@@ -108,4 +108,11 @@ public class ZCacheMixed implements ZCache<ZCacheR> {
 		return k1;
 	}
 
+	@Override
+	public void removePrefix(final String keyPreifx) {
+		this.memory.removePrefix(keyPreifx);
+		this.redis.removePrefix(keyPreifx);
+		this.memory.removePrefix(keyPreifx);
+	}
+
 }

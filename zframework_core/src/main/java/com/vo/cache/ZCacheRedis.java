@@ -1,5 +1,6 @@
 package com.vo.cache;
 
+import java.util.List;
 import java.util.Set;
 
 import org.springframework.util.StringUtils;
@@ -9,6 +10,8 @@ import com.vo.core.ZContext;
 
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.ScanParams;
+import redis.clients.jedis.ScanResult;
 
 /**
  *
@@ -63,6 +66,19 @@ public class ZCacheRedis implements ZCache<ZCacheR> {
 		try (Jedis jedis = ZContext.getBean(JedisPool.class).getResource()) {
 			final Set<String> keys = jedis.keys("*");
 			return keys;
+		}
+	}
+
+	@Override
+	public void removePrefix(final String keyPreifx) {
+
+		try (Jedis jedis = ZContext.getBean(JedisPool.class).getResource()) {
+			final ScanParams match = new ScanParams().match(keyPreifx + "*");
+			final ScanResult<String> scan = jedis.scan("0", match);
+			final List<String> result = scan.getResult();
+			for (final String string : result) {
+				jedis.del(string);
+			}
 		}
 	}
 

@@ -1,8 +1,10 @@
 package com.vo.cache;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
+import java.util.stream.Collectors;
 
 import com.vo.anno.ZComponent;
 
@@ -35,8 +37,8 @@ public class ZCacheMemory implements ZCache<ZCacheR> {
 				return null;
 			}
 
-			if (vC.getExpire() == ZCacheable.NEVER
-					|| System.currentTimeMillis() < vC.getExpire() + vC.getCurrentTimeMillis()) {
+			if ((vC.getExpire() == ZCacheable.NEVER)
+					|| (System.currentTimeMillis() < (vC.getExpire() + vC.getCurrentTimeMillis()))) {
 				return vC;
 			}
 
@@ -63,6 +65,19 @@ public class ZCacheMemory implements ZCache<ZCacheR> {
 	@Override
 	public synchronized Set<String> keySet() {
 		return this.map.keySet();
+	}
+
+	@Override
+	public void removePrefix(final String keyPreifx) {
+		synchronized (this.map) {
+			final List<String> kpl = this.map.keySet().stream().filter(key -> key.startsWith(keyPreifx))
+					.collect(Collectors.toList());
+			if (kpl.size() > 0) {
+				for (final String k : kpl) {
+					this.map.remove(k);
+				}
+			}
+		}
 	}
 
 }
