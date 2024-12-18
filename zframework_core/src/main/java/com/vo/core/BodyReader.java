@@ -36,6 +36,7 @@ public class BodyReader {
 		if (headerEndIndex <= -1) {
 			// FIXME 2024年12月11日 下午3:15:18 zhangzhen : 看外面，这个异常跑不出去，考虑好怎么办
 			//			throw new ParseHTTPRequestException("");
+			return null;
 		}
 
 		// FIXME 2024年12月13日 下午5:07:00 zhangzhen : 本机测试终于重现了：
