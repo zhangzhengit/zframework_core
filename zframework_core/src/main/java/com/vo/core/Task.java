@@ -130,8 +130,23 @@ public class Task {
 	 * @return
 	 * @throws Exception
 	 */
-	public static <T extends Annotation> T getMethodETag(final ZRequest request, final Class<T> annoClass) {
+	public static <T extends Annotation> T getMethodAnnotation(final ZRequest request, final Class<T> annoClass) {
 
+		final String key = request.getRequestURI() + "@" + annoClass.getCanonicalName();
+		final Object v = CACHE_MAP.get(key);
+		if (v != null) {
+			return (T) v;
+		}
+
+		synchronized (key) {
+
+			final T v2 = getMethodAnnotation0(request, annoClass);
+			CACHE_MAP.put(key, v2);
+			return v2;
+		}
+	}
+
+	private static <T extends Annotation> T getMethodAnnotation0(final ZRequest request, final Class<T> annoClass) {
 		// 匹配path
 		final RequestLine requestLine = request.getRequestLine();
 		if (CollUtil.isEmpty(request.getLineList())) {
@@ -169,11 +184,8 @@ public class Task {
 	 *
 	 */
 	public ZResponse invoke(final ZRequest request, final SocketChannel socketChannel) throws Exception {
-		// 匹配path
+
 		final RequestLine requestLine = request.getRequestLine();
-		if (CollUtil.isEmpty(request.getLineList())) {
-			return null;
-		}
 
 		final String path = requestLine.getPath();
 		final Method method = ZControllerMap.getMethodByMethodEnumAndPath(requestLine.getMethodEnum(), path);
@@ -315,14 +327,12 @@ public class Task {
 	private ZResponse invokeAndResponse(final Method method, final Object[] arraygP, final Object zController, final ZRequest request)
 			throws IllegalAccessException, InvocationTargetException {
 
-
 		final String controllerName = zController.getClass().getCanonicalName();
 		final Integer qps = ZControllerMap.getQPSByControllerNameAndMethodName(controllerName, method.getName());
 
 		final String userAgent = request.getHeader(TaskRequestHandler.USER_AGENT);
 		final QPSHandlingEnum handlingEnum = ZContext
 				.getBean(RequestValidatorConfigurationProperties.class).getHandlingEnum(userAgent);
-
 		final boolean allow = QC.allow("API" + controllerName + method.getName(), qps, handlingEnum);
 		if (!allow) {
 
