@@ -60,12 +60,12 @@ public class QC {
 		if (count == null) {
 			C.put(k, 1);
 		} else {
-			if (count.intValue() >= qpsNEW) {
+			if (count.intValue() > qpsNEW) {
+				C.remove(k);
 				return false;
 			}
 			C.put(k, count + 1);
 		}
-
 		return true;
 	}
 
@@ -73,24 +73,24 @@ public class QC {
 		return keyPrefix + "_" + time;
 	}
 
-//	public static void main(final String[] args) throws InterruptedException {
-		//		System.out.println(a(1));
-		//		System.out.println(a(5));
-		//		System.out.println(a(10));
-		//		System.out.println(a(20));
-		//		System.out.println(a(50));
-		//		System.out.println();
-		//		System.out.println(a(100));
-		//		System.out.println(a(200));
-		//		System.out.println(a(500));
-		//		System.out.println(a(1000));
-		//		System.out.println(a(5000));
-		//		System.out.println("5000");
-//
-//		final int n = 123444;
-//		for (int i = 1; i <= n; i++) {
-//			System.out.println(allow("test", 13300,QPSHandlingEnum.UNEVEN));
-//		}
-//	}
+	//	public static void main(final String[] args) throws InterruptedException {
+	//		System.out.println(a(1));
+	//		System.out.println(a(5));
+	//		System.out.println(a(10));
+	//		System.out.println(a(20));
+	//		System.out.println(a(50));
+	//		System.out.println();
+	//		System.out.println(a(100));
+	//		System.out.println(a(200));
+	//		System.out.println(a(500));
+	//		System.out.println(a(1000));
+	//		System.out.println(a(5000));
+	//		System.out.println("5000");
+	//
+	//		final int n = 123444;
+	//		for (int i = 1; i <= n; i++) {
+	//			System.out.println(allow("test", 13300,QPSHandlingEnum.UNEVEN));
+	//		}
+	//	}
 
 }
