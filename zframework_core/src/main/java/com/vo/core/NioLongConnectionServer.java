@@ -7,6 +7,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.net.SocketException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
@@ -232,8 +233,20 @@ public class NioLongConnectionServer {
 				final SS ss = SOCKET_CHANNEL_MAP.remove(k);
 				synchronized (ss.getSocketChannel()) {
 					try {
+						if (!ss.getSocketChannel().isOpen()) {
+							continue;
+						}
+
+						final SocketAddress remoteAddress = ss.getSocketChannel().getRemoteAddress();
 						ss.getSocketChannel().close();
 						ss.getSelectionKey().cancel();
+						LOG.info("已关闭超时的长连接[{}] ({}秒).当前剩余长连接数[{}]个",
+								remoteAddress,
+								keepAliveTimeout,
+								SOCKET_CHANNEL_MAP.size()
+								);
+
+						SOCKET_CHANNEL_MAP.remove(k);
 					} catch (final IOException e) {
 						e.printStackTrace();
 					}
@@ -532,65 +545,30 @@ public class NioLongConnectionServer {
 	private static void response(final SelectionKey key, final SocketChannel socketChannel, final ZRequest request,
 			final Task task) throws Exception {
 
-		// 解析请求时，无匹配的Method
-		if (request.getRequestLine().getMethodEnum() == null) {
-			final MethodEnum[] values = MethodEnum.values();
-			final String methodString = Lists.newArrayList(values).stream().map(MethodEnum::getMethod).collect(Collectors.joining(","));
-			final CR<Object> error = CR.error(HttpStatus.HTTP_405.getCode(), HttpStatus.HTTP_405.getMessage());
-			new ZResponse(socketChannel)
-			.header(ZRequest.ALLOW, methodString)
-			.httpStatus(HttpStatus.HTTP_405.getCode())
-			.contentType(HeaderEnum.APPLICATION_JSON.getType())
-			.body(J.toJSONString(error, Include.NON_NULL))
-			.write();
-			closeSocketChannelAndKeyCancel(key, socketChannel);
-			return;
-		}
-
-		final String connection = request.getHeader(HttpHeaderEnum.CONNECTION.getValue());
-		final boolean keepAlive = StrUtil.isNotEmpty(connection)
-				&& (connection.equalsIgnoreCase(ConnectionEnum.KEEP_ALIVE.getValue())
-						|| connection.toLowerCase().contains(ConnectionEnum.KEEP_ALIVE.getValue().toLowerCase()));
-
 		try {
-
 			final ZResponse response = task.invoke(request, socketChannel);
-			if ((response != null) && !response.getWrite().get()) {
 
-				if (Boolean.TRUE.equals(SERVER_CONFIGURATION.getResponseZSessionId())) {
-					final ZSession sessionFALSE = request.getSession(false);
-					if (sessionFALSE == null) {
-						final ZSession sessionTRUE = request.getSession(true);
-						sessionTRUE.setLastAccessedTime(new Date());
-						final ZCookie cookie =
-								new ZCookie(ZRequest.Z_SESSION_ID, sessionTRUE.getId())
-								.path("/")
-								.httpOnly(true);
-						response.cookie(cookie);
-					} else {
-						sessionFALSE.setLastAccessedTime(new Date());
-					}
-				}
-
-				if (keepAlive) {
-					response.header(CONNECTION, ConnectionEnum.KEEP_ALIVE.getValue());
-					SOCKET_CHANNEL_MAP.put((System.currentTimeMillis() / 1000) * 1000, new SS(socketChannel, key));
-				}
-
-				setCustomHeader(response);
-				setServer(response);
-				setDate(response);
-				setCacheControl(request, response);
-				setETag(socketChannel, request, response);
-
-
-				// 在此自动write，接口中可以不调用write
-				response.write();
-
-				if (!keepAlive) {
-					closeSocketChannelAndKeyCancel(key, socketChannel);
-				}
+			if ((response == null) || response.getWrite().get()) {
+				return;
 			}
+
+			setZSessionId(request, response);
+			setCustomHeader(response);
+			setServer(response);
+			setDate(response);
+			setCacheControl(request, response);
+			setETag(socketChannel, request, response);
+
+			final boolean keepAlive = isConnectionKeepAlive(request);
+			setConnection(key, socketChannel, keepAlive, response);
+
+			response.write();
+
+			// 非长连接，直接关闭连接
+			if (!keepAlive) {
+				closeSocketChannelAndKeyCancel(key, socketChannel);
+			}
+
 		} catch (final Exception e) {
 			// 这里不能关闭，因为外面的异常处理器类还要write
 			// socketChannelCloseAndKeyCancel(key, socketChannel);
@@ -599,8 +577,41 @@ public class NioLongConnectionServer {
 
 	}
 
+	private static boolean isConnectionKeepAlive(final ZRequest request) {
+		final String connection = request.getHeader(HttpHeaderEnum.CONNECTION.getValue());
+		final boolean keepAlive = StrUtil.isNotEmpty(connection)
+				&& (connection.equalsIgnoreCase(ConnectionEnum.KEEP_ALIVE.getValue())
+						|| connection.toLowerCase().contains(ConnectionEnum.KEEP_ALIVE.getValue().toLowerCase()));
+		return keepAlive;
+	}
+
+	private static void setConnection(final SelectionKey key, final SocketChannel socketChannel,
+			final boolean keepAlive, final ZResponse response) {
+		if (keepAlive) {
+			response.header(CONNECTION, ConnectionEnum.KEEP_ALIVE.getValue());
+			SOCKET_CHANNEL_MAP.put((System.currentTimeMillis() / 1000) * 1000, new SS(socketChannel, key));
+		}
+	}
+
+	private static void setZSessionId(final ZRequest request, final ZResponse response) {
+		if (!Boolean.TRUE.equals(SERVER_CONFIGURATION.getResponseZSessionId())) {
+			return;
+		}
+
+		final ZSession sessionFALSE = request.getSession(false);
+		if (sessionFALSE != null) {
+			sessionFALSE.setLastAccessedTime(new Date());
+			return;
+		}
+
+		final ZSession sessionTRUE = request.getSession(true);
+		sessionTRUE.setLastAccessedTime(new Date());
+		final ZCookie cookie = new ZCookie(ZRequest.Z_SESSION_ID, sessionTRUE.getId()).path("/").httpOnly(true);
+		response.cookie(cookie);
+	}
+
 	private static void setCacheControl(final ZRequest request, final ZResponse response) {
-		final ZCacheControl cacheControl = Task.getMethodETag(request, ZCacheControl.class);
+		final ZCacheControl cacheControl = Task.getMethodAnnotation(request, ZCacheControl.class);
 		if (cacheControl != null) {
 
 			final CacheControlEnum[] vs = cacheControl.value();
@@ -638,27 +649,28 @@ public class NioLongConnectionServer {
 
 	private static void setETag(final SocketChannel socketChannel, final ZRequest request,
 			final ZResponse response) {
-		final ZETag methodETag = Task.getMethodETag(request, ZETag.class);
-		if (methodETag != null) {
-
-			final String newETag = MD5.c(response.getBodyList());
-
-			// 执行目标方法前，先看请求头的ETag
-			final String requestIfNoneMatch = request.getHeader(IF_NONE_MATCH);
-			if ((requestIfNoneMatch != null) && Objects.equals(newETag, requestIfNoneMatch)) {
-				final ZResponse r304 = new ZResponse(socketChannel);
-				r304.httpStatus(304);
-				r304.contentType(null);
-				final List<ZHeader> rhl = response.getHeaderList();
-				for (final ZHeader zHeader : rhl) {
-					r304.header(zHeader.getName(),zHeader.getValue());
-				}
-				r304.header(E_TAG, requestIfNoneMatch);
-				r304.write();
-				return;
-			}
-			response.header(E_TAG, newETag);
+		final ZETag methodETag = Task.getMethodAnnotation(request, ZETag.class);
+		if (methodETag == null) {
+			return;
 		}
+
+		final String newETagMd5 = MD5.c(response.getBodyList());
+
+		// 执行目标方法前，先看请求头的ETag
+		final String requestIfNoneMatch = request.getHeader(IF_NONE_MATCH);
+		if ((requestIfNoneMatch != null) && Objects.equals(newETagMd5, requestIfNoneMatch)) {
+			final ZResponse r304 = new ZResponse(socketChannel);
+			r304.httpStatus(304);
+			r304.contentType(null);
+			final List<ZHeader> rhl = response.getHeaderList();
+			for (final ZHeader zHeader : rhl) {
+				r304.header(zHeader.getName(),zHeader.getValue());
+			}
+			r304.header(E_TAG, requestIfNoneMatch);
+			r304.write();
+			return;
+		}
+		response.header(E_TAG, newETagMd5);
 	}
 
 	@Data
