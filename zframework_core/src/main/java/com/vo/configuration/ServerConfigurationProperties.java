@@ -164,13 +164,25 @@ public class ServerConfigurationProperties {
 	@ZValue(name = "server.task.timeout.milliseconds", listenForChanges = true)
 	private Integer taskTimeoutMilliseconds = 100;
 
+	/**
+	 * 是否启用对一个client的qps限制
+	 */
+	@ZNotNull
+	@ZValue(name = "server.enable.client.qps", listenForChanges = true)
+	private Boolean enableClientQps = true;
 
+	/**
+	 * 对一个client的qps限制
+	 */
 	@ZMin(min = ZClientQPSValidator.MIN_VALUE)
 	@ZMax(max = ZClientQPSValidator.MAX_VALUE)
 	@ZValue(name = "server.client.qps", listenForChanges = true)
 	@ZCustom(cls = ZClientQPSValidator.class)
 	private Integer clientQps = QPSEnum.CLIENT.getDefaultValue();
 
+	/**
+	 * 对一个ZSESSIONID的qps限制
+	 */
 	@ZMin(min = ZSessionIdQPSValidator.MIN_VALUE)
 	@ZMax(max = ZSessionIdQPSValidator.MAX_VALUE)
 	@ZValue(name = "server.session.id.qps", listenForChanges = true)
