@@ -178,10 +178,6 @@ public class ZRequest {
 		return this.getPath();
 	}
 
-	public String getQueryString() {
-		return this.getQueryString();
-	}
-
 	/**
 	 * 获取Content-Type值
 	 *

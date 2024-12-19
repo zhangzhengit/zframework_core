@@ -59,9 +59,19 @@ public class ServerConfigurationProperties {
 	 * 读取http请求的ByteBuffer的容量大小
 	 */
 	@ZNotNull
-	@ZMin(min = 2)
+	@ZMin(min = 1)
 	@ZMax(max = 10240)
 	private Integer byteBufferSize = 1024 * 2;
+
+	/**
+	 * nio 读取http请求的body时
+	 * socketChannel.read()方法一直返回0时的等待超时毫秒数
+	 *
+	 */
+	@ZMin(min = 1)
+	@ZMax(max = 1000 * 60)
+	@ZNotNull
+	private Integer nioReadTimeout = 500;
 
 	/**
 	 * 上传文件时存放临时文件的目录

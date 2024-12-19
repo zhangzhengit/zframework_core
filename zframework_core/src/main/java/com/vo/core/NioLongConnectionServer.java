@@ -340,29 +340,40 @@ public class NioLongConnectionServer {
 					}
 
 					// 开始读取body部分
-					final ByteBuffer bbBody = ByteBuffer.allocateDirect(bodyReadC);
+					final ByteBuffer bbBody = (bodyReadC - BodyReader.RN_BYTES_LENGTH) > 0
+							? ByteBuffer.allocateDirect(bodyReadC)
+									: null;
+
+					final Integer nioReadTimeout = SERVER_CONFIGURATION.getNioReadTimeout();
+					final long startTime = System.currentTimeMillis();
 					try {
-						int bodyLength = 0;
-						while (bodyLength < (bodyReadC - BodyReader.RN_BYTES_LENGTH)) {
-							final int cbllREad = socketChannel.read(bbBody);
-							bodyLength += cbllREad;
+						int totalBytesRead = 0;
+						while (totalBytesRead < (bodyReadC - BodyReader.RN_BYTES_LENGTH)) {
+							final int read = socketChannel.read(bbBody);
+							totalBytesRead += read;
+
+							// 如果读取返回 0，则检查超时
+							if (((totalBytesRead == 0) || (read == 0))
+									&& ((System.currentTimeMillis() - startTime) > nioReadTimeout)) {
+								throw new IllegalArgumentException("读取body超时");
+							}
 						}
 
-						bbBody.flip();
-						while (bbBody.hasRemaining()) {
-							final byte b1 = bbBody.get();
-							array.add(b1);
+						if (bbBody != null) {
+							bbBody.flip();
+							while (bbBody.hasRemaining()) {
+								array.add(bbBody.get());
+							}
+							bbBody.clear();
 						}
-						bbBody.clear();
+
 					} catch (final IOException e) {
 						e.printStackTrace();
 					}
-					bbBody.clear();
 				}
 			}
 
 			return array;
-
 		} catch (final Exception e) {
 			throw e;
 		}
@@ -394,7 +405,7 @@ public class NioLongConnectionServer {
 
 					// 没找到\r\n\r\n，读到的不足byteBufferSize，说明不存在\r\n\r\n，是bad request
 					if ((tR < byteBufferSize)) {
-						throw new IllegalArgumentException("bad request");
+						throw new IllegalArgumentException("header截止错误");
 					}
 				}
 
