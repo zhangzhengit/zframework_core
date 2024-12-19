@@ -532,8 +532,9 @@ public class ZRequest {
 		final int hI = requestLine.lastIndexOf("HTTP/");
 		if (hI > -1) {
 			final String version = requestLine.substring(hI);
-			if (!HTTP_11.equals(version)) {
-				throw new IllegalArgumentException("请求行错误：HTTP版本错误,本服务器支持HTTP/1.1");
+			if (!HTTP_11.equalsIgnoreCase(version)) {
+				// FIXME 2024年12月19日 下午1:41:45 zhangzhen : ab 命令测试会走到异常，要不要抛异常以后再看
+				//				throw new IllegalArgumentException("请求行错误：HTTP版本错误,本服务器支持HTTP/1.1");
 			}
 			request.setVersion(version);
 		} else {
