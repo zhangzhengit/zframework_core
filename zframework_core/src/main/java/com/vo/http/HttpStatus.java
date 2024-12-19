@@ -17,6 +17,8 @@ public enum HttpStatus {
 
 	HTTP_200(200, "200 OK"),
 
+	HTTP_400(400, "400 Bad Request"),
+
 	HTTP_403(403, "403 拒绝服务"),
 
 	HTTP_404(404, "404 not-found"),
