@@ -160,11 +160,14 @@ public class NioLongConnectionServer {
 							try {
 								array = NioLongConnectionServer.handleRead(selectionKey);
 							} catch (final Exception e) {
+								final String message = e.getMessage();
 								final ZResponse response = new ZResponse((SocketChannel) selectionKey.channel());
 								response.contentType(HeaderEnum.APPLICATION_JSON.getType())
 								.httpStatus(HttpStatus.HTTP_400.getCode())
 								.header(HttpHeaderEnum.CONNECTION.getValue(), "close")
-								.body(J.toJSONString(CR.error(HttpStatus.HTTP_400.getCode(),"Bad Request"), Include.NON_NULL));
+								.body(J.toJSONString(CR.error(HttpStatus.HTTP_400.getCode(),
+										HttpStatus.HTTP_400.getMessage() + " " + message
+										), Include.NON_NULL));
 								response.write();
 
 								closeSocketChannelAndKeyCancel(selectionKey, (SocketChannel) selectionKey.channel());

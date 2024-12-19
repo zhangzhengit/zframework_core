@@ -555,7 +555,7 @@ public class ZRequest {
 			if (k > -1) {
 				final String key = l.substring(0, k).trim();
 				final String value = l.substring(k + 1).trim();
-
+				// CONTENT_LENGTH 头在bodyreader.readHeader时已经校验过了，在此肯定非负的整数
 				hm.put(key, value);
 			}
 		}
