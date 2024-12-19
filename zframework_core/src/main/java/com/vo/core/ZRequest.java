@@ -19,6 +19,7 @@ import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
+import com.vo.cache.STU;
 import com.vo.enums.MethodEnum;
 import com.vo.http.ZCookie;
 
@@ -52,6 +53,8 @@ public class ZRequest {
 	public static final String CONTENT_LENGTH = "Content-Length";
 	public static final String CONTENT_DISPOSITION = "Content-Disposition";
 	public static final String CONTENT_TYPE = "Content-Type";
+
+	// FIXME 2024年12月19日 下午1:23:50 zhangzhen : 记得处理为header不区分大小写，现在就按常量中这种形式判断
 	public static final String HOST = "Host";
 	private static final AtomicLong GZSESSIONID = new AtomicLong(1L);
 
@@ -128,6 +131,10 @@ public class ZRequest {
 		}
 
 		return false;
+	}
+
+	public String getHost() {
+		return this.getHeader(HOST);
 	}
 
 	public String getMethod() {
@@ -424,12 +431,12 @@ public class ZRequest {
 
 		// paserHeader
 		paserHeader(request);
-		//		request.setRequestLine(requestLine);
 
 		// HTTP1.1必须有 HOST 头
-		final String header = request.getHeader("HOST");
-		final int x = 0;
-		//		parseHost(requestLine, line);
+		final String header = request.getHost();
+		if (STU.isNullOrEmptyOrBlank(header)) {
+			throw new IllegalArgumentException("缺少 " + HOST + " 头");
+		}
 
 		// parseBody
 		// FIXME 2024年12月9日 下午6:32:57 zhangzhen : 不需要parseBody了，在BodyReader里面已经setBody(byte[])了
@@ -437,8 +444,6 @@ public class ZRequest {
 
 		// clientIp
 		request.setClientIp(getClientIp0());
-
-		//		request.setRequestLine(requestLine);
 
 		return request;
 	}
