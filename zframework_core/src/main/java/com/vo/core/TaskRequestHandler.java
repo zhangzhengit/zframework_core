@@ -5,9 +5,13 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.google.common.collect.ImmutableCollection;
+import com.vo.cache.J;
 import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.exception.StartupException;
+import com.vo.http.HttpStatus;
+import com.votool.common.CR;
 
 /**
  * 处理请求
@@ -63,11 +67,17 @@ public final class TaskRequestHandler extends Thread {
 	@Override
 	public void run() {
 
-		final RequestValidatorConfigurationProperties p = ZContext.getBean(RequestValidatorConfigurationProperties.class);
+		final RequestValidatorConfigurationProperties p = ZContext
+				.getBean(RequestValidatorConfigurationProperties.class);
 
 		while (true) {
+			TaskRequest taskRequest = null;
 			try {
-				final TaskRequest taskRequest = this.queue.take();
+				taskRequest = this.queue.take();
+			} catch (final InterruptedException e1) {
+				e1.printStackTrace();
+			}
+			try {
 
 				final ZRequest request = BodyReader.readHeader(taskRequest.getRequestData());
 				if (request == null) {
@@ -80,6 +90,20 @@ public final class TaskRequestHandler extends Thread {
 
 			} catch (final Exception e) {
 				e.printStackTrace();
+
+				final String message = e.getMessage();
+				System.out.println("QRUn_E = " + message);
+
+				final ZResponse response = new ZResponse(taskRequest.getSocketChannel());
+				response.contentType(HeaderEnum.APPLICATION_JSON.getType())
+				.httpStatus(HttpStatus.HTTP_400.getCode())
+				.header(HttpHeaderEnum.CONNECTION.getValue(), "close")
+				.body(J.toJSONString(CR.error(HttpStatus.HTTP_400.getCode(),
+						HttpStatus.HTTP_400.getMessage() + " " +
+								message), Include.NON_NULL));
+				response.write();
+
+				//				final int debug = 12;
 				continue;
 			}
 		}

@@ -34,31 +34,11 @@ public class BodyReader {
 	 */
 	public static ZRequest readHeader(final byte[] ba) {
 		final int headerEndIndex = search(ba, RNRN, 1, 0);
-		if (headerEndIndex <= -1) {
-			// FIXME 2024年12月11日 下午3:15:18 zhangzhen : 看外面，这个异常跑不出去，考虑好怎么办
-			//			throw new ParseHTTPRequestException("");
-			return null;
-		}
 
-		// FIXME 2024年12月13日 下午5:07:00 zhangzhen : 本机测试终于重现了：
-		// TODO 处理为：直接close，因为至少下面这种情况是client close了
-		/**
-		 *
-		 * java.lang.IllegalArgumentException: 0 > -1
-	at java.util.Arrays.copyOfRange(Arrays.java:3519)
-	at com.vo.core.BodyReader.readHeader(BodyReader.java:48)
-	at com.vo.core.TaskRequestHandler.run(TaskRequestHandler.java:72)
-java.io.IOException: 远程主机强迫关闭了一个现有的连接。
-	at sun.nio.ch.SocketDispatcher.read0(Native Method)
-	at sun.nio.ch.SocketDispatcher.read(SocketDispatcher.java:43)
-		 */
+		final byte[] headerBA = Arrays.copyOfRange(ba, 0, headerEndIndex);
+		final String[] headerKVString = new String(headerBA).split(RN);
 
-		final byte[] hba = Arrays.copyOfRange(ba, 0, headerEndIndex);
-		final String h = new String(hba);
-		final String[] a = h.split(RN);
-
-		final ZRequest request1 = new ZRequest(a);
-		final ZRequest request = Task.parseRequest(request1);
+		final ZRequest request= new ZRequest(headerKVString);
 
 		final byte[] readFullBody = readFullBody(ba, request.getContentType(), headerEndIndex, request.getBoundary());
 		request.setBody(readFullBody);

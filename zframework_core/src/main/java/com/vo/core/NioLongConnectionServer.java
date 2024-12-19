@@ -8,14 +8,12 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import java.net.SocketException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -29,16 +27,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.google.common.collect.Lists;
 import com.vo.cache.J;
 import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.configuration.TaskResponsiveModeEnum;
 import com.vo.core.ZRequest.ZHeader;
 import com.vo.enums.ConnectionEnum;
-import com.vo.enums.MethodEnum;
 import com.vo.exception.ZControllerAdviceActuator;
 import com.vo.http.HttpStatus;
 import com.vo.http.ZCacheControl;
@@ -70,16 +65,10 @@ public class NioLongConnectionServer {
 
 	public static final int DEFAULT_HTTP_PORT = 80;
 
-	public static final int BYTE_BUFFER_BODY_CAPACITY = 1;
-
-	public static final Charset CHARSET = Charset.forName("UTF-8");
-	//	public static final Charset CHARSET = Charset.forName("ISO-8859-1");
-
 	public static final String Z_SERVER_QPS = "ZServer_QPS";
 
 	public static final String E_TAG = "ETag";
 	public static final String IF_NONE_MATCH = "If-None-Match";
-
 	public static final String DATE = "Date";
 	public static final String SERVER = HttpHeaderEnum.SERVER.getValue();
 
@@ -167,8 +156,22 @@ public class NioLongConnectionServer {
 									.getBean(ServerConfigurationProperties.class);
 							NioLongConnectionServer.response429Async(selectionKey, p.getQpsExceedMessage());
 						} else {
+							ZArray array=null;
+							try {
+								array = NioLongConnectionServer.handleRead(selectionKey);
+							} catch (final Exception e) {
+								final ZResponse response = new ZResponse((SocketChannel) selectionKey.channel());
+								response.contentType(HeaderEnum.APPLICATION_JSON.getType())
+								.httpStatus(HttpStatus.HTTP_400.getCode())
+								.header(HttpHeaderEnum.CONNECTION.getValue(), "close")
+								.body(J.toJSONString(CR.error(HttpStatus.HTTP_400.getCode(),"Bad Request"), Include.NON_NULL));
+								response.write();
 
-							final ZArray array = NioLongConnectionServer.handleRead2(selectionKey);
+								closeSocketChannelAndKeyCancel(selectionKey, (SocketChannel) selectionKey.channel());
+								e.printStackTrace();
+								continue;
+							}
+
 							if (array != null) {
 								final TaskRequest taskRequest = new TaskRequest(selectionKey, (SocketChannel) selectionKey.channel(),
 										array.get(), new Date());
@@ -288,65 +291,78 @@ public class NioLongConnectionServer {
 	 * @param key
 	 * @return
 	 */
-	private static ZArray handleRead2(final SelectionKey key) {
+	// FIXME 2024年12月19日 上午11:25:20 zhangzhen : 考虑好以下情况：
+	//	考虑好如下情况：
+	// POST PUT PATCH 有content-type则一定有body，但是
+	// GET HEAD OPTIONS 有CT不一定有body，想好怎么处理
+	private static ZArray handleRead(final SelectionKey key) throws Exception {
 
-		final SocketChannel socketChannel = (SocketChannel) key.channel();
-		if (!socketChannel.isOpen()) {
-			return null;
-		}
+		try {
+			final SocketChannel socketChannel = (SocketChannel) key.channel();
+			if (!socketChannel.isOpen()) {
+				return null;
+			}
 
-		final AR ar = readHttpHeader(key, socketChannel);
-		final ZArray array = ar.getArray();
+			final AR ar = readHttpHeader(key, socketChannel);
+			if (ar == null) {
+				return null;
+			}
 
-		final int cLIndex = BodyReader.search(array.get(), ZRequest.CONTENT_LENGTH, 1, 0);
-		if (cLIndex <= -1) {
-			return array;
-		}
+			final ZArray array = ar.getArray();
 
-		// 读header时读到的字节数比header截止符号(\r\n\r\n)的index还大，说明读到的不只有header还有下面的body部分
-		if (ar.getArray().length() > ar.getHeaderEndIndex()) {
+			final int cLIndex = BodyReader.search(array.get(), ZRequest.CONTENT_LENGTH, 1, 0);
+			if (cLIndex <= -1) {
+				return array;
+			}
 
-			final int cLIndexRN = BodyReader.search(array.get(), BodyReader.RN, 1, cLIndex);
-			if (cLIndexRN > cLIndex) {
-				final byte[] copyOfRange = Arrays.copyOfRange(array.get(), cLIndex, cLIndexRN);
-				final String contentTypeLine = new String(copyOfRange);
-				final int contentLength = Integer.parseInt(contentTypeLine.split(":")[1].trim());
-				if (contentLength <= 0) {
-					return array;
-				}
+			// 读header时读到的字节数比header截止符号(\r\n\r\n)的index还大，说明读到的不只有header还有下面的body部分
+			if (ar.getArray().length() > ar.getHeaderEndIndex()) {
 
-				// 根据Content-Length和读header多出的部分，重新计算出body需要读的字节数
-				final int bodyReadC = contentLength - (array.length() - ar.getHeaderEndIndex()
-						- BodyReader.RN_BYTES_LENGTH - BodyReader.RN_BYTES_LENGTH);
-
-				// 无需再次读body了，读header时一起读出来了
-				if (bodyReadC <= 0) {
-					return array;
-				}
-
-				// 开始读取body部分
-				final ByteBuffer bbBody = ByteBuffer.allocateDirect(bodyReadC);
-				try {
-					int bodyLength = 0;
-					while (bodyLength < (bodyReadC - BodyReader.RN_BYTES_LENGTH)) {
-						final int cbllREad = socketChannel.read(bbBody);
-						bodyLength += cbllREad;
+				final int cLIndexRN = BodyReader.search(array.get(), BodyReader.RN, 1, cLIndex);
+				if (cLIndexRN > cLIndex) {
+					final byte[] copyOfRange = Arrays.copyOfRange(array.get(), cLIndex, cLIndexRN);
+					final String contentTypeLine = new String(copyOfRange);
+					final int contentLength = Integer.parseInt(contentTypeLine.split(":")[1].trim());
+					if (contentLength <= 0) {
+						return array;
 					}
 
-					bbBody.flip();
-					while (bbBody.hasRemaining()) {
-						final byte b1 = bbBody.get();
-						array.add(b1);
+					// 根据Content-Length和读header多出的部分，重新计算出body需要读的字节数
+					final int bodyReadC = contentLength - (array.length() - ar.getHeaderEndIndex()
+							- BodyReader.RN_BYTES_LENGTH - BodyReader.RN_BYTES_LENGTH);
+
+					// 无需再次读body了，读header时一起读出来了
+					if (bodyReadC <= 0) {
+						return array;
+					}
+
+					// 开始读取body部分
+					final ByteBuffer bbBody = ByteBuffer.allocateDirect(bodyReadC);
+					try {
+						int bodyLength = 0;
+						while (bodyLength < (bodyReadC - BodyReader.RN_BYTES_LENGTH)) {
+							final int cbllREad = socketChannel.read(bbBody);
+							bodyLength += cbllREad;
+						}
+
+						bbBody.flip();
+						while (bbBody.hasRemaining()) {
+							final byte b1 = bbBody.get();
+							array.add(b1);
+						}
+						bbBody.clear();
+					} catch (final IOException e) {
+						e.printStackTrace();
 					}
 					bbBody.clear();
-				} catch (final IOException e) {
-					e.printStackTrace();
 				}
-				bbBody.clear();
 			}
-		}
 
-		return array;
+			return array;
+
+		} catch (final Exception e) {
+			throw e;
+		}
 	}
 
 	private static AR readHttpHeader(final SelectionKey key, final SocketChannel socketChannel) {
@@ -363,14 +379,19 @@ public class NioLongConnectionServer {
 				final int tR = socketChannel.read(byteBuffer);
 				if (tR == -1) {
 					NioLongConnectionServer.closeSocketChannelAndKeyCancel(key, socketChannel);
-					break;
+					return null;
 				}
 
 				if (tR > 0) {
 					add(byteBuffer, array);
-					headerEndIndex = httpHeaderEND(array.get());
+					headerEndIndex = gethttpHeaderEndIndex(array.get());
 					if (headerEndIndex > -1) {
 						break;
+					}
+
+					// 没找到\r\n\r\n，读到的不足byteBufferSize，说明不存在\r\n\r\n，是bad request
+					if ((tR < byteBufferSize)) {
+						throw new IllegalArgumentException("bad request");
 					}
 				}
 
@@ -408,97 +429,8 @@ public class NioLongConnectionServer {
 		return null;
 	}
 
-	private static ZArray handleRead(final SelectionKey key) {
-
-		final SocketChannel socketChannel = (SocketChannel) key.channel();
-		if (!socketChannel.isOpen()) {
-			return null;
-		}
-
-		try {
-			socketChannel.socket().setTcpNoDelay(true);
-			socketChannel.socket().setReceiveBufferSize(64 * 1024);
-		} catch (final SocketException e1) {
-			e1.printStackTrace();
-		}
-
-		final int bf = BUFFER_SIZE;
-		final ByteBuffer byteBuffer = ByteBuffer.allocate(bf);
-
-		final ZArray array = new ZArray();
-		while (true) {
-			try {
-				final int tR = socketChannel.read(byteBuffer);
-				if (tR > 0) {
-					add(byteBuffer, array);
-					if (httpEND(array.get())) {
-						break;
-					}
-				}
-
-				if (tR == -1) {
-					NioLongConnectionServer.closeSocketChannelAndKeyCancel(key, socketChannel);
-					break;
-				}
-
-			} catch (final IOException e) {
-				e.printStackTrace();
-				NioLongConnectionServer.closeSocketChannelAndKeyCancel(key, socketChannel);
-				return null;
-			}
-		}
-
-		return array.length() > 0 ? array : null;
-	}
-
-	private static int httpHeaderEND(final byte[] ba) {
-		final int rnrnIndex = BodyReader.search(ba, BodyReader.RNRN, 1, 0);
-		//		return rnrnIndex >= 0;
-		return rnrnIndex;
-	}
-
-	/**
-	 * 判断已读到的http请求报文是否到截止位置了(是否已读到一个完整的http请求了)
-	 *
-	 * @param ba 当前已读取到的byte[]
-	 * @return
-	 */
-	// FIXME 2024年12月16日 下午10:31:26 zhangzhen : 这个方法待定，似乎只要判断content-length
-	// 有并且>0然后读取body就行了，读到的报文就算是完整了，不需要这个方法的根据content-type来判断了，
-	// 不同的CT判断规则还不同，有点复杂，还要区分METHOD等等
-
-	//	考虑好如下情况：
-	// POST PUT PATCH 有content-type则一定有body，但是
-	// GET HEAD OPTIONS 有CT不一定有body，想好怎么处理
-	private static boolean httpEND(final byte[] ba) {
-		final int rnrnIndex = BodyReader.search(ba, BodyReader.RNRN, 1, 0);
-		if (rnrnIndex > 0) {
-			final int contentTypeIndex = BodyReader.search(ba, ZRequest.CONTENT_TYPE, 1, 0);
-			if (contentTypeIndex == -1) {
-				// 有RNRN并且没有Content-Type，说明是普通的请求
-				return true;
-			}
-
-
-			// 到此是有CT的，则判断boundary
-			final int contentTypeIndexRN = BodyReader.search(ba, BodyReader.RN, 1, contentTypeIndex);
-
-			if (contentTypeIndexRN > contentTypeIndex) {
-				final byte[] copyOfRange = Arrays.copyOfRange(ba, contentTypeIndex, contentTypeIndexRN);
-				final String ct = new String(copyOfRange);
-				if (ct.contains(ZRequest.MULTIPART_FORM_DATA)) {
-					final String boundary = ct.split(ZRequest.BOUNDARY)[1].trim();
-					if (boundary != null) {
-						final int boundaryEndIndex = BodyReader.search(ba, boundary + "--", 1, contentTypeIndexRN);
-						if (boundaryEndIndex >= 0) {
-							return true;
-						}
-					}
-				}
-			}
-		}
-
-		return false;
+	private static int gethttpHeaderEndIndex(final byte[] headerBA) {
+		return BodyReader.search(headerBA, BodyReader.RNRN, 1, 0);
 	}
 
 	private static void add(final ByteBuffer byteBuffer, final ZArray array) {

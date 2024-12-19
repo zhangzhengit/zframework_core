@@ -12,8 +12,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
 import java.net.URLDecoder;
@@ -22,7 +20,6 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -36,7 +33,6 @@ import java.util.stream.Collectors;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.vo.anno.ZCookieValue;
 import com.vo.anno.ZRequestBody;
 import com.vo.anno.ZRequestHeader;
@@ -44,7 +40,6 @@ import com.vo.aop.InterceptorParameter;
 import com.vo.api.StaticController;
 import com.vo.cache.J;
 import com.vo.configuration.ServerConfigurationProperties;
-import com.vo.core.ZRequest.RequestLine;
 import com.vo.core.ZRequest.RequestParam;
 import com.vo.enums.MethodEnum;
 import com.vo.exception.FormPairParseException;
@@ -97,7 +92,7 @@ public class Task {
 	public static final String NEW_LINE = "\r\n";
 	private static final Map<Object, Object> CACHE_MAP = new WeakHashMap<>(1024, 1F);
 
-	private static final ThreadLocal<SocketChannel> SCTL = new ThreadLocal<>();
+	public static final ThreadLocal<SocketChannel> SCTL = new ThreadLocal<>();
 	private final SocketChannel socketChannel;
 	private final Socket socket;
 	private BufferedInputStream bufferedInputStream;
@@ -148,16 +143,15 @@ public class Task {
 
 	private static <T extends Annotation> T getMethodAnnotation0(final ZRequest request, final Class<T> annoClass) {
 		// 匹配path
-		final RequestLine requestLine = request.getRequestLine();
 		if (CollUtil.isEmpty(request.getLineList())) {
 			return null;
 		}
 
-		final String path = requestLine.getPath();
-		final Method method = ZControllerMap.getMethodByMethodEnumAndPath(requestLine.getMethodEnum(), path);
+		final String path = request.getPath();
+		final Method method = ZControllerMap.getMethodByMethodEnumAndPath(request.getMethodEnum(), path);
 		if (method == null) {
 
-			final Map<String, Method> rowMap = ZControllerMap.getByMethodEnum(requestLine.getMethodEnum());
+			final Map<String, Method> rowMap = ZControllerMap.getByMethodEnum(request.getMethodEnum());
 			final Set<Entry<String, Method>> entrySet = rowMap.entrySet();
 			for (final Entry<String, Method> entry : entrySet) {
 				final Method methodTarget = entry.getValue();
@@ -185,14 +179,12 @@ public class Task {
 	 */
 	public ZResponse invoke(final ZRequest request, final SocketChannel socketChannel) throws Exception {
 
-		final RequestLine requestLine = request.getRequestLine();
-
-		final String path = requestLine.getPath();
-		final Method method = ZControllerMap.getMethodByMethodEnumAndPath(requestLine.getMethodEnum(), path);
+		final String path = request.getPath();
+		final Method method = ZControllerMap.getMethodByMethodEnumAndPath(request.getMethodEnum(), path);
 
 		// 查找对应的控制器来处理
 		if (method == null) {
-			return this.handleNoMethodMatche(request, requestLine, path);
+			return this.handleNoMethodMatche(request, path);
 		}
 
 		try {
@@ -202,7 +194,7 @@ public class Task {
 			final String clientIp = ci.substring(1, ci.indexOf(":"));
 			request.setClientIp(clientIp);
 
-			final Object[] p = this.generateParameters(method, request, requestLine, path, socketChannel);
+			final Object[] p = this.generateParameters(method, request, path, socketChannel);
 			if (p == null) {
 				return null;
 			}
@@ -220,7 +212,7 @@ public class Task {
 
 	}
 
-	private ZResponse handleNoMethodMatche(final ZRequest request, final RequestLine requestLine, final String path) throws Exception {
+	private ZResponse handleNoMethodMatche(final ZRequest request,  final String path) throws Exception {
 		final Map<MethodEnum, Method> methodMap = ZControllerMap.getByPath(path);
 		if (CollUtil.isNotEmpty(methodMap)) {
 			final String methodString = methodMap.keySet().stream().map(MethodEnum::getMethod).collect(Collectors.joining(","));
@@ -229,11 +221,11 @@ public class Task {
 					.httpStatus(HttpStatus.HTTP_405.getCode())
 					.contentType(HeaderEnum.APPLICATION_JSON.getType())
 					.body(J.toJSONString(CR.error(HttpStatus.HTTP_405.getCode(), "请求Method不支持："
-							+ requestLine.getMethodEnum().getMethod() + ", Method: " + methodString), Include.NON_NULL));
+							+ request.getMethodEnum().getMethod() + ", Method: " + methodString), Include.NON_NULL));
 
 		}
 
-		final Map<String, Method> rowMap = ZControllerMap.getByMethodEnum(requestLine.getMethodEnum());
+		final Map<String, Method> rowMap = ZControllerMap.getByMethodEnum(request.getMethodEnum());
 		final Set<Entry<String, Method>> entrySet = rowMap.entrySet();
 		for (final Entry<String, Method> entry : entrySet) {
 			final Method methodTarget = entry.getValue();
@@ -241,7 +233,7 @@ public class Task {
 			if (Boolean.TRUE.equals(ZControllerMap.getIsregexByMethodEnumAndPath(methodTarget, requestMapping)) &&path.matches(requestMapping)) {
 
 				final Object object = ZControllerMap.getObjectByMethod(methodTarget);
-				final Object[] arraygP = this.generateParameters(methodTarget, request, requestLine, path, this.socketChannel);
+				final Object[] arraygP = this.generateParameters(methodTarget, request, path, this.socketChannel);
 				try {
 					ZMappingRegex.set(URLDecoder.decode(path, DEFAULT_CHARSET_NAME));
 					final ZResponse invokeAndResponse = this.invokeAndResponse(methodTarget, arraygP, object, request);
@@ -546,7 +538,7 @@ public class Task {
 	}
 
 	private Object[] generateParameters(final Method method, final Object[] parametersArray, final ZRequest request,
-			final RequestLine requestLine, final String path, final SocketChannel socketChannel) {
+			final String path, final SocketChannel socketChannel) {
 
 		final Parameter[] ps = method.getParameters();
 		if (ps.length < parametersArray.length) {
@@ -560,7 +552,7 @@ public class Task {
 			if (p.isAnnotationPresent(ZRequestHeader.class)) {
 				final ZRequestHeader a = p.getAnnotation(ZRequestHeader.class);
 				final String name = a.value();
-				final String headerValue = requestLine.getHeaderMap().get(name);
+				final String headerValue = request.getHeaderMap().get(name);
 				if ((headerValue == null) && a.required()) {
 					throw new FormPairParseException("请求方法[" + path + "]的header[" + p.getName() + "]不存在");
 				}
@@ -625,7 +617,7 @@ public class Task {
 				pI++;
 
 			} else if (p.isAnnotationPresent(ZRequestParam.class)) {
-				pI = Task.hZRequestParam(parametersArray, request, requestLine, path, pI, p);
+				pI = Task.hZRequestParam(parametersArray, request, path, pI, p);
 			} else if (p.isAnnotationPresent(ZPathVariable.class)) {
 				final List<Object> list = ZPVTL.get();
 				final Class<?> type = p.getType();
@@ -777,11 +769,11 @@ public class Task {
 		}
 	}
 
-	private static int hZRequestParam(final Object[] parametersArray, final ZRequest request, final RequestLine requestLine,
-			final String path, final int pI, final Parameter p) {
+	private static int hZRequestParam(final Object[] parametersArray, final ZRequest request, final String path,
+			final int pI, final Parameter p) {
 
 		int piR = 0;
-		final Set<RequestParam> paramSet = requestLine.getParamSet();
+		final Set<RequestParam> paramSet = request.getParamSet();
 		if (CollUtil.isNotEmpty(paramSet)) {
 			final Optional<RequestParam> findAny = paramSet.stream()
 					.filter(rp -> rp.getName().equals(p.getName()))
@@ -917,11 +909,11 @@ public class Task {
 		return nI.get();
 	}
 
-	private Object[] generateParameters(final Method method, final ZRequest request, final RequestLine requestLine,
-			final String path, final SocketChannel socketChannel) {
+	private Object[] generateParameters(final Method method, final ZRequest request, final String path,
+			final SocketChannel socketChannel) {
 		final Object[] parametersArray = new Object[method.getParameters().length];
 
-		return this.generateParameters(method, parametersArray, request, requestLine, path, socketChannel);
+		return this.generateParameters(method, parametersArray, request, path, socketChannel);
 	}
 
 	private void setZRequestAndZResponse(final Object[] arraygP, final ZRequest request) {
@@ -948,167 +940,6 @@ public class Task {
 		if (!sR) {
 			ZHttpContext.setZResponse(new ZResponse(this.outputStream, this.socketChannel));
 		}
-	}
-
-
-	public static ZRequest parseRequest(final ZRequest request) {
-
-		final Object v = CACHE_MAP.get(request);
-		if (v != null) {
-			return (ZRequest) v;
-		}
-
-		synchronized (request) {
-			final ZRequest v2 = parseRequest0(request);
-			if (v2 == null) {
-				return v2;
-			}
-
-			CACHE_MAP.put(request, v2);
-			return v2;
-		}
-
-	}
-
-	private static ZRequest parseRequest0(final ZRequest request) {
-		final ZRequest.RequestLine requestLine = new ZRequest.RequestLine();
-		if (CollUtil.isEmpty(request.getLineList())) {
-			return request;
-		}
-
-		// 0 为 请求行
-		final String line = request.getLineList().get(0);
-		requestLine.setOriginal(line);
-
-		// method
-		final int methodIndex = line.indexOf(" ");
-		if (methodIndex > -1) {
-			final String methodS = line.substring(0, methodIndex);
-			final MethodEnum me = MethodEnum.valueOfString(methodS);
-			// 可能是null，在这里不管，在外面处理，返回405
-			requestLine.setMethodEnum(me);
-		}
-
-		// path
-		parsePath(line, requestLine, methodIndex);
-
-		// version
-		parseVersion(requestLine, line);
-
-		// paserHeader
-		paserHeader(request, requestLine);
-
-		// parseBody
-		// FIXME 2024年12月9日 下午6:32:57 zhangzhen : 不需要parseBody了，在BodyReader里面已经setBody(byte[])了
-		//		parseBody(request, requestLine);
-
-		// clientIp
-		request.setClientIp(getClientIp());
-
-		request.setRequestLine(requestLine);
-
-		return request;
-	}
-
-	private static String getClientIp() {
-
-		final SocketChannel socketChannel = SCTL.get();
-		if (socketChannel == null) {
-			return null;
-		}
-		// FIXME 2023年11月16日 下午2:47:38 zhanghen: ab 测试这里可能取不到,修复掉
-		final Socket socket = socketChannel.socket();
-		if (socket == null) {
-			return null;
-		}
-		final InetSocketAddress inetSocketAddress = (InetSocketAddress) socket.getRemoteSocketAddress();
-		if (inetSocketAddress == null) {
-			return null;
-		}
-
-		final InetAddress address = inetSocketAddress.getAddress();
-		return address.getHostAddress();
-	}
-
-	private static void parsePath(final String s, final ZRequest.RequestLine line, final int methodIndex) {
-		final int pathI = s.indexOf(" ", methodIndex + 1);
-		if (pathI > methodIndex) {
-			final String fullPath = s.substring(methodIndex  + 1, pathI);
-
-			final int wenI = fullPath.indexOf("?");
-			if (wenI > -1) {
-				line.setQueryString(fullPath.substring(("?".length() + wenI) - 1));
-
-				final Set<RequestParam> paramSet = Sets.newHashSet();
-				final String param = fullPath.substring("?".length() + wenI);
-				final String simplePath = fullPath.substring(0,wenI);
-
-				try {
-					line.setPath(java.net.URLDecoder.decode(simplePath, DEFAULT_CHARSET_NAME));
-				} catch (final UnsupportedEncodingException e) {
-					e.printStackTrace();
-				}
-
-				final String[] paramArray = param.split(SP);
-				for (final String p : paramArray) {
-					final String[] p0 = p.split("=");
-					final ZRequest.RequestParam requestParam = new ZRequest.RequestParam();
-					requestParam.setName(p0[0]);
-					if (p0.length >= 2) {
-						try {
-							final String v = StrUtil.isEmpty(p0[1]) ? EMPTY_STRING
-									: java.net.URLDecoder.decode(p0[1], DEFAULT_CHARSET_NAME);
-							requestParam.setValue(v);
-						} catch (final UnsupportedEncodingException e) {
-							e.printStackTrace();
-						}
-					} else {
-						requestParam.setValue(EMPTY_STRING);
-					}
-
-					paramSet.add(requestParam);
-				}
-
-				line.setParamSet(paramSet);
-
-			} else {
-				try {
-					line.setPath(java.net.URLDecoder.decode(fullPath, DEFAULT_CHARSET_NAME));
-				} catch (final UnsupportedEncodingException e) {
-					e.printStackTrace();
-				}
-			}
-			line.setFullpath(fullPath);
-		}
-	}
-
-	private static void parseVersion(final ZRequest.RequestLine requestLine, final String line) {
-		final int hI = line.lastIndexOf("HTTP/");
-		if (hI > -1) {
-			final String version = line.substring(hI);
-			requestLine.setVersion(version);
-		}
-	}
-
-	private static void paserHeader(final ZRequest request, final ZRequest.RequestLine requestLine) {
-		final List<String> x = request.getLineList();
-		final HashMap<String, String> hm = new HashMap<>(16, 1F);
-		for (int i = x.size() - 1; i > 0; i--) {
-			final String l = x.get(i);
-			if (EMPTY_STRING.equals(l)) {
-				continue;
-			}
-
-			final int k = l.indexOf(":");
-			if (k > -1) {
-				final String key = l.substring(0, k).trim();
-				final String value = l.substring(k + 1).trim();
-
-				hm.put(key, value);
-			}
-		}
-
-		requestLine.setHeaderMap(hm);
 	}
 
 }
