@@ -69,8 +69,9 @@ public class ZArray {
 		this.ar.add(b);
 	}
 
-	public void remove(final int index) {
-		this.ar.remove(index);
+	public Byte remove(final int index) {
+		final Byte remove = this.ar.remove(index);
+		return remove;
 	}
 
 	public void add(final byte[] ba) {
