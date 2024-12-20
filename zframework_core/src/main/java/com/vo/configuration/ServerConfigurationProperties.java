@@ -92,7 +92,7 @@ public class ServerConfigurationProperties {
 	@ZMin(min = 100)
 	@ZMax(max = 1024 * 100)
 	@ZNotNull
-	private Integer uploadFileToTempSize = 10;
+	private Integer uploadFileToTempSize = 100;
 
 	/**
 	 * 上传文件时存放临时文件的目录
