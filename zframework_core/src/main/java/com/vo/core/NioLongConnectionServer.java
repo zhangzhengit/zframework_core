@@ -581,6 +581,8 @@ public class NioLongConnectionServer {
 			e.printStackTrace();
 		} finally {
 			try {
+				// FIXME 2024年12月20日 下午12:27:02 zhangzhen : 在ubuntu测试发现：这行NPE，是new TF那行没走进去，
+				// buffer.size =1 就没问题，待会再看什么原因
 				tf.getBufferedOutputStream().flush();
 				tf.getBufferedOutputStream().close();
 				tf.getOutputStream().flush();
