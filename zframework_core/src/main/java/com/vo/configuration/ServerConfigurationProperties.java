@@ -112,7 +112,7 @@ public class ServerConfigurationProperties {
 	 * 处理http请求的线程的名称前缀，生成的线程以此为前缀分别命名为1、2、3以此类推
 	 */
 	@ZNotEmtpy
-	private String threadName = "zframework-nio-http-thread-";
+	private String threadName = "http-Thread-";
 
 	/**
 	 * 是否启用静态资源的缓存
