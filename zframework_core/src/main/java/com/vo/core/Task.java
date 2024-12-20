@@ -648,30 +648,10 @@ public class Task {
 
 				pI++;
 			} else if (p.getType().getCanonicalName().equals(ZMultipartFile.class.getCanonicalName())) {
-
 				if (ArrayUtil.isEmpty(request.getOriginalRequestBytes())) {
 					throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
 				}
-				// FIXME 2024年12月20日 下午12:03:52 zhangzhen :  ZMultipartFile 这段有多余代码，先提交，待会看
-
-				final TF tf = request.getTf();
-				final byte[] ba = request.getOriginalRequestBytes();
-				final ZArray array = new ZArray(ba);
-				if (tf != null) {
-					final byte[] bs = new byte[(int) tf.getFile().length()];
-					try {
-						final BufferedInputStream bufferedInputStream = new BufferedInputStream(
-								new FileInputStream(tf.getFile()));
-						final int read = bufferedInputStream.read(bs);
-						if(read > 0) {
-							array.add(bs, 0, read);
-						}
-					} catch (final IOException e) {
-						e.printStackTrace();
-					}
-				}
-
-				//				tf.getName();
+				
 				final List<FD2> fdList = BodyReader.readFormDate(request.getOriginalRequestBytes(),
 						request.getContentType(), request.getBoundary());
 				request.clearOriginalRequestBytes();
@@ -685,7 +665,8 @@ public class Task {
 
 					pI = Task.setValue(parametersArray, pI, p, file);
 				} else {
-					if (!p.getName().equals(tf.getName())) {
+					
+					if (!p.getName().equals(request.getTf().getName())) {
 						throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
 					}
 
@@ -696,7 +677,7 @@ public class Task {
 						e.printStackTrace();
 					}
 
-					final String contentType = tf.getContentType();
+					final String contentType = request.getTf().getContentType();
 
 					final ZMultipartFile file = new ZMultipartFile (request.getTf().getName(),
 							request.getTf().getFileName(),
