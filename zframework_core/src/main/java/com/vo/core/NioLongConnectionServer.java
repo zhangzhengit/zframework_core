@@ -16,6 +16,7 @@ import java.nio.channels.SocketChannel;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +35,7 @@ import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.configuration.TaskResponsiveModeEnum;
 import com.vo.core.ZRequest.ZHeader;
 import com.vo.enums.ConnectionEnum;
+import com.vo.enums.MethodEnum;
 import com.vo.exception.ZControllerAdviceActuator;
 import com.vo.http.HttpStatus;
 import com.vo.http.ZCacheControl;
@@ -58,6 +60,7 @@ import lombok.NoArgsConstructor;
  *
  */
 public class NioLongConnectionServer {
+
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
@@ -356,15 +359,8 @@ public class NioLongConnectionServer {
 						// 文件写入临时文件之前，把读header时多读出的超出header的部分删掉
 						final int writeArrayLength = array.length() - ar.getHeaderEndIndex() - BodyReader.RN_BYTES_LENGTH
 								- BodyReader.RN_BYTES_LENGTH;
-						if (writeArrayLength > 0) {
-							int rc = writeArrayLength;
-							while (rc > 0) {
-								array.remove(array.length() - 1);
-								rc--;
-							}
-						}
 
-						final TF tf = readBodyToTempFile(socketChannel, array, newNeedReadBodyLength);
+						final TF tf = readBodyToTempFile(socketChannel, array, newNeedReadBodyLength, writeArrayLength);
 						array.setTf(tf);
 					} else {
 						readBodyToMemory(socketChannel, array, bodyReadC, newNeedReadBodyLength);
@@ -386,13 +382,30 @@ public class NioLongConnectionServer {
 
 	}
 
+
 	@SuppressWarnings("resource")
 	private static TF readBodyToTempFile(final SocketChannel socketChannel, final ZArray array,
-			final int newNeedReadBodyLength) {
+			final int newNeedReadBodyLength, final int writeArrayLength) {
 
-		//		final Integer byteBufferSize = SERVER_CONFIGURATION.getByteBufferSize();
+		final List<Byte> removeFromHeaderList = new ArrayList<>();
+		// 从ZArray中删除读header多出来的部分，保证当前array中的内容是一个完整的合法的header部分
+		if (writeArrayLength > 0) {
+			int rc = writeArrayLength;
+			while (rc > 0) {
+				final Byte remove = array.remove(array.length() - 1);
+				removeFromHeaderList.add(remove);
+				rc--;
+			}
+		}
+
+		final Integer uploadFileToTempSize = SERVER_CONFIGURATION.getUploadFileToTempSize();
 		// 开始读取body部分
-		final ByteBuffer bbBody = ByteBuffer.allocate(1024 * 10);
+		final ByteBuffer bbBody = ByteBuffer.allocate(uploadFileToTempSize * 1024);
+
+		Collections.reverse(removeFromHeaderList);
+		for (final byte b : removeFromHeaderList) {
+			bbBody.put(b);
+		}
 
 		final Integer nioReadTimeout = SERVER_CONFIGURATION.getNioReadTimeout();
 
@@ -404,12 +417,6 @@ public class NioLongConnectionServer {
 		final long startTime = System.currentTimeMillis();
 		try {
 			int totalBytesRead = 0;
-
-			//			final byte[] hS = array.get();
-			//			final String hSS = new String(hS);
-			//			System.out.println("header读到的 = ");
-			//			System.out.println(hSS);
-
 			int rnrnIndex=-1;
 			boolean findCT = false;
 			String ctLine =null;
@@ -418,8 +425,6 @@ public class NioLongConnectionServer {
 			int bodyStartIndex = -1;
 			boolean writeB1= false;
 			int biIndex = -1;
-			//			final ZArray fdContent = new ZArray();
-			//			final ZArray fileContent = new ZArray();
 			int readCOUNT = 0;
 			int findBodyStartReadCount = 0;
 			int findBiStartReadCount = 0;
@@ -447,20 +452,15 @@ public class NioLongConnectionServer {
 							final int cdNameIndex = BodyReader.search(temp, "filename", 1,
 									cdIndex + ZRequest.CONTENT_DISPOSITION.getBytes().length);
 							if (cdNameIndex > cdIndex) {
-
 								final int cdRNIndex = BodyReader.search(temp, BodyReader.RN, 1,
 										cdIndex + ZRequest.CONTENT_DISPOSITION.getBytes().length);
 								if (cdRNIndex > cdIndex) {
-
 									final byte[] cdBa = Arrays.copyOfRange(temp, cdIndex, cdRNIndex);
 									final String cdLine = new String(cdBa);
-									// System.out.println("cdLine = ");
 									final Map<String, String> parseCDLine = parseCDLine(cdLine);
 									final String name = parseCDLine.get("name");
 									final String filename = parseCDLine.get("filename");
 									tf = saveToTempFile(randomFileName, name, filename);
-
-									// System.out.println(cdLine);
 								}
 							}
 						}
@@ -488,7 +488,6 @@ public class NioLongConnectionServer {
 					if (findCT && !findBodyStart) {
 						rnrnIndex = BodyReader.search(temp, BodyReader.RNRN, 1, ctIndex);
 						if (rnrnIndex > -1) {
-							// System.out.println("rnrnIndex = " + rnrnIndex);
 							bodyStartIndex = rnrnIndex + BodyReader.RNRN.getBytes().length;
 							findBodyStart = true;
 							findBodyStartReadCount = readCOUNT;
@@ -507,57 +506,41 @@ public class NioLongConnectionServer {
 							byte[] baContent = null;
 							if (findBiStartReadCount == findBodyStartReadCount) {
 								baContent = Arrays.copyOfRange(temp, bodyStartIndex, biIndex);
-
 								final byte[] fdBA1 = Arrays.copyOfRange(temp, 0, bodyStartIndex);
 								final int ctIndexX = BodyReader.search(fdBA1, ZRequest.CONTENT_TYPE, 1, 0);
 								if(ctIndexX <= -1) {
-									//									fdContent.add(fdBA1);
 									array.add(fdBA1);
 								}
-
 								final byte[] fdBA2 = Arrays.copyOfRange(temp, biIndex, read);
 								final int ctIndexX2 = BodyReader.search(fdBA2, ZRequest.CONTENT_TYPE, 1, 0);
 								if(ctIndexX2 <= -1) {
-									//									fdContent.add(fdBA2);
 									array.add(fdBA2);
 								}
-
 							} else {
 								baContent = Arrays.copyOfRange(temp, 0, biIndex);
 								final byte[] fdBA2 = Arrays.copyOfRange(temp, biIndex, read);
 								final int ctIndexX2 = BodyReader.search(fdBA2, ZRequest.CONTENT_TYPE, 1, 0);
-								if(ctIndexX2 <= -1) {
-									//									fdContent.add(fdBA2);
+								if (ctIndexX2 <= -1) {
 									array.add(fdBA2);
 								}
 							}
-							//							fileContent.add(baContent);
 							tf.getBufferedOutputStream().write(baContent);
 						} else {
 							byte[] copyOfRange = null;
 							if (!writeB1) {
 								copyOfRange = Arrays.copyOfRange(temp, bodyStartIndex, read);
-
 								final byte[] fdBA1 = Arrays.copyOfRange(temp, 0, bodyStartIndex);
 								final int ctIndexX = BodyReader.search(fdBA1, ZRequest.CONTENT_TYPE, 1, 0);
 								if(ctIndexX <= -1) {
-									//									fdContent.add(fdBA1);
 									array.add(fdBA1);
 								}
-
 							} else {
 								copyOfRange = Arrays.copyOfRange(temp, 0, read);
 							}
-
-							//							fileContent.add(copyOfRange);
 							tf.getBufferedOutputStream().write(copyOfRange);
-							//							final String x = new String(copyOfRange);
 							writeB1 = true;
-							// System.out.println("findBodyStart-x1 = ");
-							//					System.out.println(x);
 						}
 					} else {
-						//						fdContent.add(temp);
 						array.add(temp);
 					}
 
@@ -572,10 +555,6 @@ public class NioLongConnectionServer {
 					throw new IllegalArgumentException("读取body超时");
 				}
 			}
-
-			//			System.out.println("fdContent = ");
-			//			System.out.println(new String(fdContent.get()));
-			//			array.add(fdContent.get());
 
 		} catch (final IOException e) {
 			e.printStackTrace();
@@ -610,22 +589,20 @@ public class NioLongConnectionServer {
 
 	private static Fm hFM(final ZArray array) {
 		final int boundaryStartIndex = BodyReader.search(array.get(), ZRequest.BOUNDARY, 1, 1);
-		if (boundaryStartIndex > -1) {
-
-			final int boundaryEndIndex = BodyReader.search(array.get(), BodyReader.RN, 1,
-					boundaryStartIndex + ZRequest.BOUNDARY.getBytes().length);
-			if (boundaryEndIndex > boundaryStartIndex) {
-
-				final byte[] copyOfRange = Arrays.copyOfRange(array.get(),
-						boundaryStartIndex + ZRequest.BOUNDARY.getBytes().length, boundaryEndIndex);
-
-				final String boundary = new String(copyOfRange);
-				System.out.println("boundary = " + boundary);
-
-				return new Fm(true, boundary);
-			}
-
+		if (boundaryStartIndex <= -1) {
+			return new Fm(false, "");
 		}
+
+		final int boundaryEndIndex = BodyReader.search(array.get(), BodyReader.RN, 1,
+				boundaryStartIndex + ZRequest.BOUNDARY.getBytes().length);
+		if (boundaryEndIndex > boundaryStartIndex) {
+
+			final byte[] copyOfRange = Arrays.copyOfRange(array.get(),
+					boundaryStartIndex + ZRequest.BOUNDARY.getBytes().length, boundaryEndIndex);
+			final String boundary = new String(copyOfRange);
+			return new Fm(true, boundary);
+		}
+
 		return new Fm(false, "");
 	}
 
@@ -664,10 +641,58 @@ public class NioLongConnectionServer {
 		}
 	}
 
+	private static MR readMethod(final SelectionKey key, final SocketChannel socketChannel) {
+
+		// FIXME 2024年12月20日 下午4:17:48 zhangzhen : 这个方法是妥协，不想debug post时的提取body存入临时文件并且把普通表单字段继续存入内存了
+		// 直接 无body 使用配置值，有body一个byte一个byte读header
+
+		final int maxLength = MethodEnum.OPTIONS.name().length();
+
+		final ByteBuffer byteBuffer = ByteBuffer.allocate(maxLength);
+
+		try {
+			final int tR = socketChannel.read(byteBuffer);
+			if (tR == -1) {
+				NioLongConnectionServer.closeSocketChannelAndKeyCancel(key, socketChannel);
+			}
+
+			if (tR > 0) {
+				final byte[] array = byteBuffer.array();
+				final String x = new String(array, 0, tR);
+				final int i = x.indexOf(" ");
+				if (i > -1) {
+					final String method = x.substring(0, i);
+					final MR mr = new MR(maxLength, method, array);
+					//					final Integer byteBufferSize = mr.getByteBufferSize();
+					//					System.out.println("htt-method = " + method + "\t byteBufferSize = " + byteBufferSize);
+					return mr;
+				}
+			}
+		} catch (final IOException e) {
+			NioLongConnectionServer.closeSocketChannelAndKeyCancel(key, socketChannel);
+		}
+		return null;
+	}
+
 	private static AR readHttpHeader(final SelectionKey key, final SocketChannel socketChannel) {
-		final Integer byteBufferSize = SERVER_CONFIGURATIONPROPERTIES.getByteBufferSize();
+
+		final MR mr = readMethod(key, socketChannel);
+
+		// 1 get post 等等全都用固定的读取长度
+		//		final Integer byteBufferSize = SERVER_CONFIGURATIONPROPERTIES.getByteBufferSize();
+
+		// FIXME 2024年12月20日 下午4:17:48 zhangzhen : 2是妥协，不想debug post时的提取body存入临时文件并且把普通表单字段继续存入内存了
+		// 2 由method来确定，不带body使用配置项的值，带body一个一个byte读
+		final Integer byteBufferSize = mr.getByteBufferSize();
 		final ByteBuffer byteBuffer = ByteBuffer.allocate(byteBufferSize);
+		final byte[] mra = mr.getArray();
 		final ZArray array = new ZArray(byteBufferSize);
+		for (final byte b : mra) {
+			array.add(b);
+		}
+
+		final int byteBufferSizeREAD = byteBufferSize - mr.getArray().length;
+
 		int headerEndIndex = -1;
 		while (true) {
 			try {
@@ -689,7 +714,7 @@ public class NioLongConnectionServer {
 					}
 
 					// 没找到\r\n\r\n，读到的不足byteBufferSize，说明不存在\r\n\r\n，是bad request
-					if ((tR < byteBufferSize)) {
+					if ((tR < byteBufferSizeREAD)) {
 						throw new IllegalArgumentException("header截止错误");
 					}
 				}

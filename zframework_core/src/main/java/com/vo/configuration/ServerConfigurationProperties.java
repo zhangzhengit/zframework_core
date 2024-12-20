@@ -59,7 +59,7 @@ public class ServerConfigurationProperties {
 	 * 读取http请求的ByteBuffer的容量大小
 	 */
 	@ZNotNull
-	@ZMin(min = 1)
+	@ZMin(min = 100)
 	@ZMax(max = 10240)
 	private Integer byteBufferSize = 1024 * 2;
 
@@ -89,10 +89,10 @@ public class ServerConfigurationProperties {
 	 *
 	 * 单位：KB
 	 */
-	@ZMin(min = 1)
+	@ZMin(min = 100)
 	@ZMax(max = 1024 * 100)
 	@ZNotNull
-	private Integer uploadFileToTempSize = 1024 * 5;
+	private Integer uploadFileToTempSize = 10;
 
 	/**
 	 * 上传文件时存放临时文件的目录
