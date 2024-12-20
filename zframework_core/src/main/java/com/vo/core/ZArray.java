@@ -20,6 +20,10 @@ public class ZArray {
 
 	@Getter
 	@Setter
+	private TF tf;
+
+	@Getter
+	@Setter
 	private boolean yichangle;
 
 	public ZArray() {
@@ -34,17 +38,31 @@ public class ZArray {
 		return this.ar.isEmpty();
 	}
 
-	public ZArray(final byte[] ba) {
+	public ZArray(final byte[] ba, final int from, final int to) {
 		this.ar = new ArrayList<>(ba.length);
-		for (final byte b : ba) {
-			this.ar.add(b);
+		for (int i = from; i < to; i++) {
+			this.ar.add(ba[i]);
 		}
+	}
+
+	public ZArray(final byte[] ba) {
+		this(ba, 0, ba.length);
 	}
 
 	public void add(final byte[] ba, final int from, final int to) {
 		for (int i = from; i < to; i++) {
 			this.ar.add(ba[i]);
 		}
+	}
+
+	public byte[] get(final int from, final int len) {
+		final byte[] ba = new byte[len];
+		int bi = 0;
+		for (int i = from; i < (from + len); i++) {
+			ba[bi] = this.ar.get(i);
+			bi++;
+		}
+		return ba;
 	}
 
 	public void add(final byte b) {

@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
@@ -14,6 +13,7 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -64,6 +64,8 @@ public class NioLongConnectionServer {
 	private static final String CACHE_CONTROL = "Cache-Control";
 
 	public static final int DEFAULT_HTTP_PORT = 80;
+
+	public static final SecureRandom RANDOM = new SecureRandom();
 
 	public static final String Z_SERVER_QPS = "ZServer_QPS";
 
@@ -176,8 +178,8 @@ public class NioLongConnectionServer {
 							}
 
 							if (array != null) {
-								final TaskRequest taskRequest = new TaskRequest(selectionKey, (SocketChannel) selectionKey.channel(),
-										array.get(), new Date());
+								final TaskRequest taskRequest = new TaskRequest(selectionKey,
+										(SocketChannel) selectionKey.channel(), array.get(), array.getTf(), new Date());
 								final boolean responseAsync = NioLongConnectionServer.this.requestHandler
 										.add(taskRequest);
 								if (!responseAsync) {
@@ -330,6 +332,11 @@ public class NioLongConnectionServer {
 						return array;
 					}
 
+					final Integer uploadFileSize = SERVER_CONFIGURATION.getUploadFileSize();
+					if (contentLength >= (uploadFileSize * 1024)) {
+						throw new IllegalArgumentException("上传文件过大: Content-Length = " + contentLength);
+					}
+
 					// 根据Content-Length和读header多出的部分，重新计算出body需要读的字节数
 					final int bodyReadC = contentLength - (array.length() - ar.getHeaderEndIndex()
 							- BodyReader.RN_BYTES_LENGTH - BodyReader.RN_BYTES_LENGTH);
@@ -339,36 +346,28 @@ public class NioLongConnectionServer {
 						return array;
 					}
 
-					// 开始读取body部分
-					final ByteBuffer bbBody = (bodyReadC - BodyReader.RN_BYTES_LENGTH) > 0
-							? ByteBuffer.allocateDirect(bodyReadC)
-									: null;
+					final int newNeedReadBodyLength = bodyReadC - BodyReader.RN_BYTES_LENGTH;
+					if (newNeedReadBodyLength <= 0) {
+						return array;
+					}
 
-					final Integer nioReadTimeout = SERVER_CONFIGURATION.getNioReadTimeout();
-					final long startTime = System.currentTimeMillis();
-					try {
-						int totalBytesRead = 0;
-						while (totalBytesRead < (bodyReadC - BodyReader.RN_BYTES_LENGTH)) {
-							final int read = socketChannel.read(bbBody);
-							totalBytesRead += read;
-
-							// 如果读取返回 0，则检查超时
-							if (((totalBytesRead == 0) || (read == 0))
-									&& ((System.currentTimeMillis() - startTime) > nioReadTimeout)) {
-								throw new IllegalArgumentException("读取body超时");
+					final Integer uploadFileToTempSize = SERVER_CONFIGURATION.getUploadFileToTempSize();
+					if (newNeedReadBodyLength > (uploadFileToTempSize * 1024)) {
+						// 文件写入临时文件之前，把读header时多读出的超出header的部分删掉
+						final int writeArrayLength = array.length() - ar.getHeaderEndIndex() - BodyReader.RN_BYTES_LENGTH
+								- BodyReader.RN_BYTES_LENGTH;
+						if (writeArrayLength > 0) {
+							int rc = writeArrayLength;
+							while (rc > 0) {
+								array.remove(array.length() - 1);
+								rc--;
 							}
 						}
 
-						if (bbBody != null) {
-							bbBody.flip();
-							while (bbBody.hasRemaining()) {
-								array.add(bbBody.get());
-							}
-							bbBody.clear();
-						}
-
-					} catch (final IOException e) {
-						e.printStackTrace();
+						final TF tf = readBodyToTempFile(socketChannel, array, newNeedReadBodyLength);
+						array.setTf(tf);
+					} else {
+						readBodyToMemory(socketChannel, array, bodyReadC, newNeedReadBodyLength);
 					}
 				}
 			}
@@ -376,6 +375,290 @@ public class NioLongConnectionServer {
 			return array;
 		} catch (final Exception e) {
 			throw e;
+		}
+	}
+
+	public static Map<String, String> parseCDLine(final String cdLine ) {
+
+		//		 Content-Disposition: form-data; name="file"; filename="123.txt"
+		final Map<String, String> cdMap = BodyReader.handleBodyContentDisposition(cdLine);
+		return cdMap;
+
+	}
+
+	@SuppressWarnings("resource")
+	private static TF readBodyToTempFile(final SocketChannel socketChannel, final ZArray array,
+			final int newNeedReadBodyLength) {
+
+		//		final Integer byteBufferSize = SERVER_CONFIGURATION.getByteBufferSize();
+		// 开始读取body部分
+		final ByteBuffer bbBody = ByteBuffer.allocate(1024 * 10);
+
+		final Integer nioReadTimeout = SERVER_CONFIGURATION.getNioReadTimeout();
+
+		final String randomFileName = "file_" + Math.abs(RANDOM.nextLong()) + "_" + newNeedReadBodyLength;
+
+		final Fm fm = hFM(array);
+		TF tf = null;
+		final boolean fileEnd = false;
+		final long startTime = System.currentTimeMillis();
+		try {
+			int totalBytesRead = 0;
+
+			//			final byte[] hS = array.get();
+			//			final String hSS = new String(hS);
+			//			System.out.println("header读到的 = ");
+			//			System.out.println(hSS);
+
+			int rnrnIndex=-1;
+			boolean findCT = false;
+			String ctLine =null;
+			boolean findBodyStart = false;
+			int ctIndex = -1;
+			int bodyStartIndex = -1;
+			boolean writeB1= false;
+			int biIndex = -1;
+			//			final ZArray fdContent = new ZArray();
+			//			final ZArray fileContent = new ZArray();
+			int readCOUNT = 0;
+			int findBodyStartReadCount = 0;
+			int findBiStartReadCount = 0;
+			int cdIndex  = -1;
+			while ((totalBytesRead < newNeedReadBodyLength) && !fileEnd) {
+				final int read = socketChannel.read(bbBody);
+				if (read <= -1) {
+					break;
+				}
+
+				totalBytesRead += read;
+				readCOUNT++;
+
+				final long startWriteToFile = System.currentTimeMillis();
+				if (read > 0) {
+
+					bbBody.flip();
+
+					final byte[] temp = new byte[bbBody.remaining()];
+					bbBody.get(temp);
+
+					if (cdIndex <= -1) {
+						cdIndex = BodyReader.search(temp, ZRequest.CONTENT_DISPOSITION, 1, 0);
+						if (cdIndex > -1) {
+							final int cdNameIndex = BodyReader.search(temp, "filename", 1,
+									cdIndex + ZRequest.CONTENT_DISPOSITION.getBytes().length);
+							if (cdNameIndex > cdIndex) {
+
+								final int cdRNIndex = BodyReader.search(temp, BodyReader.RN, 1,
+										cdIndex + ZRequest.CONTENT_DISPOSITION.getBytes().length);
+								if (cdRNIndex > cdIndex) {
+
+									final byte[] cdBa = Arrays.copyOfRange(temp, cdIndex, cdRNIndex);
+									final String cdLine = new String(cdBa);
+									// System.out.println("cdLine = ");
+									final Map<String, String> parseCDLine = parseCDLine(cdLine);
+									final String name = parseCDLine.get("name");
+									final String filename = parseCDLine.get("filename");
+									tf = saveToTempFile(randomFileName, name, filename);
+
+									// System.out.println(cdLine);
+								}
+							}
+						}
+					}
+
+					if (!findCT) {
+						ctIndex = BodyReader.search(temp, ZRequest.CONTENT_TYPE, 1, 0);
+						if (ctIndex > -1) {
+							findCT = true;
+							final int search = BodyReader.search(temp, BodyReader.RN, 1,
+									ctIndex + ZRequest.CONTENT_TYPE.getBytes().length);
+							if (search > ctIndex) {
+								final byte[] ctBA = Arrays.copyOfRange(temp, ctIndex, search);
+								ctLine = new String(ctBA);
+							}
+						}
+					}
+
+					if ((cdIndex > -1) && (findCT && (tf != null) && (tf.getContentType() == null)) && (ctLine != null)) {
+						final String[] split = ctLine.split(":");
+						final String contentType = split[1].trim();
+						tf.setContentType(contentType);
+					}
+
+					if (findCT && !findBodyStart) {
+						rnrnIndex = BodyReader.search(temp, BodyReader.RNRN, 1, ctIndex);
+						if (rnrnIndex > -1) {
+							// System.out.println("rnrnIndex = " + rnrnIndex);
+							bodyStartIndex = rnrnIndex + BodyReader.RNRN.getBytes().length;
+							findBodyStart = true;
+							findBodyStartReadCount = readCOUNT;
+						}
+					}
+
+					if (findBodyStart && (biIndex <= -1)) {
+						biIndex = BodyReader.search(temp, BodyReader.RN + "--" + fm.getBoundary(), 1, 3);
+						if (biIndex > -1) {
+							findBiStartReadCount = readCOUNT;
+						}
+					}
+
+					if (bodyStartIndex > -1) {
+						if ((biIndex > -1)) {
+							byte[] baContent = null;
+							if (findBiStartReadCount == findBodyStartReadCount) {
+								baContent = Arrays.copyOfRange(temp, bodyStartIndex, biIndex);
+
+								final byte[] fdBA1 = Arrays.copyOfRange(temp, 0, bodyStartIndex);
+								final int ctIndexX = BodyReader.search(fdBA1, ZRequest.CONTENT_TYPE, 1, 0);
+								if(ctIndexX <= -1) {
+									//									fdContent.add(fdBA1);
+									array.add(fdBA1);
+								}
+
+								final byte[] fdBA2 = Arrays.copyOfRange(temp, biIndex, read);
+								final int ctIndexX2 = BodyReader.search(fdBA2, ZRequest.CONTENT_TYPE, 1, 0);
+								if(ctIndexX2 <= -1) {
+									//									fdContent.add(fdBA2);
+									array.add(fdBA2);
+								}
+
+							} else {
+								baContent = Arrays.copyOfRange(temp, 0, biIndex);
+								final byte[] fdBA2 = Arrays.copyOfRange(temp, biIndex, read);
+								final int ctIndexX2 = BodyReader.search(fdBA2, ZRequest.CONTENT_TYPE, 1, 0);
+								if(ctIndexX2 <= -1) {
+									//									fdContent.add(fdBA2);
+									array.add(fdBA2);
+								}
+							}
+							//							fileContent.add(baContent);
+							tf.getBufferedOutputStream().write(baContent);
+						} else {
+							byte[] copyOfRange = null;
+							if (!writeB1) {
+								copyOfRange = Arrays.copyOfRange(temp, bodyStartIndex, read);
+
+								final byte[] fdBA1 = Arrays.copyOfRange(temp, 0, bodyStartIndex);
+								final int ctIndexX = BodyReader.search(fdBA1, ZRequest.CONTENT_TYPE, 1, 0);
+								if(ctIndexX <= -1) {
+									//									fdContent.add(fdBA1);
+									array.add(fdBA1);
+								}
+
+							} else {
+								copyOfRange = Arrays.copyOfRange(temp, 0, read);
+							}
+
+							//							fileContent.add(copyOfRange);
+							tf.getBufferedOutputStream().write(copyOfRange);
+							//							final String x = new String(copyOfRange);
+							writeB1 = true;
+							// System.out.println("findBodyStart-x1 = ");
+							//					System.out.println(x);
+						}
+					} else {
+						//						fdContent.add(temp);
+						array.add(temp);
+					}
+
+					bbBody.clear();
+
+				}
+				final long endWriteToFile = System.currentTimeMillis();
+
+				// 如果读取返回 0，则检查超时
+				if (((totalBytesRead == 0) || (read == 0)) && ((System.currentTimeMillis() - startTime
+						- (endWriteToFile - startWriteToFile)) > nioReadTimeout)) {
+					throw new IllegalArgumentException("读取body超时");
+				}
+			}
+
+			//			System.out.println("fdContent = ");
+			//			System.out.println(new String(fdContent.get()));
+			//			array.add(fdContent.get());
+
+		} catch (final IOException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				tf.getBufferedOutputStream().flush();
+				tf.getBufferedOutputStream().close();
+				tf.getOutputStream().flush();
+				tf.getOutputStream().close();
+			} catch (final IOException e) {
+				e.printStackTrace();
+			}
+		}
+
+		return tf;
+	}
+
+	//	public static boolean hasCDFilenameLine(final byte[] ba) {
+	//		final String cdFilenameLine = getCDFilenameLine(ba);
+	//		return cdFilenameLine!=null;
+	//	}
+
+	public static int getRNAfterCDFilenameLine(final byte[] ba, final int cdEndIndex, final String boundary) {
+		final int boundaryStartIndex = BodyReader.search(ba,
+				BodyReader.RN+
+				"--"+
+				boundary, 1, cdEndIndex);
+		return boundaryStartIndex;
+	}
+
+	private static Fm hFM(final ZArray array) {
+		final int boundaryStartIndex = BodyReader.search(array.get(), ZRequest.BOUNDARY, 1, 1);
+		if (boundaryStartIndex > -1) {
+
+			final int boundaryEndIndex = BodyReader.search(array.get(), BodyReader.RN, 1,
+					boundaryStartIndex + ZRequest.BOUNDARY.getBytes().length);
+			if (boundaryEndIndex > boundaryStartIndex) {
+
+				final byte[] copyOfRange = Arrays.copyOfRange(array.get(),
+						boundaryStartIndex + ZRequest.BOUNDARY.getBytes().length, boundaryEndIndex);
+
+				final String boundary = new String(copyOfRange);
+				System.out.println("boundary = " + boundary);
+
+				return new Fm(true, boundary);
+			}
+
+		}
+		return new Fm(false, "");
+	}
+
+	private static void readBodyToMemory(final SocketChannel socketChannel, final ZArray array, final int bodyReadC,
+			final int newNeedReadBodyLength) {
+		// 开始读取body部分
+		final ByteBuffer bbBody = newNeedReadBodyLength > 0
+				? ByteBuffer.allocateDirect(bodyReadC)
+						: null;
+
+		final Integer nioReadTimeout = SERVER_CONFIGURATION.getNioReadTimeout();
+		final long startTime = System.currentTimeMillis();
+		try {
+			int totalBytesRead = 0;
+			while (totalBytesRead < newNeedReadBodyLength) {
+				final int read = socketChannel.read(bbBody);
+				totalBytesRead += read;
+
+				// 如果读取返回 0，则检查超时
+				if (((totalBytesRead == 0) || (read == 0))
+						&& ((System.currentTimeMillis() - startTime) > nioReadTimeout)) {
+					throw new IllegalArgumentException("读取body超时");
+				}
+			}
+
+			if (bbBody != null) {
+				bbBody.flip();
+				while (bbBody.hasRemaining()) {
+					array.add(bbBody.get());
+				}
+				bbBody.clear();
+			}
+
+		} catch (final IOException e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -422,8 +705,9 @@ public class NioLongConnectionServer {
 	}
 
 
-	static BufferedOutputStream saveToTempFile(final String fileName) {
-		final File file = new File(SERVER_CONFIGURATION.getUploadTempDir() + fileName);
+	// FIXME 2024年12月20日 上午1:09:51 zhangzhen : 文件名重新考虑下
+	private static TF saveToTempFile(final String fileNameRandom, final String name, final String fileName) {
+		final File file = new File(SERVER_CONFIGURATION.getUploadTempDir() + fileNameRandom + ".temp");
 		if (!file.exists()) {
 			try {
 				file.createNewFile();
@@ -433,9 +717,9 @@ public class NioLongConnectionServer {
 		}
 
 		try {
-			final OutputStream outputStream = new FileOutputStream(file);
+			final FileOutputStream outputStream = new FileOutputStream(file);
 			final BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(outputStream);
-			return bufferedOutputStream;
+			return new TF(file, name, fileName, outputStream, bufferedOutputStream);
 		} catch (final FileNotFoundException e) {
 			e.printStackTrace();
 		}

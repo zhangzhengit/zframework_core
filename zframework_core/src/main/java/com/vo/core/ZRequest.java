@@ -71,6 +71,8 @@ public class ZRequest {
 	 */
 	String queryString;
 
+	TF tf;
+
 	/**
 	 * 请求方法
 	 */

@@ -86,6 +86,8 @@ public final class TaskRequestHandler extends Thread {
 					continue;
 				}
 
+				request.setTf(taskRequest.getTf());
+
 				this.requestValidator.handle(request, taskRequest);
 
 			} catch (final Exception e) {
@@ -103,7 +105,6 @@ public final class TaskRequestHandler extends Thread {
 								message), Include.NON_NULL));
 				response.write();
 
-				//				final int debug = 12;
 				continue;
 			}
 		}

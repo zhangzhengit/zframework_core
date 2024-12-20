@@ -71,7 +71,28 @@ public class ServerConfigurationProperties {
 	@ZMin(min = 1)
 	@ZMax(max = 1000 * 60)
 	@ZNotNull
-	private Integer nioReadTimeout = 500;
+	private Integer nioReadTimeout = 100 * 5;
+
+	/**
+	 * 限制上传文件的最大KB数
+	 * 单位：KB
+	 */
+	@ZMin(min = 1)
+	@ZMax(max = 1024 * 1000)
+	@ZNotNull
+	private Integer uploadFileSize = 1024 * 50;
+
+	/**
+	 * 上传文件时从[一次性读取内存]改为[边读边写入到临时文件]的阈值
+	 *
+	 * 现在为一次性读取到内存的最大值，max值设得小一点防止占用太大内存
+	 *
+	 * 单位：KB
+	 */
+	@ZMin(min = 1)
+	@ZMax(max = 1024 * 100)
+	@ZNotNull
+	private Integer uploadFileToTempSize = 1024 * 5;
 
 	/**
 	 * 上传文件时存放临时文件的目录

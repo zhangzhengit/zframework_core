@@ -220,7 +220,7 @@ public class BodyReader {
 	 * @param line
 	 * @return
 	 */
-	private static Map<String, String> handleBodyContentDisposition(final String line) {
+	public static Map<String, String> handleBodyContentDisposition(final String line) {
 		final Map<String, String> vMap = new HashMap<>();
 		final String[] a = line.split(";");
 		for (final String a1 : a) {
@@ -271,8 +271,9 @@ public class BodyReader {
 			}
 
 			// 当前字节的上面是\r
-			if (find && (ba[i - 1] == '=')) {
+			if (find && (i > 0) && (ba[i - 1] == '=')) {
 				find = false;
+				break;
 			}
 			if (find) {
 				findN++;

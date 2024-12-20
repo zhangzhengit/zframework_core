@@ -1,6 +1,9 @@
 package com.vo.core;
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -649,83 +652,57 @@ public class Task {
 				if (ArrayUtil.isEmpty(request.getOriginalRequestBytes())) {
 					throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
 				}
+				// FIXME 2024年12月20日 下午12:03:52 zhangzhen :  ZMultipartFile 这段有多余代码，先提交，待会看
 
+				final TF tf = request.getTf();
+				final byte[] ba = request.getOriginalRequestBytes();
+				final ZArray array = new ZArray(ba);
+				if (tf != null) {
+					final byte[] bs = new byte[(int) tf.getFile().length()];
+					try {
+						final BufferedInputStream bufferedInputStream = new BufferedInputStream(
+								new FileInputStream(tf.getFile()));
+						final int read = bufferedInputStream.read(bs);
+						if(read > 0) {
+							array.add(bs, 0, read);
+						}
+					} catch (final IOException e) {
+						e.printStackTrace();
+					}
+				}
+
+				//				tf.getName();
 				final List<FD2> fdList = BodyReader.readFormDate(request.getOriginalRequestBytes(),
 						request.getContentType(), request.getBoundary());
 				request.clearOriginalRequestBytes();
 				final Optional<FD2> findAny = fdList.stream().filter(fd -> fd.getName().equals(p.getName())).findAny();
-				if (!findAny.isPresent()) {
-					//					System.out.println(Thread.currentThread().getName() + "\t" + LocalDateTime.now() + "\t"
-					//							+ "Task.generateParameters()");
-					//					// FIXME 2024年12月17日 上午11:09:05 zhangzhen : 在此再读取body
-					//
-					//					final SCSEnum currentStatus = SCS.getCurrentStatus(socketChannel);
-					//					System.out.println("currentStatus = " + currentStatus);
-					//
-					//					final int contentLength = request.getContentLength();
-					//					System.out.println("contentLength = " + contentLength);
-					//
-					//					final ByteBuffer bbBody = ByteBuffer.allocate(contentLength);
-					//					int cLR = 0;
-					//					while (socketChannel.isOpen()) {
-					//						//					while (socketChannel.isOpen() && (cLR < contentLength)) {
-					//						try {
-					//							final int read = socketChannel.read(bbBody);
-					//							cLR += read;
-					//						} catch (final IOException e) {
-					//							e.printStackTrace();
-					//						}
-					//
-					//						final int search = BodyReader.search(bbBody.array(), request.getBoundary() + "--", 1, 0);
-					//						if (search > -1) {
-					//							break;
-					//						}
-					//					}
-					//
-					//					SCS.setStatus(socketChannel, null);
-					//
-					//					final ZArray arrayAll = new ZArray(request.getOriginalRequestBytes());
-					//					bbBody.flip();
-					//					final byte[] bbBA = bbBody.array();
-					//
-					//					final byte[] bs = arrayAll.get();
-					//					final String headerS = new String(bs);
-					//					//					System.out.println("header = ");
-					//					//					System.out.println(headerS);
-					//
-					//					final String bbBS = new String(bbBA);
-					//					//					System.out.println("body = ");
-					//					//					System.out.println(bbBS);
-					//					while(bbBody.hasRemaining()) {
-					//						arrayAll.add(bbBody.get());
-					//					}
-					//					bbBody.clear();
-					//
-					//					SCS.setStatus(socketChannel, null);
-					//
-					//					final List<FD2> fdList2 = BodyReader.readFormDate(arrayAll.get(),
-					//							request.getContentType(), request.getBoundary());
-					//					final Optional<FD2> findAny2 = fdList2.stream().filter(fd -> fd.getName().equals(p.getName())).findAny();
-					//
-					//					if(findAny2.isPresent()) {
-					//
-					//						final ZMultipartFile file = new ZMultipartFile (findAny2.get().getName(),
-					//								findAny2.get().getFileName(),
-					//								findAny2.get().getBody(),
-					//								findAny2.get().getContentType(), null);
-					//
-					//						pI = Task.setValue(parametersArray, pI, p, file);
-					//					}else {
-					//						throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
-					//					}
-					throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
-
-				}else {
-
+				if (findAny.isPresent()) {
+					final InputStream	inputStream = new ByteArrayInputStream(findAny.get().getBody());
 					final ZMultipartFile file = new ZMultipartFile (findAny.get().getName(),
 							findAny.get().getFileName(),
 							findAny.get().getBody(),
-							findAny.get().getContentType(), null);
+							findAny.get().getContentType(), inputStream);
+
+					pI = Task.setValue(parametersArray, pI, p, file);
+				} else {
+					if (!p.getName().equals(tf.getName())) {
+						throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
+					}
+
+					InputStream inputStream = null;
+					try {
+						inputStream = new FileInputStream(request.getTf().getFile());
+					} catch (final FileNotFoundException e) {
+						e.printStackTrace();
+					}
+
+					final String contentType = tf.getContentType();
+
+					final ZMultipartFile file = new ZMultipartFile (request.getTf().getName(),
+							request.getTf().getFileName(),
+							null,
+							// FIXME 2024年12月20日 上午12:26:54 zhangzhen : 解析出来content-type
+							contentType, inputStream);
 
 					pI = Task.setValue(parametersArray, pI, p, file);
 				}

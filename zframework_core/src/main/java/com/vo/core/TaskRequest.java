@@ -20,6 +20,7 @@ public class TaskRequest {
 	final SelectionKey selectionKey;
 	final SocketChannel socketChannel;
 	final byte[] requestData;
+	final TF tf;
 
 	/**
 	 * 接收到请求的时间点
