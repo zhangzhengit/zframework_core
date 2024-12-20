@@ -61,8 +61,9 @@ import lombok.NoArgsConstructor;
  */
 public class NioLongConnectionServer {
 
-
 	private static final ZLog2 LOG = ZLog2.getInstance();
+
+	public static final String SPACE = " ";
 
 	private static final String CACHE_CONTROL = "Cache-Control";
 
@@ -171,7 +172,7 @@ public class NioLongConnectionServer {
 								.httpStatus(HttpStatus.HTTP_400.getCode())
 								.header(HttpHeaderEnum.CONNECTION.getValue(), "close")
 								.body(J.toJSONString(CR.error(HttpStatus.HTTP_400.getCode(),
-										HttpStatus.HTTP_400.getMessage() + " " + message
+										HttpStatus.HTTP_400.getMessage() + SPACE + message
 										), Include.NON_NULL));
 								response.write();
 
@@ -414,7 +415,7 @@ public class NioLongConnectionServer {
 		final Fm fm = hFM(array);
 		TF tf = null;
 		final boolean fileEnd = false;
-		final long startTime = System.currentTimeMillis();
+		long startTime = System.currentTimeMillis();
 		try {
 			int totalBytesRead = 0;
 			int rnrnIndex=-1;
@@ -543,15 +544,18 @@ public class NioLongConnectionServer {
 					} else {
 						array.add(temp);
 					}
-
 					bbBody.clear();
 
+					// 读到了数据，则重置开始时间为当前时间
+					startTime = System.currentTimeMillis();
 				}
+
 				final long endWriteToFile = System.currentTimeMillis();
 
 				// 如果读取返回 0，则检查超时
-				if (((totalBytesRead == 0) || (read == 0)) && ((System.currentTimeMillis() - startTime
-						- (endWriteToFile - startWriteToFile)) > nioReadTimeout)) {
+				if (((totalBytesRead == 0) || (read == 0))
+						&& ((System.currentTimeMillis() - startTime
+								- (endWriteToFile - startWriteToFile)) > nioReadTimeout)) {
 					throw new IllegalArgumentException("读取body超时");
 				}
 			}
@@ -654,18 +658,20 @@ public class NioLongConnectionServer {
 			final int tR = socketChannel.read(byteBuffer);
 			if (tR == -1) {
 				NioLongConnectionServer.closeSocketChannelAndKeyCancel(key, socketChannel);
+				return null;
 			}
 
 			if (tR > 0) {
 				final byte[] array = byteBuffer.array();
 				final String x = new String(array, 0, tR);
-				final int i = x.indexOf(" ");
+				final int i = x.indexOf(SPACE);
 				if (i > -1) {
 					final String method = x.substring(0, i);
-					final MR mr = new MR(maxLength, method, array);
-					//					final Integer byteBufferSize = mr.getByteBufferSize();
-					//					System.out.println("htt-method = " + method + "\t byteBufferSize = " + byteBufferSize);
-					return mr;
+					final MethodEnum valueOfString = MethodEnum.valueOfString(method);
+					if (valueOfString != null) {
+						final MR mr = new MR(maxLength, method, array);
+						return mr;
+					}
 				}
 			}
 		} catch (final IOException e) {
@@ -677,6 +683,9 @@ public class NioLongConnectionServer {
 	private static AR readHttpHeader(final SelectionKey key, final SocketChannel socketChannel) {
 
 		final MR mr = readMethod(key, socketChannel);
+		if (mr == null) {
+			return null;
+		}
 
 		// 1 get post 等等全都用固定的读取长度
 		//		final Integer byteBufferSize = SERVER_CONFIGURATIONPROPERTIES.getByteBufferSize();
@@ -684,6 +693,7 @@ public class NioLongConnectionServer {
 		// FIXME 2024年12月20日 下午4:17:48 zhangzhen : 2是妥协，不想debug post时的提取body存入临时文件并且把普通表单字段继续存入内存了
 		// 2 由method来确定，不带body使用配置项的值，带body一个一个byte读
 		final Integer byteBufferSize = mr.getByteBufferSize();
+
 		final ByteBuffer byteBuffer = ByteBuffer.allocate(byteBufferSize);
 		final byte[] mra = mr.getArray();
 		final ZArray array = new ZArray(byteBufferSize);
