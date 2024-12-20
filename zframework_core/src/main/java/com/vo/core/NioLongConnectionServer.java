@@ -400,6 +400,13 @@ public class NioLongConnectionServer {
 		}
 
 		final Integer uploadFileToTempSize = SERVER_CONFIGURATION.getUploadFileToTempSize();
+
+		// FIXME 2024年12月20日 下午7:15:50 zhangzhen : 这个方法极有可能有问题，就是这个方法每次解析CD CT RNRNR BOUNDARY 等等内容
+		// 都是从一次read出的ByteBuffer中解析的，有可能上述关键字出现在一个BB和下一个BB之间
+		// 如：本次read出的BB 结尾是----------------，下一次read的BB开头是 ----lxkcjvlsjdljfljljlj
+		// 那么这个boundary就会解析不到。只是现在ByteBuffer的capacity设置得很大，还没发现这个bug。
+		// 看不要 N次读取之间两个相邻的ByteBuffer合并在一起来解析？
+
 		// 开始读取body部分
 		final ByteBuffer bbBody = ByteBuffer.allocate(uploadFileToTempSize * 1024);
 
