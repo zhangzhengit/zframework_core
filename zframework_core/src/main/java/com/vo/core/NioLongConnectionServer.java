@@ -81,10 +81,17 @@ public class NioLongConnectionServer {
 	public static final ServerConfigurationProperties SERVER_CONFIGURATIONPROPERTIES= ZContext.getBean(ServerConfigurationProperties.class);
 
 	public final static ZE ZE = ZES.newZE(SERVER_CONFIGURATIONPROPERTIES.getThreadCount(),
+			"zf-Worker-Group",
 			SERVER_CONFIGURATIONPROPERTIES.getThreadName(),
 			TaskResponsiveModeEnum.IMMEDIATELY.name().equals(SERVER_CONFIGURATIONPROPERTIES.getTaskResponsiveMode())
 			? ThreadModeEnum.IMMEDIATELY
 					: ThreadModeEnum.LAZY);
+
+	/**
+	 * 专门用于读取http请求报文的池
+	 */
+	private final static com.votool.ze.ZE ZE_READ = ZES.newZE(Runtime.getRuntime().availableProcessors(),
+			"nio-read-Group", "nio-read-Thread-", ThreadModeEnum.LAZY);
 
 	public static final String SERVER_VALUE = ZContext.getBean(ServerConfigurationProperties.class).getName();
 	public static final String CONNECTION = HttpHeaderEnum.CONNECTION.getValue();
@@ -108,6 +115,7 @@ public class NioLongConnectionServer {
 	private final TaskRequestHandler requestHandler = new TaskRequestHandler();
 
 	public void startNIOServer(final Integer serverPort) {
+
 
 		this.requestHandler.start();
 		ZContext.addBean(this.requestHandler.getClass(), this.requestHandler);
@@ -155,45 +163,52 @@ public class NioLongConnectionServer {
 					if (selectionKey.isAcceptable()) {
 						handleAccept(selectionKey, selector);
 					} else if (selectionKey.isReadable()) {
-						if (Boolean.TRUE.equals(SERVER_CONFIGURATION.getQpsLimitEnabled())
-								&& !QC.allow(NioLongConnectionServer.Z_SERVER_QPS, SERVER_CONFIGURATION.getQps(),
-										QPSHandlingEnum.UNEVEN)) {
-							final ServerConfigurationProperties p = ZContext
-									.getBean(ServerConfigurationProperties.class);
-							NioLongConnectionServer.response429Async(selectionKey, p.getQpsExceedMessage());
-						} else {
-							ZArray array=null;
-							try {
-								array = NioLongConnectionServer.handleRead(selectionKey);
-							} catch (final Exception e) {
-								final String message = e.getMessage();
-								final ZResponse response = new ZResponse((SocketChannel) selectionKey.channel());
-								response.contentType(HeaderEnum.APPLICATION_JSON.getType())
-								.httpStatus(HttpStatus.HTTP_400.getCode())
-								.header(HttpHeaderEnum.CONNECTION.getValue(), "close")
-								.body(J.toJSONString(CR.error(HttpStatus.HTTP_400.getCode(),
-										HttpStatus.HTTP_400.getMessage() + SPACE + message
-										), Include.NON_NULL));
-								response.write();
 
-								closeSocketChannelAndKeyCancel(selectionKey, (SocketChannel) selectionKey.channel());
-								e.printStackTrace();
-								continue;
-							}
+						final SocketChannel channel = (SocketChannel)selectionKey.channel();
+						final String keyword = channel.toString();
 
-							if (array != null) {
-								final TaskRequest taskRequest = new TaskRequest(selectionKey,
-										(SocketChannel) selectionKey.channel(), array.get(), array.getTf(), new Date());
-								final boolean responseAsync = NioLongConnectionServer.this.requestHandler
-										.add(taskRequest);
-								if (!responseAsync) {
-									final ServerConfigurationProperties p = ZContext
-											.getBean(ServerConfigurationProperties.class);
-									NioLongConnectionServer.response429Async(selectionKey,
-											p.getPendingTasksExceedMessage());
+						NioLongConnectionServer.ZE_READ.executeByNameInASpecificThread(keyword, () -> {
+
+							if (Boolean.TRUE.equals(SERVER_CONFIGURATION.getQpsLimitEnabled())
+									&& !QC.allow(NioLongConnectionServer.Z_SERVER_QPS, SERVER_CONFIGURATION.getQps(),
+											QPSHandlingEnum.UNEVEN)) {
+								final ServerConfigurationProperties p = ZContext
+										.getBean(ServerConfigurationProperties.class);
+								NioLongConnectionServer.response429Async(selectionKey, p.getQpsExceedMessage());
+							} else {
+								ZArray array=null;
+								try {
+									array = NioLongConnectionServer.handleRead(selectionKey);
+								} catch (final Exception e) {
+									final String message = e.getMessage();
+									final ZResponse response = new ZResponse((SocketChannel) selectionKey.channel());
+									response.contentType(HeaderEnum.APPLICATION_JSON.getType())
+									.httpStatus(HttpStatus.HTTP_400.getCode())
+									.header(HttpHeaderEnum.CONNECTION.getValue(), "close")
+									.body(J.toJSONString(CR.error(HttpStatus.HTTP_400.getCode(),
+											HttpStatus.HTTP_400.getMessage() + SPACE + message
+											), Include.NON_NULL));
+									response.write();
+
+									closeSocketChannelAndKeyCancel(selectionKey, (SocketChannel) selectionKey.channel());
+									e.printStackTrace();
+								}
+
+								if (array != null) {
+									final TaskRequest taskRequest = new TaskRequest(selectionKey,
+											(SocketChannel) selectionKey.channel(), array.get(), array.getTf(), new Date());
+									final boolean responseAsync = NioLongConnectionServer.this.requestHandler
+											.add(taskRequest);
+									if (!responseAsync) {
+										final ServerConfigurationProperties p = ZContext
+												.getBean(ServerConfigurationProperties.class);
+										NioLongConnectionServer.response429Async(selectionKey,
+												p.getPendingTasksExceedMessage());
+									}
 								}
 							}
-						}
+						});
+
 					}
 				} catch (final Exception e) {
 					e.printStackTrace();
@@ -438,7 +453,7 @@ public class NioLongConnectionServer {
 			int findBiStartReadCount = 0;
 			int cdIndex  = -1;
 			while ((totalBytesRead < newNeedReadBodyLength) && !fileEnd) {
-				final int read = socketChannel.read(bbBody);
+				final int read = socketChannel.isOpen() ? socketChannel.read(bbBody) : -1;
 				if (read <= -1) {
 					break;
 				}
@@ -569,14 +584,17 @@ public class NioLongConnectionServer {
 
 		} catch (final IOException e) {
 			e.printStackTrace();
+			return null;
 		} finally {
 			try {
 				// FIXME 2024年12月20日 下午12:27:02 zhangzhen : 在ubuntu测试发现：这行NPE，是new TF那行没走进去，
 				// buffer.size =1 就没问题，待会再看什么原因
-				tf.getBufferedOutputStream().flush();
-				tf.getBufferedOutputStream().close();
-				tf.getOutputStream().flush();
-				tf.getOutputStream().close();
+				if (tf != null) {
+					tf.getBufferedOutputStream().flush();
+					tf.getBufferedOutputStream().close();
+					tf.getOutputStream().flush();
+					tf.getOutputStream().close();
+				}
 			} catch (final IOException e) {
 				e.printStackTrace();
 			}
