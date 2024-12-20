@@ -612,10 +612,12 @@ public class NioLongConnectionServer {
 
 	private static void readBodyToMemory(final SocketChannel socketChannel, final ZArray array, final int bodyReadC,
 			final int newNeedReadBodyLength) {
-		// 开始读取body部分
-		final ByteBuffer bbBody = newNeedReadBodyLength > 0
-				? ByteBuffer.allocateDirect(bodyReadC)
-						: null;
+
+		if (newNeedReadBodyLength <= 0) {
+			return;
+		}
+
+		final ByteBuffer bbBody = ByteBuffer.allocateDirect(newNeedReadBodyLength);
 
 		final Integer nioReadTimeout = SERVER_CONFIGURATION.getNioReadTimeout();
 		final long startTime = System.currentTimeMillis();
