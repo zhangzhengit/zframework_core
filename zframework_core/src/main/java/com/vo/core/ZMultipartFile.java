@@ -24,6 +24,7 @@ import lombok.NoArgsConstructor;
 public class ZMultipartFile {
 
 	private String name;
+	private String tempFilePath;
 	private String originalFilenameString;
 	private byte[] content;
 	private boolean isTempFile;

@@ -16,18 +16,21 @@ import lombok.Data;
  */
 @Data
 @AllArgsConstructor
+// FIXME 2024年12月21日 下午8:51:01 zhangzhen : 此类功能和 ZMFile大多都重复了，看能不能少去一步从本类到ZMF的流程？
 public class TF {
 
 	private final File file;
+	private final String tempFilePath;
 	private final String name;
 	private final String fileName;
 	private String contentType;
 	private final OutputStream outputStream;
 	private final BufferedOutputStream bufferedOutputStream;
 
-	public TF(final File file, final String name, final String fileName, final OutputStream outputStream,
+	public TF(final File file, final String tempFilePath, final String name, final String fileName, final OutputStream outputStream,
 			final BufferedOutputStream bufferedOutputStream) {
 		this.file = file;
+		this.tempFilePath = tempFilePath;
 		this.name = name;
 		this.fileName = fileName;
 		this.outputStream = outputStream;

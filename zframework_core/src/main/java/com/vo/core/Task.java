@@ -2,6 +2,7 @@ package com.vo.core;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -320,7 +321,7 @@ public class Task {
 
 	@SuppressWarnings("boxing")
 	private ZResponse invokeAndResponse(final Method method, final Object[] arraygP, final Object zController, final ZRequest request)
-			throws IllegalAccessException, InvocationTargetException {
+			throws IllegalAccessException, InvocationTargetException, IOException {
 
 		final String controllerName = zController.getClass().getCanonicalName();
 		final Integer qps = ZControllerMap.getQPSByControllerNameAndMethodName(controllerName, method.getName());
@@ -444,9 +445,10 @@ public class Task {
 	 * @return
 	 * @throws IllegalAccessException
 	 * @throws InvocationTargetException
+	 * @throws IOException
 	 */
 	private static Object invoke0(final Method method, final Object[] arraygP, final Object zController)
-			throws IllegalAccessException, InvocationTargetException {
+			throws IllegalAccessException, InvocationTargetException, IOException {
 
 		// FIXME 2024年5月27日 下午1:13:41 zhangzhen: 这个要不要这么写死？或者直接用拦截器算了，定义一个内置的[API方法执行信息]拦截器，并且提供一个开关参数？
 		// admin页面要完成的功能有点复杂，包含排序/过滤等，要不要使用derby/h2?
@@ -475,6 +477,9 @@ public class Task {
 		//		final long t1 = System.currentTimeMillis();
 
 		final Object r = method.invoke(zController, arraygP);
+
+		closeZMFInputStreamAndDeleteTempFile(arraygP);
+
 		//		final long t2 = System.currentTimeMillis();
 		//
 		//		final MethodInvocationLogsEntity entity = new MethodInvocationLogsEntity();
@@ -483,6 +488,27 @@ public class Task {
 		//		mr.save(entity);
 
 		return r;
+	}
+
+	private static void closeZMFInputStreamAndDeleteTempFile(final Object[] arraygP) throws IOException {
+		for (int i = arraygP.length - 1; i >= 0; i--) {
+			if (ZMultipartFile.class.equals(arraygP[i].getClass())) {
+				final ZMultipartFile file = (ZMultipartFile) arraygP[i];
+				try (final InputStream inputStream2 = file.getInputStream()) {
+				}
+
+				final String tempFilePath = file.getTempFilePath();
+				if (tempFilePath != null) {
+					final File tFile = new File(tempFilePath);
+					if (tFile.exists()) {
+						tFile.delete();
+						tFile.deleteOnExit();
+					}
+				}
+
+				break;
+			}
+		}
 	}
 
 	private ZResponse responseDefault_JSON(final ZRequest request, final Object r) {
@@ -659,6 +685,7 @@ public class Task {
 
 					final InputStream inputStream = new ByteArrayInputStream(findAny.get().getBody());
 					final ZMultipartFile file = new ZMultipartFile(findAny.get().getName(),
+							null,
 							findAny.get().getFileName(),
 							findAny.get().getBody(),
 							false,
@@ -683,6 +710,7 @@ public class Task {
 					final String contentType = request.getTf().getContentType();
 
 					final ZMultipartFile file = new ZMultipartFile (request.getTf().getName(),
+							request.getTf().getTempFilePath(),
 							request.getTf().getFileName(),
 							null,
 							true, contentType, inputStream);

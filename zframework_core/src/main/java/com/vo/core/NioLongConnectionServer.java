@@ -771,9 +771,9 @@ public class NioLongConnectionServer {
 
 
 	// FIXME 2024年12月20日 上午1:09:51 zhangzhen : 文件名重新考虑下
-	// FIXME 2024年12月20日 下午12:06:22 zhangzhen : 想好什么时候删除临时文件，不然一直占用硬盘空间
 	private static TF saveToTempFile(final String fileNameRandom, final String name, final String fileName) {
-		final File file = new File(SERVER_CONFIGURATION.getUploadTempDir() + fileNameRandom + ".temp");
+		final String tempFilePath = SERVER_CONFIGURATION.getUploadTempDir() + fileNameRandom + ".temp";
+		final File file = new File(tempFilePath);
 		if (!file.exists()) {
 			try {
 				file.createNewFile();
@@ -785,7 +785,7 @@ public class NioLongConnectionServer {
 		try {
 			final FileOutputStream outputStream = new FileOutputStream(file);
 			final BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(outputStream);
-			return new TF(file, name, fileName, outputStream, bufferedOutputStream);
+			return new TF(file, tempFilePath, name, fileName, outputStream, bufferedOutputStream);
 		} catch (final FileNotFoundException e) {
 			e.printStackTrace();
 		}
