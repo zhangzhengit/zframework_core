@@ -19,6 +19,7 @@ import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.core.Task;
 import com.vo.core.ZContext;
 import com.vo.core.ZLog2;
+import com.vo.core.ZMultipartFile;
 import com.vo.core.ZObjectGeneratorStarter;
 import com.vo.core.ZPathVariable;
 import com.vo.core.ZResponse;
@@ -48,7 +49,13 @@ import cn.hutool.core.util.StrUtil;
 // 1、现在能想到的是：读取body时边读边解析出表单字段，但是同时也要保存好file的内容，和在业务方法中校验header并无本质区别。
 public class ZControllerScanner {
 
+
 	private static final ZLog2 LOG = ZLog2.getInstance();
+
+	/**
+	 * API允许的 ZMultipartFile 参数的个数
+	 */
+	private static final int ZMF_SIZE = 1;
 
 	@SuppressWarnings("unchecked")
 	private static final HashSet<Class<? extends Annotation>> HTTP_METHOD_SET = Sets.newHashSet(ZRequestMapping.class);
@@ -102,6 +109,9 @@ public class ZControllerScanner {
 						final MethodEnum methodEnum = requestMappingAnnotation.method();
 						ZControllerMap.put(methodEnum, prefix + mapping, method, controllerObject, isRegex[i]);
 					}
+
+					checkZMFIleSize(cls, method);
+
 				}
 
 			}
@@ -109,6 +119,24 @@ public class ZControllerScanner {
 		}
 
 		return zcSet;
+	}
+
+	private static void checkZMFIleSize(final Class<?> cls, final Method method) {
+		final int parameterCount = method.getParameterCount();
+		if (parameterCount > 0) {
+			int zmfC = 0;
+			final Parameter[] ps = method.getParameters();
+			for (final Parameter element : ps) {
+				if (ZMultipartFile.class.equals(element.getType())) {
+					zmfC++;
+					if (zmfC > ZMF_SIZE) {
+						final String message = "接口方法[" + cls.getSimpleName() + "." + method.getName() + "]最多允许有[" + ZMF_SIZE
+								+ "]个[" + ZMultipartFile.class.getSimpleName() + "]参数,当前已找到[" + zmfC + "]个";
+						throw new StartupException(message);
+					}
+				}
+			}
+		}
 	}
 
 	/**
