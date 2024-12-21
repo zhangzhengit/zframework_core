@@ -52,7 +52,8 @@ public class QC {
 		final long time = qps <= QPS_THRESHOLD ? (ms / (1000 / qps)) : (ms / (1000 / QPS_THRESHOLD));
 		final long qpsNEW =  (qps / QPS_THRESHOLD) <= 0 ? 1 : (qps / QPS_THRESHOLD);
 
-		return a(keyPrefix, time, qpsNEW);
+		final boolean ok = a(keyPrefix, time, qpsNEW);
+		return ok;
 	}
 
 	private static boolean a(final String keyPrefix, final long time, final long qpsNEW) {
@@ -61,8 +62,9 @@ public class QC {
 		if (count == null) {
 			C.put(k, 1);
 		} else {
-			if (count.intValue() > qpsNEW) {
-				
+			// @ZRM.qps = 100时, > 会导致实际放行数*2，因为改为了>=
+			if (count.intValue() >= qpsNEW) {
+
 				// FIXME 2024年12月21日 下午1:17:11 zhangzhen : 上次加入下面这样是想及时山remove掉不再用的K，结果导致bug了
 				// 现在先注释了，以后再看怎么清楚不再用的K
 				//				C.remove(k);
