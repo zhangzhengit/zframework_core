@@ -115,10 +115,6 @@ public class ZRequest {
 	 */
 	private String clientIp;
 
-	public void clearOriginalRequestBytes() {
-		this.originalRequestBytes = null;
-	}
-
 	public boolean isSupportGZIP() {
 		final String a = this.getHeader(ZRequest.ACCEPT_ENCODING);
 		if (StrUtil.isEmpty(a)) {

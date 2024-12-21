@@ -651,10 +651,9 @@ public class Task {
 				if (ArrayUtil.isEmpty(request.getOriginalRequestBytes())) {
 					throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
 				}
-				
+
 				final List<FD2> fdList = BodyReader.readFormDate(request.getOriginalRequestBytes(),
 						request.getContentType(), request.getBoundary());
-				request.clearOriginalRequestBytes();
 				final Optional<FD2> findAny = fdList.stream().filter(fd -> fd.getName().equals(p.getName())).findAny();
 				if (findAny.isPresent()) {
 					final InputStream	inputStream = new ByteArrayInputStream(findAny.get().getBody());
@@ -665,7 +664,7 @@ public class Task {
 
 					pI = Task.setValue(parametersArray, pI, p, file);
 				} else {
-					
+
 					if (!p.getName().equals(request.getTf().getName())) {
 						throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
 					}
