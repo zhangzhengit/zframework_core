@@ -463,10 +463,10 @@ public class Task {
 		 */
 
 
-		final List<Object> al = Arrays.stream(arraygP)
-				.filter(a -> a.getClass() != ZRequest.class)
-				.filter(a -> a.getClass() != ZResponse.class)
-				.collect(Collectors.toList());
+		//		final List<Object> al = Arrays.stream(arraygP)
+		//				.filter(a -> a.getClass() != ZRequest.class)
+		//				.filter(a -> a.getClass() != ZResponse.class)
+		//				.collect(Collectors.toList());
 
 		//		System.out.println("API开始执行,method = " + method.getName() + "\t\t" + "Controller = " + zController.getClass().getSimpleName()
 		//				+ "\t" + "arg = " + al
@@ -478,7 +478,9 @@ public class Task {
 
 		final Object r = method.invoke(zController, arraygP);
 
-		closeZMFInputStreamAndDeleteTempFile(arraygP);
+		if (arraygP.length > 0) {
+			closeZMFInputStreamAndDeleteTempFile(arraygP);
+		}
 
 		//		final long t2 = System.currentTimeMillis();
 		//
@@ -491,6 +493,7 @@ public class Task {
 	}
 
 	private static void closeZMFInputStreamAndDeleteTempFile(final Object[] arraygP) throws IOException {
+
 		for (int i = arraygP.length - 1; i >= 0; i--) {
 			if (ZMultipartFile.class.equals(arraygP[i].getClass())) {
 				final ZMultipartFile file = (ZMultipartFile) arraygP[i];
