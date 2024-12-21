@@ -41,6 +41,11 @@ import cn.hutool.core.util.StrUtil;
  * @date 2023年6月12日
  *
  */
+// FIXME 2024年12月21日 下午3:23:26 zhangzhen : TODO：考虑这个问题：
+//	上传文件尤其是大文件并且带一个认证用的header(比如谷歌验证码等)的情况
+// 按现在的逻辑是 读取完了文件并且解析出全部的表单字段以后才开始执行目标业务方法，才开始校验header
+// 这时候如果手误传错了header甚至是恶意的频繁form-data请求，就会验证浪费服务器性能和存储空间。怎么办？
+// 1、现在能想到的是：读取body时边读边解析出表单字段，但是同时也要保存好file的内容，和在业务方法中校验header并无本质区别。
 public class ZControllerScanner {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
@@ -58,7 +63,7 @@ public class ZControllerScanner {
 		for (final Class<?> cls : zcSet) {
 			final Boolean staticControllerEnable = serverConfiguration.getStaticControllerEnable();
 			if (Boolean.FALSE.equals(staticControllerEnable)
-				&& cls.getCanonicalName().equals(StaticController.class.getCanonicalName())) {
+					&& cls.getCanonicalName().equals(StaticController.class.getCanonicalName())) {
 
 				ZControllerScanner.LOG.info("[{}] 未启用，不创建[{}]对象", StaticController.class.getSimpleName(),
 						StaticController.class.getSimpleName());
@@ -197,13 +202,13 @@ public class ZControllerScanner {
 				if (s.length() <= 1) {
 					continue;
 				}
-				if ((s.charAt(0) == '{' && s.charAt(s.length() - 1) == '}')) {
+				if (((s.charAt(0) == '{') && (s.charAt(s.length() - 1) == '}'))) {
 					zpvNameList.add(s.substring(1, s.length() - 1));
 					if ((requestMappingArray.length > 1)) {
 						throw new StartupException(
 								"接口方法[" + method.getName() + "]参数使用@" + ZPathVariable.class.getSimpleName()
-										+ ",则mapping只能声明一个,当前声明了" + requestMappingArray.length + "个"
-										+ Arrays.toString(requestMappingArray) + ",请修改");
+								+ ",则mapping只能声明一个,当前声明了" + requestMappingArray.length + "个"
+								+ Arrays.toString(requestMappingArray) + ",请修改");
 					}
 				}
 			}
@@ -221,7 +226,7 @@ public class ZControllerScanner {
 				for (int i = 0; i < zpvPList.size(); i++) {
 					// 可以按名称顺序判断，因为一个方法中参数名称不可以重复
 					if (!zpvPList.get(i).getName().equals(zpvNameList.get(i))) {
-						final List<String> pnl = zpvPList.stream().map(p -> p.getName())
+						final List<String> pnl = zpvPList.stream().map(Parameter::getName)
 								.collect(Collectors.toList());
 						throw new StartupException("接口方法mapping 声明@" + ZPathVariable.class.getSimpleName()
 								+ "参数顺序" + pnl + "与方法mapping" + zpvNameList + "顺序不一致,请修改参数顺序。接口方法=" + method.getName()
@@ -229,8 +234,7 @@ public class ZControllerScanner {
 					}
 				}
 
-				for (int i = 0; i < zpvPList.size(); i++) {
-					final Parameter p = zpvPList.get(i);
+				for (final Parameter p : zpvPList) {
 					final String canonicalName = p.getType().getCanonicalName();
 
 					if (!Task.ZPV_TYPE.contains(canonicalName)) {
@@ -243,7 +247,7 @@ public class ZControllerScanner {
 		}
 
 		final boolean[] isRegex = requestMappingAnnotation.isRegex();
-		if (!ArrayUtil.isEmpty(isRegex) && isRegex.length != requestMappingArray.length) {
+		if (!ArrayUtil.isEmpty(isRegex) && (isRegex.length != requestMappingArray.length)) {
 			throw new StartupException("接口方法 " + method.getName() + " isRegex个数必须与mapping值个数 相匹配, isRegex个数 = "
 					+ isRegex.length + " mapping个数 = " + requestMappingArray.length);
 		}
