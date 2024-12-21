@@ -37,9 +37,10 @@ public class QC {
 		}
 
 		final long ms = System.currentTimeMillis();
-		final long time = ms / 1000;
+		final long sencod = ms / 1000;
 		final long qpsNEW = qps;
-		return a(keyPrefix, time, qpsNEW);
+		final boolean ok = a(keyPrefix, sencod, qpsNEW);
+		return ok;
 	}
 
 	public static boolean allowSmooth(final String keyPrefix, final long qps) {
@@ -61,7 +62,10 @@ public class QC {
 			C.put(k, 1);
 		} else {
 			if (count.intValue() > qpsNEW) {
-				C.remove(k);
+				
+				// FIXME 2024年12月21日 下午1:17:11 zhangzhen : 上次加入下面这样是想及时山remove掉不再用的K，结果导致bug了
+				// 现在先注释了，以后再看怎么清楚不再用的K
+				//				C.remove(k);
 				return false;
 			}
 			C.put(k, count + 1);
