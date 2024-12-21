@@ -579,7 +579,7 @@ public class NioLongConnectionServer {
 				if (((totalBytesRead == 0) || (read == 0))
 						&& ((System.currentTimeMillis() - startTime
 								- (endWriteToFile - startWriteToFile)) > nioReadTimeout)) {
-					throw new IllegalArgumentException("读取body超时");
+					throw new IllegalArgumentException("读取body超时,nioReadTimeout = " + nioReadTimeout);
 				}
 			}
 
@@ -656,7 +656,7 @@ public class NioLongConnectionServer {
 				// 如果读取返回 0，则检查超时
 				if (((totalBytesRead == 0) || (read == 0))
 						&& ((System.currentTimeMillis() - startTime) > nioReadTimeout)) {
-					throw new IllegalArgumentException("读取body超时");
+					throw new IllegalArgumentException("读取body超时,nioReadTimeout = " + nioReadTimeout);
 				}
 			}
 
