@@ -656,13 +656,17 @@ public class Task {
 						request.getContentType(), request.getBoundary());
 				final Optional<FD2> findAny = fdList.stream().filter(fd -> fd.getName().equals(p.getName())).findAny();
 				if (findAny.isPresent()) {
-					final InputStream	inputStream = new ByteArrayInputStream(findAny.get().getBody());
-					final ZMultipartFile file = new ZMultipartFile (findAny.get().getName(),
+
+					final InputStream inputStream = new ByteArrayInputStream(findAny.get().getBody());
+					final ZMultipartFile file = new ZMultipartFile(findAny.get().getName(),
 							findAny.get().getFileName(),
 							findAny.get().getBody(),
-							findAny.get().getContentType(), inputStream);
+							false,
+							findAny.get().getContentType(),
+							inputStream);
 
 					pI = Task.setValue(parametersArray, pI, p, file);
+
 				} else {
 
 					if (!p.getName().equals(request.getTf().getName())) {
@@ -681,8 +685,7 @@ public class Task {
 					final ZMultipartFile file = new ZMultipartFile (request.getTf().getName(),
 							request.getTf().getFileName(),
 							null,
-							// FIXME 2024年12月20日 上午12:26:54 zhangzhen : 解析出来content-type
-							contentType, inputStream);
+							true, contentType, inputStream);
 
 					pI = Task.setValue(parametersArray, pI, p, file);
 				}
