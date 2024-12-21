@@ -164,49 +164,50 @@ public class NioLongConnectionServer {
 						handleAccept(selectionKey, selector);
 					} else if (selectionKey.isReadable()) {
 
-						final SocketChannel channel = (SocketChannel)selectionKey.channel();
+						final SocketChannel channel = (SocketChannel) selectionKey.channel();
 						final String keyword = channel.toString();
 
 						NioLongConnectionServer.ZE_READ.executeByNameInASpecificThread(keyword, () -> {
 
-							if (Boolean.TRUE.equals(SERVER_CONFIGURATION.getQpsLimitEnabled())
-									&& !QC.allow(NioLongConnectionServer.Z_SERVER_QPS, SERVER_CONFIGURATION.getQps(),
-											QPSHandlingEnum.UNEVEN)) {
-								final ServerConfigurationProperties p = ZContext
-										.getBean(ServerConfigurationProperties.class);
-								NioLongConnectionServer.response429Async(selectionKey, p.getQpsExceedMessage());
-							} else {
-								ZArray array=null;
-								try {
-									array = NioLongConnectionServer.handleRead(selectionKey);
-								} catch (final Exception e) {
-									final String message = e.getMessage();
-									final ZResponse response = new ZResponse((SocketChannel) selectionKey.channel());
-									response.contentType(HeaderEnum.APPLICATION_JSON.getType())
-									.httpStatus(HttpStatus.HTTP_400.getCode())
-									.header(HttpHeaderEnum.CONNECTION.getValue(), "close")
-									.body(J.toJSONString(CR.error(HttpStatus.HTTP_400.getCode(),
-											HttpStatus.HTTP_400.getMessage() + SPACE + message
-											), Include.NON_NULL));
-									response.write();
-
-									closeSocketChannelAndKeyCancel(selectionKey, (SocketChannel) selectionKey.channel());
-									e.printStackTrace();
-								}
-
+							ZArray array = null;
+							try {
+								array = NioLongConnectionServer.handleRead(selectionKey);
 								if (array != null) {
-									final TaskRequest taskRequest = new TaskRequest(selectionKey,
-											(SocketChannel) selectionKey.channel(), array.get(), array.getTf(), new Date());
-									final boolean responseAsync = NioLongConnectionServer.this.requestHandler
-											.add(taskRequest);
-									if (!responseAsync) {
-										final ServerConfigurationProperties p = ZContext
-												.getBean(ServerConfigurationProperties.class);
+									if (Boolean.TRUE.equals(SERVER_CONFIGURATION.getQpsLimitEnabled())
+											&& !QC.allow(NioLongConnectionServer.Z_SERVER_QPS,
+													SERVER_CONFIGURATION.getQps(), QPSHandlingEnum.UNEVEN)) {
+
 										NioLongConnectionServer.response429Async(selectionKey,
-												p.getPendingTasksExceedMessage());
+												SERVER_CONFIGURATION.getQpsExceedMessage());
+
+									} else {
+										final TaskRequest taskRequest = new TaskRequest(selectionKey,
+												(SocketChannel) selectionKey.channel(), array.get(), array.getTf(),
+												new Date());
+										final boolean responseAsync = NioLongConnectionServer.this.requestHandler
+												.add(taskRequest);
+										if (!responseAsync) {
+											NioLongConnectionServer.response429Async(selectionKey,
+													SERVER_CONFIGURATION.getPendingTasksExceedMessage());
+										}
 									}
 								}
+							} catch (final Exception e) {
+								final String message = e.getMessage();
+								final ZResponse response = new ZResponse((SocketChannel) selectionKey.channel());
+								response.contentType(HeaderEnum.APPLICATION_JSON.getType())
+								.httpStatus(HttpStatus.HTTP_400.getCode())
+								.header(HttpHeaderEnum.CONNECTION.getValue(), "close")
+								.body(J.toJSONString(
+										CR.error(HttpStatus.HTTP_400.getCode(),
+												HttpStatus.HTTP_400.getMessage() + SPACE + message),
+										Include.NON_NULL));
+								response.write();
+
+								closeSocketChannelAndKeyCancel(selectionKey, (SocketChannel) selectionKey.channel());
+								e.printStackTrace();
 							}
+
 						});
 
 					}
