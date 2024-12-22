@@ -62,7 +62,7 @@ public class ZValueScanner {
 		}
 
 		for (final Class<?> cls : clist) {
-			final Object bean = ZContext.getBean(cls.getCanonicalName());
+			final Object bean = ZContext.getBean(cls);
 			if (Objects.isNull(bean)) {
 				continue;
 			}
@@ -75,7 +75,7 @@ public class ZValueScanner {
 	}
 
 	public static void inject(final Class<?> cls, final Field field) {
-		final Object bean = ZContext.getBean(cls.getCanonicalName());
+		final Object bean = ZContext.getBean(cls);
 		final ZValue value = field.getAnnotation(ZValue.class);
 		if (value == null) {
 			return;

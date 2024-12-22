@@ -49,7 +49,7 @@ public class ZAutowiredScanner {
 					|| (annoClass == ZService.class)
 					|| (annoClass == ZConfiguration.class)
 					) {
-				o2 = ZContext.getBean(canonicalName);
+				o2 = ZContext.getBean(cls);
 			} else if (annoClass == ZAOP.class) {
 				o2 = ZSingleton.getSingletonByClass(cls);
 			}
@@ -125,7 +125,7 @@ public class ZAutowiredScanner {
 		// FIXME 2023年7月5日 下午8:02:09 zhanghen: TODO ： 如果getByName 有多个返回值，则提示一下要具体注入哪个
 		final Object object = cls.isAnnotationPresent(ZAOP.class)
 				? ZSingleton.getSingletonByClass(cls)
-						: ZContext.getBean(cls.getCanonicalName());
+						: ZContext.getBean(cls);
 		final Object vT = ZContext.getBean(name);
 		final Object value = vT != null ? vT : ZContext.getBean(f.getType().getCanonicalName());
 
