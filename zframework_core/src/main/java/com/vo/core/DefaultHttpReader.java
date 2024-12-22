@@ -117,7 +117,8 @@ public class DefaultHttpReader {
 					return array;
 				}
 
-				final int newNeedReadBodyLength = bodyReadC - BodyReader.RN_BYTES_LENGTH;
+				final int newNeedReadBodyLength = bodyReadC;
+				//				final int newNeedReadBodyLength = bodyReadC - BodyReader.RN_BYTES_LENGTH;
 				if (newNeedReadBodyLength <= 0) {
 					return array;
 				}
