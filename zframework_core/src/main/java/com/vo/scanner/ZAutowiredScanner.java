@@ -128,15 +128,15 @@ public class ZAutowiredScanner {
 
 		// FIXME 2023年7月5日 下午8:02:09 zhanghen: TODO ： 如果getByName 有多个返回值，则提示一下要具体注入哪个
 		final Object object = cls.isAnnotationPresent(ZAOP.class)
-					? ZSingleton.getSingletonByClass(cls)
-					: ZContext.getBean(cls.getCanonicalName());
+				? ZSingleton.getSingletonByClass(cls)
+						: ZContext.getBean(cls.getCanonicalName());
 		final Object vT = ZContext.getBean(name);
 		final Object value = vT != null ? vT : ZContext.getBean(f.getType().getCanonicalName());
 
 		// 不能在此提示，因为可能有循环依赖，某些时候bean存在但是还没注入进来，所以在此提示不合适，等所有bean都初始化完成了再提示
-//		if (autowired.required() && value == null) {
-//			throw new BeanNotExistException(name);
-//		}
+		//		if (autowired.required() && value == null) {
+		//			throw new BeanNotExistException(name);
+		//		}
 
 		try {
 			f.setAccessible(true);
@@ -180,7 +180,7 @@ public class ZAutowiredScanner {
 				try {
 					final Object v = f.get(bean);
 					// 在此判断：如果 autowired.required() 并且字段不存在，则抛异常
-					if (v == null && autowired.required()) {
+					if ((v == null) && autowired.required()) {
 						final String beanName = StrUtil.isEmpty(autowired.name()) ?
 								f.getType().getCanonicalName() + "@" +
 								f.getName() : autowired.name();
