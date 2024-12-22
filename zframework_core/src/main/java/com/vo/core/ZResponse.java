@@ -76,6 +76,8 @@ import lombok.Getter;
 @Data
 public class ZResponse {
 
+	private static final byte[] NEW_LINE_BYTES = Task.NEW_LINE.getBytes();
+
 	private static final String CHARSET = "charset";
 
 	public static final String HTTP_1_1 = "HTTP/1.1 ";
@@ -221,27 +223,27 @@ public class ZResponse {
 			}
 
 			this.outputStream.write((ZResponse.HTTP_1_1 + this.httpStatus.get()).getBytes());
-			this.outputStream.write(Task.NEW_LINE.getBytes());
+			this.outputStream.write(NEW_LINE_BYTES);
 
 			// header-Content-Length
 			if (CU.isNotEmpty(this.bodyList)) {
 				final int contentLenght = this.bodyList.size();
 
 				this.outputStream.write((ZRequest.CONTENT_LENGTH + ":" + contentLenght).getBytes());
-				this.outputStream.write(Task.NEW_LINE.getBytes());
+				this.outputStream.write(NEW_LINE_BYTES);
 			}
 
 			this.outputStream.write(this.contentTypeAR.get().getBytes());
-			this.outputStream.write(Task.NEW_LINE.getBytes());
+			this.outputStream.write(NEW_LINE_BYTES);
 
 			if (this.headerList != null) {
 				for (final ZHeader zHeader : this.headerList) {
 					this.outputStream.write((zHeader.getName() + ":" + zHeader.getValue()).getBytes());
-					this.outputStream.write(Task.NEW_LINE.getBytes());
+					this.outputStream.write(NEW_LINE_BYTES);
 				}
 			}
 
-			this.outputStream.write(Task.NEW_LINE.getBytes());
+			this.outputStream.write(NEW_LINE_BYTES);
 
 			// body
 			if (CU.isNotEmpty(this.bodyList)) {
@@ -254,7 +256,7 @@ public class ZResponse {
 				this.outputStream.write(J.toJSONString(CR.ok(), Include.NON_NULL).getBytes());
 			}
 
-			this.outputStream.write(Task.NEW_LINE.getBytes());
+			this.outputStream.write(NEW_LINE_BYTES);
 
 		} catch (final Exception e) {
 			e.printStackTrace();
@@ -271,31 +273,33 @@ public class ZResponse {
 			throw new IllegalArgumentException(ZRequest.CONTENT_TYPE + "未设置");
 		}
 
-		final ZArray array = new ZArray();
+
+		final int contentLenght = CU.isNotEmpty(this.bodyList) ? this.bodyList.size() : 0;
+		// FIXME 2024年12月22日 下午9:39:47 zhangzhen : 这个预估好一般有多少，或者自己写个扩容固定值的比如40
+		final ZArray array = new ZArray(contentLenght + 2048);
 
 		array.add((ZResponse.HTTP_1_1 + this.httpStatus.get()).getBytes());
-		array.add(Task.NEW_LINE.getBytes());
+		array.add(NEW_LINE_BYTES);
 
 		// header-Content-Length
 		if (CU.isNotEmpty(this.bodyList)) {
-			final int contentLenght = this.bodyList.size();
 			array.add((ZRequest.CONTENT_LENGTH + ":" + contentLenght).getBytes());
 		} else {
 			array.add((ZRequest.CONTENT_LENGTH + ":" + 0).getBytes());
 		}
-		array.add(Task.NEW_LINE.getBytes());
+		array.add(NEW_LINE_BYTES);
 
 		array.add((this.contentTypeAR.get()).getBytes());
-		array.add(Task.NEW_LINE.getBytes());
+		array.add(NEW_LINE_BYTES);
 
 		if (this.headerList != null) {
 			for (final ZHeader zHeader : this.headerList) {
 				array.add((zHeader.getName() + ":" + zHeader.getValue()).getBytes());
-				array.add(Task.NEW_LINE.getBytes());
+				array.add(NEW_LINE_BYTES);
 			}
 		}
 
-		array.add(Task.NEW_LINE.getBytes());
+		array.add(NEW_LINE_BYTES);
 
 		// body
 		if (CU.isNotEmpty(this.bodyList)) {
@@ -305,7 +309,7 @@ public class ZResponse {
 			}
 
 			array.add(ba);
-			array.add(Task.NEW_LINE.getBytes());
+			array.add(NEW_LINE_BYTES);
 
 		} else {
 			//			array.add(JSON.toJSONString(CR.ok()).getBytes());
