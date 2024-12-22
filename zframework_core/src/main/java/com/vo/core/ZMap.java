@@ -75,8 +75,8 @@ public class ZMap<K, V> implements Map<K, V> {
 	@Override
 	public synchronized int size() {
 		int c = 0;
-		for (int i = 0; i < this.data.size(); i++) {
-			c += this.data.get(i).size();
+		for (final LinkedList<ZNode> element : this.data) {
+			c += element.size();
 		}
 		return c;
 	}
@@ -87,8 +87,8 @@ public class ZMap<K, V> implements Map<K, V> {
 			return true;
 		}
 
-		for (int i = 0; i < this.data.size(); i++) {
-			final int size = this.data.get(i).size();
+		for (final LinkedList<ZNode> element : this.data) {
+			final int size = element.size();
 			if (size > 0) {
 				return false;
 			}
@@ -130,8 +130,7 @@ public class ZMap<K, V> implements Map<K, V> {
 	@Override
 	public synchronized boolean containsValue(final Object value) {
 
-		for (int i = 0; i < this.data.size(); i++) {
-			final LinkedList<ZNode> nl = this.data.get(i);
+		for (final LinkedList<ZNode> nl : this.data) {
 			for (final ZNode zNode : nl) {
 				if (Objects.equals(zNode.getV(), value)) {
 					return true;
@@ -152,6 +151,7 @@ public class ZMap<K, V> implements Map<K, V> {
 
 		final String keyword = lock(n);
 		synchronized (keyword.intern()) {
+
 
 			final LinkedList<ZNode> nl = this.data.get(n);
 
@@ -291,7 +291,7 @@ public class ZMap<K, V> implements Map<K, V> {
 		final StringBuilder builder = new StringBuilder("[");
 		for (int i = 0; i < this.groups; i++) {
 			final LinkedList<ZNode> nl = this.data.get(i);
-			if (nl == null || nl.isEmpty()) {
+			if ((nl == null) || nl.isEmpty()) {
 				continue;
 			}
 			builder.append(nl);
