@@ -33,28 +33,24 @@ public class ZAutowiredScanner {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
-	public static Set<Class<?>> inject(final Class<? extends Annotation> targetClass, final String... packageName) {
+	public static Set<Class<?>> inject(final Class<? extends Annotation> annoClass, final String... packageName) {
 
-		ZAutowiredScanner.LOG.info("开始扫描带有[{}]注解的类", targetClass.getCanonicalName());
-		final Set<Class<?>> zcSet = ClassMap.scanPackageByAnnotation(targetClass, packageName);
+		ZAutowiredScanner.LOG.info("开始扫描带有[{}]注解的类", annoClass.getCanonicalName());
+		final Set<Class<?>> zcSet = ClassMap.scanPackageByAnnotation(annoClass, packageName);
 
-		ZAutowiredScanner.LOG.info("带有[{}]注解的类个数={}", targetClass.getCanonicalName(), zcSet.size());
+		ZAutowiredScanner.LOG.info("带有[{}]注解的类个数={}", annoClass.getCanonicalName(), zcSet.size());
+
 
 		for (final Class<?> cls : zcSet) {
+			final String canonicalName = cls.getCanonicalName();
 			Object o2 = null;
-			if (targetClass.getCanonicalName().equals(ZController.class.getCanonicalName())) {
-				o2 = ZContext.getBean(cls.getCanonicalName());
-			}
-			if (targetClass.getCanonicalName().equals(ZComponent.class.getCanonicalName())) {
-				o2 = ZContext.getBean(cls.getCanonicalName());
-			}
-			if (targetClass.getCanonicalName().equals(ZService.class.getCanonicalName())) {
-				o2 = ZContext.getBean(cls.getCanonicalName());
-			}
-			if (targetClass.getCanonicalName().equals(ZConfiguration.class.getCanonicalName())) {
-				o2 = ZContext.getBean(cls.getCanonicalName());
-			}
-			if (targetClass.getCanonicalName().equals(ZAOP.class.getCanonicalName())) {
+			if ((annoClass == ZController.class)
+					|| (annoClass == ZComponent.class)
+					|| (annoClass == ZService.class)
+					|| (annoClass == ZConfiguration.class)
+					) {
+				o2 = ZContext.getBean(canonicalName);
+			} else if (annoClass == ZAOP.class) {
 				o2 = ZSingleton.getSingletonByClass(cls);
 			}
 
