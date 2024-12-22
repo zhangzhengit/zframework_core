@@ -95,6 +95,8 @@ public class Task {
 	public static final String NEW_LINE = "\r\n";
 	private static final Map<Object, Object> CACHE_MAP = new WeakHashMap<>(1024, 1F);
 
+	private static final ServerConfigurationProperties serverConfiguration = ZSingleton.getSingletonByClass(ServerConfigurationProperties.class);
+
 	public static final ThreadLocal<SocketChannel> SCTL = new ThreadLocal<>();
 	private final SocketChannel socketChannel;
 	private final Socket socket;
@@ -130,7 +132,7 @@ public class Task {
 	 */
 	public static <T extends Annotation> T getMethodAnnotation(final ZRequest request, final Class<T> annoClass) {
 
-		final String key = request.getRequestURI() + "@" + annoClass.getCanonicalName();
+		final String key = request.getRequestURI() + "@" + annoClass.getName()  + "-" + annoClass.hashCode();
 		final Object v = CACHE_MAP.get(key);
 		if (v != null) {
 			return (T) v;
@@ -421,7 +423,7 @@ public class Task {
 		}
 
 		// 接口方法无返回值，直接返回 response对象
-		if (Task.VOID.equals(method.getReturnType().getCanonicalName())) {
+		if (method.getReturnType() == void.class) {
 			final ZResponse response = ZHttpContext.getZResponseAndRemove();
 			return response;
 		}
@@ -515,7 +517,6 @@ public class Task {
 
 	private ZResponse responseDefault_JSON(final ZRequest request, final Object r) {
 		final String json = J.toJSONString(r, Include.NON_NULL);
-		final ServerConfigurationProperties serverConfiguration = ZSingleton.getSingletonByClass(ServerConfigurationProperties.class);
 		if (serverConfiguration.getGzipEnable()
 				&& serverConfiguration.gzipContains(DEFAULT_CONTENT_TYPE.getType())
 				&& request.isSupportGZIP()) {
@@ -539,7 +540,6 @@ public class Task {
 			final String html = ZTemplate.freemarker(htmlContent);
 			ZModel.clear();
 
-			final ServerConfigurationProperties serverConfiguration = ZSingleton.getSingletonByClass(ServerConfigurationProperties.class);
 			if (serverConfiguration.getGzipEnable()
 					&& serverConfiguration.gzipContains(HeaderEnum.TEXT_HTML.getType())
 					&& request.isSupportGZIP()) {
@@ -921,7 +921,7 @@ public class Task {
 				continue;
 			}
 
-			if (ZResponse.class.getCanonicalName().equals(object.getClass().getCanonicalName())) {
+			if (ZResponse.class == object.getClass()) {
 				ZHttpContext.setZResponse((ZResponse) object);
 				sR = true;
 				break;
