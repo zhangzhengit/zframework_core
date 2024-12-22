@@ -23,6 +23,10 @@ public class ZContext {
 		return (T) getBean(beanClass.getCanonicalName());
 	}
 
+	public synchronized static <T> Object remove(final Class<T> beanClass) {
+		return BEAN_MAP.remove(beanClass.getCanonicalName());
+	}
+
 	public synchronized static Object getBean(final String beanName) {
 		return BEAN_MAP.get(beanName);
 	}
@@ -38,7 +42,7 @@ public class ZContext {
 	public synchronized static void addBean(final String beanName, final Object bean) {
 		final Object v = BEAN_MAP.get(beanName);
 		// 同样name已存在一个不同的
-		if (v != null && v != bean) {
+		if ((v != null) && (v != bean)) {
 			throw new BeanAlreadyEexistsException(beanName);
 		}
 		BEAN_MAP.put(beanName, bean);
