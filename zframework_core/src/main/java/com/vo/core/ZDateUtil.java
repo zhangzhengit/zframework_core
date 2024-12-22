@@ -14,11 +14,12 @@ import java.util.TimeZone;
  */
 public class ZDateUtil {
 
+	private static final TimeZone TIME_ZONE = TimeZone.getTimeZone("GMT");
 	private final static SimpleDateFormat SDF = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss 'GMT'",Locale.ENGLISH);
 
 	public static String gmt(final Date date) {
 
-		SDF.setTimeZone(TimeZone.getTimeZone("GMT"));
+		SDF.setTimeZone(TIME_ZONE);
 
 		return SDF.format(date);
 
