@@ -19,13 +19,12 @@ import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
+import com.vo.cache.AU;
+import com.vo.cache.CU;
 import com.vo.cache.STU;
 import com.vo.enums.MethodEnum;
 import com.vo.http.ZCookie;
 
-import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.util.ArrayUtil;
-import cn.hutool.core.util.StrUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -117,7 +116,7 @@ public class ZRequest {
 
 	public boolean isSupportGZIP() {
 		final String a = this.getHeader(ZRequest.ACCEPT_ENCODING);
-		if (StrUtil.isEmpty(a)) {
+		if (STU.isEmpty(a)) {
 			return false;
 		}
 
@@ -247,7 +246,7 @@ public class ZRequest {
 	public synchronized ZSession getSession(final boolean create) {
 		final ZCookie[] cs = this.getCookies();
 
-		if (ArrayUtil.isNotEmpty(cs)) {
+		if (AU.isNotEmpty(cs)) {
 			for (final ZCookie zc : cs) {
 				if (ZRequest.Z_SESSION_ID.equals(zc.getName())) {
 					final ZSession session = ZSessionMap.get(zc.getValue());
@@ -295,7 +294,7 @@ public class ZRequest {
 	public ZCookie[] getCookies() {
 
 		final String cookisString = this.getHeaderMap().get(ZRequest.COOKIE);
-		if (StrUtil.isEmpty(cookisString)) {
+		if (STU.isEmpty(cookisString)) {
 			return null;
 		}
 
@@ -315,7 +314,7 @@ public class ZRequest {
 
 	public ZCookie getZSESSIONID() {
 		final ZCookie[] cookies = this.getCookies();
-		if (ArrayUtil.isEmpty(cookies)) {
+		if (AU.isEmpty(cookies)) {
 			return null;
 		}
 
@@ -336,7 +335,7 @@ public class ZRequest {
 		// FIXME 2024年12月9日 下午6:30:42 zhangzhen : 这个方法是否要改
 		// 因为@ZRequestParam加入了默认值，用此方法取还是原值而非默认值
 		final Set<RequestParam> ps = this.getParamSet();
-		if (CollUtil.isEmpty(ps)) {
+		if (CU.isEmpty(ps)) {
 			return null;
 		}
 
@@ -395,7 +394,7 @@ public class ZRequest {
 	private static ZRequest parseRequest0(final ZRequest request) {
 
 		//		final ZRequest.RequestLine requestLine = new ZRequest.RequestLine();
-		if (CollUtil.isEmpty(request.getLineList())) {
+		if (CU.isEmpty(request.getLineList())) {
 			return request;
 		}
 
@@ -493,7 +492,7 @@ public class ZRequest {
 				requestParam.setName(p0[0]);
 				if (p0.length >= 2) {
 					try {
-						final String v = StrUtil.isEmpty(p0[1]) ? Task.EMPTY_STRING
+						final String v = STU.isEmpty(p0[1]) ? Task.EMPTY_STRING
 								: java.net.URLDecoder.decode(p0[1], Task.DEFAULT_CHARSET_NAME);
 						requestParam.setValue(v);
 					} catch (final UnsupportedEncodingException e) {

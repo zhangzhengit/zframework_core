@@ -16,13 +16,11 @@ import java.nio.file.WatchService;
 import java.util.Enumeration;
 import java.util.Properties;
 
-import com.google.common.collect.ContiguousSet;
 import com.vo.configuration.ZProperties;
 import com.vo.core.ZLog2;
 import com.votool.ze.ZE;
 import com.votool.ze.ZES;
 
-import cn.hutool.core.io.IORuntimeException;
 import cn.hutool.core.io.IoUtil;
 
 /**
@@ -119,7 +117,7 @@ public class ZPropertiesListener {
 									}
 								}
 
-							} catch (IORuntimeException | IOException e) {
+							} catch (final IOException e) {
 								e.printStackTrace();
 							}
 						}

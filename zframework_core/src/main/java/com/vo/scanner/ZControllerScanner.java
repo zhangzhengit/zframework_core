@@ -15,6 +15,8 @@ import com.google.common.collect.Sets;
 import com.vo.anno.ZController;
 import com.vo.anno.ZCookieValue;
 import com.vo.api.StaticController;
+import com.vo.cache.AU;
+import com.vo.cache.STU;
 import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.core.Task;
 import com.vo.core.ZContext;
@@ -31,9 +33,6 @@ import com.vo.http.ZControllerMap;
 import com.vo.http.ZCookie;
 import com.vo.http.ZHtml;
 import com.vo.http.ZRequestMapping;
-
-import cn.hutool.core.util.ArrayUtil;
-import cn.hutool.core.util.StrUtil;
 
 /**
  * 扫描 @ZController 的类，注册为一个控制类
@@ -148,7 +147,7 @@ public class ZControllerScanner {
 	 *
 	 */
 	private static String n(final String prefix) {
-		if (StrUtil.isEmpty(prefix)) {
+		if (STU.isEmpty(prefix)) {
 			return "";
 		}
 
@@ -184,7 +183,7 @@ public class ZControllerScanner {
 	private static void checkZRequestMapping(final Method method, final ZRequestMapping requestMappingAnnotation,
 			final String[] requestMappingArray) {
 
-		if (ArrayUtil.isEmpty(requestMappingArray)) {
+		if (AU.isEmpty(requestMappingArray)) {
 			throw new StartupException("接口方法 " + method.getName() + " mapping值不能为空");
 		}
 
@@ -197,14 +196,14 @@ public class ZControllerScanner {
 			final Class<?> type = zcvO.get().getType();
 			final ZCookieValue cookieValue = zcvO.get().getAnnotation(ZCookieValue.class);
 			if (type.equals(String.class)) {
-				if (StrUtil.isEmpty(cookieValue.name())) {
+				if (STU.isEmpty(cookieValue.name())) {
 					throw new StartupException("接口方法[" + method.getName() + "]的@" + ZCookieValue.class.getSimpleName()
 							+ " 参数用于 String 类型时，" + zcvO.get().getName() + " 名称表示的是 Cookie的value，所以"
 							+ "请声明@" + ZCookieValue.class.getSimpleName() + ".name() 属性来表示Cookie的name");
 				}
 
 			} else if (type.equals(ZCookie.class)) {
-				if (StrUtil.isEmpty(cookieValue.name())) {
+				if (STU.isEmpty(cookieValue.name())) {
 					throw new StartupException("接口方法[" + method.getName() + "]的@" + ZCookieValue.class.getSimpleName()
 							+ " 参数用于 "+ZCookie.class.getSimpleName()+" 类型时，" + zcvO.get().getName() + " 名称表示的是 "+ZCookie.class.getSimpleName()+"对象，所以"
 							+ "请声明@" + ZCookieValue.class.getSimpleName() + ".name() 属性来表示Cookie的name");
@@ -275,7 +274,7 @@ public class ZControllerScanner {
 		}
 
 		final boolean[] isRegex = requestMappingAnnotation.isRegex();
-		if (!ArrayUtil.isEmpty(isRegex) && (isRegex.length != requestMappingArray.length)) {
+		if (!AU.isEmpty(isRegex) && (isRegex.length != requestMappingArray.length)) {
 			throw new StartupException("接口方法 " + method.getName() + " isRegex个数必须与mapping值个数 相匹配, isRegex个数 = "
 					+ isRegex.length + " mapping个数 = " + requestMappingArray.length);
 		}
@@ -284,7 +283,7 @@ public class ZControllerScanner {
 
 		for (final String requestMapping : requestMappingArray) {
 
-			if (StrUtil.isEmpty(requestMapping)) {
+			if (STU.isEmpty(requestMapping)) {
 				throw new StartupException("接口方法 " + method.getName() + " mapping值不能为空");
 			}
 

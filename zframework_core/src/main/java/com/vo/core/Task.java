@@ -42,7 +42,10 @@ import com.vo.anno.ZRequestBody;
 import com.vo.anno.ZRequestHeader;
 import com.vo.aop.InterceptorParameter;
 import com.vo.api.StaticController;
+import com.vo.cache.AU;
+import com.vo.cache.CU;
 import com.vo.cache.J;
+import com.vo.cache.STU;
 import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.core.ZRequest.RequestParam;
 import com.vo.enums.MethodEnum;
@@ -69,10 +72,6 @@ import com.vo.validator.ZPositive;
 import com.vo.validator.ZValidated;
 import com.vo.validator.ZValidator;
 import com.votool.common.CR;
-
-import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.util.ArrayUtil;
-import cn.hutool.core.util.StrUtil;
 
 /**
  *
@@ -147,7 +146,7 @@ public class Task {
 
 	private static <T extends Annotation> T getMethodAnnotation0(final ZRequest request, final Class<T> annoClass) {
 		// 匹配path
-		if (CollUtil.isEmpty(request.getLineList())) {
+		if (CU.isEmpty(request.getLineList())) {
 			return null;
 		}
 
@@ -218,7 +217,7 @@ public class Task {
 
 	private ZResponse handleNoMethodMatche(final ZRequest request,  final String path) throws Exception {
 		final Map<MethodEnum, Method> methodMap = ZControllerMap.getByPath(path);
-		if (CollUtil.isNotEmpty(methodMap)) {
+		if (CU.isNotEmpty(methodMap)) {
 			final String methodString = methodMap.keySet().stream().map(MethodEnum::getMethod).collect(Collectors.joining(","));
 			return new ZResponse(this.socketChannel)
 					.header(ZRequest.ALLOW, methodString)
@@ -268,7 +267,7 @@ public class Task {
 		e.printStackTrace(writer);
 
 		final String zfm = getZFMessage(e);
-		final String eMessage =  (StrUtil.isEmpty(zfm) ? "" : "\r\n\tmessage=" + zfm + "\r\n\t")
+		final String eMessage =  (STU.isEmpty(zfm) ? "" : "\r\n\tmessage=" + zfm + "\r\n\t")
 				+stringWriter
 				;
 
@@ -376,7 +375,7 @@ public class Task {
 		Object r = null;
 		// 在此zhi执行
 		final List<ZHandlerInterceptor> zhiList = ZHandlerInterceptorScanner.match(request.getRequestURI());
-		if (CollUtil.isEmpty(zhiList)) {
+		if (CU.isEmpty(zhiList)) {
 			r = invoke0(method, arraygP, zController);
 		} else {
 			final ZResponse response = new ZResponse(this.socketChannel);
@@ -592,9 +591,9 @@ public class Task {
 				pI++;
 			} else if (p.isAnnotationPresent(ZCookieValue.class)) {
 				final ZCookieValue cookieValue = p.getAnnotation(ZCookieValue.class);
-				final String cookieName = StrUtil.isEmpty(cookieValue.name()) ? p.getName() : cookieValue.name();
+				final String cookieName = STU.isEmpty(cookieValue.name()) ? p.getName() : cookieValue.name();
 				final ZCookie[] cookies = request.getCookies();
-				if (ArrayUtil.isEmpty(cookies)) {
+				if (AU.isEmpty(cookies)) {
 					if (cookieValue.required()) {
 						throw new FormPairParseException("请求方法[" + path + "]缺少名为[" + cookieName + "]的Cookie");
 					}
@@ -632,7 +631,7 @@ public class Task {
 				pI++;
 			} else if (p.isAnnotationPresent(ZRequestBody.class)) {
 				final byte[] body = request.getBody();
-				if (ArrayUtil.isEmpty(body)) {
+				if (AU.isEmpty(body)) {
 					final String simpleName = p.getType().getSimpleName();
 					throw new FormPairParseException("@" + ZRequestBody.class.getSimpleName() + " 参数 " + simpleName + " 不存在");
 				}
@@ -677,7 +676,7 @@ public class Task {
 
 				pI++;
 			} else if (p.getType().getCanonicalName().equals(ZMultipartFile.class.getCanonicalName())) {
-				if (ArrayUtil.isEmpty(request.getOriginalRequestBytes())) {
+				if (AU.isEmpty(request.getOriginalRequestBytes())) {
 					throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
 				}
 
@@ -765,7 +764,7 @@ public class Task {
 
 		int piR = 0;
 		final Set<RequestParam> paramSet = request.getParamSet();
-		if (CollUtil.isNotEmpty(paramSet)) {
+		if (CU.isNotEmpty(paramSet)) {
 			final Optional<RequestParam> findAny = paramSet.stream()
 					.filter(rp -> rp.getName().equals(p.getName()))
 					.findAny();
@@ -787,7 +786,7 @@ public class Task {
 			piR = Task.setValue(parametersArray, pI, p, findAny.get().getValue());
 		} else {
 			final byte[] body = request.getBody();
-			if (ArrayUtil.isEmpty(body)) {
+			if (AU.isEmpty(body)) {
 				final String defaultValue = p.getAnnotation(ZRequestParam.class).defaultValue();
 				if (defaultValue != null) {
 					try {
@@ -802,12 +801,13 @@ public class Task {
 
 			final List<FD2> fdList = BodyReader.readFormDate(request.getOriginalRequestBytes(),
 					request.getContentType(), request.getBoundary());
-			if (CollUtil.isEmpty(fdList)) {
+			if (CU.isEmpty(fdList)) {
 				throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
 			}
 
 			final Optional<FD2> findAny = fdList.stream()
-					.filter(f -> StrUtil.isEmpty(f.getFileName()))
+					// FIXME 2024年12月21日 下午10:05:21 zhangzhen : 这个是isEmpty？是当时手误写错了？记得debug看下
+					.filter(f -> STU.isEmpty(f.getFileName()))
 					.filter(f -> f.getName().equals(p.getName()))
 					.findAny();
 			if (!findAny.isPresent()) {

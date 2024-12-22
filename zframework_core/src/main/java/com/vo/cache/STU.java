@@ -13,8 +13,16 @@ public class STU {
 		return (string == null);
 	}
 
+	public static boolean isEmpty(final String string) {
+		return (string == null) || (string.length() == 0);
+	}
+
 	public static boolean isNotNull(final String string) {
 		return (string != null);
+	}
+
+	public static boolean isNotEmpty(final String string) {
+		return (string != null) && !string.isEmpty();
 	}
 
 	public static boolean isNotNullAndNotEmpty(final String string) {

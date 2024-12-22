@@ -11,14 +11,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.vo.cache.CU;
 import com.vo.cache.J;
+import com.vo.cache.STU;
 import com.vo.core.ZRequest.ZHeader;
 import com.vo.http.HttpStatus;
 import com.vo.http.ZCookie;
 import com.votool.common.CR;
 
-import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.util.StrUtil;
 import lombok.Data;
 import lombok.Getter;
 
@@ -216,7 +216,7 @@ public class ZResponse {
 			if (this.write.get() || this.closed.get()) {
 				return;
 			}
-			if (StrUtil.isEmpty(this.contentTypeAR.get())) {
+			if (STU.isEmpty(this.contentTypeAR.get())) {
 				throw new IllegalArgumentException(ZRequest.CONTENT_TYPE + "未设置");
 			}
 
@@ -224,7 +224,7 @@ public class ZResponse {
 			this.outputStream.write(Task.NEW_LINE.getBytes());
 
 			// header-Content-Length
-			if (CollUtil.isNotEmpty(this.bodyList)) {
+			if (CU.isNotEmpty(this.bodyList)) {
 				final int contentLenght = this.bodyList.size();
 
 				this.outputStream.write((ZRequest.CONTENT_LENGTH + ":" + contentLenght).getBytes());
@@ -244,7 +244,7 @@ public class ZResponse {
 			this.outputStream.write(Task.NEW_LINE.getBytes());
 
 			// body
-			if (CollUtil.isNotEmpty(this.bodyList)) {
+			if (CU.isNotEmpty(this.bodyList)) {
 				final byte[] ba = new byte[this.bodyList.size()];
 				for (int b = 0; b < this.bodyList.size(); b++) {
 					ba[b] = this.bodyList.get(b);
@@ -267,7 +267,7 @@ public class ZResponse {
 
 	private ByteBuffer fillByteBuffer()  {
 
-		if (StrUtil.isEmpty(this.contentTypeAR.get())) {
+		if (STU.isEmpty(this.contentTypeAR.get())) {
 			throw new IllegalArgumentException(ZRequest.CONTENT_TYPE + "未设置");
 		}
 
@@ -277,7 +277,7 @@ public class ZResponse {
 		array.add(Task.NEW_LINE.getBytes());
 
 		// header-Content-Length
-		if (CollUtil.isNotEmpty(this.bodyList)) {
+		if (CU.isNotEmpty(this.bodyList)) {
 			final int contentLenght = this.bodyList.size();
 			array.add((ZRequest.CONTENT_LENGTH + ":" + contentLenght).getBytes());
 		} else {
@@ -298,7 +298,7 @@ public class ZResponse {
 		array.add(Task.NEW_LINE.getBytes());
 
 		// body
-		if (CollUtil.isNotEmpty(this.bodyList)) {
+		if (CU.isNotEmpty(this.bodyList)) {
 			final byte[] ba = new byte[this.bodyList.size()];
 			for (int b = 0; b < this.bodyList.size(); b++) {
 				ba[b] = this.bodyList.get(b);

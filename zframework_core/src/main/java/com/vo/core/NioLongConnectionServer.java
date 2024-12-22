@@ -30,7 +30,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.vo.cache.CU;
 import com.vo.cache.J;
+import com.vo.cache.STU;
 import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.configuration.TaskResponsiveModeEnum;
 import com.vo.core.ZRequest.ZHeader;
@@ -46,8 +48,6 @@ import com.votool.ze.ThreadModeEnum;
 import com.votool.ze.ZE;
 import com.votool.ze.ZES;
 
-import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.util.StrUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -818,7 +818,7 @@ public class NioLongConnectionServer {
 
 				final Task task = new Task(taskRequest.getSocketChannel());
 				final String contentType = request.getContentType();
-				if (StrUtil.isNotEmpty(contentType)
+				if (STU.isNotEmpty(contentType)
 						&& contentType.toLowerCase().startsWith(HeaderEnum.MULTIPART_FORM_DATA.getType().toLowerCase())) {
 					// setOriginalRequestBytes方法会导致qps降低，FORM_DATA 才set
 					// 后续解析需要，或是不需要，再看.
@@ -898,7 +898,7 @@ public class NioLongConnectionServer {
 
 	private static boolean isConnectionKeepAlive(final ZRequest request) {
 		final String connection = request.getHeader(HttpHeaderEnum.CONNECTION.getValue());
-		final boolean keepAlive = StrUtil.isNotEmpty(connection)
+		final boolean keepAlive = STU.isNotEmpty(connection)
 				&& (connection.equalsIgnoreCase(ConnectionEnum.KEEP_ALIVE.getValue())
 						|| connection.toLowerCase().contains(ConnectionEnum.KEEP_ALIVE.getValue().toLowerCase()));
 		return keepAlive;
@@ -950,7 +950,7 @@ public class NioLongConnectionServer {
 
 	private static void setCustomHeader(final ZResponse response) {
 		final Map<String, String> responseHeaders = SERVER_CONFIGURATION.getResponseHeaders();
-		if (CollUtil.isNotEmpty(responseHeaders)) {
+		if (CU.isNotEmpty(responseHeaders)) {
 			final Set<Entry<String, String>> entrySet = responseHeaders.entrySet();
 			for (final Entry<String, String> entry : entrySet) {
 				response.header(entry.getKey(), entry.getValue());

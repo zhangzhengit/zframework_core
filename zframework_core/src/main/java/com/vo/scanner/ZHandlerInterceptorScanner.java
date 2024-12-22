@@ -13,10 +13,9 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.vo.anno.ZOrder;
+import com.vo.cache.CU;
 import com.vo.core.ZContext;
 import com.vo.exception.StartupException;
-
-import cn.hutool.core.collection.CollUtil;
 
 /**
  * 扫描 ZHandlerInterceptor 的实现类
@@ -102,7 +101,7 @@ public class ZHandlerInterceptorScanner {
 		final List<ZHandlerInterceptor> zhiRList = Lists.newArrayList();
 
 		final List<ZHandlerInterceptor> list = get();
-		if (CollUtil.isNotEmpty(list)) {
+		if (CU.isNotEmpty(list)) {
 			for (final ZHandlerInterceptor zhi : list) {
 				final String[] interceptionPath = zhi.interceptionPathRegex();
 				for (final String reg : interceptionPath) {
