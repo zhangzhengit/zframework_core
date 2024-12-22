@@ -150,7 +150,8 @@ public class ZMap<K, V> implements Map<K, V> {
 		final int n = this.hash(key);
 
 		final String keyword = lock(n);
-		synchronized (keyword.intern()) {
+		synchronized ("zmap.get-" + keyword) {
+			//		synchronized (keyword.intern()) {
 
 
 			final LinkedList<ZNode> nl = this.data.get(n);
