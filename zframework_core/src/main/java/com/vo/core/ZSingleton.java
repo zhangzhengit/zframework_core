@@ -39,9 +39,11 @@ public class ZSingleton {
 
 	public static <T> T getSingletonByClass(final Class<T> cls) {
 
+		// FIXME 2024年12月22日 下午9:35:14 zhangzhen : 所有的getCanonicalName都想办法替换掉，因为太慢了
+		// 1 getCanonicalName 太慢了
 		final String key = cls.getCanonicalName();
 
-		synchronized (key.intern()) {
+		synchronized (key) {
 
 			final Object v = SINGLETON_MAP.get(key);
 			if (v != null) {
