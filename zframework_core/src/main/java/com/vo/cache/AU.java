@@ -10,7 +10,7 @@ package com.vo.cache;
 public class AU {
 
 	public static <T> boolean isNotEmpty(final T[] array) {
-		return (array == null) || (array.length == 0);
+		return (array != null) && (array.length > 0);
 	}
 
 	public static boolean isEmpty(final byte[] array) {
