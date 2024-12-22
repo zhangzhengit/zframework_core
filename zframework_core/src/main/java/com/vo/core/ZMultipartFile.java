@@ -9,7 +9,6 @@ import java.io.InputStream;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  * 接收 multipart/form-data 上传的文件，专指文件。
@@ -20,16 +19,15 @@ import lombok.NoArgsConstructor;
  */
 @Data
 @AllArgsConstructor
-@NoArgsConstructor
 public class ZMultipartFile {
 
-	private String name;
-	private String tempFilePath;
-	private String originalFilenameString;
-	private byte[] content;
-	private boolean isTempFile;
-	private String contentType;
-	private InputStream inputStream;
+	private final String name;
+	private final String tempFilePath;
+	private final String originalFilenameString;
+	private final byte[] content;
+	private final boolean isTempFile;
+	private final String contentType;
+	private final InputStream inputStream;
 
 	/**
 	 * 返回上传的文件的名称，指上传的文件的原始文件名，如：123.txt abcd.jpg 等等
@@ -68,26 +66,29 @@ public class ZMultipartFile {
 	 *
 	 */
 	public long getSize() {
-		return this.getBytes().length;
+		return this.content.length;
 	}
 
 	/**
 	 * 返回文件的全部内容，适用于比较小的文件，一次性读取文件全部内容到内存中
 	 *
-	 * 注意：如果 isTempFile 方法返回true，则本方法返回为null，此时请用 getInputStream 方法来读取文件
+	 * 注意：如果 isTempFile 方法返回true，
+	 * 		则本方法返回为null，此时请用 getInputStream 方法来读取文件
 	 *
 	 * @return
 	 */
-	public byte[] getBytes() {
-		return this.getContent();
+	public byte[] getContent() {
+		return this.content;
 	}
 
 	/**
-	 * 获取上传的文件的输入流，适用于比较大的文件，分批读取
-	 *
+	 * 获取上传的文件的输入流，适用于比较大的文件分批读取。
+	 * 如果接收到的文件比较小(由 @see ServerConfigurationProperties.uploadFileToTempSize 控制)
+	 * 用 getContent 来读取更方便
+	 * 
 	 * 注意：使用本方法后记得把inputStream给close掉
 	 *
-	 * @return
+	 * @return	返回接收到的文件的输入流，不管文件大小都会返回一个InputStream对象
 	 */
 	public InputStream getInputStream() {
 		return this.inputStream;
