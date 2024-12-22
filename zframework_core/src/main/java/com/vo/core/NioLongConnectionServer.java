@@ -68,7 +68,7 @@ public class NioLongConnectionServer {
 	public static final String DATE = "Date";
 	public static final String SERVER = HttpHeaderEnum.SERVER.getValue();
 
-	public static final ServerConfigurationProperties SERVER_CONFIGURATIONPROPERTIES= ZContext.getBean(ServerConfigurationProperties.class);
+	private static final ServerConfigurationProperties SERVER_CONFIGURATIONPROPERTIES= ZContext.getBean(ServerConfigurationProperties.class);
 
 	public final static ZE ZE = ZES.newZE(SERVER_CONFIGURATIONPROPERTIES.getThreadCount(),
 			"zf-Worker-Group",
@@ -80,8 +80,10 @@ public class NioLongConnectionServer {
 	/**
 	 * 专门用于读取http请求报文的池
 	 */
-	private final static com.votool.ze.ZE ZE_READ = ZES.newZE(Runtime.getRuntime().availableProcessors(),
-			"nio-read-Group", "nio-read-Thread-", ThreadModeEnum.LAZY);
+	//	private final static com.votool.ze.ZE ZE_READ = ZES.newZE(
+	//			Math.min(4, Runtime.getRuntime().availableProcessors()),
+	//			//			Runtime.getRuntime().availableProcessors(),
+	//			"nio-read-Group", "nio-read-Thread-", ThreadModeEnum.LAZY);
 
 	public static final String SERVER_VALUE = ZContext.getBean(ServerConfigurationProperties.class).getName();
 	public static final String CONNECTION = HttpHeaderEnum.CONNECTION.getValue();
@@ -158,14 +160,14 @@ public class NioLongConnectionServer {
 						handleAccept(selectionKey, selector);
 					} else if (selectionKey.isValid() && selectionKey.isReadable()) {
 
-						final SocketChannel channel = (SocketChannel) selectionKey.channel();
-						final String keyword = channel.toString();
+						final SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
+						final String keyword = socketChannel.toString();
 
-						NioLongConnectionServer.ZE_READ.executeByNameInASpecificThread(keyword, () -> {
+						NioLongConnectionServer.ZE.executeByNameInASpecificThread(keyword, () -> {
 
 							ZArray array = null;
 							try {
-								array = this.httpReader.handleRead(selectionKey);
+								array = HTTPProcessor.process(socketChannel, selectionKey);
 								if (array != null) {
 									if (Boolean.TRUE.equals(SERVER_CONFIGURATION.getQpsLimitEnabled())
 											&& !QC.allow(NioLongConnectionServer.Z_SERVER_QPS,
@@ -397,8 +399,7 @@ public class NioLongConnectionServer {
 			final boolean keepAlive, final ZResponse response) {
 		if (keepAlive) {
 			response.header(CONNECTION, ConnectionEnum.KEEP_ALIVE.getValue());
-			final long currentTimeMillis = System.currentTimeMillis();
-			SOCKET_CHANNEL_MAP.put((currentTimeMillis / 1000) * 1000, new SS(socketChannel, key));
+			SOCKET_CHANNEL_MAP.put((System.currentTimeMillis() / 1000) * 1000, new SS(socketChannel, key));
 		}
 	}
 

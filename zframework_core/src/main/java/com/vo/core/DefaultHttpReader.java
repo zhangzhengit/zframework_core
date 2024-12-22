@@ -21,17 +21,26 @@ import com.vo.enums.MethodEnum;
 
 
 /**
+ * 本类早于API目标Method( @ZRequestMapping 标记的方法)之前执行，
+ * 可以在API Method之前，在解析http请求时，执行自定义流程。
+ *
+ * 如： 上传文件form-data请求同时带一个header的验证码，
+ * 	    如果把API Method声明为
+ * 		(@ZRequestHeader(value = "gc") final String gc, final ZMultipartFile file)
+ *  	然后在里面校验gc通过了再处理file，有可能出现gc错误甚至是恶意的脚本请求只为浪费服务器资源，
+ *  	而此时的file参数已经读取解析并且存储完成，这个就白做了。
+ *
+ *  	所以可以自定义类 A extends 本类，A类加上 @ZComponent 然后覆盖本类中方法即可，
+ *  	如上例子则覆盖 checkHeader 方法，使用 BodyReader.readHeader 得到 ZRequest然后
+ *  	request.getHeader("gc")，在此校验不通过则抛异常，避免了后续的读取解析保存body部分的工作
+ *
+ *
  * 默认的http请求报文解析器，当前实现流程为：
  *
  * 1、读取请求行的METHOD
  * 2、读取header
  * 3、读取body(读入内存/form-data边读边写入临时文件等等)，
  * 		这一步根据前两步来判断是否读取，因为body是非必须的
- *
- * 如需自定义读取解析过程，可覆盖本类中的对应方法：
- * 自定义类 A extends 本类，A类加上 @ZComponent 然后覆盖本类中方法即可
- *
- * 如：form-data请求同时上传文件并带一个header，可先验证header，通过后才去解析读取存储body，可避免资源浪费
  *
  * @author zhangzhen
  * @date 2024年12月22日 下午1:53:19
@@ -60,77 +69,76 @@ public class DefaultHttpReader {
 	// GET HEAD OPTIONS 有CT不一定有body，想好怎么处理
 	public ZArray handleRead(final SelectionKey key) throws Exception {
 
-		try {
-			final SocketChannel socketChannel = (SocketChannel) key.channel();
-			if (!socketChannel.isOpen()) {
-				NioLongConnectionServer.closeSocketChannelAndKeyCancel(key, socketChannel);
-				return null;
-			}
-
-			final AR ar = this.readHeader(key, socketChannel);
-			if (ar == null) {
-				return null;
-			}
-
-			final ZArray array = ar.getArray();
-
-			final int cLIndex = BodyReader.search(array.get(), ZRequest.CONTENT_LENGTH, 1, 0);
-			if (cLIndex <= -1) {
-				return array;
-			}
-
-			// 读header时读到的字节数比header截止符号(\r\n\r\n)的index还大，说明读到的不只有header还有下面的body部分
-			if (ar.getArray().length() > ar.getHeaderEndIndex()) {
-
-				final int cLIndexRN = BodyReader.search(array.get(), BodyReader.RN, 1, cLIndex);
-				if (cLIndexRN > cLIndex) {
-					final byte[] copyOfRange = Arrays.copyOfRange(array.get(), cLIndex, cLIndexRN);
-					final String contentTypeLine = new String(copyOfRange);
-					final int contentLength = Integer.parseInt(contentTypeLine.split(":")[1].trim());
-					if (contentLength <= 0) {
-						return array;
-					}
-
-					final Integer uploadFileSize = SERVER_CONFIGURATIONPROPERTIES.getUploadFileSize();
-					if (contentLength >= (uploadFileSize * _1024)) {
-						throw new IllegalArgumentException("上传文件过大: Content-Length = " + contentLength);
-					}
-
-					// 根据Content-Length和读header多出的部分，重新计算出body需要读的字节数
-					final int bodyReadC = contentLength - (array.length() - ar.getHeaderEndIndex()
-							- BodyReader.RN_BYTES_LENGTH - BodyReader.RN_BYTES_LENGTH);
-
-					// 无需再次读body了，读header时一起读出来了
-					if (bodyReadC <= 0) {
-						return array;
-					}
-
-					final int newNeedReadBodyLength = bodyReadC - BodyReader.RN_BYTES_LENGTH;
-					if (newNeedReadBodyLength <= 0) {
-						return array;
-					}
-
-					final Integer uploadFileToTempSize = SERVER_CONFIGURATIONPROPERTIES.getUploadFileToTempSize();
-					if (newNeedReadBodyLength > (uploadFileToTempSize * _1024)) {
-						// 文件写入临时文件之前，把读header时多读出的超出header的部分删掉
-						final int writeArrayLength = array.length() - ar.getHeaderEndIndex() - BodyReader.RN_BYTES_LENGTH
-								- BodyReader.RN_BYTES_LENGTH;
-
-						final TF tf = readBodyToTempFile(socketChannel, array, newNeedReadBodyLength, writeArrayLength);
-						array.setTf(tf);
-					} else {
-						readBodyToMemory(socketChannel, array, newNeedReadBodyLength);
-					}
-				}
-			}
-
-			return array;
-		} catch (final Exception e) {
-			throw e;
+		final SocketChannel socketChannel = (SocketChannel) key.channel();
+		if (!socketChannel.isOpen()) {
+			NioLongConnectionServer.closeSocketChannelAndKeyCancel(key, socketChannel);
+			return null;
 		}
+
+		final AR ar = this.readHeader(key, socketChannel);
+		if (ar == null) {
+			return null;
+		}
+
+		return this.readBody(socketChannel, ar);
 	}
 
-	private static MR readMethod(final SelectionKey key, final SocketChannel socketChannel) {
+	public ZArray readBody(final SocketChannel socketChannel, final AR ar) {
+		final ZArray array = ar.getArray();
+
+		final int cLIndex = BodyReader.search(array.get(), ZRequest.CONTENT_LENGTH, 1, 0);
+		if (cLIndex <= -1) {
+			return array;
+		}
+
+		// 读header时读到的字节数比header截止符号(\r\n\r\n)的index还大，说明读到的不只有header还有下面的body部分
+		if (ar.getArray().length() > ar.getHeaderEndIndex()) {
+
+			final int cLIndexRN = BodyReader.search(array.get(), BodyReader.RN, 1, cLIndex);
+			if (cLIndexRN > cLIndex) {
+				final byte[] copyOfRange = Arrays.copyOfRange(array.get(), cLIndex, cLIndexRN);
+				final String contentTypeLine = new String(copyOfRange);
+				final int contentLength = Integer.parseInt(contentTypeLine.split(":")[1].trim());
+				if (contentLength <= 0) {
+					return array;
+				}
+
+				final Integer uploadFileSize = SERVER_CONFIGURATIONPROPERTIES.getUploadFileSize();
+				if (contentLength >= (uploadFileSize * _1024)) {
+					throw new IllegalArgumentException("上传文件过大: Content-Length = " + contentLength);
+				}
+
+				// 根据Content-Length和读header多出的部分，重新计算出body需要读的字节数
+				final int bodyReadC = contentLength - (array.length() - ar.getHeaderEndIndex()
+						- BodyReader.RN_BYTES_LENGTH - BodyReader.RN_BYTES_LENGTH);
+
+				// 无需再次读body了，读header时一起读出来了
+				if (bodyReadC <= 0) {
+					return array;
+				}
+
+				final int newNeedReadBodyLength = bodyReadC - BodyReader.RN_BYTES_LENGTH;
+				if (newNeedReadBodyLength <= 0) {
+					return array;
+				}
+
+				final Integer uploadFileToTempSize = SERVER_CONFIGURATIONPROPERTIES.getUploadFileToTempSize();
+				if (newNeedReadBodyLength > (uploadFileToTempSize * _1024)) {
+					// 文件写入临时文件之前，把读header时多读出的超出header的部分删掉
+					final int writeArrayLength = array.length() - ar.getHeaderEndIndex() - BodyReader.RN_BYTES_LENGTH
+							- BodyReader.RN_BYTES_LENGTH;
+
+					final TF tf = readBodyToTempFile(socketChannel, array, newNeedReadBodyLength, writeArrayLength);
+					array.setTf(tf);
+				} else {
+					readBodyToMemory(socketChannel, array, newNeedReadBodyLength);
+				}
+			}
+		}
+		return array;
+	}
+
+	private MR readMethod(final SelectionKey key, final SocketChannel socketChannel) {
 
 		// FIXME 2024年12月20日 下午4:17:48 zhangzhen : 这个方法是妥协，不想debug
 		// post时的提取body存入临时文件并且把普通表单字段继续存入内存了
@@ -170,9 +178,19 @@ public class DefaultHttpReader {
 		return null;
 	}
 
-	private AR readHeader(final SelectionKey key, final SocketChannel socketChannel) {
+	/**
+	 * 已经读取完成的一个完整的http请求的header部分
+	 *
+	 * @param ar
+	 * @return	本类默认为true
+	 */
+	public boolean checkHeader(final AR ar) {
+		return true;
+	}
 
-		final MR mr = DefaultHttpReader.readMethod(key, socketChannel);
+	public AR readHeader(final SelectionKey key, final SocketChannel socketChannel) {
+
+		final MR mr = this.readMethod(key, socketChannel);
 		if (mr == null) {
 			return null;
 		}
