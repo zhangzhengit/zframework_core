@@ -55,8 +55,8 @@ public class ZControllerMap {
 
 		objectMap.put(method, object);
 
-		final ZRequestMappingConfigurationProperties zrmConf = ZContext.getBean(ZRequestMappingConfigurationProperties.class);
-		final int qps = requestMapping.qps() == ZRequestMapping.DEFAULT_QPS ? zrmConf.getQps() : requestMapping.qps();
+		//		final ZRequestMappingConfigurationProperties zrmConf = ZContext.getBean(ZRequestMappingConfigurationProperties.class);
+		final int qps = requestMapping.qps() == ZRequestMapping.DEFAULT_QPS ? ZRequestMapping.DEFAULT_QPS : requestMapping.qps();
 		if (qps <= 0) {
 			throw new StartupException(
 					"接口qps必须大于0,method = " + method.getName() + ",\t" + "qps = " + qps);
@@ -67,7 +67,7 @@ public class ZControllerMap {
 					+ method.getName() + ",\t" + "qps = " + qps);
 		}
 
-		methodQPSTable.put(object.getClass().getCanonicalName(), method.getName(), qps);
+		methodQPSTable.put(object.getClass().getName(), method.getName(), qps);
 
 		final ZQPSLimitation zqpsl = method.getAnnotation(ZQPSLimitation.class);
 		if (zqpsl != null) {
@@ -96,7 +96,7 @@ public class ZControllerMap {
 						);
 			}
 
-			methodZQPSLimitationTable.put(object.getClass().getCanonicalName(), method.getName(), zqpsl);
+			methodZQPSLimitationTable.put(object.getClass().getName(), method.getName(), zqpsl);
 		}
 	}
 

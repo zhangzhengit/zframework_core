@@ -73,7 +73,7 @@ public class ZConfigurationPropertiesScanner {
 		final Set<Integer> valueSet = Sets.newHashSet();
 		for (final Class<?> cls : cl) {
 			final ZOrder annotation = cls.getAnnotation(ZOrder.class);
-			if (annotation != null && !valueSet.add(annotation.value())) {
+			if ((annotation != null) && !valueSet.add(annotation.value())) {
 				throw new StartupException("@" + ZConfigurationProperties.class.getSimpleName() + " 类 " + "@"
 						+ ZOrder.class.getSimpleName() + ".value" + "[" + annotation.value() + "]" + "重复，请检查代码");
 			}
@@ -98,20 +98,20 @@ public class ZConfigurationPropertiesScanner {
 			System.out.println("ZCP-object = " + object);
 
 			ZContext.addBean(cs, object);
-			ZContext.addBean(cs.getCanonicalName(), object);
+			ZContext.addBean(cs, object);
 		}
 
 
 		for (final Class<?> cls : csSet) {
 			// 如果Class有 @ZAutowired 字段，则先生成对应的的对象，然后注入进来
 			Lists.newArrayList(cls.getDeclaredFields()).stream()
-				.filter(f -> f.isAnnotationPresent(ZAutowired.class))
-				.forEach(f -> ZAutowiredScanner.inject(cls, f));
+			.filter(f -> f.isAnnotationPresent(ZAutowired.class))
+			.forEach(f -> ZAutowiredScanner.inject(cls, f));
 
 			// 如果Class有 @ZValue 字段 ，则先给此字段注入值
 			Lists.newArrayList(cls.getDeclaredFields()).stream()
-				.filter(f -> f.isAnnotationPresent(ZValue.class))
-				.forEach(f -> ZValueScanner.inject(cls, f));
+			.filter(f -> f.isAnnotationPresent(ZValue.class))
+			.forEach(f -> ZValueScanner.inject(cls, f));
 		}
 
 		final List<Object> zcpList = ZContext.all().values().stream()
@@ -193,20 +193,20 @@ public class ZConfigurationPropertiesScanner {
 	 * 	List的泛型参数对象里支持的字段类型
 	 */
 	public static final
-		ImmutableList<String> LIST_T_FIELD_TYPE = ImmutableList.copyOf(
-					Lists.newArrayList(
-								Byte.class.getCanonicalName(),
-								Short.class.getCanonicalName(),
-								Integer.class.getCanonicalName(),
-								Long.class.getCanonicalName(),
-								Float.class.getCanonicalName(),
-								Double.class.getCanonicalName(),
-								Character.class.getCanonicalName(),
-								Boolean.class.getCanonicalName(),
-								String.class.getCanonicalName()
-							)
+	ImmutableList<String> LIST_T_FIELD_TYPE = ImmutableList.copyOf(
+			Lists.newArrayList(
+					Byte.class.getCanonicalName(),
+					Short.class.getCanonicalName(),
+					Integer.class.getCanonicalName(),
+					Long.class.getCanonicalName(),
+					Float.class.getCanonicalName(),
+					Double.class.getCanonicalName(),
+					Character.class.getCanonicalName(),
+					Boolean.class.getCanonicalName(),
+					String.class.getCanonicalName()
+					)
 
-				);
+			);
 
 
 
@@ -222,7 +222,7 @@ public class ZConfigurationPropertiesScanner {
 			throw new ZConfigurationPropertiesException(message);
 		}
 
-		for (int i = 1; i <= PROPERTY_INDEX + 1; i++) {
+		for (int i = 1; i <= (PROPERTY_INDEX + 1); i++) {
 			final String suffix = "[" + (i - 1) + "]";
 			final String k1 = key + suffix;
 
@@ -298,7 +298,7 @@ public class ZConfigurationPropertiesScanner {
 		// 从1-N个[i]
 		final List<Object> list = Lists.newArrayList();
 
-		for (int i = 1; i <= PROPERTY_INDEX + 1; i++) {
+		for (int i = 1; i <= (PROPERTY_INDEX + 1); i++) {
 
 			final Object newInstance = newInstance(field);
 
@@ -337,15 +337,15 @@ public class ZConfigurationPropertiesScanner {
 
 			// FIXME 2024年2月16日 下午7:35:20 zhanghen: 下面的之前考虑的可以 0配置 1配置null 2配置
 			// 形成 List list = {配置1,null,配置2}的这种形式还待考虑怎么实现好，或者不做这个功能了
-//			else {
-//				// 为空也add null，占一个位置，为了这种需求：
-//				// [0]=A [2]=C 就是不配置第二个位置让其为空，
-//				// 这样取的时候list.get(1) 取得的第二个就是null
-//
-////				list.add(null);
-//			}
+			//			else {
+			//				// 为空也add null，占一个位置，为了这种需求：
+			//				// [0]=A [2]=C 就是不配置第二个位置让其为空，
+			//				// 这样取的时候list.get(1) 取得的第二个就是null
+			//
+			////				list.add(null);
+			//			}
 
-//			list.add(newInstance);
+			//			list.add(newInstance);
 		}
 
 
@@ -355,7 +355,7 @@ public class ZConfigurationPropertiesScanner {
 
 		// 最后去除后面的所有的null
 		int i = list.size();
-//		int i = list.size() - 1;
+		//		int i = list.size() - 1;
 		while (i > 1) {
 			if (list.get(i - 1) != null) {
 				break;
@@ -382,7 +382,7 @@ public class ZConfigurationPropertiesScanner {
 			final String fullKey1, final Iterator<String> sk1, final Object newInstance) throws Exception {
 		final String xa = sk1.next();
 		final String xaValue = p.getString(xa);
-//		final Object newInstance = newInstance(field);
+		//		final Object newInstance = newInstance(field);
 		try {
 			setValue(newInstance, fullKey1, xa, xaValue);
 		} catch (final Exception e) {
@@ -398,7 +398,7 @@ public class ZConfigurationPropertiesScanner {
 				setValue(newInstance, fullKey1, xa2, xaValue2);
 			}
 		}
-//		list.add(newInstance);
+		//		list.add(newInstance);
 		return newInstance;
 	}
 
@@ -559,23 +559,23 @@ public class ZConfigurationPropertiesScanner {
 
 	private static void checkModifiers(final Class<?> cs, final Field field) {
 		// FIXME 2023年11月28日 下午5:31:44 zhanghen: XXX 下面的校验似乎不校验也可以？
-//		final int modifiers = field.getModifiers();
-//		if (Modifier.isPublic(modifiers)) {
-//			throw new IllegalArgumentException("@" + ZConfigurationProperties.class.getSimpleName() + " 类 "
-//					+ cs.getSimpleName() + " 的字段 " + field.getName() + " 不能用public修饰");
-//		}
-//		if (Modifier.isStatic(modifiers)) {
-//			throw new IllegalArgumentException("@" + ZConfigurationProperties.class.getSimpleName() + " 类 "
-//					+ cs.getSimpleName() + " 的字段 " + field.getName() + " 不能用static修饰");
-//		}
-//		if (Modifier.isFinal(modifiers)) {
-//			throw new IllegalArgumentException("@" + ZConfigurationProperties.class.getSimpleName() + " 类 "
-//					+ cs.getSimpleName() + " 的字段 " + field.getName() + " 不能用final修饰");
-//		}
-//		if (Modifier.isAbstract(modifiers)) {
-//			throw new IllegalArgumentException("@" + ZConfigurationProperties.class.getSimpleName() + " 类 "
-//					+ cs.getSimpleName() + " 的字段 " + field.getName() + " 不能用abstract修饰");
-//		}
+		//		final int modifiers = field.getModifiers();
+		//		if (Modifier.isPublic(modifiers)) {
+		//			throw new IllegalArgumentException("@" + ZConfigurationProperties.class.getSimpleName() + " 类 "
+		//					+ cs.getSimpleName() + " 的字段 " + field.getName() + " 不能用public修饰");
+		//		}
+		//		if (Modifier.isStatic(modifiers)) {
+		//			throw new IllegalArgumentException("@" + ZConfigurationProperties.class.getSimpleName() + " 类 "
+		//					+ cs.getSimpleName() + " 的字段 " + field.getName() + " 不能用static修饰");
+		//		}
+		//		if (Modifier.isFinal(modifiers)) {
+		//			throw new IllegalArgumentException("@" + ZConfigurationProperties.class.getSimpleName() + " 类 "
+		//					+ cs.getSimpleName() + " 的字段 " + field.getName() + " 不能用final修饰");
+		//		}
+		//		if (Modifier.isAbstract(modifiers)) {
+		//			throw new IllegalArgumentException("@" + ZConfigurationProperties.class.getSimpleName() + " 类 "
+		//					+ cs.getSimpleName() + " 的字段 " + field.getName() + " 不能用abstract修饰");
+		//		}
 	}
 
 	public static Set<Class<?>> scanPackage(final String... packageName) {

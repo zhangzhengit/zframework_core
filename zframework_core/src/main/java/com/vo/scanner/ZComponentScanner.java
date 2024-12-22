@@ -70,7 +70,7 @@ public class ZComponentScanner {
 				injectParentFieldForProxy(newInstanceProxy);
 
 				// 放代理类
-				ZContext.addBean(newComponent.getClass().getCanonicalName(), newInstanceProxy);
+				ZContext.addBean(newComponent.getClass(), newInstanceProxy);
 				ZContext.addZClassBean(newComponent.getClass().getCanonicalName(), proxyClass, newInstanceProxy);
 			} else {
 
@@ -85,7 +85,7 @@ public class ZComponentScanner {
 					addZValidatedProxyClass(cls, newComponent);
 				} else {
 					// 正常放原类
-					ZContext.addBean(newComponent.getClass().getCanonicalName(), newComponent);
+					ZContext.addBean(newComponent.getClass(), newComponent);
 				}
 
 			}
@@ -106,7 +106,7 @@ public class ZComponentScanner {
 			final String name = StrUtil.isEmpty(autowired.name()) ? f.getType().getCanonicalName() : autowired.name();
 
 			final Object vT = ZContext.getBean(name);
-			final Object value = vT != null ? vT : ZContext.getBean(f.getType().getCanonicalName());
+			final Object value = vT != null ? vT : ZContext.getBean(f.getType());
 
 			try {
 				f.setAccessible(true);
@@ -133,14 +133,14 @@ public class ZComponentScanner {
 		final HashSet<ZMethod> zms = Sets.newHashSet();
 		for (final Method m : mss) {
 			final ArrayList<ZMethodArg> argList = ZMethod.getArgListFromMethod(m);
-			final String a = argList.stream().map(ma ->  ma.getName()).collect(Collectors.joining(","));
+			final String a = argList.stream().map(ZMethodArg::getName).collect(Collectors.joining(","));
 			final Class<?> returnType = m.getReturnType();
 			if (Lists.newArrayList(m.getParameterTypes()).stream().filter(pa -> pa.isAnnotationPresent(ZValidated.class)).findAny().isPresent()) {
 
 				final StringBuilder insert = new StringBuilder();
 				final Parameter[] ps = m.getParameters();
 				for (final Parameter p : ps) {
-					final boolean annotationPresent = p.getType().isAnnotationPresent(ZValidated.class);;
+					final boolean annotationPresent = p.getType().isAnnotationPresent(ZValidated.class);
 					if (!annotationPresent) {
 						continue;
 					}
@@ -161,7 +161,7 @@ public class ZComponentScanner {
 				final String body =
 						ZAOPScaner.VOID.equals(returnType.getName())
 						? "super." + m.getName() + "(" + a + ");"
-						: "return super." + m.getName() + "(" + a + ");";
+								: "return super." + m.getName() + "(" + a + ");";
 
 				final ZMethod zm = ZMethod.copyFromMethod(m);
 				zm.setgReturn(false);
@@ -174,7 +174,7 @@ public class ZComponentScanner {
 				final String body =
 						ZAOPScaner.VOID.equals(returnType.getName())
 						? "super." + m.getName() + "(" + a + ");"
-						: "return super." + m.getName() + "(" + a + ");";
+								: "return super." + m.getName() + "(" + a + ");";
 
 				final ZMethod zm = ZMethod.copyFromMethod(m);
 				zm.setgReturn(false);
@@ -185,7 +185,7 @@ public class ZComponentScanner {
 		}
 		proxyZClass.setMethodSet(zms);
 
-		ZContext.addBean(newComponent.getClass().getCanonicalName(), proxyZClass.newInstance());
+		ZContext.addBean(newComponent.getClass(), proxyZClass.newInstance());
 	}
 
 }

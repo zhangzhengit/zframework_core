@@ -19,7 +19,8 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@ZConfigurationProperties(prefix = "request.mapping")
+//@ZConfigurationProperties(prefix = "request.mapping")
+// FIXME 2024年12月23日 上午1:15:43 zhangzhen : 这个功能废弃了，不用了，记得删除
 public class ZRequestMappingConfigurationProperties {
 
 	public static final int MIN_VALUE = 1;
@@ -28,8 +29,8 @@ public class ZRequestMappingConfigurationProperties {
 
 	public static final int DEFAULT_VALUE = 10000 * 5;
 
-	@ZMin(min = MIN_VALUE)
-	@ZMax(max = MAX_VALUE)
+	//	@ZMin(min = MIN_VALUE)
+	//	@ZMax(max = MAX_VALUE)
 	// FIXME 2023年11月3日 下午9:58:24 zhanghen: TODO 此类作为基础配置类
 	//加入下一行 @ZValue实时更新，只做到了 实时更新ZRequestMappingConf对象，
 	// 使用此基础配置类时是在启动时就初始化好了的，没有在使用时每次都在本对象中取值，

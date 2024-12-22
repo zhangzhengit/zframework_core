@@ -1,5 +1,7 @@
 package com.vo.core;
 
+import java.util.Map;
+import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import com.google.common.collect.ImmutableMap;
@@ -20,11 +22,23 @@ public class ZContext {
 
 	@SuppressWarnings("unchecked")
 	public synchronized static <T> T getBean(final Class<T> beanClass) {
-		return (T) getBean(beanClass.getCanonicalName());
+		return (T) getBean(gUK(beanClass));
 	}
 
 	public synchronized static <T> Object remove(final Class<T> beanClass) {
-		return BEAN_MAP.remove(beanClass.getCanonicalName());
+		return BEAN_MAP.remove(gUK(beanClass));
+	}
+
+
+	static	Map<String, String> c =new WeakHashMap<>();
+	public synchronized static <T> String gUK(final Class<T> beanClass) {
+		//		return "ZContent_Bean-" + beanClass.getName();
+
+		//		c.get(beanClass)
+
+		// FIXME 2024年12月23日 上午1:48:55 zhangzhen : 考虑好用什么比较好
+		return beanClass.getName()+ "-bean";
+		//		return beanClass.getCanonicalName();
 	}
 
 	public synchronized static Object getBean(final String beanName) {
@@ -35,8 +49,8 @@ public class ZContext {
 		return ZCLASS_MAP.get(beanName);
 	}
 
-	public synchronized static void addBean(final Class<?> className, final Object bean) {
-		addBean(className.getCanonicalName(), bean);
+	public synchronized static void addBean(final Class<?> beanClass, final Object bean) {
+		addBean(gUK(beanClass), bean);
 	}
 
 	public synchronized static void addBean(final String beanName, final Object bean) {

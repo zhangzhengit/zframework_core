@@ -93,7 +93,7 @@ public class ZAutowiredScanner {
 			final String name = StrUtil.isEmpty(autowired.name()) ? f.getType().getCanonicalName() : autowired.name();
 
 			final Object vT = ZContext.getBean(name);
-			final Object value = vT != null ? vT : ZContext.getBean(f.getType().getCanonicalName());
+			final Object value = vT != null ? vT : ZContext.getBean(f.getType());
 
 			try {
 				f.setAccessible(true);
@@ -108,7 +108,10 @@ public class ZAutowiredScanner {
 
 		}
 
-		ZContext.addBean(superClassObject.getClass().getCanonicalName() + ZAOPScaner.PROXY_ZCLASS_NAME_SUFFIX	, superClassObject);
+		// XXX 注意：这个即使调用的(String name)的，就是这个不要动，生产代理类的时候用到
+		// 如果检测到 groovy中 getCanonicalName也是很耗时，就这个和生产代理类的代码一起改
+		ZContext.addBean(superClassObject.getClass().getCanonicalName() + ZAOPScaner.PROXY_ZCLASS_NAME_SUFFIX,
+				superClassObject);
 	}
 
 	public static String inject(final Class<?> cls, final Field f) {
@@ -121,13 +124,15 @@ public class ZAutowiredScanner {
 				ZAutowired.class.getCanonicalName(), f.getType().getCanonicalName());
 
 		final String name = StrUtil.isEmpty(autowired.name()) ? f.getType().getCanonicalName() + "@" + f.getName() : autowired.name();
+		//		final String name = StrUtil.isEmpty(autowired.name()) ? f.getType().getCanonicalName() + "@" + f.getName() : autowired.name();
 
 		// FIXME 2023年7月5日 下午8:02:09 zhanghen: TODO ： 如果getByName 有多个返回值，则提示一下要具体注入哪个
 		final Object object = cls.isAnnotationPresent(ZAOP.class)
 				? ZSingleton.getSingletonByClass(cls)
 						: ZContext.getBean(cls);
 		final Object vT = ZContext.getBean(name);
-		final Object value = vT != null ? vT : ZContext.getBean(f.getType().getCanonicalName());
+		final Object value = vT != null ? vT : ZContext.getBean(f.getType());
+		//		final Object value = vT != null ? vT : ZContext.getBean(f.getType().getCanonicalName());
 
 		// 不能在此提示，因为可能有循环依赖，某些时候bean存在但是还没注入进来，所以在此提示不合适，等所有bean都初始化完成了再提示
 		//		if (autowired.required() && value == null) {

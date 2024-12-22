@@ -324,13 +324,13 @@ public class Task {
 	private ZResponse invokeAndResponse(final Method method, final Object[] arraygP, final Object zController, final ZRequest request)
 			throws IllegalAccessException, InvocationTargetException, IOException {
 
-		final String controllerName = zController.getClass().getCanonicalName();
+		final String controllerName = zController.getClass().getName();
 		final Integer qps = ZControllerMap.getQPSByControllerNameAndMethodName(controllerName, method.getName());
 
 		final String userAgent = request.getHeader(TaskRequestHandler.USER_AGENT);
 		final QPSHandlingEnum handlingEnum = ZContext
 				.getBean(RequestValidatorConfigurationProperties.class).getHandlingEnum(userAgent);
-		final boolean allow = QC.allow("API" + controllerName + method.getName(), qps, handlingEnum);
+		final boolean allow = QC.allow("API-" + controllerName + "@" + method.getName(), qps, handlingEnum);
 		if (!allow) {
 
 			final CR<Object> error = CR.error(AccessDeniedCodeEnum.CLIENT.getCode(),
@@ -589,137 +589,139 @@ public class Task {
 				}
 				parametersArray[pI] = headerValue;
 				pI++;
-			} else if (p.isAnnotationPresent(ZCookieValue.class)) {
-				final ZCookieValue cookieValue = p.getAnnotation(ZCookieValue.class);
-				final String cookieName = STU.isEmpty(cookieValue.name()) ? p.getName() : cookieValue.name();
-				final ZCookie[] cookies = request.getCookies();
-				if (AU.isEmpty(cookies)) {
-					if (cookieValue.required()) {
-						throw new FormPairParseException("请求方法[" + path + "]缺少名为[" + cookieName + "]的Cookie");
-					}
-				} else {
-
-					final Optional<ZCookie> c = Arrays.stream(cookies)
-							.filter(cookie -> Objects.equals(cookie.getName(), cookieName)).findAny();
-					if (c.isPresent()) {
-						if (p.getType().getCanonicalName().equals(String.class.getCanonicalName())) {
-							parametersArray[pI] = c.get().getValue();
-							pI++;
-						} else if (p.getType().getCanonicalName().equals(ZCookie.class.getCanonicalName())) {
-							parametersArray[pI] = c.get();
-							pI++;
-						}
-					} else {
+			} else {
+				final Class<?> pType = p.getType();
+				if (p.isAnnotationPresent(ZCookieValue.class)) {
+					final ZCookieValue cookieValue = p.getAnnotation(ZCookieValue.class);
+					final String cookieName = STU.isEmpty(cookieValue.name()) ? p.getName() : cookieValue.name();
+					final ZCookie[] cookies = request.getCookies();
+					if (AU.isEmpty(cookies)) {
 						if (cookieValue.required()) {
 							throw new FormPairParseException("请求方法[" + path + "]缺少名为[" + cookieName + "]的Cookie");
 						}
-						parametersArray[pI] = null;
-						pI++;
-					}
-				}
+					} else {
 
-			} else if (p.getType().getCanonicalName().equals(ZRequest.class.getCanonicalName())) {
-				parametersArray[pI] = request;
-				pI++;
-			} else if (p.getType().getCanonicalName().equals(ZResponse.class.getCanonicalName())) {
-				final ZResponse response = new ZResponse(this.outputStream, this.socketChannel);
-				parametersArray[pI] = response;
-				pI++;
-			} else if (p.getType().getCanonicalName().equals(ZModel.class.getCanonicalName())) {
-				final ZModel model = new ZModel();
-				parametersArray[pI] = model;
-				pI++;
-			} else if (p.isAnnotationPresent(ZRequestBody.class)) {
-				final byte[] body = request.getBody();
-				if (AU.isEmpty(body)) {
-					final String simpleName = p.getType().getSimpleName();
-					throw new FormPairParseException("@" + ZRequestBody.class.getSimpleName() + " 参数 " + simpleName + " 不存在");
-				}
-
-				final Object object = J.parseObject(new String(body), p.getType());
-				if (object == null) {
-					final String simpleName = p.getType().getSimpleName();
-					throw new FormPairParseException("@" + ZRequestBody.class.getSimpleName() + " 参数 " + simpleName + " 错误");
-				}
-
-				Task.checkZValidated(p, object);
-
-				parametersArray[pI] = object;
-				pI++;
-
-			} else if (p.isAnnotationPresent(ZRequestParam.class)) {
-				pI = Task.hZRequestParam(parametersArray, request, path, pI, p);
-			} else if (p.isAnnotationPresent(ZPathVariable.class)) {
-				final List<Object> list = ZPVTL.get();
-				final Class<?> type = p.getType();
-				// FIXME 2023年11月8日 下午4:39:18 zhanghen: @ZRM 启动校验是否此类型
-				try {
-					final Object a = list.get(zpvPI);
-					Task.setZPathVariableValue(parametersArray, pI, type, a);
-					zpvPI++;
-
-
-					// FIXME 2023年11月8日 下午10:47:54 zhanghen: TODO 继续支持 校验注解
-					if (p.isAnnotationPresent(ZPositive.class)) {
-						ZValidator.validatedZPositive(p, parametersArray[pI]);
-					}
-					if (p.isAnnotationPresent(ZMin.class)) {
-						ZValidator.validatedZMin(p, parametersArray[pI],p.getAnnotation(ZMin.class).min());
+						final Optional<ZCookie> c = Arrays.stream(cookies)
+								.filter(cookie -> Objects.equals(cookie.getName(), cookieName)).findAny();
+						if (c.isPresent()) {
+							if (pType == (String.class)) {
+								parametersArray[pI] = c.get().getValue();
+								pI++;
+							} else if (pType == ZCookie.class) {
+								parametersArray[pI] = c.get();
+								pI++;
+							}
+						} else {
+							if (cookieValue.required()) {
+								throw new FormPairParseException("请求方法[" + path + "]缺少名为[" + cookieName + "]的Cookie");
+							}
+							parametersArray[pI] = null;
+							pI++;
+						}
 					}
 
+				} else if (ZRequest.class == pType) {
+					parametersArray[pI] = request;
+					pI++;
+				} else if (pType == ZResponse.class) {
+					final ZResponse response = new ZResponse(this.outputStream, this.socketChannel);
+					parametersArray[pI] = response;
+					pI++;
+				} else if (pType == ZModel.class) {
+					final ZModel model = new ZModel();
+					parametersArray[pI] = model;
+					pI++;
+				} else if (p.isAnnotationPresent(ZRequestBody.class)) {
+					final byte[] body = request.getBody();
+					if (AU.isEmpty(body)) {
+						final String simpleName = pType.getSimpleName();
+						throw new FormPairParseException(
+								"@" + ZRequestBody.class.getSimpleName() + " 参数 " + simpleName + " 不存在");
+					}
 
-				} catch (final Exception e) {
-					e.printStackTrace();
-					final String causedby = ZControllerAdviceThrowable.findCausedby(e);
-					throw new PathVariableException(causedby);
-				}
+					final Object object = J.parseObject(new String(body), pType);
+					if (object == null) {
+						final String simpleName = pType.getSimpleName();
+						throw new FormPairParseException(
+								"@" + ZRequestBody.class.getSimpleName() + " 参数 " + simpleName + " 错误");
+					}
 
-				pI++;
-			} else if (p.getType().getCanonicalName().equals(ZMultipartFile.class.getCanonicalName())) {
-				if (AU.isEmpty(request.getOriginalRequestBytes())) {
-					throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
-				}
+					Task.checkZValidated(p, object);
 
-				final List<FD2> fdList = BodyReader.readFormDate(request.getOriginalRequestBytes(),
-						request.getContentType(), request.getBoundary());
-				final Optional<FD2> findAny = fdList.stream().filter(fd -> fd.getName().equals(p.getName())).findAny();
-				if (findAny.isPresent()) {
+					parametersArray[pI] = object;
+					pI++;
 
-					final InputStream inputStream = new ByteArrayInputStream(findAny.get().getBody());
-					final ZMultipartFile file = new ZMultipartFile(findAny.get().getName(),
-							null,
-							findAny.get().getFileName(),
-							findAny.get().getBody(),
-							false,
-							findAny.get().getContentType(),
-							inputStream);
+				} else if (p.isAnnotationPresent(ZRequestParam.class)) {
+					pI = Task.hZRequestParam(parametersArray, request, path, pI, p);
+				} else if (p.isAnnotationPresent(ZPathVariable.class)) {
+					final List<Object> list = ZPVTL.get();
+					final Class<?> type = pType;
+					// FIXME 2023年11月8日 下午4:39:18 zhanghen: @ZRM 启动校验是否此类型
+					try {
+						final Object a = list.get(zpvPI);
+						Task.setZPathVariableValue(parametersArray, pI, type, a);
+						zpvPI++;
 
-					pI = Task.setValue(parametersArray, pI, p, file);
+						// FIXME 2023年11月8日 下午10:47:54 zhanghen: TODO 继续支持 校验注解
+						if (p.isAnnotationPresent(ZPositive.class)) {
+							ZValidator.validatedZPositive(p, parametersArray[pI]);
+						}
+						if (p.isAnnotationPresent(ZMin.class)) {
+							ZValidator.validatedZMin(p, parametersArray[pI], p.getAnnotation(ZMin.class).min());
+						}
 
-				} else {
+					} catch (final Exception e) {
+						e.printStackTrace();
+						final String causedby = ZControllerAdviceThrowable.findCausedby(e);
+						throw new PathVariableException(causedby);
+					}
 
-					if (!p.getName().equals(request.getTf().getName())) {
+					pI++;
+				} else if (pType == ZMultipartFile.class) {
+					if (AU.isEmpty(request.getOriginalRequestBytes())) {
 						throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
 					}
 
-					InputStream inputStream = null;
-					try {
-						inputStream = new FileInputStream(request.getTf().getFile());
-					} catch (final FileNotFoundException e) {
-						e.printStackTrace();
+					final List<FD2> fdList = BodyReader.readFormDate(request.getOriginalRequestBytes(),
+							request.getContentType(), request.getBoundary());
+					final Optional<FD2> findAny = fdList.stream().filter(fd -> fd.getName().equals(p.getName()))
+							.findAny();
+					if (findAny.isPresent()) {
+
+						final InputStream inputStream = new ByteArrayInputStream(findAny.get().getBody());
+						final ZMultipartFile file = new ZMultipartFile(findAny.get().getName(),
+								null,
+								findAny.get().getFileName(),
+								findAny.get().getBody(), false,
+								findAny.get().getContentType(), inputStream);
+
+						pI = Task.setValue(parametersArray, pI, p, file);
+
+					} else {
+
+						if (!p.getName().equals(request.getTf().getName())) {
+							throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
+						}
+
+						InputStream inputStream = null;
+						try {
+							inputStream = new FileInputStream(request.getTf().getFile());
+						} catch (final FileNotFoundException e) {
+							e.printStackTrace();
+						}
+
+						final String contentType = request.getTf().getContentType();
+
+						final ZMultipartFile file = new ZMultipartFile(request.getTf().getName(),
+								request.getTf().getTempFilePath(),
+								request.getTf().getFileName(),
+								null, true,
+								contentType, inputStream);
+
+						pI = Task.setValue(parametersArray, pI, p, file);
 					}
 
-					final String contentType = request.getTf().getContentType();
-
-					final ZMultipartFile file = new ZMultipartFile (request.getTf().getName(),
-							request.getTf().getTempFilePath(),
-							request.getTf().getFileName(),
-							null,
-							true, contentType, inputStream);
-
-					pI = Task.setValue(parametersArray, pI, p, file);
 				}
-
 			}
 
 		}
@@ -876,22 +878,23 @@ public class Task {
 
 	private static int setValue(final Object[] parametersArray, final int pI, final Parameter p, final Object value) {
 
+		final Class<?> pppppppppp = p.getType();
 		final AtomicInteger nI = new AtomicInteger(pI);
-		if (p.getType().getCanonicalName().equals(Byte.class.getCanonicalName())) {
+		if (pppppppppp == Byte.class) {
 			parametersArray[nI.getAndIncrement()] = Byte.valueOf(String.valueOf(value));
-		} else if (p.getType().getCanonicalName().equals(Short.class.getCanonicalName())) {
+		} else if (pppppppppp == Short.class) {
 			parametersArray[nI.getAndIncrement()] = Short.valueOf(String.valueOf(value));
-		} else if (p.getType().getCanonicalName().equals(Integer.class.getCanonicalName())) {
+		} else if (pppppppppp == Integer.class) {
 			parametersArray[nI.getAndIncrement()] = Integer.valueOf(String.valueOf(value));
-		} else if (p.getType().getCanonicalName().equals(Long.class.getCanonicalName())) {
+		} else if (pppppppppp == Long.class) {
 			parametersArray[nI.getAndIncrement()] = Long.valueOf(String.valueOf(value));
-		} else if (p.getType().getCanonicalName().equals(Float.class.getCanonicalName())) {
+		} else if (pppppppppp == Float.class) {
 			parametersArray[nI.getAndIncrement()] = Float.valueOf(String.valueOf(value));
-		} else if (p.getType().getCanonicalName().equals(Double.class.getCanonicalName())) {
+		} else if (pppppppppp == Double.class) {
 			parametersArray[nI.getAndIncrement()] = Double.valueOf(String.valueOf(value));
-		} else if (p.getType().getCanonicalName().equals(Character.class.getCanonicalName())) {
+		} else if (pppppppppp == Character.class) {
 			parametersArray[nI.getAndIncrement()] = Character.valueOf(String.valueOf(value).charAt(0));
-		} else if (p.getType().getCanonicalName().equals(Boolean.class.getCanonicalName())) {
+		} else if (pppppppppp == Boolean.class) {
 			parametersArray[nI.getAndIncrement()] = Boolean.valueOf(String.valueOf(value));
 		} else {
 			parametersArray[nI.getAndIncrement()] = value;

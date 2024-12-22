@@ -42,18 +42,18 @@ public class ZConfigurationScanner {
 		for (final Class<?> cls : clsSet) {
 
 			final Object newInstance = ZSingleton.getSingletonByClass(cls);
-			ZContext.addBean(cls.getCanonicalName(), newInstance);
+			ZContext.addBean(cls, newInstance);
 
 
 			// 如果Class有 @ZAutowired 字段，则先生成对应的的对象，然后注入进来
 			Lists.newArrayList(cls.getDeclaredFields()).stream()
-				.filter(f -> f.isAnnotationPresent(ZAutowired.class))
-				.forEach(f -> ZAutowiredScanner.inject(cls, f));
+			.filter(f -> f.isAnnotationPresent(ZAutowired.class))
+			.forEach(f -> ZAutowiredScanner.inject(cls, f));
 
 			// 如果Class有 @ZValue 字段 ，则先给此字段注入值
 			Lists.newArrayList(cls.getDeclaredFields()).stream()
-				.filter(f -> f.isAnnotationPresent(ZValue.class))
-				.forEach(f -> ZValueScanner.inject(cls, f));
+			.filter(f -> f.isAnnotationPresent(ZValue.class))
+			.forEach(f -> ZValueScanner.inject(cls, f));
 
 			final Method[] ms = cls.getDeclaredMethods();
 			for (final Method method : ms) {
@@ -77,7 +77,8 @@ public class ZConfigurationScanner {
 				check(method);
 
 				try {
-					LOG.info("找到@{}类[{}]的@{}方法{},开始创建bean", ZConfiguration.class.getSimpleName(), cls.getSimpleName(),
+					LOG.info("找到@{}类[{}]的@{}方法{},开始创建bean", ZConfiguration.class.getSimpleName(),
+							cls.getSimpleName(),
 							ZBean.class.getSimpleName(), method.getName());
 
 					final Object r = method.invoke(newInstance, null);
@@ -99,7 +100,7 @@ public class ZConfigurationScanner {
 					ZContext.addBean(r.getClass().getCanonicalName() + "@" + method.getName(), r);
 
 				} catch (final InvocationTargetException | IllegalAccessException | IllegalArgumentException e) {
-//					e.printStackTrace();
+					e.printStackTrace();
 					throw e;
 				}
 
@@ -110,13 +111,13 @@ public class ZConfigurationScanner {
 		for (final Class<?> cls : clsSet) {
 			// 如果Class有 @ZAutowired 字段，则先生成对应的的对象，然后注入进来
 			Lists.newArrayList(cls.getDeclaredFields()).stream()
-				.filter(f -> f.isAnnotationPresent(ZAutowired.class))
-				.forEach(f -> ZAutowiredScanner.inject(cls, f));
+			.filter(f -> f.isAnnotationPresent(ZAutowired.class))
+			.forEach(f -> ZAutowiredScanner.inject(cls, f));
 
 			// 如果Class有 @ZValue 字段 ，则先给此字段注入值
 			Lists.newArrayList(cls.getDeclaredFields()).stream()
-				.filter(f -> f.isAnnotationPresent(ZValue.class))
-				.forEach(f -> ZValueScanner.inject(cls, f));
+			.filter(f -> f.isAnnotationPresent(ZValue.class))
+			.forEach(f -> ZValueScanner.inject(cls, f));
 		}
 
 	}
