@@ -678,6 +678,12 @@ public class Task {
 
 					pI++;
 				} else if (pType == ZMultipartFile.class) {
+
+					// FIXME 2024年12月23日 上午2:09:28 zhangzhen : 下面代码有一个可以正常运行的bug
+					// 就是一个form-data如果只有一个文件而无其他内容，到此 request.getOriginalRequestBytes()
+					// 内容其实header 下面一个空行 再下面是 --boundary--
+					// 以后再看要不要修复，反正这个bug可以正常运行
+
 					if (AU.isEmpty(request.getOriginalRequestBytes())) {
 						throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
 					}
