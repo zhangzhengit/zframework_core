@@ -12,6 +12,8 @@ import com.vo.enums.BeanModeEnum;
  *
  * 用在type上，表示此类是一个通用的组件，由容器自动管理
  *
+ * 使用时使用 @ZAutowired 引入即可
+ *
  * @author zhangzhen
  * @date 2023年6月12日
  *
