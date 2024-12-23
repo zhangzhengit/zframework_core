@@ -63,6 +63,11 @@ public class ZAutowiredScanner {
 			for (final Field f : fs) {
 				inject(cls, f);
 			}
+			
+			if (annoClass == ZAOP.class) {
+				// 放进去，给后面扫描AOP类时使用
+				ZContext.addBean(cls, o2);
+			}
 
 			final Object superClassObject = com.vo.core.ZSingleton.getSingletonByClass(o2.getClass().getSuperclass());
 			injectForProxyMethod_getSingletonByClass(superClassObject);
