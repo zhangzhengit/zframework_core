@@ -63,7 +63,7 @@ public class ZAutowiredScanner {
 			for (final Field f : fs) {
 				inject(cls, f);
 			}
-			
+
 			if (annoClass == ZAOP.class) {
 				// 放进去，给后面扫描AOP类时使用
 				ZContext.addBean(cls, o2);
@@ -191,8 +191,16 @@ public class ZAutowiredScanner {
 								f.getType().getCanonicalName() + "@" +
 								f.getName() : autowired.name();
 
-						final String message = bean.getClass().getSimpleName() + " 所依赖的bean " + beanName + " 不存在，请检查 " + f.getType().getSimpleName() + " 是否正确配置了？";
-						throw new BeanNotExistException(message);
+						final String message1 =
+								bean.getClass().getSimpleName() + "." + f.getName()
+								+ "的 @"
+								+ ZAutowired.class.getSimpleName()
+								+ ".name 指定的依赖对象["
+								+ beanName
+								+ "]不存在,请检查[" + beanName + "]是否正确配置了?";
+
+
+						throw new BeanNotExistException(message1);
 					}
 
 				} catch (IllegalArgumentException | IllegalAccessException e) {
