@@ -1,10 +1,13 @@
 package com.vo.core;
 
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
 import com.vo.anno.ZConfigurationProperties;
 import com.vo.anno.ZValue;
+import com.vo.cache.STU;
 import com.vo.validator.ZNotEmtpy;
 import com.vo.validator.ZNotNull;
 
@@ -26,15 +29,27 @@ import lombok.NoArgsConstructor;
 public class RequestValidatorConfigurationProperties {
 
 	/**
+	 * 默认为平滑处理
+	 */
+	private static final QPSHandlingEnum DEFAULT_HANDLINGENUM = QPSHandlingEnum.SMOOTH;
+
+	static private String[] uaL = null;
+
+	/**
 	 *
-	 * 平滑处理请求的User-Agent，默认为浏览器的请求就不平滑处理。其他比如ab、postman、脚本等就平滑处理。
+	 * 平滑处理请求的User-Agent，如果包含此值中的某一项就不平滑处理。
+	 * 默认为几个浏览器的User-Agent
+	 *
 	 * 对于伪造User-Agent似乎没办法。
 	 *
-	 * 代码中实现为 User-Agent忽略大小进行 contains 此字段值
+	 * 注意：判断User-Agent时区分大小写，就是chrome和Chrome会被认为是两个，
+	 * 		如需判断这两个，则需要把这两个都配置上
+	 *
 	 *
 	 */
 	@ZNotEmtpy
-	private Set<String> smoothUserAgent = Sets.newHashSet("Safari", "Chrome", "Firefox", "Edge", "Edg", "Opera",
+	private Set<String> smoothUserAgent = Sets.newHashSet("Safari", "Chrome", "Firefox",
+			"Edge", "Edg", "Opera",
 			"OPR");
 
 	/**
@@ -63,17 +78,41 @@ public class RequestValidatorConfigurationProperties {
 	 * @return	根据userAgent来判断是否平滑，默认为平滑
 	 */
 	public QPSHandlingEnum getHandlingEnum(final String userAgent) {
-		if (userAgent == null) {
-			return QPSHandlingEnum.SMOOTH;
+		if (STU.isNullOrEmptyOrBlank(userAgent)) {
+			return DEFAULT_HANDLINGENUM;
 		}
 
-		for (final String v : this.getSmoothUserAgent()) {
-			if (userAgent.toLowerCase().contains(v.toLowerCase())) {
+		if (uaL == null) {
+			synchronized (this) {
+				if (uaL == null) {
+					uaL = new String[this.getSmoothUserAgent().size()];
+					uaL = this.getSmoothUserAgent().toArray(new String[0]);
+					Arrays.sort(uaL, Comparator.comparing(String::length));
+				}
+			}
+		}
+
+		for (int i = 0; i < uaL.length; i++) {
+			final String ua = uaL[i];
+			if (userAgent.length() < ua.length()) {
+				continue;
+			}
+
+			if (userAgent.length() == ua.length()) {
+				for (int ui = 0; ui < userAgent.length(); ui++) {
+					if (userAgent.charAt(ui) != ua.charAt(ui)) {
+						return DEFAULT_HANDLINGENUM;
+					}
+				}
+				return QPSHandlingEnum.UNEVEN;
+			}
+
+			if (userAgent.contains(ua)) {
 				return QPSHandlingEnum.UNEVEN;
 			}
 		}
 
-		return QPSHandlingEnum.SMOOTH;
+		return DEFAULT_HANDLINGENUM;
 	}
 
 }
