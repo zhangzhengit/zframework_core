@@ -3,6 +3,7 @@ package com.vo.configuration;
 import com.vo.anno.ZAutowired;
 import com.vo.anno.ZBean;
 import com.vo.anno.ZConfiguration;
+import com.votool.ze.ThreadModeEnum;
 import com.votool.ze.ZE;
 import com.votool.ze.ZES;
 
@@ -22,7 +23,8 @@ public class ZAsyncConfiguration {
 
 	@ZBean
 	public ZE zeZAsync() {
-		return ZES.newZE(this.zAsyncProperties.getThreadCount(), this.zAsyncProperties.getThreadNamePrefix());
+		return ZES.newZE(this.zAsyncProperties.getThreadCount(), "async-Group",
+				this.zAsyncProperties.getThreadNamePrefix(), ThreadModeEnum.LAZY);
 	}
 
 }
