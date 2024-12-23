@@ -16,6 +16,9 @@ import com.vo.configuration.TaskResponsiveModeEnum;
  */
 abstract class AbstractRequestValidator {
 
+	private final RequestValidatorConfigurationProperties requestValidatorConfigurationProperties = ZContext
+			.getBean(RequestValidatorConfigurationProperties.class);
+
 	public void handle(final ZRequest request, final TaskRequest taskRequest) {
 		final RequestVerificationResult r = this.validated(request, taskRequest);
 		if (r.isPassed()) {
@@ -72,11 +75,8 @@ abstract class AbstractRequestValidator {
 			final ZSession session = request.getSession(false);
 			if (session != null) {
 				final String smoothUserAgentKeyword = ZRequest.Z_SESSION_ID + "@" + session.getId();
-
-				final RequestValidatorConfigurationProperties requestValidatorConfigurationProperties = ZContext
-						.getBean(RequestValidatorConfigurationProperties.class);
-
-				final QPSHandlingEnum handlingEnum = requestValidatorConfigurationProperties.getHandlingEnum(userAgent);
+				final QPSHandlingEnum handlingEnum = this.requestValidatorConfigurationProperties
+						.getHandlingEnum(userAgent);
 				final boolean allow = QC.allow(smoothUserAgentKeyword, this.getSessionIdQps(), handlingEnum);
 				return new RequestVerificationResult(allow, allow ? "" : "ZSESSIONID访问频繁");
 			}
@@ -88,15 +88,10 @@ abstract class AbstractRequestValidator {
 		final String clientIp = request.getClientIp();
 		final String keyword = clientIp + "@" + userAgent;
 
-		final RequestValidatorConfigurationProperties requestValidatorConfigurationProperties = ZContext
-				.getBean(RequestValidatorConfigurationProperties.class);
-
-		final QPSHandlingEnum handlingEnum = requestValidatorConfigurationProperties.getHandlingEnum(userAgent);
+		final QPSHandlingEnum handlingEnum = this.requestValidatorConfigurationProperties.getHandlingEnum(userAgent);
 		final boolean allow = QC.allow(keyword, this.getClientQps(), handlingEnum);
 
-		final RequestVerificationResult r = new RequestVerificationResult(allow,
-				allow ? "" : "CLIENT访问频繁");
-		return r;
+		return new RequestVerificationResult(allow, allow ? "" : "CLIENT访问频繁");
 	}
 
 	/**
