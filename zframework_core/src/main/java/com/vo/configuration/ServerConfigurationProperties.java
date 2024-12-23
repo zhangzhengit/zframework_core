@@ -56,7 +56,9 @@ public class ServerConfigurationProperties {
 	private String name = "ZServer";
 
 	/**
-	 * 读取http请求的ByteBuffer的容量大小
+	 * 读取http请求的header的ByteBuffer的容量大小
+	 * 并且只有在 GET/TRACE/HEAD 的METHOD时才使用此值
+	 * 其他的POST/PUT/PATCH等固定使用1的容量
 	 */
 	@ZNotNull
 	@ZMin(min = 100)
@@ -134,10 +136,12 @@ public class ServerConfigurationProperties {
 	@ZValue(name = "server.qps.limit.enabled", listenForChanges = true)
 	private Boolean qpsLimitEnabled = true;
 
+	/**
+	 * 接受并且处理http请求的QPS最大值，超过此值会返回非200的status
+	 * 此值可配置为0，作为一个feature来让其拒绝一切请求
+	 */
 	@ZNotNull
-	// FIXME 2023年7月1日 上午4:21:59 zhanghen:  @ZMin在此设为0作为一个feature？可以配置为0让应用拒绝一切服务
-	//	@ZMin(min = 0)
-	@ZMin(min = ZServerQPSValidator.MIN_VALUE)
+	@ZMin(min = 0)
 	@ZMax(max = ZServerQPSValidator.MAX_VALUE)
 	@ZValue(name = "server.qps", listenForChanges = true)
 	@ZCustom(cls = ZServerQPSValidator.class)
