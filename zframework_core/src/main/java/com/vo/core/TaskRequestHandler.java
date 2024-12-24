@@ -72,6 +72,11 @@ public final class TaskRequestHandler extends Thread {
 
 			final TaskRequest taskRequest = this.queue.pollFirst();
 			if (taskRequest == null) {
+				try {
+					Thread.sleep(1);
+				} catch (final InterruptedException e) {
+					e.printStackTrace();
+				}
 				continue;
 			}
 
