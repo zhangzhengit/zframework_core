@@ -107,13 +107,7 @@ public class ResourcesLoader {
 
 		final BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
 
-		if (response.getOutputStream() != null) {
-			final AtomicLong write = writeOutputStream(cte, response.getOutputStream(), inputStream, bufferedInputStream);
-			return write.get();
-		}
-
 		if (response.getSocketChannel() != null) {
-
 			return writeSocketChannel(cte, response, bufferedInputStream);
 		}
 
@@ -148,9 +142,9 @@ public class ResourcesLoader {
 		}
 
 		response.contentType(cte.getType())
-				.header(ZRequest.CONTENT_LENGTH,String.valueOf(baR.length))
-				.body(baR)
-				.write();
+		.header(ZRequest.CONTENT_LENGTH,String.valueOf(baR.length))
+		.body(baR)
+		.write();
 
 		write1.set(baR.length);
 
@@ -173,7 +167,7 @@ public class ResourcesLoader {
 		final AtomicLong write = writeToOutputStream(bufferedInputStream, outputStream);
 
 		try {
-//			outputStream.write(Task.NEW_LINE.getBytes());
+			//			outputStream.write(Task.NEW_LINE.getBytes());
 			outputStream.flush();
 			outputStream.close();
 
@@ -227,20 +221,20 @@ public class ResourcesLoader {
 		}
 		//			final byte[] ba1 = loadByteArray(resourcePath + File.separator + (resourceName.replace("/", "")));
 		//			final String fileName = resourcePath + File.separator + (resourceName.replace("/", ""));
-					final String fileName = resourcePath + (resourceName.replace("/", File.separator));
-					try {
-						final FileInputStream fileInputStream = new FileInputStream(new File(fileName));
+		final String fileName = resourcePath + (resourceName.replace("/", File.separator));
+		try {
+			final FileInputStream fileInputStream = new FileInputStream(new File(fileName));
 
-						final FastByteArrayOutputStream read = IoUtil.read(fileInputStream);
+			final FastByteArrayOutputStream read = IoUtil.read(fileInputStream);
 
-						final byte[] byteArray = read.toByteArray();
+			final byte[] byteArray = read.toByteArray();
 
-						fileInputStream.close();
+			fileInputStream.close();
 
-						return byteArray;
-					} catch (final IOException e) {
-						e.printStackTrace();
-					}
+			return byteArray;
+		} catch (final IOException e) {
+			e.printStackTrace();
+		}
 
 		return null;
 	}
@@ -348,12 +342,12 @@ public class ResourcesLoader {
 
 
 	private static InputStream checkInputStream(final String name) {
-//		final URL resource = ResourcesLoader.class.getResource(name);
-//		System.out.println("resource = " + resource);
+		//		final URL resource = ResourcesLoader.class.getResource(name);
+		//		System.out.println("resource = " + resource);
 		final InputStream inputStream = ResourcesLoader.class.getResourceAsStream(name);
 		if (inputStream == null) {
 			throw new ResourceNotExistException("资源不存在,name = " + name);
-//			throw new IllegalArgumentException("资源不存在,name = " + name);
+			//			throw new IllegalArgumentException("资源不存在,name = " + name);
 		}
 		return inputStream;
 	}

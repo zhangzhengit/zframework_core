@@ -1,7 +1,6 @@
 package com.vo.core;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
@@ -10,14 +9,11 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.vo.cache.CU;
-import com.vo.cache.J;
 import com.vo.cache.STU;
 import com.vo.core.ZRequest.ZHeader;
 import com.vo.http.HttpStatus;
 import com.vo.http.ZCookie;
-import com.votool.common.CR;
 
 import lombok.Data;
 import lombok.Getter;
@@ -89,13 +85,10 @@ public class ZResponse {
 	 */
 	@Getter
 	private final AtomicBoolean write = new AtomicBoolean(false);
-	private final AtomicBoolean closed  = new AtomicBoolean(false);
 	private final AtomicBoolean setContentType  = new AtomicBoolean(false);
 
 	private final AtomicReference<Integer> httpStatus = new AtomicReference<>(HttpStatus.HTTP_200.getCode());
 	private final AtomicReference<String> contentTypeAR = new AtomicReference<>(Task.DEFAULT_CONTENT_TYPE.getValue());
-
-	private OutputStream outputStream;
 
 	private SocketChannel socketChannel;
 
@@ -177,9 +170,7 @@ public class ZResponse {
 			return;
 		}
 
-		if (this.outputStream != null) {
-			this.writeOutputStream();
-		} else if (this.socketChannel != null) {
+		if (this.socketChannel != null) {
 			this.writeSocketChannel();
 			this.closeSocketChannelIfStatusNot200();
 		} else {
@@ -210,60 +201,6 @@ public class ZResponse {
 			}
 		} catch (final IOException e) {
 			//			e.printStackTrace();
-		}
-	}
-
-	private void writeOutputStream() {
-		try {
-			if (this.write.get() || this.closed.get()) {
-				return;
-			}
-			if (STU.isEmpty(this.contentTypeAR.get())) {
-				throw new IllegalArgumentException(ZRequest.CONTENT_TYPE + "未设置");
-			}
-
-			this.outputStream.write((ZResponse.HTTP_1_1 + this.httpStatus.get()).getBytes());
-			this.outputStream.write(NEW_LINE_BYTES);
-
-			// header-Content-Length
-			if (CU.isNotEmpty(this.bodyList)) {
-				final int contentLenght = this.bodyList.size();
-
-				this.outputStream.write((ZRequest.CONTENT_LENGTH + ":" + contentLenght).getBytes());
-				this.outputStream.write(NEW_LINE_BYTES);
-			}
-
-			this.outputStream.write(this.contentTypeAR.get().getBytes());
-			this.outputStream.write(NEW_LINE_BYTES);
-
-			if (this.headerList != null) {
-				for (final ZHeader zHeader : this.headerList) {
-					this.outputStream.write((zHeader.getName() + ":" + zHeader.getValue()).getBytes());
-					this.outputStream.write(NEW_LINE_BYTES);
-				}
-			}
-
-			this.outputStream.write(NEW_LINE_BYTES);
-
-			// body
-			if (CU.isNotEmpty(this.bodyList)) {
-				final byte[] ba = new byte[this.bodyList.size()];
-				for (int b = 0; b < this.bodyList.size(); b++) {
-					ba[b] = this.bodyList.get(b);
-				}
-				this.outputStream.write(ba);
-			} else {
-				this.outputStream.write(J.toJSONString(CR.ok(), Include.NON_NULL).getBytes());
-			}
-
-			this.outputStream.write(NEW_LINE_BYTES);
-
-		} catch (final Exception e) {
-			e.printStackTrace();
-			this.flushAndClose();
-		} finally {
-			this.write.set(true);
-			this.flushAndClose();
 		}
 	}
 
@@ -320,39 +257,6 @@ public class ZResponse {
 
 		return buffer;
 
-	}
-
-	public void flushAndClose() {
-		this.flush();
-		this.close();
-	}
-
-	public void flush() {
-		try {
-			this.outputStream.flush();
-		} catch (final IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public synchronized void close() {
-		try {
-			this.outputStream.close();
-			this.closed.set(true);
-		} catch (final IOException e) {
-			e.printStackTrace();
-		} finally {
-			this.closed.set(true);
-		}
-	}
-
-	public ZResponse(final OutputStream outputStream, final SocketChannel socketChannel) {
-		this.outputStream = outputStream;
-		this.socketChannel = socketChannel;
-	}
-
-	public ZResponse(final OutputStream outputStream) {
-		this.outputStream = outputStream;
 	}
 
 	public ZResponse(final SocketChannel socketChannel) {

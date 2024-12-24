@@ -1,13 +1,11 @@
 package com.vo.core;
 
-import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
@@ -16,7 +14,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import java.net.Socket;
 import java.net.SocketAddress;
 import java.net.URLDecoder;
 import java.nio.channels.SocketChannel;
@@ -99,27 +96,10 @@ public class Task {
 
 	public static final ThreadLocal<SocketChannel> SCTL = new ThreadLocal<>();
 	private final SocketChannel socketChannel;
-	private final Socket socket;
-	private BufferedInputStream bufferedInputStream;
-	private InputStream inputStream;
-	private OutputStream outputStream;
 
 	public Task(final SocketChannel socketChannel) {
 		SCTL.set(socketChannel);
 		this.socketChannel = socketChannel;
-		this.socket = null;
-	}
-
-	public Task(final Socket socket) {
-		this.socketChannel = null;
-		this.socket = socket;
-		try {
-			this.inputStream = socket.getInputStream();
-			this.bufferedInputStream = new BufferedInputStream(this.inputStream);
-			this.outputStream = socket.getOutputStream();
-		} catch (final IOException e) {
-			e.printStackTrace();
-		}
 	}
 
 	/**
@@ -211,8 +191,6 @@ public class Task {
 		} catch (final Exception e) {
 			e.printStackTrace();
 			throw e;
-		} finally {
-			this.close();
 		}
 
 	}
@@ -252,7 +230,7 @@ public class Task {
 		}
 
 		// 无匹配的正则表达式接口，返回404
-		return	new ZResponse(this.outputStream, this.socketChannel)
+		return	new ZResponse(this.socketChannel)
 				.httpStatus(HttpStatus.HTTP_404.getCode())
 				.contentType(DEFAULT_CONTENT_TYPE.getType())
 				.body(J.toJSONString(CR.error(HTTP_STATUS_404, "请求方法不存在 [" + path+"]"), Include.NON_NULL))	;
@@ -290,34 +268,6 @@ public class Task {
 		// socketChannel 不关闭
 		//		if (this.socketChannel != null) {
 		//		}
-		if (this.inputStream != null) {
-			try {
-				this.inputStream.close();
-			} catch (final IOException e) {
-				e.printStackTrace();
-			}
-		}
-		if (this.bufferedInputStream != null) {
-			try {
-				this.bufferedInputStream.close();
-			} catch (final IOException e) {
-				e.printStackTrace();
-			}
-		}
-		if (this.outputStream != null) {
-			try {
-				this.outputStream.close();
-			} catch (final IOException e) {
-				e.printStackTrace();
-			}
-		}
-		if (this.socket != null) {
-			try {
-				this.socket.close();
-			} catch (final IOException e) {
-				e.printStackTrace();
-			}
-		}
 	}
 
 	@SuppressWarnings("boxing")
@@ -336,7 +286,7 @@ public class Task {
 			final CR<Object> error = CR.error(AccessDeniedCodeEnum.CLIENT.getCode(),
 					AccessDeniedCodeEnum.CLIENT.getMessageToClient());
 
-			final ZResponse response = new ZResponse(this.outputStream, this.socketChannel);
+			final ZResponse response = new ZResponse(this.socketChannel);
 			response.contentType(HeaderEnum.APPLICATION_JSON.getType())
 			.httpStatus(HttpStatus.HTTP_429.getCode())
 			.body(J.toJSONString(error, Include.NON_NULL));
@@ -359,7 +309,7 @@ public class Task {
 				if (!QC.allow(keyword, zqpsLimitation.qps(), handlingEnum)) {
 
 					final CR<Object> error = CR.error(AccessDeniedCodeEnum.ZSESSIONID.getCode(), AccessDeniedCodeEnum.ZSESSIONID.getMessageToClient());
-					final ZResponse response = new ZResponse(this.outputStream, this.socketChannel);
+					final ZResponse response = new ZResponse(this.socketChannel);
 					response.contentType(HeaderEnum.APPLICATION_JSON.getType())
 					.httpStatus(HttpStatus.HTTP_429.getCode())
 					.body(J.toJSONString(error, Include.NON_NULL));
@@ -522,13 +472,13 @@ public class Task {
 				&& request.isSupportGZIP()) {
 			final byte[] compress = ZGzip.compress(json);
 
-			return new ZResponse(this.outputStream, this.socketChannel)
+			return new ZResponse(this.socketChannel)
 					.header(StaticController.CONTENT_ENCODING, ZRequest.GZIP)
 					.contentType(DEFAULT_CONTENT_TYPE.getType()).body(compress);
 
 		}
 
-		return new ZResponse(this.outputStream, this.socketChannel).contentType(DEFAULT_CONTENT_TYPE.getType())
+		return new ZResponse(this.socketChannel).contentType(DEFAULT_CONTENT_TYPE.getType())
 				.body(json);
 	}
 
@@ -545,16 +495,16 @@ public class Task {
 					&& request.isSupportGZIP()) {
 				final byte[] compress = ZGzip.compress(html);
 
-				return new ZResponse(this.outputStream, this.socketChannel).contentType(HeaderEnum.TEXT_HTML.getType())
+				return new ZResponse(this.socketChannel).contentType(HeaderEnum.TEXT_HTML.getType())
 						.header(StaticController.CONTENT_ENCODING, ZRequest.GZIP).body(compress);
 			}
 
-			return new ZResponse(this.outputStream, this.socketChannel)
+			return new ZResponse(this.socketChannel)
 					.contentType(HeaderEnum.TEXT_HTML.getType()).body(html);
 
 		} catch (final Exception e) {
 			e.printStackTrace();
-			return new ZResponse(this.outputStream, this.socketChannel)
+			return new ZResponse(this.socketChannel)
 					.httpStatus(HttpStatus.HTTP_500.getCode())
 					.contentType(DEFAULT_CONTENT_TYPE.getType())
 					.body(CR.error(HTTP_STATUS_500 + INTERNAL_SERVER_ERROR));
@@ -624,7 +574,7 @@ public class Task {
 					parametersArray[pI] = request;
 					pI++;
 				} else if (pType == ZResponse.class) {
-					final ZResponse response = new ZResponse(this.outputStream, this.socketChannel);
+					final ZResponse response = new ZResponse(this.socketChannel);
 					parametersArray[pI] = response;
 					pI++;
 				} else if (pType == ZModel.class) {
@@ -938,7 +888,7 @@ public class Task {
 		}
 
 		if (!sR) {
-			ZHttpContext.setZResponse(new ZResponse(this.outputStream, this.socketChannel));
+			ZHttpContext.setZResponse(new ZResponse(this.socketChannel));
 		}
 	}
 

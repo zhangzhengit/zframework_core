@@ -40,7 +40,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ZRequest {
 
-	private static final Map<Object, Object> CACHE_MAP = new WeakHashMap<>(64, 1F);
 	public static final String HTTP_11 = "HTTP/1.1";
 	public static final String BOUNDARY = "boundary=";
 	public static final String MULTIPART_FORM_DATA = "multipart/form-data";
