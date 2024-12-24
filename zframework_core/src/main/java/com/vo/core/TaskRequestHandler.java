@@ -1,8 +1,6 @@
 package com.vo.core;
 
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -30,7 +28,7 @@ public final class TaskRequestHandler extends Thread {
 
 	public static final String USER_AGENT = "User-Agent";
 
-	private final BlockingQueue<TaskRequest> queue = new LinkedBlockingQueue<>(ZContext.getBean(ServerConfigurationProperties.class).getPendingTasks());
+	private final TQ<TaskRequest> queue = new TQ<>(ZContext.getBean(ServerConfigurationProperties.class).getPendingTasks());
 
 	private final AbstractRequestValidator requestValidator;
 
@@ -71,14 +69,13 @@ public final class TaskRequestHandler extends Thread {
 				.getBean(RequestValidatorConfigurationProperties.class);
 
 		while (true) {
-			TaskRequest taskRequest = null;
-			try {
-				taskRequest = this.queue.take();
-			} catch (final InterruptedException e1) {
-				e1.printStackTrace();
-			}
-			try {
 
+			final TaskRequest taskRequest = this.queue.pollFirst();
+			if (taskRequest == null) {
+				continue;
+			}
+
+			try {
 				final ZRequest request = BodyReader.readHeader(taskRequest.getRequestData());
 				if (request == null) {
 					taskRequest.getSocketChannel().close();
@@ -119,8 +116,11 @@ public final class TaskRequestHandler extends Thread {
 	 * @return
 	 *
 	 */
-	public boolean add(final TaskRequest taskRequest) {
-		final boolean offer = this.queue.offer(taskRequest);
-		return offer;
+	public boolean addLast(final TaskRequest taskRequest) {
+		return this.queue.addLast(taskRequest);
+	}
+
+	public boolean addFirst(final TaskRequest taskRequest) {
+		return this.queue.addFirst(taskRequest);
 	}
 }

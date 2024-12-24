@@ -18,8 +18,44 @@ abstract class AbstractRequestValidator {
 
 	private final RequestValidatorConfigurationProperties requestValidatorConfigurationProperties = ZContext
 			.getBean(RequestValidatorConfigurationProperties.class);
+	private final String mode = ZContext.getBean(ServerConfigurationProperties.class).getTaskResponsiveMode();
 
 	public void handle(final ZRequest request, final TaskRequest taskRequest) {
+
+		// 如果任务执行模式为[排队执行]，则使用队列模式来执行
+		if (TaskResponsiveModeEnum.QUEUE.name().equals(this.mode)) {
+			// 直接放入线程队列等待处理
+			NioLongConnectionServer.ZE.executeInQueue(() -> this.handle0(request, taskRequest));
+			return;
+		}
+
+		if (TaskResponsiveModeEnum.IMMEDIATELY.name().equals(this.mode)) {
+
+			final boolean executeImmediately = NioLongConnectionServer.ZE
+					.executeImmediately(() -> this.handle0(request, taskRequest));
+
+			// 当前有空闲线程，直接处理
+			if (executeImmediately) {
+				return;
+			}
+
+			// 超时，直接返回[429任务超时]
+			if (this.timeout(taskRequest)) {
+				final String message = "服务器忙：当前无空闲线程&任务等待超时："
+						+ ZContext.getBean(ServerConfigurationProperties.class).getTaskTimeoutMilliseconds();
+				NioLongConnectionServer.response429(taskRequest.getSelectionKey(), message);
+			} else {
+				// 没超时，则优先处理放入任务队列最前面，成功则此任务会等待下次调用本方法优先处理，失败则返回[429任务队列满]
+				if (!ZContext.getBean(TaskRequestHandler.class).addFirst(taskRequest)) {
+					final String message = "服务器忙：当前无空闲线程&任务队列满";
+					NioLongConnectionServer.response429(taskRequest.getSelectionKey(), message);
+				}
+			}
+		}
+
+	}
+
+	private void handle0(final ZRequest request, final TaskRequest taskRequest) {
 		final RequestVerificationResult r = this.validated(request, taskRequest);
 		if (r.isPassed()) {
 			this.passed(request, taskRequest);
@@ -55,7 +91,7 @@ abstract class AbstractRequestValidator {
 	 * 1、如果启用了 响应 ZSESSIONID并且服务器中存在对应的session则按ZSESSIONID来判断为同一个客户端
 	 * 2、没启用ZSESSIONID，则根据clientIp和User-Agent来判断为同一个客户端
 	 *
-	 * 	判断QPS不能超过 配置的值
+	 * 判断QPS不能超过 配置的值
 	 *
 	 * @param request
 	 * @param taskRequest
@@ -70,7 +106,8 @@ abstract class AbstractRequestValidator {
 
 		final String userAgent = request.getHeader(TaskRequestHandler.USER_AGENT);
 
-		// 启用了响应 ZSESSIONID，则认为ZSESSIONID相同就是同一个客户端(前提是服务器中存在对应的session，因为session可能是伪造的等，服务器重启就重启就认为是无效session)
+		// 启用了响应
+		// ZSESSIONID，则认为ZSESSIONID相同就是同一个客户端(前提是服务器中存在对应的session，因为session可能是伪造的等，服务器重启就重启就认为是无效session)
 		if (this.responseZSessionId()) {
 			final ZSession session = request.getSession(false);
 			if (session != null) {
@@ -122,39 +159,7 @@ abstract class AbstractRequestValidator {
 	 *
 	 */
 	public void passed(final ZRequest request, final TaskRequest taskRequest) {
-
-		final String mode = ZContext.getBean(ServerConfigurationProperties.class).getTaskResponsiveMode();
-
-		if (TaskResponsiveModeEnum.QUEUE.name().equals(mode)) {
-			// 直接放入线程队列等待处理
-			NioLongConnectionServer.ZE.executeInQueue(() -> NioLongConnectionServer.response(request, taskRequest));
-		} else if (TaskResponsiveModeEnum.IMMEDIATELY.name().equals(mode)) {
-
-			// 使用池中空闲线程处理，有空闲的则直接处理
-			// 无空闲的则先看此时是否超过任务等待毫秒数，超过则 提示 message
-			// 没超过则把请求重新放入队列等待后续继续使用空闲线程处理
-
-			final boolean executeImmediately = NioLongConnectionServer.ZE
-					.executeImmediately(() -> NioLongConnectionServer.response(request, taskRequest));
-			if (!executeImmediately) {
-				if (this.timeout(taskRequest)) {
-					// FIXME 2024年2月10日 下午11:41:27 zhanghen: 各个messge都改为配置项，并给一个默认值
-					final String message = "服务器忙：当前无空闲线程&处理超时："
-							+ ZContext.getBean(ServerConfigurationProperties.class).getTaskTimeoutMilliseconds();
-					NioLongConnectionServer.response429(taskRequest.getSelectionKey(), message);
-				} else {
-					final TaskRequestHandler taskRequestHandler = ZContext.getBean(TaskRequestHandler.class);
-
-					// FIXME 2024年2月12日 下午5:55:22 zhanghen: 任务队列改用双向队列，好在此放入队头部优先执行此任务？
-					final boolean add = taskRequestHandler.add(taskRequest);
-					if (!add) {
-						final String message = "服务器忙：当前无空闲线程&任务队列满";
-						NioLongConnectionServer.response429(taskRequest.getSelectionKey(), message);
-					}
-				}
-			}
-		}
-
+		NioLongConnectionServer.response(request, taskRequest);
 	}
 
 }

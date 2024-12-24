@@ -181,7 +181,7 @@ public class NioLongConnectionServer {
 												(SocketChannel) selectionKey.channel(), array.get(), array.getTf(),
 												new Date());
 										final boolean responseAsync = NioLongConnectionServer.this.requestHandler
-												.add(taskRequest);
+												.addLast(taskRequest);
 										if (!responseAsync) {
 											NioLongConnectionServer.response429Async(selectionKey,
 													SERVER_CONFIGURATION.getPendingTasksExceedMessage());
