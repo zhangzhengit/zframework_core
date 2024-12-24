@@ -18,12 +18,14 @@ import com.votool.ze.ZES;
 @ZConfiguration
 public class ZAsyncConfiguration {
 
+	private static final String ASYNC_GROUP = "async-Group";
+
 	@ZAutowired
 	private ZAsyncProperties zAsyncProperties;
 
 	@ZBean
 	public ZE zeZAsync() {
-		return ZES.newZE(this.zAsyncProperties.getThreadCount(), "async-Group",
+		return ZES.newZE(this.zAsyncProperties.getThreadCount(), ASYNC_GROUP,
 				this.zAsyncProperties.getThreadNamePrefix(), ThreadModeEnum.LAZY);
 	}
 

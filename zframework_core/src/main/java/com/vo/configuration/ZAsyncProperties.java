@@ -24,12 +24,17 @@ import lombok.NoArgsConstructor;
 public class ZAsyncProperties {
 
 	/**
+	 * 默认 最低的线程数量
+	 */
+	private static final int MIN = 4;
+
+	/**
 	 * 最大线程数量
 	 */
 	@ZNotNull
-	@ZMin(min = 1)
-	@ZMax(max = Integer.MAX_VALUE)
-	private Integer threadCount = Runtime.getRuntime().availableProcessors();
+	@ZMin(min = 2)
+	@ZMax(max = 100)
+	private Integer threadCount = Math.min(MIN, Runtime.getRuntime().availableProcessors());
 
 	/**
 	 * 线程名称前缀
@@ -42,7 +47,7 @@ public class ZAsyncProperties {
 	// 是废弃原线程池然后新建一个线程池？还是对原线程池增减线程？
 	// @ZValue 要不要 新建一个方法属性，指定一个方法，来实现listenForChanges = true
 	// 的相关对应操作？
-//	@ZValue(name = "async.threadNamePrefix", listenForChanges = true)
-	private String threadNamePrefix = "zasync-Thread-";
+	//	@ZValue(name = "async.threadNamePrefix", listenForChanges = true)
+	private String threadNamePrefix = "async-Thread-";
 
 }
