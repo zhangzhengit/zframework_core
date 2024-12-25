@@ -13,6 +13,8 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.springframework.scheduling.SchedulingAwareRunnable;
+
 import com.google.common.collect.Sets;
 import com.vo.anno.ZConfigurationProperties;
 import com.vo.anno.ZValue;
@@ -23,6 +25,8 @@ import com.vo.exception.TypeNotSupportedExcpetion;
 import com.vo.exception.ValidatedException;
 import com.vo.scanner.ClassMap;
 import com.vo.scanner.ZConfigurationPropertiesScanner;
+
+import lombok.val;
 
 /**
  * 验证器
@@ -651,9 +655,13 @@ public class ZValidator {
 			return "";
 		}
 
-		final String prefix = zcp.prefix().endsWith(".") ? zcp.prefix() : zcp.prefix() + ".";
 		final ZValue zValue = field.getAnnotation(ZValue.class);
-		final String name = zValue != null ? zValue.name() : ZConfigurationPropertiesScanner.convert(field.getName());
+		if (zValue != null) {
+			return zValue.name();
+		}
+
+		final String prefix = zcp.prefix().endsWith(".") ? zcp.prefix() : zcp.prefix() + ".";
+		final String name = ZConfigurationPropertiesScanner.convert(field.getName());
 
 		return prefix + name;
 	}
