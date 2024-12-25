@@ -10,13 +10,12 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.vo.cache.AU;
+import com.vo.cache.CU;
 import com.vo.core.Task;
 import com.vo.core.ZContext;
 import com.vo.core.ZSingleton;
 import com.vo.scanner.ClassMap;
-
-import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.util.ArrayUtil;
 
 /**
  * 扫描 @ZControllerAdvice 类
@@ -37,7 +36,7 @@ public class ZControllerAdviceScanner {
 		for (final Class<?> cls : zcaList) {
 			final List<Method> zehList = Lists.newArrayList(cls.getDeclaredMethods()).stream()
 					.filter(m -> m.isAnnotationPresent(ZExceptionHandler.class)).collect(Collectors.toList());
-			if (CollUtil.isEmpty(zehList)) {
+			if (CU.isEmpty(zehList)) {
 				continue;
 			}
 			for (final Method m : zehList) {
@@ -55,14 +54,14 @@ public class ZControllerAdviceScanner {
 				}
 
 				final Parameter[] ps = m.getParameters();
-				if (ArrayUtil.isEmpty(ps) || ps.length != 1) {
+				if (AU.isEmpty(ps) || (ps.length != 1)) {
 					throw new StartupException("@ZExceptionHandler 方法必须有且只有一个参数，当前方法=" + m.getName());
 				}
 
 				final Class<? extends Throwable> ec = m.getAnnotation(ZExceptionHandler.class).value();
 				if (!ps[0].getType().getCanonicalName().equals(Throwable.class.getCanonicalName())) {
 					throw new StartupException("@ZExceptionHandler 方法参数必须为 (Throwable throwable)，当前方法=" + m.getName()
-							+ ",当前方法参数类型=" + ps[0].getType().getCanonicalName());
+					+ ",当前方法参数类型=" + ps[0].getType().getCanonicalName());
 				}
 
 				final Object bean = ZSingleton.getSingletonByClass(cls);

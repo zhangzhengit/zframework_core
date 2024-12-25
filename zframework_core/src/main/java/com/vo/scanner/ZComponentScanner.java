@@ -17,6 +17,7 @@ import com.vo.anno.ZAutowired;
 import com.vo.anno.ZComponent;
 import com.vo.aop.ZAOPProxyClass;
 import com.vo.aop.ZAOPScaner;
+import com.vo.cache.STU;
 import com.vo.core.Task;
 import com.vo.core.ZClass;
 import com.vo.core.ZContext;
@@ -28,8 +29,6 @@ import com.vo.core.ZPackage;
 import com.vo.core.ZSingleton;
 import com.vo.validator.ZValidated;
 import com.vo.validator.ZValidator;
-
-import cn.hutool.core.util.StrUtil;
 
 /**
  * 扫描 @ZComponent 的类
@@ -103,7 +102,7 @@ public class ZComponentScanner {
 			}
 
 			final ZAutowired autowired = f.getAnnotation(ZAutowired.class);
-			final String name = StrUtil.isEmpty(autowired.name()) ? f.getType().getCanonicalName() : autowired.name();
+			final String name = STU.isEmpty(autowired.name()) ? f.getType().getCanonicalName() : autowired.name();
 
 			final Object vT = ZContext.getBean(name);
 			final Object value = vT != null ? vT : ZContext.getBean(f.getType());

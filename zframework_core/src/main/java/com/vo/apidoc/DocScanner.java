@@ -9,6 +9,7 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.vo.anno.ZController;
+import com.vo.cache.CU;
 import com.vo.core.ZLog2;
 import com.vo.core.ZRequest;
 import com.vo.core.ZResponse;
@@ -16,8 +17,6 @@ import com.vo.enums.MethodEnum;
 import com.vo.http.ZRequestMapping;
 import com.vo.scanner.ZConfigurationPropertiesScanner;
 import com.vo.template.ZModel;
-
-import cn.hutool.core.collection.CollUtil;
 
 /**
  * 扫描 @ZController 类里的 API方法，生成接口文档
@@ -37,7 +36,7 @@ public class DocScanner {
 				.filter(cls -> cls.isAnnotationPresent(ZController.class))
 				.collect(Collectors.toSet());
 
-		if (CollUtil.isEmpty(zcSet)) {
+		if (CU.isEmpty(zcSet)) {
 			return;
 		}
 

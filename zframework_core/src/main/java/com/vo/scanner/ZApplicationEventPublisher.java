@@ -11,11 +11,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import com.google.common.collect.HashBasedTable;
 import com.vo.anno.ZAutowired;
 import com.vo.anno.ZComponent;
+import com.vo.cache.AU;
 import com.vo.core.ZContext;
 import com.vo.exception.StartupException;
 import com.votool.ze.ZE;
-
-import cn.hutool.core.util.ArrayUtil;
 
 /**
  * 事件发布者
@@ -90,9 +89,9 @@ public final class ZApplicationEventPublisher {
 				}
 
 				final Parameter[] ps = method.getParameters();
-				if (ArrayUtil.isEmpty(ps) || ps.length != 1 || !ps[0].getType().equals(eventListener.value())) {
+				if (AU.isEmpty(ps) || (ps.length != 1) || !ps[0].getType().equals(eventListener.value())) {
 					throw new StartupException("@" + ZEventListener.class.getSimpleName() + "方法[" + cls.getSimpleName()
-							+ "." + method.getName() + "]必须有且只有一个[" + eventListener.value().getSimpleName() + "]参数");
+					+ "." + method.getName() + "]必须有且只有一个[" + eventListener.value().getSimpleName() + "]参数");
 				}
 
 				TABLE.put(eventListener.value(), method, cls);

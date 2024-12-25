@@ -13,6 +13,10 @@ import java.util.Set;
  */
 public class CU {
 
+	public static boolean isEmpty(final Map map) {
+		return (map == null) || map.isEmpty();
+	}
+
 	public static <T> boolean isEmpty(final Set<T> set) {
 		return (set == null) || set.isEmpty();
 	}

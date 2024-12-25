@@ -31,6 +31,9 @@ import com.vo.anno.ZConfigurationPropertiesRegistry;
 import com.vo.anno.ZOrder;
 import com.vo.anno.ZOrderComparator;
 import com.vo.anno.ZValue;
+import com.vo.cache.AU;
+import com.vo.cache.CU;
+import com.vo.cache.STU;
 import com.vo.configuration.ZProperties;
 import com.vo.core.ZContext;
 import com.vo.core.ZLog2;
@@ -40,8 +43,6 @@ import com.vo.exception.TypeNotSupportedExcpetion;
 import com.vo.validator.ZConfigurationPropertiesException;
 import com.vo.validator.ZValidator;
 
-import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 
 /**
@@ -65,7 +66,7 @@ public class ZConfigurationPropertiesScanner {
 		final Set<Class<?>> csSet = scanPackage(packageName).stream()
 				.filter(cls -> cls.isAnnotationPresent(ZConfigurationProperties.class))
 				.collect(Collectors.toSet());
-		if (CollUtil.isEmpty(csSet)) {
+		if (CU.isEmpty(csSet)) {
 			return;
 		}
 
@@ -85,7 +86,7 @@ public class ZConfigurationPropertiesScanner {
 
 			final ZConfigurationProperties zcp = cs.getAnnotation(ZConfigurationProperties.class);
 
-			final String prefix = StrUtil.isEmpty(zcp.prefix()) ? ""
+			final String prefix = STU.isEmpty(zcp.prefix()) ? ""
 					: zcp.prefix().endsWith(".") ? zcp.prefix() : zcp.prefix() + ".";
 
 			final Object object = ZSingleton.getSingletonByClass(cs);
@@ -154,7 +155,7 @@ public class ZConfigurationPropertiesScanner {
 				// FIXME 2023年11月9日 上午12:13:59 zhanghen: 支持三种类型要支持什么类型
 
 				final Class<?>[] ts = ZCU.getGenericType(field);
-				if (ArrayUtil.isEmpty(ts)) {
+				if (AU.isEmpty(ts)) {
 					final String message = "@" + ZConfigurationProperties.class.getSimpleName() + " List类型必须加入泛型参数";
 					throw new ZConfigurationPropertiesException(message);
 				}
@@ -217,7 +218,7 @@ public class ZConfigurationPropertiesScanner {
 		final Set<Object> set = Sets.newLinkedHashSet();
 
 		final Class<?>[] ts = ZCU.getGenericType(field);
-		if (ArrayUtil.isEmpty(ts)) {
+		if (AU.isEmpty(ts)) {
 			final String message = object.getClass().getSimpleName() + "." + field.getName() + " Set类型必须加入泛型参数" ;
 			throw new ZConfigurationPropertiesException(message);
 		}
@@ -281,7 +282,7 @@ public class ZConfigurationPropertiesScanner {
 		} else if (gType.equals(Double.class)) {
 			value = p.getDouble(xa);
 		} else if (gType.equals(Character.class)) {
-			value = StrUtil.isEmpty(p.getString(xa)) ? null : p.getString(xa).charAt(0);
+			value = STU.isEmpty(p.getString(xa)) ? null : p.getString(xa).charAt(0);
 		} else if (gType.equals(Boolean.class)) {
 			value = p.getBoolean(xa);
 		} else {
@@ -368,7 +369,7 @@ public class ZConfigurationPropertiesScanner {
 		System.out.println("list = " + subList);
 
 		try {
-			if (CollUtil.isNotEmpty(subList)) {
+			if (CU.isNotEmpty(subList)) {
 				field.setAccessible(true);
 				field.set(object, subList);
 			}

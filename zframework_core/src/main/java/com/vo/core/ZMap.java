@@ -10,7 +10,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import cn.hutool.core.collection.CollUtil;
+import com.vo.cache.CU;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -112,7 +113,7 @@ public class ZMap<K, V> implements Map<K, V> {
 		synchronized (keyword.intern()) {
 
 			final LinkedList<ZNode> nl = this.data.get(n);
-			if (CollUtil.isEmpty(nl)) {
+			if (CU.isEmpty(nl)) {
 				return false;
 			}
 

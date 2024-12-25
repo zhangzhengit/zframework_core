@@ -22,13 +22,13 @@ import com.vo.anno.ZComponent;
 import com.vo.anno.ZController;
 import com.vo.anno.ZService;
 import com.vo.anno.ZValue;
+import com.vo.cache.CU;
 import com.vo.configuration.ZProperties;
 import com.vo.core.Task;
 import com.vo.core.ZContext;
 import com.vo.core.ZLog2;
 import com.vo.validator.ZValidator;
 
-import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ReflectUtil;
 
 /**
@@ -93,7 +93,7 @@ public class ZValueScanner {
 
 	public static void updateValue(final String name, final Object value)  {
 		final Map<Field, Object> map = valueTable.row(name);
-		if (CollUtil.isEmpty(map)) {
+		if (CU.isEmpty(map)) {
 			return;
 		}
 

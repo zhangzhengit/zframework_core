@@ -18,6 +18,7 @@ import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.vo.cache.CU;
 import com.vo.core.Task;
 import com.vo.core.ZClass;
 import com.vo.core.ZContext;
@@ -30,8 +31,6 @@ import com.vo.core.ZSingleton;
 import com.vo.scanner.ClassMap;
 import com.vo.validator.ZValidated;
 import com.vo.validator.ZValidator;
-
-import cn.hutool.core.collection.CollUtil;
 
 /**
  *
@@ -330,9 +329,9 @@ public class ZAOPScaner {
 								+ " 只能只允许有一个AOP类!现在有 " + aL.size() + " 个 = " + aL);
 					}
 
-					if (CollUtil.isNotEmpty(aL)) {
+					if (CU.isNotEmpty(aL)) {
 						final List<Class<?>> cl = table.get(c	, m);
-						if (CollUtil.isEmpty(cl)) {
+						if (CU.isEmpty(cl)) {
 							table.put(c, m, Lists.newArrayList(aL.get(0)));
 						}else {
 							cl.add(aL.get(0));

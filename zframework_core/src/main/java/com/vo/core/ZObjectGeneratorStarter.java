@@ -5,12 +5,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.BeanNotOfRequiredTypeException;
-
 import com.google.common.collect.Lists;
 import com.vo.aop.ZAOPScaner;
-
-import cn.hutool.core.collection.CollectionUtil;
+import com.vo.cache.CU;
 
 /**
  *
@@ -49,7 +46,7 @@ public class ZObjectGeneratorStarter {
 		final List<ZObjectGenerator> zogList2 = zogList.stream()
 				.filter(o -> !o.getClass().getCanonicalName().equals(ZDefaultObjectGenerator.class.getCanonicalName()))
 				.collect(Collectors.toList());
-		if (CollectionUtil.isNotEmpty(zogList2)) {
+		if (CU.isNotEmpty(zogList2)) {
 			System.out.println("有自定义ZOG，使用自定义生成");
 			for (final ZObjectGenerator zObjectGenerator : zogList2) {
 				glis.add(zObjectGenerator);

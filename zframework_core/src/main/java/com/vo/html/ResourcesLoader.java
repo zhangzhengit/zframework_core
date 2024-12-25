@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.google.common.collect.HashBasedTable;
+import com.vo.cache.STU;
 import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.core.HeaderEnum;
 import com.vo.core.Task;
@@ -27,7 +28,6 @@ import com.vo.exception.ResourceNotExistException;
 import cn.hutool.core.io.FastByteArrayOutputStream;
 import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.lang.UUID;
-import cn.hutool.core.util.StrUtil;
 
 /**
  * 从 resources 目录加载文件
@@ -53,7 +53,7 @@ public class ResourcesLoader {
 	public static String loadStaticResourceString(final String resourceName) {
 
 		final String resourcePath = System.getProperty(STATIC_RESOURCES_PROPERTY_NAME);
-		if (!StrUtil.isNotEmpty(resourcePath)) {
+		if (STU.isNullOrEmptyOrBlank(resourcePath)) {
 			final ServerConfigurationProperties serverConfiguration = ZSingleton.getSingletonByClass(ServerConfigurationProperties.class);
 			final String staticPrefix = serverConfiguration.getStaticPrefix();
 			final String key = staticPrefix + resourceName;
@@ -210,8 +210,7 @@ public class ResourcesLoader {
 	public static byte[] loadStaticResourceByteArray(final String resourceName) {
 
 		final String resourcePath = System.getProperty(STATIC_RESOURCES_PROPERTY_NAME);
-		if (!StrUtil.isNotEmpty(resourcePath)) {
-
+		if (STU.isNullOrEmptyOrBlank(resourcePath)) {
 			final ServerConfigurationProperties serverConfiguration = ZSingleton.getSingletonByClass(ServerConfigurationProperties.class);
 			final String staticPrefix = serverConfiguration.getStaticPrefix();
 			final String key = staticPrefix + resourceName;

@@ -11,12 +11,10 @@ import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.vo.cache.STU;
 import com.vo.core.QPSEnum;
-import com.vo.core.ZContext;
 import com.vo.enums.MethodEnum;
 import com.vo.exception.StartupException;
-
-import cn.hutool.core.util.StrUtil;
 
 /**
  * 存取接口方法
@@ -125,7 +123,7 @@ public class ZControllerMap {
 
 		final Set<String> keySet = methodPathTable.row(methodEnum).keySet();
 		final String pathM = getx(path, keySet);
-		if (StrUtil.isEmpty(pathM)) {
+		if (STU.isEmpty(pathM)) {
 			return null;
 		}
 
@@ -150,7 +148,7 @@ public class ZControllerMap {
 			final ArrayList<Object> list = Lists.newArrayList();
 			for (int i = 0; i < s.length; i++) {
 				final String t = s[i];
-				if (StrUtil.isEmpty(t)) {
+				if (STU.isEmpty(t)) {
 					empty++;
 					continue;
 				}
@@ -194,7 +192,7 @@ public class ZControllerMap {
 			throw new IllegalArgumentException(MethodEnum.class.getSimpleName() + " 不能为空");
 		}
 
-		if (StrUtil.isEmpty(mapping)) {
+		if (STU.isEmpty(mapping)) {
 			throw new IllegalArgumentException("mapping 不能为空");
 		}
 		if (!mapping.startsWith("/")) {

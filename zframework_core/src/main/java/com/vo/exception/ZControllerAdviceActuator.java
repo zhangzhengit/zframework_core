@@ -4,11 +4,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
 import com.vo.anno.ZComponent;
+import com.vo.cache.CU;
 import com.vo.core.Task;
 import com.vo.core.ZContext;
 import com.vo.core.ZLog2;
-
-import cn.hutool.core.collection.CollUtil;
 
 /**
  * 运行时处理 @ZControllerAdvice 定义的方法
@@ -35,9 +34,10 @@ public class ZControllerAdviceActuator {
 		LOG.error("执行异常,message={}", message);
 
 		final List<ZControllerAdviceBody> list = ZControllerAdviceScanner.LIST;
-		if (CollUtil.isNotEmpty(list)) {
+		if (CU.isNotEmpty(list)) {
 			for (final ZControllerAdviceBody zcadto : list) {
-				if (zcadto.getThrowable().getCanonicalName().equals(throwable.getClass().getCanonicalName())) {
+				if (zcadto.getThrowable().getCanonicalName().equals(throwable.getClass().getCanonicalName()) || ((throwable.getCause() != null) && zcadto.getThrowable().getCanonicalName()
+						.equals(throwable.getCause().getClass().getCanonicalName()))) {
 
 					try {
 						return zcadto.getMethod().invoke(zcadto.getObject(), throwable);
@@ -45,14 +45,6 @@ public class ZControllerAdviceActuator {
 						e.printStackTrace();
 					}
 
-				} else if (throwable.getCause() != null && zcadto.getThrowable().getCanonicalName()
-						.equals(throwable.getCause().getClass().getCanonicalName())) {
-
-					try {
-						return zcadto.getMethod().invoke(zcadto.getObject(), throwable);
-					} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-						e.printStackTrace();
-					}
 				}
 			}
 		}

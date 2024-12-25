@@ -6,7 +6,10 @@ import java.nio.charset.Charset;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-import cn.hutool.core.util.ArrayUtil;
+import org.codehaus.groovy.runtime.StackTraceUtils;
+
+import com.vo.cache.AU;
+import com.vo.cache.STU;
 
 /**
  *
@@ -21,7 +24,7 @@ public class ZGzip {
 	private static final String DEFAULT_CHARSET = Charset.defaultCharset().displayName();
 
 	public static String decompression(final byte[] ba) {
-		if (ArrayUtil.isEmpty(ba)) {
+		if (AU.isEmpty(ba)) {
 			return null;
 		}
 
@@ -47,7 +50,7 @@ public class ZGzip {
 	}
 
 	public static byte[] compress(final String string) {
-		if (string == null || string.length() == 0) {
+		if (STU.isNullOrEmpty(string)) {
 			return null;
 		}
 		try {

@@ -15,12 +15,11 @@ import com.vo.anno.ZController;
 import com.vo.anno.ZService;
 import com.vo.aop.ZAOP;
 import com.vo.aop.ZAOPScaner;
+import com.vo.cache.STU;
 import com.vo.core.ZContext;
 import com.vo.core.ZLog2;
 import com.vo.core.ZSingleton;
 import com.vo.exception.BeanNotExistException;
-
-import cn.hutool.core.util.StrUtil;
 
 /**
  * 扫描 @ZController 的类，注册为一个控制类
@@ -95,7 +94,7 @@ public class ZAutowiredScanner {
 					ZAutowired.class.getCanonicalName(), f.getType().getCanonicalName());
 
 			final ZAutowired autowired = f.getAnnotation(ZAutowired.class);
-			final String name = StrUtil.isEmpty(autowired.name()) ? f.getType().getCanonicalName() : autowired.name();
+			final String name = STU.isEmpty(autowired.name()) ? f.getType().getCanonicalName() : autowired.name();
 
 			final Object vT = ZContext.getBean(name);
 			final Object value = vT != null ? vT : ZContext.getBean(f.getType());
@@ -128,8 +127,7 @@ public class ZAutowiredScanner {
 		ZAutowiredScanner.LOG.info("找到[{}]对象的[{}]字段={}", cls.getCanonicalName(),
 				ZAutowired.class.getCanonicalName(), f.getType().getCanonicalName());
 
-		final String name = StrUtil.isEmpty(autowired.name()) ? f.getType().getCanonicalName() + "@" + f.getName() : autowired.name();
-		//		final String name = StrUtil.isEmpty(autowired.name()) ? f.getType().getCanonicalName() + "@" + f.getName() : autowired.name();
+		final String name = STU.isEmpty(autowired.name()) ? f.getType().getCanonicalName() + "@" + f.getName() : autowired.name();
 
 		// FIXME 2023年7月5日 下午8:02:09 zhanghen: TODO ： 如果getByName 有多个返回值，则提示一下要具体注入哪个
 		final Object object = cls.isAnnotationPresent(ZAOP.class)
@@ -187,7 +185,7 @@ public class ZAutowiredScanner {
 					final Object v = f.get(bean);
 					// 在此判断：如果 autowired.required() 并且字段不存在，则抛异常
 					if ((v == null) && autowired.required()) {
-						final String beanName = StrUtil.isEmpty(autowired.name()) ?
+						final String beanName = STU.isEmpty(autowired.name()) ?
 								f.getType().getCanonicalName() + "@" +
 								f.getName() : autowired.name();
 

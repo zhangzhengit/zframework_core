@@ -4,7 +4,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
-import cn.hutool.core.util.ArrayUtil;
+import com.vo.cache.AU;
 
 /**
  *
@@ -28,7 +28,7 @@ public class ZCU {
 		if (fieldType instanceof ParameterizedType) {
 			final ParameterizedType parameterizedType = (ParameterizedType) fieldType;
 			final Type[] typeArguments = parameterizedType.getActualTypeArguments();
-			if (ArrayUtil.isEmpty(typeArguments)) {
+			if (AU.isEmpty(typeArguments)) {
 				return null;
 			}
 

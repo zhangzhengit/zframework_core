@@ -12,12 +12,11 @@ import com.vo.anno.ZConditional;
 import com.vo.anno.ZConfiguration;
 import com.vo.anno.ZConfigurationPropertiesRegistry;
 import com.vo.anno.ZValue;
+import com.vo.cache.CU;
 import com.vo.core.Task;
 import com.vo.core.ZContext;
 import com.vo.core.ZLog2;
 import com.vo.core.ZSingleton;
-
-import cn.hutool.core.collection.CollUtil;
 
 /**
  *	扫描 @ZConfiguration 注解，找到里面的 @ZBean方法，来生成一个配置类
@@ -34,7 +33,7 @@ public class ZConfigurationScanner {
 		LOG.info("开始扫描带有@{}注解的类", ZConfiguration.class.getSimpleName());
 
 		final Set<Class<?>> clsSet = ClassMap.scanPackageByAnnotation(ZConfiguration.class, packageName);
-		if (CollUtil.isEmpty(clsSet)) {
+		if (CU.isEmpty(clsSet)) {
 			LOG.info("没有带有@{}注解的类", ZConfiguration.class.getSimpleName());
 			return;
 		}
