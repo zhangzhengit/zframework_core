@@ -14,12 +14,15 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.google.common.collect.Sets;
+import com.vo.anno.ZConfigurationProperties;
 import com.vo.anno.ZValue;
+import com.vo.cache.STU;
 import com.vo.core.Task;
 import com.vo.core.ZSingleton;
 import com.vo.exception.TypeNotSupportedExcpetion;
 import com.vo.exception.ValidatedException;
 import com.vo.scanner.ClassMap;
+import com.vo.scanner.ZConfigurationPropertiesScanner;
 
 /**
  * 验证器
@@ -95,7 +98,11 @@ public class ZValidator {
 			final String pName = field.isAnnotationPresent(ZValue.class)
 					? "[" + field.getAnnotation(ZValue.class).name() + "]"
 							: "";
-			final String format = String.format(message, t + pName, v);
+
+			final String itemName = gItemName(object, field);
+
+			final String format = String.format(message, t + pName, v)
+					+ (STU.isEmpty(itemName) ? "" : ("\r\n\t" + "请配置[" + itemName + "]为大于0的值"));
 
 			throw new ValidatedException(format);
 		}
@@ -160,16 +167,18 @@ public class ZValidator {
 		if ((s.length() < zl.min()) || (s.length() > zl.max())) {
 
 			final String message = zl.message();
-			//			final String message = ZLength.MESSAGE_DEFAULT.equals(zl.message())
-			//					? ZContext.getBean(ZLengthMessageConfigurationProperties.class).getMessage()
-			//					: zl.message();
 
 			final String pName = field.isAnnotationPresent(ZValue.class)
 					? "[" + field.getAnnotation(ZValue.class).name() + "]"
 							: "";
 			final String t = object.getClass().getSimpleName() + "." + field.getName();
+
+			final String itemName = gItemName(object, field);
+
 			final String format = String.format(message, t + pName, String.valueOf(zl.min()), String.valueOf(zl.max()),
-					String.valueOf(s.length()));
+					String.valueOf(s.length()))
+					+ (STU.isEmpty(itemName) ? ""
+							: ("\r\n\t" + "请配置[" + itemName + "]为在[" + zl.min() + "]和[" + zl.max() + "]之间"));
 			throw new ValidatedException(format);
 		}
 
@@ -208,7 +217,11 @@ public class ZValidator {
 				final String pName = field.isAnnotationPresent(ZValue.class)
 						? "[" + field.getAnnotation(ZValue.class).name() + "]"
 								: "";
-				final String format = String.format(message, t + pName, prefix);
+
+				final String itemName = gItemName(object, field);
+
+				final String format = String.format(message, t + pName, prefix)
+						+ (STU.isEmpty(itemName) ? "" : ("\r\n\t" + "请配置[" + itemName + "]为以[" + prefix + "]开始"));
 
 				throw new ValidatedException(format);
 			}
@@ -249,7 +262,11 @@ public class ZValidator {
 				final String pName = field.isAnnotationPresent(ZValue.class)
 						? "[" + field.getAnnotation(ZValue.class).name() + "]"
 								: "";
-				final String format = String.format(message, t + pName, endsWith.suffix());
+
+				final String itemName = gItemName(object, field);
+
+				final String format = String.format(message, t + pName, endsWith.suffix())
+						+ (STU.isEmpty(itemName) ? "" : ("\r\n\t" + "请配置[" + itemName + "]为以[" + endsWith.suffix() + "]结尾"));
 
 				throw new ValidatedException(format);
 			}
@@ -436,7 +453,10 @@ public class ZValidator {
 				? "[" + field.getAnnotation(ZValue.class).name() + "]"
 						: "";
 
-		final String format = String.format(message, t + pName);
+		final String itemName = gItemName(object, field);
+
+		final String format = String.format(message, t + pName)
+				+ (STU.isEmpty(itemName) ? "" : ("\r\n\t" + "请配置[" + itemName + "]为非empty值"));
 		throw new ValidatedException(format);
 	}
 
@@ -584,7 +604,11 @@ public class ZValidator {
 				? "[" + field.getAnnotation(ZValue.class).name() + "]"
 						: "";
 		final String t = object.getClass().getSimpleName() + "." + field.getName();
-		final String format = String.format(message, t + pName, min, minFiledValue);
+
+		final String itemName = gItemName(object, field);
+
+		final String format = String.format(message, t + pName, min, minFiledValue)
+				+ (STU.isEmpty(itemName) ? "" : ("\r\n\t" + "请配置[" + itemName + "]为不小于[" + min + "]"));
 		throw new ValidatedException(format);
 	}
 
@@ -603,8 +627,35 @@ public class ZValidator {
 				? "[" + field.getAnnotation(ZValue.class).name() + "]"
 						: "";
 
-		final String format = String.format(message, t + pName);
+		final String itemName = gItemName(object, field);
+
+		final String format = String.format(message, t + pName)
+				+ (STU.isEmpty(itemName) ? "" : ("\r\n\t" + "请配置[" + itemName + "]"));
 		throw new ValidatedException(format);
+	}
+
+	/**
+	 * 	根据对象和字段生成一个配置项，只有用了 @ZConfigurationProperties 注解的配置类
+	 *  本方法才会放回如[xx.xx]的String，用于提示配置项[xx.xx]如何配置
+	 *
+	 *  否则返回""，因为可能是接口中声明比如 ( @ZRequestBody @ZValidated final PO po)
+	 *  的自定义对象来验证的，只提示值不符合规则就行了
+	 *
+	 * @param object
+	 * @param field
+	 * @return
+	 */
+	private static String gItemName(final Object object, final Field field) {
+		final ZConfigurationProperties zcp = object.getClass().getAnnotation(ZConfigurationProperties.class);
+		if (zcp == null) {
+			return "";
+		}
+
+		final String prefix = zcp.prefix().endsWith(".") ? zcp.prefix() : zcp.prefix() + ".";
+		final ZValue zValue = field.getAnnotation(ZValue.class);
+		final String name = zValue != null ? zValue.name() : ZConfigurationPropertiesScanner.convert(field.getName());
+
+		return prefix + name;
 	}
 
 	private static void throwZMaxMessage(final Object object, final Field field, final Object max,
@@ -613,8 +664,13 @@ public class ZValidator {
 		final String pName = field.isAnnotationPresent(ZValue.class)
 				? "[" + field.getAnnotation(ZValue.class).name() + "]"
 						: "";
+
 		final String t = object.getClass().getSimpleName() + "." + field.getName();
-		final String format = String.format(message, t + pName, max, maxFiledValue);
+
+		final String itemName = gItemName(object, field);
+
+		final String format = String.format(message, t + pName, max, maxFiledValue)
+				+ (STU.isEmpty(itemName) ? "" : ("\r\n\t" + "请配置[" + itemName + "]为不大于[" + max + "]"));
 		throw new ValidatedException(format);
 	}
 

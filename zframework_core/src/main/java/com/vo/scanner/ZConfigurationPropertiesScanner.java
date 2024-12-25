@@ -598,7 +598,7 @@ public class ZConfigurationPropertiesScanner {
 	 * @return
 	 *
 	 */
-	private static String convert(final String fieldName) {
+	public static String convert(final String fieldName) {
 		final StringBuilder builder = new StringBuilder(fieldName);
 		final char[] ca = fieldName.toCharArray();
 		final AtomicInteger replaceCount = new AtomicInteger(0);

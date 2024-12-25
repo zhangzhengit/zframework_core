@@ -23,12 +23,11 @@ import java.lang.annotation.Target;
 public @interface ZLength {
 
 	public static final String MESSAGE_DEFAULT = "[%s]长度必须在[%s]和[%s]之间,当前值[%s]";
-//	public static final String MESSAGE_DEFAULT = "validator.constraints.length.message";
+	//	public static final String MESSAGE_DEFAULT = "validator.constraints.length.message";
 
 	String message() default MESSAGE_DEFAULT;
 
-	int min() default 0;
+	int max();
 
-	int max() default Integer.MAX_VALUE;
-
+	int min();
 }
