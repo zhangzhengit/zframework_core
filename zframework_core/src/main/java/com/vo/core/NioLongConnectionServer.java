@@ -110,8 +110,13 @@ public class NioLongConnectionServer {
 
 
 	public void startNIOServer(final Integer serverPort) {
+		final Thread thread = new Thread(() -> NioLongConnectionServer.this.startNIOServer0(serverPort));
+		thread.setName("nio-Thread");
+		thread.setPriority(Thread.MAX_PRIORITY);
+		thread.start();
+	}
 
-
+	private void startNIOServer0(final Integer serverPort) {
 		this.requestHandler.start();
 		ZContext.addBean(this.requestHandler.getClass(), this.requestHandler);
 
