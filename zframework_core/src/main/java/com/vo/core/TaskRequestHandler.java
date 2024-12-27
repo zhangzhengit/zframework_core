@@ -102,9 +102,8 @@ public final class TaskRequestHandler extends Thread {
 				response.contentType(HeaderEnum.APPLICATION_JSON.getType())
 				.httpStatus(HttpStatus.HTTP_400.getCode())
 				.header(HttpHeaderEnum.CONNECTION.getValue(), "close")
-				.body(J.toJSONString(CR.error(HttpStatus.HTTP_400.getCode(),
-						HttpStatus.HTTP_400.getMessage() + " " +
-								message), Include.NON_NULL));
+				.body(J.toJSONString(CR.error(HttpStatus.HTTP_400.getMessage() + " " +
+						message), Include.NON_NULL));
 				response.write();
 
 				continue;

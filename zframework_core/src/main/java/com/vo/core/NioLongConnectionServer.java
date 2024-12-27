@@ -200,8 +200,7 @@ public class NioLongConnectionServer {
 								.httpStatus(HttpStatus.HTTP_400.getCode())
 								.header(HttpHeaderEnum.CONNECTION.getValue(), "close")
 								.body(J.toJSONString(
-										CR.error(HttpStatus.HTTP_400.getCode(),
-												HttpStatus.HTTP_400.getMessage() + SPACE + message),
+										CR.error(HttpStatus.HTTP_400.getMessage() + SPACE + message),
 										Include.NON_NULL));
 								response.write();
 

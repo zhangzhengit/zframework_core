@@ -202,7 +202,7 @@ public class Task {
 					.header(ZRequest.ALLOW, methodString)
 					.httpStatus(HttpStatus.HTTP_405.getCode())
 					.contentType(HeaderEnum.APPLICATION_JSON.getType())
-					.body(J.toJSONString(CR.error(HttpStatus.HTTP_405.getCode(), "请求Method不支持："
+					.body(J.toJSONString(CR.error("请求Method不支持："
 							+ request.getMethodEnum().getMethod() + ", Method: " + methodString), Include.NON_NULL));
 
 		}
