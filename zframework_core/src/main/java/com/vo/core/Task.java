@@ -86,7 +86,6 @@ public class Task {
 	public static final String VOID = "void";
 	public static final String HTTP_200 = "HTTP/1.1 200";
 	public static final int HTTP_STATUS_500 = 500;
-	public static final int HTTP_STATUS_404 = 404;
 	public static final String INTERNAL_SERVER_ERROR = "Internal Server Error";
 	public static final HeaderEnum DEFAULT_CONTENT_TYPE = HeaderEnum.APPLICATION_JSON;
 	public static final String NEW_LINE = "\r\n";
@@ -233,7 +232,7 @@ public class Task {
 		return	new ZResponse(this.socketChannel)
 				.httpStatus(HttpStatus.HTTP_404.getCode())
 				.contentType(DEFAULT_CONTENT_TYPE.getType())
-				.body(J.toJSONString(CR.error(HTTP_STATUS_404, "请求方法不存在 [" + path+"]"), Include.NON_NULL))	;
+				.body(J.toJSONString(CR.error("请求方法不存在 [" + path+"]"), Include.NON_NULL))	;
 	}
 
 	public static String gExceptionMessage(final Throwable e) {
