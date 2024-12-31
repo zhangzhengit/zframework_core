@@ -5,6 +5,7 @@ import java.util.Map;
 import com.vo.anno.ZConfigurationProperties;
 import com.vo.anno.ZOrder;
 import com.vo.anno.ZValue;
+import com.vo.core.PortChecker;
 import com.vo.core.QPSEnum;
 import com.vo.enums.ZSessionStorageTypeEnum;
 import com.vo.validator.ZClientQPSValidator;
@@ -39,7 +40,8 @@ public class ServerConfigurationProperties {
 	 * 启动的端口号
 	 */
 	@ZNotNull
-	@ZMin(min = 1)
+	@ZMin(min = PortChecker.PORT_MIN)
+	@ZMax(max = PortChecker.PORT_MAX)
 	private Integer port = 80;
 
 	/**
