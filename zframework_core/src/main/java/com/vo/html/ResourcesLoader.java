@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import com.google.common.collect.HashBasedTable;
 import com.vo.cache.STU;
 import com.vo.configuration.ServerConfigurationProperties;
-import com.vo.core.HeaderEnum;
+import com.vo.core.ContentTypeEnum;
 import com.vo.core.Task;
 import com.vo.core.ZContext;
 import com.vo.core.ZRequest;
@@ -97,7 +97,7 @@ public class ResourcesLoader {
 	 * @param outputStream
 	 * @return 返回写入的字节数
 	 */
-	public static long writeResourceToOutputStreamThenClose(final String resourceName, final HeaderEnum cte, final ZResponse response) {
+	public static long writeResourceToOutputStreamThenClose(final String resourceName, final ContentTypeEnum cte, final ZResponse response) {
 
 		final ServerConfigurationProperties serverConfiguration = ZSingleton.getSingletonByClass(ServerConfigurationProperties.class);
 		final String staticPrefix = serverConfiguration.getStaticPrefix();
@@ -115,7 +115,7 @@ public class ResourcesLoader {
 
 	}
 
-	private static long writeSocketChannel(final HeaderEnum cte, final ZResponse response,
+	private static long writeSocketChannel(final ContentTypeEnum cte, final ZResponse response,
 			final BufferedInputStream bufferedInputStream) {
 		final AtomicLong write1 = new AtomicLong(0L);
 		final byte[] ba = new byte[1000 * 10];
@@ -151,7 +151,7 @@ public class ResourcesLoader {
 		return write1.get();
 	}
 
-	private static AtomicLong writeOutputStream(final HeaderEnum cte, final OutputStream outputStream,
+	private static AtomicLong writeOutputStream(final ContentTypeEnum cte, final OutputStream outputStream,
 			final InputStream inputStream, final BufferedInputStream bufferedInputStream) {
 		try {
 			outputStream.write(Task.HTTP_200.getBytes());

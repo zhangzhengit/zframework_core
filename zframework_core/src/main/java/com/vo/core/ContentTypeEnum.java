@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
- * 响应头
+ * Content-Type
  *
  * @author zhangzhen
  * @date 2023年6月24日
@@ -12,7 +12,7 @@ import lombok.Getter;
  */
 @Getter
 @AllArgsConstructor
-public enum HeaderEnum {
+public enum ContentTypeEnum {
 
 
 	TEXT_PLAIN("Content-Type: text/plain;charset=UTF-8", "text/plain"),
@@ -20,7 +20,7 @@ public enum HeaderEnum {
 	MULTIPART_FORM_DATA("Content-Type: multipart/form-data", "multipart/form-data"),
 
 	URLENCODED("Content-Type: application/x-www-form-urlencoded", "application/x-www-form-urlencoded"),
-	
+
 	APPLICATION_OCTET_STREAM("Content-Type: application/octet-stream", "application/octet-stream"),
 
 	APPLICATION_JSON("Content-Type: application/json;charset=UTF-8", "application/json"),
@@ -53,16 +53,16 @@ public enum HeaderEnum {
 
 	;
 
-	public static HeaderEnum gType(final String fileNameSuffix) {
+	public static ContentTypeEnum gType(final String fileNameSuffix) {
 		if (fileNameSuffix.endsWith("js")) {
 			return JS;
 		}
 		if (fileNameSuffix.endsWith("doc") || fileNameSuffix.endsWith("docx")) {
-			return HeaderEnum.WORD;
+			return ContentTypeEnum.WORD;
 		}
 
-		final HeaderEnum[] vs = values();
-		for (final HeaderEnum ee : vs) {
+		final ContentTypeEnum[] vs = values();
+		for (final ContentTypeEnum ee : vs) {
 			if (ee.getType().endsWith(fileNameSuffix)) {
 				return ee;
 			}

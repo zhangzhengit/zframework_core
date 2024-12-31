@@ -87,7 +87,7 @@ public class Task {
 	public static final String HTTP_200 = "HTTP/1.1 200";
 	public static final int HTTP_STATUS_500 = 500;
 	public static final String INTERNAL_SERVER_ERROR = "Internal Server Error";
-	public static final HeaderEnum DEFAULT_CONTENT_TYPE = HeaderEnum.APPLICATION_JSON;
+	public static final ContentTypeEnum DEFAULT_CONTENT_TYPE = ContentTypeEnum.APPLICATION_JSON;
 	public static final String NEW_LINE = "\r\n";
 	private static final Map<Object, Object> CACHE_MAP = new WeakHashMap<>(1024, 1F);
 
@@ -201,7 +201,7 @@ public class Task {
 			return new ZResponse(this.socketChannel)
 					.header(ZRequest.ALLOW, methodString)
 					.httpStatus(HttpStatus.HTTP_405.getCode())
-					.contentType(HeaderEnum.APPLICATION_JSON.getType())
+					.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 					.body(J.toJSONString(CR.error("请求Method不支持："
 							+ request.getMethodEnum().getMethod() + ", Method: " + methodString), Include.NON_NULL));
 
@@ -286,7 +286,7 @@ public class Task {
 					AccessDeniedCodeEnum.CLIENT.getMessageToClient());
 
 			final ZResponse response = new ZResponse(this.socketChannel);
-			response.contentType(HeaderEnum.APPLICATION_JSON.getType())
+			response.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 			.httpStatus(HttpStatus.HTTP_429.getCode())
 			.body(J.toJSONString(error, Include.NON_NULL));
 
@@ -309,7 +309,7 @@ public class Task {
 
 					final CR<Object> error = CR.error(AccessDeniedCodeEnum.ZSESSIONID.getCode(), AccessDeniedCodeEnum.ZSESSIONID.getMessageToClient());
 					final ZResponse response = new ZResponse(this.socketChannel);
-					response.contentType(HeaderEnum.APPLICATION_JSON.getType())
+					response.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 					.httpStatus(HttpStatus.HTTP_429.getCode())
 					.body(J.toJSONString(error, Include.NON_NULL));
 					return response;
@@ -490,16 +490,16 @@ public class Task {
 			ZModel.clear();
 
 			if (serverConfiguration.getGzipEnable()
-					&& serverConfiguration.gzipContains(HeaderEnum.TEXT_HTML.getType())
+					&& serverConfiguration.gzipContains(ContentTypeEnum.TEXT_HTML.getType())
 					&& request.isSupportGZIP()) {
 				final byte[] compress = ZGzip.compress(html);
 
-				return new ZResponse(this.socketChannel).contentType(HeaderEnum.TEXT_HTML.getType())
+				return new ZResponse(this.socketChannel).contentType(ContentTypeEnum.TEXT_HTML.getType())
 						.header(StaticController.CONTENT_ENCODING, ZRequest.GZIP).body(compress);
 			}
 
 			return new ZResponse(this.socketChannel)
-					.contentType(HeaderEnum.TEXT_HTML.getType()).body(html);
+					.contentType(ContentTypeEnum.TEXT_HTML.getType()).body(html);
 
 		} catch (final Exception e) {
 			e.printStackTrace();

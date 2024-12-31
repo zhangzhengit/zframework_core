@@ -27,7 +27,7 @@ import lombok.Getter;
  * 	new ZResponse(socketChannel)
 		.header(ZRequest.ALLOW, "GET")
 		.httpStatus(HttpStatus.HTTP_405.getCode())
-		.contentType(HeaderEnum.JSON.getType())
+		.contentType(ContentTypeEnum.JSON.getType())
 		.body(JSON.toJSONString(CR.error(HttpStatus.HTTP_405.getCode(), HttpStatus.HTTP_405.getMessage())))
 		.write();
 ---------------------------------------------------------

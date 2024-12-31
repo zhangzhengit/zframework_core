@@ -99,7 +99,7 @@ public final class TaskRequestHandler extends Thread {
 				System.out.println("QRUn_E = " + message);
 
 				final ZResponse response = new ZResponse(taskRequest.getSocketChannel());
-				response.contentType(HeaderEnum.APPLICATION_JSON.getType())
+				response.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 				.httpStatus(HttpStatus.HTTP_400.getCode())
 				.header(HttpHeaderEnum.CONNECTION.getValue(), "close")
 				.body(J.toJSONString(CR.error(HttpStatus.HTTP_400.getMessage() + " " +

@@ -1,8 +1,10 @@
 package com.vo.api;
 
+import java.time.LocalDateTime;
+
 import com.vo.anno.ZController;
 import com.vo.configuration.ServerConfigurationProperties;
-import com.vo.core.HeaderEnum;
+import com.vo.core.ContentTypeEnum;
 import com.vo.core.ZGzip;
 import com.vo.core.ZMappingRegex;
 import com.vo.core.ZRequest;
@@ -35,23 +37,32 @@ public class StaticController {
 	isRegex = { true, true, true, true, true, true, true, true, true }, qps = 10000)
 
 	public void staticResources(final ZResponse response,final ZRequest request) {
+		System.out.println(Thread.currentThread().getName() + "\t" + LocalDateTime.now() + "\t"
+				+ "StaticController.staticResources()");
+
+		final String requestURI = request.getRequestURI();
+		System.out.println("requestURI = " + requestURI);
+
 
 		final String resourceName = String.valueOf(ZMappingRegex.getAndRemove());
 
 		final int i = resourceName.indexOf(".");
 		if (i <= -1) {
-			response.httpStatus(HttpStatus.HTTP_500.getCode()).body(CR.error("不支持无后缀的文件"));
+			response.httpStatus(HttpStatus.HTTP_500.getCode())
+			.body(CR.error("不支持无后缀的文件"));
 			return;
 		}
 
-		final HeaderEnum cte = HeaderEnum.gType(resourceName.substring(i + 1));
+		final ContentTypeEnum cte = ContentTypeEnum.gType(resourceName.substring(i + 1));
 		if (cte == null) {
-			response.httpStatus(HttpStatus.HTTP_500.getCode()).body(CR.error(HttpStatus.HTTP_500.getMessage()));
+			response.httpStatus(HttpStatus.HTTP_500.getCode())
+			.body(CR.error("不支持的文件类型"));
 			return;
 		}
 
 		final byte[] loadByteArray = ResourcesLoader.loadStaticResourceByteArray(resourceName);
 		// FIXME 2023年7月19日 下午8:20:39 zhanghen: TODO 改为和Socket 一样，一边读取一边写入到OutStream
+
 		response.contentType(cte.getType()).body(loadByteArray);
 
 		//		ResourcesLoader.writeResourceToOutputStreamThenClose(resourceName, cte, response);
@@ -74,7 +85,7 @@ public class StaticController {
 			return;
 		}
 
-		final HeaderEnum cte = HeaderEnum.gType(resourceName.substring(i + 1));
+		final ContentTypeEnum cte = ContentTypeEnum.gType(resourceName.substring(i + 1));
 		if (cte == null) {
 			response.httpStatus(HttpStatus.HTTP_500.getCode()).body(CR.error(HttpStatus.HTTP_500.getMessage()));
 			return;
@@ -83,7 +94,7 @@ public class StaticController {
 		final ServerConfigurationProperties serverConfiguration = ZSingleton.getSingletonByClass(ServerConfigurationProperties.class);
 
 		final Boolean gzipEnable = serverConfiguration.getGzipEnable();
-		final boolean gzipContains = serverConfiguration.gzipContains(HeaderEnum.TEXT_CSS.getType());
+		final boolean gzipContains = serverConfiguration.gzipContains(ContentTypeEnum.TEXT_CSS.getType());
 		if (gzipEnable && gzipContains && request.isSupportGZIP()) {
 
 			final String string = ResourcesLoader.loadStaticResourceString(resourceName);
@@ -117,7 +128,7 @@ public class StaticController {
 			return;
 		}
 
-		final HeaderEnum cte = HeaderEnum.gType(resourceName.substring(i + 1));
+		final ContentTypeEnum cte = ContentTypeEnum.gType(resourceName.substring(i + 1));
 		if (cte == null) {
 			response.httpStatus(HttpStatus.HTTP_500.getCode()).body(CR.error(HttpStatus.HTTP_500.getMessage()));
 			return;
@@ -125,7 +136,7 @@ public class StaticController {
 
 		final ServerConfigurationProperties serverConfiguration = ZSingleton.getSingletonByClass(ServerConfigurationProperties.class);
 		final Boolean gzipEnable = serverConfiguration.getGzipEnable();
-		final boolean gzipContains = serverConfiguration.gzipContains(HeaderEnum.TEXT_HTML.getType());
+		final boolean gzipContains = serverConfiguration.gzipContains(ContentTypeEnum.TEXT_HTML.getType());
 		final String html = ResourcesLoader.loadStaticResourceString(resourceName);
 
 		if (gzipEnable && gzipContains && request.isSupportGZIP()) {
