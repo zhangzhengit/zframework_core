@@ -47,15 +47,13 @@ public class StaticController {
 
 		final int i = resourceName.indexOf(".");
 		if (i <= -1) {
-			response.httpStatus(HttpStatus.HTTP_500.getCode())
-			.body(CR.error("不支持无后缀的文件"));
+			response.httpStatus(HttpStatus.HTTP_500.getCode()).body(CR.error("不支持无后缀的文件"));
 			return;
 		}
 
 		final ContentTypeEnum cte = ContentTypeEnum.gType(resourceName.substring(i + 1));
 		if (cte == null) {
-			response.httpStatus(HttpStatus.HTTP_500.getCode())
-			.body(CR.error("不支持的文件类型"));
+			response.httpStatus(HttpStatus.HTTP_500.getCode()).body(CR.error("不支持的文件类型"));
 			return;
 		}
 
@@ -74,13 +72,7 @@ public class StaticController {
 
 		final int i = resourceName.indexOf(".");
 		if (i <= -1) {
-
-			response
-			.httpStatus(HttpStatus.HTTP_500.getCode())
-			.body(CR.error("不支持无后缀的文件"))
-			//				.write()
-			;
-
+			response.httpStatus(HttpStatus.HTTP_500.getCode()).body(CR.error("不支持无后缀的文件"));
 			return;
 		}
 
