@@ -43,17 +43,6 @@ public class ZRequest {
 	public static final String HTTP_11 = "HTTP/1.1";
 	public static final String BOUNDARY = "boundary=";
 	public static final String MULTIPART_FORM_DATA = "multipart/form-data";
-	public static final String Z_SESSION_ID = "ZSESSIONID";
-	public static final String GZIP = "gzip";
-	public static final String ACCEPT_ENCODING = "Accept-Encoding";
-	public static final String COOKIE = "Cookie";
-	public static final String ALLOW = "Allow";
-	public static final String CONTENT_LENGTH = "Content-Length";
-	public static final String CONTENT_DISPOSITION = "Content-Disposition";
-	public static final String CONTENT_TYPE = "Content-Type";
-
-	// FIXME 2024年12月19日 下午1:23:50 zhangzhen : 记得处理为header不区分大小写，现在就按常量中这种形式判断
-	public static final String HOST = "Host";
 	private static final AtomicLong GZSESSIONID = new AtomicLong(1L);
 
 	// -------------------------------------------------------------------------------------------------
@@ -114,14 +103,14 @@ public class ZRequest {
 	private String clientIp;
 
 	public boolean isSupportGZIP() {
-		final String a = this.getHeader(ZRequest.ACCEPT_ENCODING);
+		final String a = this.getHeader(HeaderEnum.ACCEPT_ENCODING.getName());
 		if (STU.isEmpty(a)) {
 			return false;
 		}
 
 		final String[] array = a.split(",");
 		for (final String a2 : array) {
-			if (ZRequest.GZIP.equalsIgnoreCase(a2)) {
+			if (HeaderEnum.GZIP.getName().equalsIgnoreCase(a2)) {
 				return true;
 			}
 		}
@@ -130,7 +119,7 @@ public class ZRequest {
 	}
 
 	public String getHost() {
-		return this.getHeader(HOST);
+		return this.getHeader(HeaderEnum.HOST.getName());
 	}
 
 	public String getMethod() {
@@ -142,7 +131,7 @@ public class ZRequest {
 	}
 
 	public String getServerName() {
-		final String host = this.getHeaderMap().get(ZRequest.HOST);
+		final String host = this.getHeaderMap().get(HeaderEnum.HOST.getName());
 
 		final int i = host.indexOf(":");
 		if (i > -1) {
@@ -154,7 +143,7 @@ public class ZRequest {
 
 	public int getServerPort() {
 
-		final String host = this.getHeaderMap().get(ZRequest.HOST);
+		final String host = this.getHeaderMap().get(HeaderEnum.HOST.getName());
 
 		final int i = host.indexOf(":");
 		if (i > -1) {
@@ -180,7 +169,7 @@ public class ZRequest {
 	 * @return
 	 */
 	public String getContentType() {
-		return this.getHeader(ZRequest.CONTENT_TYPE);
+		return this.getHeader(HeaderEnum.CONTENT_TYPE.getName());
 	}
 
 	/**
@@ -196,7 +185,7 @@ public class ZRequest {
 		if (!this.isContentTypeFormData()) {
 			return null;
 		}
-		final String ct = this.getHeaderMap().get(ZRequest.CONTENT_TYPE);
+		final String ct = this.getHeaderMap().get(HeaderEnum.CONTENT_TYPE.getName());
 		final String[] a = ct.split(BOUNDARY);
 		return a[1].trim();
 	}
@@ -214,7 +203,7 @@ public class ZRequest {
 	private static String gSessionID() {
 		final Hasher putString = Hashing.sha256()
 				.newHasher()
-				.putString(ZRequest.Z_SESSION_ID + System.currentTimeMillis() + ZRequest.GZSESSIONID.getAndDecrement(),
+				.putString(HeaderEnum.Z_SESSION_ID.getName() + System.currentTimeMillis() + ZRequest.GZSESSIONID.getAndDecrement(),
 						Charset.defaultCharset());
 
 		final HashCode hash = putString.hash();
@@ -247,7 +236,7 @@ public class ZRequest {
 
 		if (AU.isNotEmpty(cs)) {
 			for (final ZCookie zc : cs) {
-				if (ZRequest.Z_SESSION_ID.equals(zc.getName())) {
+				if (HeaderEnum.Z_SESSION_ID.getName().equals(zc.getName())) {
 					final ZSession session = ZSessionMap.get(zc.getValue());
 
 					if (session != null) {
@@ -286,13 +275,13 @@ public class ZRequest {
 	}
 
 	public int getContentLength() {
-		final String s = this.getHeader(ZRequest.CONTENT_LENGTH);
+		final String s = this.getHeader(HeaderEnum.CONTENT_LENGTH.getName());
 		return s == null ? -1 : Integer.parseInt(s);
 	}
 
 	public ZCookie[] getCookies() {
 
-		final String cookisString = this.getHeaderMap().get(ZRequest.COOKIE);
+		final String cookisString = this.getHeaderMap().get(HeaderEnum.COOKIE.getName());
 		if (STU.isEmpty(cookisString)) {
 			return null;
 		}
@@ -318,7 +307,7 @@ public class ZRequest {
 		}
 
 		for (final ZCookie zCookie : cookies) {
-			if(ZRequest.Z_SESSION_ID.equals(zCookie.getName())) {
+			if(HeaderEnum.Z_SESSION_ID.getName().equals(zCookie.getName())) {
 				return zCookie;
 			}
 		}
@@ -427,7 +416,7 @@ public class ZRequest {
 		// HTTP1.1必须有 HOST 头
 		final String header = request.getHost();
 		if (STU.isNullOrEmptyOrBlank(header)) {
-			throw new IllegalArgumentException("缺少 " + HOST + " 头");
+			throw new IllegalArgumentException("缺少 " + HeaderEnum.HOST.getName() + " 头");
 		}
 
 		// parseBody

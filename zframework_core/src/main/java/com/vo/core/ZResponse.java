@@ -25,7 +25,7 @@ import lombok.Getter;
  * 典型使用如下，
  *
  * 	new ZResponse(socketChannel)
-		.header(ZRequest.ALLOW, "GET")
+		.header("Allow", "GET")
 		.httpStatus(HttpStatus.HTTP_405.getCode())
 		.contentType(ContentTypeEnum.JSON.getType())
 		.body(JSON.toJSONString(CR.error(HttpStatus.HTTP_405.getCode(), HttpStatus.HTTP_405.getMessage())))
@@ -78,7 +78,7 @@ public class ZResponse {
 
 	public static final String HTTP_1_1 = "HTTP/1.1 ";
 
-	public static final String SET_COOKIE = "Set-Cookie";
+	public static final String SET_COOKIE = HeaderEnum.SET_COOKIE.getName();
 
 	/**
 	 * write 方法是否执行过
@@ -98,10 +98,10 @@ public class ZResponse {
 	public synchronized ZResponse contentType(final String contentType) {
 		if (!this.setContentType.get() && (contentType != null)) {
 			if (!contentType.toLowerCase().contains(CHARSET.toLowerCase())) {
-				this.contentTypeAR.set(ZRequest.CONTENT_TYPE + ":" + contentType + ";" + CHARSET.toLowerCase() + "="
+				this.contentTypeAR.set(HeaderEnum.CONTENT_TYPE.getName() + ":" + contentType + ";" + CHARSET.toLowerCase() + "="
 						+ Charset.defaultCharset().displayName());
 			} else {
-				this.contentTypeAR.set(ZRequest.CONTENT_TYPE + ":" + contentType);
+				this.contentTypeAR.set(HeaderEnum.CONTENT_TYPE.getName() + ":" + contentType);
 			}
 		}
 		this.setContentType.set(true);
@@ -132,8 +132,8 @@ public class ZResponse {
 	}
 
 	public ZResponse header(final String name,final String value) {
-		if (ZRequest.CONTENT_TYPE.equals(name)) {
-			throw new IllegalArgumentException(ZRequest.CONTENT_TYPE + " 使用 setContentType 方法来设置");
+		if (HeaderEnum.CONTENT_TYPE.getName().equals(name)) {
+			throw new IllegalArgumentException(HeaderEnum.CONTENT_TYPE.getName() + " 使用 setContentType 方法来设置");
 		}
 		this.header(new ZHeader(name, value));
 
@@ -207,7 +207,7 @@ public class ZResponse {
 	private ByteBuffer fillByteBuffer()  {
 
 		if (STU.isEmpty(this.contentTypeAR.get())) {
-			throw new IllegalArgumentException(ZRequest.CONTENT_TYPE + "未设置");
+			throw new IllegalArgumentException(HeaderEnum.CONTENT_TYPE.getName() + "未设置");
 		}
 
 
@@ -220,9 +220,9 @@ public class ZResponse {
 
 		// header-Content-Length
 		if (CU.isNotEmpty(this.bodyList)) {
-			array.add((ZRequest.CONTENT_LENGTH + ":" + contentLenght).getBytes());
+			array.add((HeaderEnum.CONTENT_LENGTH.getName() + ":" + contentLenght).getBytes());
 		} else {
-			array.add((ZRequest.CONTENT_LENGTH + ":" + 0).getBytes());
+			array.add((HeaderEnum.CONTENT_LENGTH.getName() + ":" + 0).getBytes());
 		}
 		array.add(NEW_LINE_BYTES);
 

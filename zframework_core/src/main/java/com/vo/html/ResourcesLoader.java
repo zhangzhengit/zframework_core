@@ -18,9 +18,9 @@ import com.google.common.collect.HashBasedTable;
 import com.vo.cache.STU;
 import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.core.ContentTypeEnum;
+import com.vo.core.HeaderEnum;
 import com.vo.core.Task;
 import com.vo.core.ZContext;
-import com.vo.core.ZRequest;
 import com.vo.core.ZResponse;
 import com.vo.core.ZSingleton;
 import com.vo.exception.ResourceNotExistException;
@@ -142,9 +142,8 @@ public class ResourcesLoader {
 		}
 
 		response.contentType(cte.getType())
-		.header(ZRequest.CONTENT_LENGTH,String.valueOf(baR.length))
-		.body(baR)
-		.write();
+		.header(HeaderEnum.CONTENT_LENGTH.getName(), String.valueOf(baR.length))
+		.body(baR).write();
 
 		write1.set(baR.length);
 

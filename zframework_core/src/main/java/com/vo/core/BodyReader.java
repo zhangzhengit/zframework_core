@@ -170,21 +170,21 @@ public class BodyReader {
 		final byte[] ba = oneBA;
 		final List<Byte> bl = new ArrayList<>();
 		// FIXME 2024年12月17日 下午4:05:16 zhangzhen : 这个方法要改进，不要for循环了，直接search CD CT RNRN等等
-		final int ctIndex = search(oneBA, ZRequest.CONTENT_TYPE, 1, 0);
+		final int ctIndex = search(oneBA, HeaderEnum.CONTENT_TYPE.getName(), 1, 0);
 		for (int i = 0; i < ba.length; i++) {
 			if (ba[i] == '\r') {
 				if ((i < (ba.length - 1)) && (ba[i + 1] == '\n')) {
 					final byte[] lineBA = listToArray(bl);
 					final String line = new String(lineBA);
 
-					if (line.startsWith(ZRequest.CONTENT_DISPOSITION)) {
+					if (line.startsWith(HeaderEnum.CONTENT_DISPOSITION.getName())) {
 						fd2.setContentDisposition(line);
 						final Map<String, String> vMap = handleBodyContentDisposition(line);
 						fd2.setName(vMap.get(NAME));
 						fd2.setFileName(vMap.get(FILENAME));
 					}
 					if (ctIndex > -1) {
-						if (line.startsWith(ZRequest.CONTENT_TYPE)) {
+						if (line.startsWith(HeaderEnum.CONTENT_TYPE.getName())) {
 							final String[] ctA = line.split(":");
 							final String ct = ctA[1].trim();
 							fd2.setContentType(ct);

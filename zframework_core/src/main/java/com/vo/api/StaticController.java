@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import com.vo.anno.ZController;
 import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.core.ContentTypeEnum;
+import com.vo.core.HeaderEnum;
 import com.vo.core.ZGzip;
 import com.vo.core.ZMappingRegex;
 import com.vo.core.ZRequest;
@@ -26,8 +27,6 @@ import com.votool.common.CR;
  */
 @ZController
 public class StaticController {
-
-	public static final String CONTENT_ENCODING = "Content-Encoding";
 
 	@ZETag
 	@ZRequestMapping(mapping = { "/favicon\\.ico",
@@ -100,7 +99,7 @@ public class StaticController {
 			final String string = ResourcesLoader.loadStaticResourceString(resourceName);
 			final byte[] ba = ZGzip.compress(string);
 
-			response.contentType(cte.getType()).header(StaticController.CONTENT_ENCODING, ZRequest.GZIP).body(ba);
+			response.contentType(cte.getType()).header(HeaderEnum.CONTENT_ENCODING.getName(), HeaderEnum.GZIP.getName()).body(ba);
 
 		} else {
 			final byte[] ba = ResourcesLoader.loadStaticResourceByteArray(resourceName);
@@ -141,7 +140,7 @@ public class StaticController {
 
 		if (gzipEnable && gzipContains && request.isSupportGZIP()) {
 			final byte[] ba = ZGzip.compress(html);
-			response.contentType(cte.getType()).header(StaticController.CONTENT_ENCODING, ZRequest.GZIP).body(ba);
+			response.contentType(cte.getType()).header(HeaderEnum.CONTENT_ENCODING.getName(), HeaderEnum.GZIP.getName()).body(ba);
 		} else {
 			response.contentType(cte.getType()).body(html);
 		}

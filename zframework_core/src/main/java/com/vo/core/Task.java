@@ -38,7 +38,6 @@ import com.vo.anno.ZCookieValue;
 import com.vo.anno.ZRequestBody;
 import com.vo.anno.ZRequestHeader;
 import com.vo.aop.InterceptorParameter;
-import com.vo.api.StaticController;
 import com.vo.cache.AU;
 import com.vo.cache.CU;
 import com.vo.cache.J;
@@ -199,7 +198,7 @@ public class Task {
 		if (CU.isNotEmpty(methodMap)) {
 			final String methodString = methodMap.keySet().stream().map(MethodEnum::getMethod).collect(Collectors.joining(","));
 			return new ZResponse(this.socketChannel)
-					.header(ZRequest.ALLOW, methodString)
+					.header(HeaderEnum.ALLOW.getName(), methodString)
 					.httpStatus(HttpStatus.HTTP_405.getCode())
 					.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 					.body(J.toJSONString(CR.error("请求Method不支持："
@@ -276,7 +275,7 @@ public class Task {
 		final String controllerName = zController.getClass().getName();
 		final Integer qps = ZControllerMap.getQPSByControllerNameAndMethodName(controllerName, method.getName());
 
-		final String userAgent = request.getHeader(TaskRequestHandler.USER_AGENT);
+		final String userAgent = request.getHeader(HeaderEnum.USER_AGENT.getName());
 		final QPSHandlingEnum handlingEnum = ZContext
 				.getBean(RequestValidatorConfigurationProperties.class).getHandlingEnum(userAgent);
 		final boolean allow = QC.allow("API-" + controllerName + "@" + method.getName(), qps, handlingEnum);
@@ -472,7 +471,7 @@ public class Task {
 			final byte[] compress = ZGzip.compress(json);
 
 			return new ZResponse(this.socketChannel)
-					.header(StaticController.CONTENT_ENCODING, ZRequest.GZIP)
+					.header(HeaderEnum.CONTENT_ENCODING.getName(), HeaderEnum.GZIP.getName())
 					.contentType(DEFAULT_CONTENT_TYPE.getType()).body(compress);
 
 		}
@@ -495,7 +494,7 @@ public class Task {
 				final byte[] compress = ZGzip.compress(html);
 
 				return new ZResponse(this.socketChannel).contentType(ContentTypeEnum.TEXT_HTML.getType())
-						.header(StaticController.CONTENT_ENCODING, ZRequest.GZIP).body(compress);
+						.header(HeaderEnum.CONTENT_ENCODING.getName(), HeaderEnum.GZIP.getName()).body(compress);
 			}
 
 			return new ZResponse(this.socketChannel)

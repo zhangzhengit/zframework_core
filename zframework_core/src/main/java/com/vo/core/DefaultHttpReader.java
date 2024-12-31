@@ -86,7 +86,7 @@ public class DefaultHttpReader {
 	public ZArray readBody(final SocketChannel socketChannel, final AR ar) {
 		final ZArray array = ar.getArray();
 
-		final int cLIndex = BodyReader.search(array.get(), ZRequest.CONTENT_LENGTH, 1, 0);
+		final int cLIndex = BodyReader.search(array.get(), HeaderEnum.CONTENT_LENGTH.getName(), 1, 0);
 		if (cLIndex <= -1) {
 			return array;
 		}
@@ -334,13 +334,13 @@ public class DefaultHttpReader {
 					bbBody.get(temp);
 
 					if (cdIndex <= -1) {
-						cdIndex = BodyReader.search(temp, ZRequest.CONTENT_DISPOSITION, 1, 0);
+						cdIndex = BodyReader.search(temp, HeaderEnum.CONTENT_DISPOSITION.getName(), 1, 0);
 						if (cdIndex > -1) {
 							final int cdNameIndex = BodyReader.search(temp, "filename", 1,
-									cdIndex + ZRequest.CONTENT_DISPOSITION.getBytes().length);
+									cdIndex + HeaderEnum.CONTENT_DISPOSITION.getName().getBytes().length);
 							if (cdNameIndex > cdIndex) {
 								final int cdRNIndex = BodyReader.search(temp, BodyReader.RN, 1,
-										cdIndex + ZRequest.CONTENT_DISPOSITION.getBytes().length);
+										cdIndex + HeaderEnum.CONTENT_DISPOSITION.getName().getBytes().length);
 								if (cdRNIndex > cdIndex) {
 									final byte[] cdBa = Arrays.copyOfRange(temp, cdIndex, cdRNIndex);
 									final String cdLine = new String(cdBa);
@@ -354,11 +354,11 @@ public class DefaultHttpReader {
 					}
 
 					if (!findCT) {
-						ctIndex = BodyReader.search(temp, ZRequest.CONTENT_TYPE, 1, 0);
+						ctIndex = BodyReader.search(temp, HeaderEnum.CONTENT_TYPE.getName(), 1, 0);
 						if (ctIndex > -1) {
 							findCT = true;
 							final int search = BodyReader.search(temp, BodyReader.RN, 1,
-									ctIndex + ZRequest.CONTENT_TYPE.getBytes().length);
+									ctIndex + HeaderEnum.CONTENT_TYPE.getName().getBytes().length);
 							if (search > ctIndex) {
 								final byte[] ctBA = Arrays.copyOfRange(temp, ctIndex, search);
 								ctLine = new String(ctBA);
@@ -394,19 +394,19 @@ public class DefaultHttpReader {
 							if (findBiStartReadCount == findBodyStartReadCount) {
 								baContent = Arrays.copyOfRange(temp, bodyStartIndex, biIndex);
 								final byte[] fdBA1 = Arrays.copyOfRange(temp, 0, bodyStartIndex);
-								final int ctIndexX = BodyReader.search(fdBA1, ZRequest.CONTENT_TYPE, 1, 0);
+								final int ctIndexX = BodyReader.search(fdBA1, HeaderEnum.CONTENT_TYPE.getName(), 1, 0);
 								if(ctIndexX <= -1) {
 									array.add(fdBA1);
 								}
 								final byte[] fdBA2 = Arrays.copyOfRange(temp, biIndex, read);
-								final int ctIndexX2 = BodyReader.search(fdBA2, ZRequest.CONTENT_TYPE, 1, 0);
+								final int ctIndexX2 = BodyReader.search(fdBA2, HeaderEnum.CONTENT_TYPE.getName(), 1, 0);
 								if(ctIndexX2 <= -1) {
 									array.add(fdBA2);
 								}
 							} else {
 								baContent = Arrays.copyOfRange(temp, 0, biIndex);
 								final byte[] fdBA2 = Arrays.copyOfRange(temp, biIndex, read);
-								final int ctIndexX2 = BodyReader.search(fdBA2, ZRequest.CONTENT_TYPE, 1, 0);
+								final int ctIndexX2 = BodyReader.search(fdBA2, HeaderEnum.CONTENT_TYPE.getName(), 1, 0);
 								if (ctIndexX2 <= -1) {
 									array.add(fdBA2);
 								}
@@ -417,7 +417,7 @@ public class DefaultHttpReader {
 							if (!writeB1) {
 								copyOfRange = Arrays.copyOfRange(temp, bodyStartIndex, read);
 								final byte[] fdBA1 = Arrays.copyOfRange(temp, 0, bodyStartIndex);
-								final int ctIndexX = BodyReader.search(fdBA1, ZRequest.CONTENT_TYPE, 1, 0);
+								final int ctIndexX = BodyReader.search(fdBA1, HeaderEnum.CONTENT_TYPE.getName(), 1, 0);
 								if(ctIndexX <= -1) {
 									array.add(fdBA1);
 								}

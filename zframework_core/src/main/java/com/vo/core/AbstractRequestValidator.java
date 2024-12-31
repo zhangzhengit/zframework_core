@@ -1,5 +1,7 @@
 package com.vo.core;
 
+import org.springframework.cache.config.CacheNamespaceHandler;
+
 import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.configuration.TaskResponsiveModeEnum;
 
@@ -104,14 +106,14 @@ abstract class AbstractRequestValidator {
 			return new RequestVerificationResult(true, "");
 		}
 
-		final String userAgent = request.getHeader(TaskRequestHandler.USER_AGENT);
+		final String userAgent = request.getHeader(HeaderEnum.USER_AGENT.getName());
 
 		// 启用了响应
 		// ZSESSIONID，则认为ZSESSIONID相同就是同一个客户端(前提是服务器中存在对应的session，因为session可能是伪造的等，服务器重启就重启就认为是无效session)
 		if (this.responseZSessionId()) {
 			final ZSession session = request.getSession(false);
 			if (session != null) {
-				final String smoothUserAgentKeyword = ZRequest.Z_SESSION_ID + "@" + session.getId();
+				final String smoothUserAgentKeyword = HeaderEnum.Z_SESSION_ID.getName() + "@" + session.getId();
 				final QPSHandlingEnum handlingEnum = this.requestValidatorConfigurationProperties
 						.getHandlingEnum(userAgent);
 				final boolean allow = QC.allow(smoothUserAgentKeyword, this.getSessionIdQps(), handlingEnum);

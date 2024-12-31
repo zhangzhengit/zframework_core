@@ -101,7 +101,7 @@ public final class TaskRequestHandler extends Thread {
 				final ZResponse response = new ZResponse(taskRequest.getSocketChannel());
 				response.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 				.httpStatus(HttpStatus.HTTP_400.getCode())
-				.header(HttpHeaderEnum.CONNECTION.getValue(), "close")
+				.header(HeaderEnum.CONNECTION.getName(), "close")
 				.body(J.toJSONString(CR.error(HttpStatus.HTTP_400.getMessage() + " " +
 						message), Include.NON_NULL));
 				response.write();

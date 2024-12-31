@@ -55,18 +55,10 @@ public class NioLongConnectionServer {
 
 	public static final String SPACE = " ";
 
-	private static final String CACHE_CONTROL = "Cache-Control";
-
 	public static final int DEFAULT_HTTP_PORT = 80;
-
-
 
 	public static final String Z_SERVER_QPS = "ZServer_QPS";
 
-	public static final String E_TAG = "ETag";
-	public static final String IF_NONE_MATCH = "If-None-Match";
-	public static final String DATE = "Date";
-	public static final String SERVER = HttpHeaderEnum.SERVER.getValue();
 
 	private static final ServerConfigurationProperties SERVER_CONFIGURATIONPROPERTIES= ZContext.getBean(ServerConfigurationProperties.class);
 
@@ -86,8 +78,6 @@ public class NioLongConnectionServer {
 	//			"nio-read-Group", "nio-read-Thread-", ThreadModeEnum.LAZY);
 
 	public static final String SERVER_VALUE = ZContext.getBean(ServerConfigurationProperties.class).getName();
-	public static final String CONNECTION = HttpHeaderEnum.CONNECTION.getValue();
-
 	/**
 	 * 执行长连接超时任务的线程池
 	 */
@@ -198,7 +188,7 @@ public class NioLongConnectionServer {
 								final ZResponse response = new ZResponse((SocketChannel) selectionKey.channel());
 								response.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 								.httpStatus(HttpStatus.HTTP_400.getCode())
-								.header(HttpHeaderEnum.CONNECTION.getValue(), "close")
+								.header(HeaderEnum.CONNECTION.getName(), "close")
 								.body(J.toJSONString(
 										CR.error(HttpStatus.HTTP_400.getMessage() + SPACE + message),
 										Include.NON_NULL));
@@ -392,7 +382,7 @@ public class NioLongConnectionServer {
 	}
 
 	private static boolean isConnectionKeepAlive(final ZRequest request) {
-		final String connection = request.getHeader(HttpHeaderEnum.CONNECTION.getValue());
+		final String connection = request.getHeader(HeaderEnum.CONNECTION.getName());
 		final boolean keepAlive = STU.isNotEmpty(connection)
 				&& (connection.equalsIgnoreCase(ConnectionEnum.KEEP_ALIVE.getValue())
 						|| connection.toLowerCase().contains(ConnectionEnum.KEEP_ALIVE.getValue().toLowerCase()));
@@ -402,7 +392,7 @@ public class NioLongConnectionServer {
 	private static void setConnection(final SelectionKey key, final SocketChannel socketChannel,
 			final boolean keepAlive, final ZResponse response) {
 		if (keepAlive) {
-			response.header(CONNECTION, ConnectionEnum.KEEP_ALIVE.getValue());
+			response.header(HeaderEnum.CONNECTION.getName(), ConnectionEnum.KEEP_ALIVE.getValue());
 			SOCKET_CHANNEL_MAP.put((System.currentTimeMillis() / 1000) * 1000, new SS(socketChannel, key));
 		}
 	}
@@ -420,7 +410,7 @@ public class NioLongConnectionServer {
 
 		final ZSession sessionTRUE = request.getSession(true);
 		sessionTRUE.setLastAccessedTime(new Date());
-		final ZCookie cookie = new ZCookie(ZRequest.Z_SESSION_ID, sessionTRUE.getId()).path("/").httpOnly(true);
+		final ZCookie cookie = new ZCookie(HeaderEnum.Z_SESSION_ID.getName(), sessionTRUE.getId()).path("/").httpOnly(true);
 		response.cookie(cookie);
 	}
 
@@ -439,7 +429,7 @@ public class NioLongConnectionServer {
 				joiner.add(CacheControlEnum.MAX_AGE.getValue().toLowerCase() + "=" + maxAge);
 			}
 
-			response.header(CACHE_CONTROL, joiner.toString());
+			response.header(HeaderEnum.CACHE_CONTROL.getName(), joiner.toString());
 		}
 	}
 
@@ -454,11 +444,11 @@ public class NioLongConnectionServer {
 	}
 
 	private static void setServer(final ZResponse response) {
-		response.header(SERVER, SERVER_VALUE);
+		response.header(HeaderEnum.SERVER.getName(), SERVER_VALUE);
 	}
 
 	private static void setDate(final ZResponse response) {
-		response.header(DATE, ZDateUtil.gmt(new Date()));
+		response.header(HeaderEnum.DATE.getName(), ZDateUtil.gmt(new Date()));
 	}
 
 	private static void setETag(final SocketChannel socketChannel, final ZRequest request,
@@ -471,7 +461,7 @@ public class NioLongConnectionServer {
 		final String newETagMd5 = MD5.c(response.getBodyList());
 
 		// 执行目标方法前，先看请求头的ETag
-		final String requestIfNoneMatch = request.getHeader(IF_NONE_MATCH);
+		final String requestIfNoneMatch = request.getHeader(HeaderEnum.IF_NONE_MATCH.getName());
 		if ((requestIfNoneMatch != null) && Objects.equals(newETagMd5, requestIfNoneMatch)) {
 			final ZResponse r304 = new ZResponse(socketChannel);
 			r304.httpStatus(304);
@@ -480,11 +470,11 @@ public class NioLongConnectionServer {
 			for (final ZHeader zHeader : rhl) {
 				r304.header(zHeader.getName(),zHeader.getValue());
 			}
-			r304.header(E_TAG, requestIfNoneMatch);
+			r304.header(HeaderEnum.ETAG.getName(), requestIfNoneMatch);
 			r304.write();
 			return;
 		}
-		response.header(E_TAG, newETagMd5);
+		response.header(HeaderEnum.ETAG.getName(), newETagMd5);
 	}
 
 	@Data
