@@ -502,10 +502,11 @@ public class Task {
 
 		} catch (final Exception e) {
 			e.printStackTrace();
+			final String em = Task.gExceptionMessage(e);
 			return new ZResponse(this.socketChannel)
 					.httpStatus(HttpStatus.HTTP_500.getCode())
 					.contentType(DEFAULT_CONTENT_TYPE.getType())
-					.body(CR.error(HTTP_STATUS_500 + INTERNAL_SERVER_ERROR));
+					.body(J.toJSONString(CR.error(em),Include.NON_NULL));
 		}
 	}
 

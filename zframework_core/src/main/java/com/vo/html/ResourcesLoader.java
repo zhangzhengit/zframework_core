@@ -5,6 +5,7 @@ import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -54,18 +55,23 @@ public class ResourcesLoader {
 
 		final String resourcePath = System.getProperty(STATIC_RESOURCES_PROPERTY_NAME);
 		if (STU.isNullOrEmptyOrBlank(resourcePath)) {
-			final ServerConfigurationProperties serverConfiguration = ZSingleton.getSingletonByClass(ServerConfigurationProperties.class);
+			final ServerConfigurationProperties serverConfiguration = ZSingleton
+					.getSingletonByClass(ServerConfigurationProperties.class);
 			final String staticPrefix = serverConfiguration.getStaticPrefix();
 			final String key = staticPrefix + resourceName;
-
-			final String string = loadString(key);
-			return string;
-
+			return loadString(key);
 		}
+
+		final String name = resourcePath + (resourceName.replace("/", File.separator));
+		FileReader fileReader = null;
 		try {
-			final String name = resourcePath + (resourceName.replace("/", File.separator));
-			final FileReader fileReader = new FileReader(name);
-			final BufferedReader bufferedReader = new BufferedReader(fileReader);
+			fileReader = new FileReader(name);
+		} catch (final FileNotFoundException e1) {
+			throw new ResourceNotExistException("资源不存在,name = " + name);
+		}
+
+		final BufferedReader bufferedReader = new BufferedReader(fileReader);
+		try {
 
 			final StringBuilder builder = new StringBuilder();
 			while (true) {
