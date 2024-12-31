@@ -73,14 +73,11 @@ public class ZProperties {
 			throw new IllegalArgumentException("找不到配置文件 " + ZProperties.PROPERTIES_NAME);
 		}
 
-
 		final String path = propertiesConfiguration.getPath();
-		System.out.println("path = " + path);
 
 		up(propertiesConfiguration, path);
 
 		PROPERTIESCONFIGURATION_ENCODING.set(propertiesConfiguration.getEncoding());
-		System.out.println("propertiesConfiguration-encoding = " + propertiesConfiguration.getEncoding());
 
 		ZPropertiesListener.listen(path);
 
