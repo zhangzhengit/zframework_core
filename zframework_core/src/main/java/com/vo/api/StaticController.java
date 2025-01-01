@@ -1,6 +1,6 @@
 package com.vo.api;
 
-import java.time.LocalDateTime;
+import java.io.InputStream;
 
 import com.vo.anno.ZController;
 import com.vo.configuration.ServerConfigurationProperties;
@@ -14,6 +14,8 @@ import com.vo.core.ZSingleton;
 import com.vo.html.ResourcesLoader;
 import com.vo.http.HttpStatus;
 import com.vo.http.ZETag;
+import com.vo.http.ZQPSLimitation;
+import com.vo.http.ZQPSLimitationEnum;
 import com.vo.http.ZRequestMapping;
 import com.votool.common.CR;
 
@@ -34,14 +36,7 @@ public class StaticController {
 			"/.+\\.js$", "/.+\\.jpg$", "/.+\\.mp3$", "/.+\\.mp4$", "/.+\\.pdf$",
 			"/.+\\.gif$", "/.+\\.doc$" },
 	isRegex = { true, true, true, true, true, true, true, true, true }, qps = 10000)
-
 	public void staticResources(final ZResponse response,final ZRequest request) {
-		System.out.println(Thread.currentThread().getName() + "\t" + LocalDateTime.now() + "\t"
-				+ "StaticController.staticResources()");
-
-		final String requestURI = request.getRequestURI();
-		System.out.println("requestURI = " + requestURI);
-
 
 		final String resourceName = String.valueOf(ZMappingRegex.getAndRemove());
 
@@ -57,15 +52,13 @@ public class StaticController {
 			return;
 		}
 
-		final byte[] loadByteArray = ResourcesLoader.loadStaticResourceByteArray(resourceName);
-		// FIXME 2023年7月19日 下午8:20:39 zhanghen: TODO 改为和Socket 一样，一边读取一边写入到OutStream
-
-		response.contentType(cte.getType()).body(loadByteArray);
-
-		//		ResourcesLoader.writeResourceToOutputStreamThenClose(resourceName, cte, response);
+		final InputStream inputStream = ResourcesLoader.loadStaticResourceAsInputStream(resourceName);
+		response.body(inputStream);
+		response.contentType(cte.getType());
 	}
 
 	@ZRequestMapping(mapping = { "/.+\\.css$" }, isRegex = { true }, qps = 10000)
+	@ZQPSLimitation(qps = 500, type = ZQPSLimitationEnum.ZSESSIONID)
 	public void css(final ZResponse response,final ZRequest request) {
 
 		final String resourceName = String.valueOf(ZMappingRegex.getAndRemove());
@@ -94,7 +87,7 @@ public class StaticController {
 			response.contentType(cte.getType()).header(HeaderEnum.CONTENT_ENCODING.getName(), HeaderEnum.GZIP.getName()).body(ba);
 
 		} else {
-			final byte[] ba = ResourcesLoader.loadStaticResourceByteArray(resourceName);
+			final byte[] ba = ResourcesLoader.loadStaticResourceAsByteArray(resourceName);
 
 			response.contentType(cte.getType()).body(ba);
 		}
@@ -109,6 +102,7 @@ public class StaticController {
 	 *
 	 */
 	@ZRequestMapping(mapping = { "/.+\\.html$" }, isRegex = { true }, qps = 10000)
+	@ZQPSLimitation(qps = 200, type = ZQPSLimitationEnum.ZSESSIONID)
 	public void html(final ZResponse response,final ZRequest request) {
 
 		final String resourceName = String.valueOf(ZMappingRegex.getAndRemove());
