@@ -22,6 +22,7 @@ import com.google.common.hash.Hashing;
 import com.vo.cache.AU;
 import com.vo.cache.CU;
 import com.vo.cache.STU;
+import com.vo.configuration.SCU;
 import com.vo.enums.MethodEnum;
 import com.vo.http.ZCookie;
 
@@ -108,7 +109,7 @@ public class ZRequest {
 			return false;
 		}
 
-		final String[] array = a.split(",");
+		final String[] array = SCU.split(a, ",");
 		for (final String a2 : array) {
 			if (HeaderEnum.GZIP.getName().equalsIgnoreCase(a2)) {
 				return true;
