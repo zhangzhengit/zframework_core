@@ -365,7 +365,6 @@ public class NioLongConnectionServer {
 			// setETag 放在最下面，因为次方法会write
 			final boolean setETag = setETag(socketChannel, request, response);
 			if (!setETag) {
-				// FIXME 2025年1月1日 下午7:30:35 zhangzhen : 记得把write改为private然后在此反射调用
 				setGzip(request, response);
 				response.write();
 			}
