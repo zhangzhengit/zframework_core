@@ -131,7 +131,7 @@ public class NioLongConnectionServer {
 			System.exit(0);
 		}
 
-		LOG.trace("zNIOServer启动成功，等待连接,serverPort={}", serverPort);
+		LOG.trace("zNIOServer启动成功,等待连接,serverPort={}", serverPort);
 
 		if (selector == null) {
 			return;
