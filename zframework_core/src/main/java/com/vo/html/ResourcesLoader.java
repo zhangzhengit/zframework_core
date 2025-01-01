@@ -10,19 +10,12 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 
 import com.google.common.collect.HashBasedTable;
 import com.vo.cache.STU;
 import com.vo.configuration.ServerConfigurationProperties;
-import com.vo.core.ContentTypeEnum;
-import com.vo.core.HeaderEnum;
 import com.vo.core.Task;
 import com.vo.core.ZContext;
-import com.vo.core.ZResponse;
 import com.vo.core.ZSingleton;
 import com.vo.exception.ResourceNotExistException;
 
@@ -31,7 +24,7 @@ import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.lang.UUID;
 
 /**
- * 从 resources 目录加载文件
+ * 从 硬盘或resources 目录加载文件，根据配置项来选择从哪里加载
  *
  * @author zhangzhen
  * @date 2023年6月24日
@@ -92,117 +85,6 @@ public class ResourcesLoader {
 		}
 
 		return null;
-	}
-
-	/**
-	 * 把静态资源写入输出流，不放入缓存.
-	 *
-	 * @param resourceName
-	 * @param cte
-	 * @param response
-	 * @param outputStream
-	 * @return 返回写入的字节数
-	 */
-	public static long writeResourceToOutputStreamThenClose(final String resourceName, final ContentTypeEnum cte, final ZResponse response) {
-
-		final ServerConfigurationProperties serverConfiguration = ZSingleton.getSingletonByClass(ServerConfigurationProperties.class);
-		final String staticPrefix = serverConfiguration.getStaticPrefix();
-		final String key = staticPrefix + resourceName;
-
-		final InputStream inputStream = checkInputStream(key);
-
-		final BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
-
-		if (response.getSocketChannel() != null) {
-			return writeSocketChannel(cte, response, bufferedInputStream);
-		}
-
-		throw new IllegalArgumentException(ZResponse.class.getSimpleName() + " outputStream 和 socketChannel 不能同时为空");
-
-	}
-
-	private static long writeSocketChannel(final ContentTypeEnum cte, final ZResponse response,
-			final BufferedInputStream bufferedInputStream) {
-		final AtomicLong write1 = new AtomicLong(0L);
-		final byte[] ba = new byte[1000 * 10];
-		final AtomicLong write = new AtomicLong(0);
-		final List<Byte> list = new ArrayList<>();
-		while (true) {
-			try {
-				final int read = bufferedInputStream.read(ba);
-				if (read <= -1) {
-					break;
-				}
-
-				write.set(write.get() + read);
-				for (int i = 0; i < read; i++) {
-					list.add(ba[i]);
-				}
-			} catch (final IOException e) {
-				e.printStackTrace();
-			}
-		}
-		final byte[] baR = new byte[list.size()];
-		for (int i = 0; i < list.size(); i++) {
-			baR[i] = list.get(i);
-		}
-
-		response.contentType(cte.getType())
-		.header(HeaderEnum.CONTENT_LENGTH.getName(), String.valueOf(baR.length))
-		.body(baR).write();
-
-		write1.set(baR.length);
-
-		return write1.get();
-	}
-
-	private static AtomicLong writeOutputStream(final ContentTypeEnum cte, final OutputStream outputStream,
-			final InputStream inputStream, final BufferedInputStream bufferedInputStream) {
-		try {
-			outputStream.write(Task.HTTP_200.getBytes());
-			outputStream.write(Task.NEW_LINE.getBytes());
-			outputStream.write(cte.getValue().getBytes());
-			outputStream.write(Task.NEW_LINE.getBytes());
-			// FIXME 2023年7月3日 下午7:38:24 zhanghen: TODO 加入content-length
-			outputStream.write(Task.NEW_LINE.getBytes());
-		} catch (final IOException e1) {
-			e1.printStackTrace();
-		}
-
-		final AtomicLong write = writeToOutputStream(bufferedInputStream, outputStream);
-
-		try {
-			//			outputStream.write(Task.NEW_LINE.getBytes());
-			outputStream.flush();
-			outputStream.close();
-
-			bufferedInputStream.close();
-			inputStream.close();
-		} catch (final IOException e) {
-			e.printStackTrace();
-		}
-		return write;
-	}
-
-	private static AtomicLong writeToOutputStream(final BufferedInputStream bufferedInputStream,
-			final OutputStream outputStream) {
-		final byte[] ba = new byte[1000 * 10];
-		final AtomicLong write = new AtomicLong(0);
-		while (true) {
-			try {
-				final int read = bufferedInputStream.read(ba);
-				if (read <= -1) {
-					break;
-				}
-
-				write.set(write.get() + read);
-				outputStream.write(ba, 0, read);
-				outputStream.flush();
-			} catch (final IOException e) {
-				e.printStackTrace();
-			}
-		}
-		return write;
 	}
 
 	/**
@@ -366,10 +248,8 @@ public class ResourcesLoader {
 			e.printStackTrace();
 		}
 
-		final byte[] byteArray = byteArrayOutputStream.toByteArray();
-		return byteArray;
+		return byteArrayOutputStream.toByteArray();
 	}
-
 
 	private static InputStream checkInputStream(final String name) {
 		final InputStream inputStream = ResourcesLoader.class.getResourceAsStream(name);
@@ -379,9 +259,9 @@ public class ResourcesLoader {
 		return inputStream;
 	}
 
-	public enum ResourcesTypeEnum{
+	public enum ResourcesTypeEnum {
 
-		BINARY,STRING;
+		BINARY, STRING;
 	}
 
 }
