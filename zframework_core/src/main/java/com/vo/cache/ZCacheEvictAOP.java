@@ -33,10 +33,6 @@ public class ZCacheEvictAOP implements ZIAOP {
 
 	@Override
 	public Object around(final AOPParameter aopParameter) {
-		System.out.println(
-				Thread.currentThread().getName() + "\t" + LocalDateTime.now() + "\t" + "ZCacheEvictAOP.around()");
-		final String name = aopParameter.getMethod().getName();
-		System.out.println("target-method-name = " + name);
 
 		if (!Boolean.TRUE.equals(this.cacheConfigurationProperties.getEnable())) {
 			return aopParameter.invoke();

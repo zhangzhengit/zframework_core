@@ -96,8 +96,6 @@ public class ZConfigurationPropertiesScanner {
 				findValueAndSetValue(prefix, object, field);
 			}
 
-			System.out.println("ZCP-object = " + object);
-
 			ZContext.addBean(cs, object);
 			ZContext.addBean(cs, object);
 		}
@@ -237,7 +235,6 @@ public class ZConfigurationPropertiesScanner {
 				}
 			}
 		}
-		System.out.println("set = " + set);
 		try {
 			if (!set.isEmpty()) {
 				field.setAccessible(true);
@@ -365,8 +362,6 @@ public class ZConfigurationPropertiesScanner {
 		}
 
 		final List<Object> subList = i <= 0 ? null : list.subList(0, i);
-
-		System.out.println("list = " + subList);
 
 		try {
 			if (CU.isNotEmpty(subList)) {

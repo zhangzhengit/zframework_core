@@ -110,10 +110,8 @@ public class ZComponentScanner {
 			try {
 				f.setAccessible(true);
 				final Object fOldV = f.get(newInstance);
-				System.out.println("对象 " + newInstance + " 的字段f = " + f.getName() + " 赋值前，值 = " + fOldV);
 				ZAutowiredScanner.setFiledValue(f, newInstance, value);
 				final Object fNewV = f.get(newInstance);
-				System.out.println("对象 " + newInstance + " 的字段f = " + f.getName() + " 赋值后，值 = " + fNewV);
 			} catch (IllegalArgumentException | IllegalAccessException e) {
 				e.printStackTrace();
 			}

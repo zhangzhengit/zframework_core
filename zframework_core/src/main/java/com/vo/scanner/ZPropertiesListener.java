@@ -82,32 +82,19 @@ public class ZPropertiesListener {
 						// 获取文件名
 						final String fileName = event.context().toString();
 
-						// 如果文件名与监听的文件名一致，则进行相应的处理
 						if (fileName.equals(new File(filePath).getName())) {
-							System.out.println("File modified: " + filePath);
-							// 在这里执行你的逻辑代码
 							try {
-								final String string = IoUtil.read(new FileReader(new File(filePath)));
-								//								System.out.println("string = \n");
-								//								System.out.println(string);
 								final Properties  properties = new Properties();
 
 								final FileInputStream fileInputStream = new FileInputStream(new File(filePath));
 								final InputStreamReader isr = new InputStreamReader(fileInputStream,
 										Charset.defaultCharset().displayName());
-
-								//							    properties.load(new FileInputStream(new File(filePath)));
 								properties.load(isr);
-
-								//								System.out.println("properties = \n");
-								//								System.out.println(properties);
 								final Enumeration<Object> keys = properties.keys();
 								while(keys.hasMoreElements()) {
 									final Object k = keys.nextElement();
 
 									final Object v = properties.get(k);
-									//									String v2 = new String
-									//									System.out.println(k + "=" + v);
 
 									try {
 										ZValueScanner.updateValue(String.valueOf(k), v);

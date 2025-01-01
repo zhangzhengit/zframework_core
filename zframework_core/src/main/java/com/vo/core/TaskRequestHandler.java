@@ -96,7 +96,6 @@ public final class TaskRequestHandler extends Thread {
 				e.printStackTrace();
 
 				final String message = e.getMessage();
-				System.out.println("QRUn_E = " + message);
 
 				final ZResponse response = new ZResponse(taskRequest.getSocketChannel());
 				response.contentType(ContentTypeEnum.APPLICATION_JSON.getType())

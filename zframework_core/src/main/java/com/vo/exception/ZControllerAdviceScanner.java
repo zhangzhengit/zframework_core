@@ -72,14 +72,12 @@ public class ZControllerAdviceScanner {
 				if (findAny.isPresent()) {
 					throw new StartupException("@ZExceptionHandler.value值不能重复，当前方法=" + m.getName());
 				}
-				final boolean add = LIST.add(e);
+
+				LIST.add(e);
 			}
 
 			Collections.sort(LIST);
 		}
-
-		System.out.println("ZCA.list.size = " + LIST.size());
-		System.out.println("ZCA.list = " + LIST);
 
 	}
 

@@ -34,35 +34,22 @@ public class ZObjectGeneratorStarter {
 	}
 
 	public static void start(final String... packageName) {
-		System.out.println(java.time.LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t"
-				+ "ZObjectGeneratorStarter.start()");
 
 		final List<ZObjectGenerator> zogList = scan(packageName);
-		System.out.println("zogList.size = " + zogList.size());
-		for (final ZObjectGenerator zObjectGenerator : zogList) {
-			System.out.println(zObjectGenerator);
-		}
-		System.out.println("zogList.size = " + zogList.size());
 		final List<ZObjectGenerator> zogList2 = zogList.stream()
 				.filter(o -> !o.getClass().getCanonicalName().equals(ZDefaultObjectGenerator.class.getCanonicalName()))
 				.collect(Collectors.toList());
 		if (CU.isNotEmpty(zogList2)) {
-			System.out.println("有自定义ZOG，使用自定义生成");
 			for (final ZObjectGenerator zObjectGenerator : zogList2) {
 				glis.add(zObjectGenerator);
-				System.out.println("开始生成 = " + zObjectGenerator);
 			}
 		} else {
-			System.out.println("无自定义ZOG，使用自定义生成");
 			final ZDefaultObjectGenerator dd = ZSingleton.getSingletonByClass(ZDefaultObjectGenerator.class);
 			glis.add(dd);
-			System.out.println("开始生成 = " + dd);
 		}
 	}
 
 	public static List<ZObjectGenerator> scan(final String... packageName) {
-		System.out.println(java.time.LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t"
-				+ "ZObjectGeneratorStarter.scan()");
 
 		final ArrayList<ZObjectGenerator> zogList = Lists.newArrayList();
 		final Set<Class<?>> zsSet = ZAOPScaner.scanPackage_COM(packageName);

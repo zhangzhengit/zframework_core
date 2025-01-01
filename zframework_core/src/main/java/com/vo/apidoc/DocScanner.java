@@ -30,7 +30,6 @@ public class DocScanner {
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
 	public static void scan(final String... packageName)  {
-		System.out.println(Thread.currentThread().getName() + "\t" + LocalDateTime.now() + "\t" + "DocScanner.scan()");
 
 		final Set<Class<?>> zcSet = ZConfigurationPropertiesScanner.scanPackage(packageName).stream()
 				.filter(cls -> cls.isAnnotationPresent(ZController.class))
@@ -42,7 +41,6 @@ public class DocScanner {
 
 		for (final Class<?> zc : zcSet) {
 
-			System.out.println("APIDOC = " + zc.getCanonicalName());
 			final Method[] ms = zc.getDeclaredMethods();
 			for (final Method m : ms) {
 				final ZRequestMapping zrm = m.getAnnotation(ZRequestMapping.class);
@@ -72,10 +70,10 @@ public class DocScanner {
 					final String type = p.getType().getSimpleName();
 					joiner.add(type + " " +name);
 				}
-				System.out.println(description);
-				System.out.println(method + " " + mS);
-				System.out.println(joiner);
-				System.out.println();
+				//				System.out.println(description);
+				//				System.out.println(method + " " + mS);
+				//				System.out.println(joiner);
+				//				System.out.println();
 
 				// FIXME 2024年12月17日 下午6:33:56 zhangzhen : 写这里 APIInfo 放进去，再写一个接口，返回html把这些api展示出来
 
