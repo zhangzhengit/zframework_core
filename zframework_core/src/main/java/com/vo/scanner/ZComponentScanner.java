@@ -51,15 +51,15 @@ public class ZComponentScanner {
 
 	private static void scanAndCreate0(final Class<? extends Annotation> zc, final String... packageName) {
 		final Map<String, ZClass> map = ZAOPScaner.scanAndGenerateProxyClass1(packageName);
-		LOG.info("开始扫描带有[{}]注解的类", zc.getCanonicalName());
+		//		LOG.info("开始扫描带有[{}]注解的类", zc.getCanonicalName());
 		final Set<Class<?>> zcSet = ClassMap.scanPackageByAnnotation(zc, packageName);
-		LOG.info("扫描到带有[{}]注解的类个数={}", zc.getCanonicalName(),zcSet.size());
-		LOG.info("开始给带有[{}]注解的类创建对象",zc.getCanonicalName());
+		//		LOG.info("扫描到带有[{}]注解的类个数={}", zc.getCanonicalName(),zcSet.size());
+		//		LOG.info("开始给带有[{}]注解的类创建对象",zc.getCanonicalName());
 		for (final Class<?> cls : zcSet) {
-			LOG.info("开始给待有[{}]注解的类[{}]创建对象",zc.getCanonicalName(),cls.getCanonicalName());
+			//			LOG.info("开始给待有[{}]注解的类[{}]创建对象",zc.getCanonicalName(),cls.getCanonicalName());
 			final Object object = ZSingleton.getSingletonByClass(cls);
-			LOG.info("给带有[{}]注解的类[{}]创建对象[{}]完成", zc.getCanonicalName(),
-					cls.getCanonicalName(), object);
+			//			LOG.info("给带有[{}]注解的类[{}]创建对象[{}]完成", zc.getCanonicalName(),
+			//					cls.getCanonicalName(), object);
 
 			final Object newComponent = ZObjectGeneratorStarter.generate(cls);
 			final ZClass proxyClass = map.get(newComponent.getClass().getSimpleName());
@@ -90,7 +90,7 @@ public class ZComponentScanner {
 			}
 		}
 
-		LOG.info("给带有[{}]注解的类创建对象完成,个数={}", zc.getCanonicalName(), zcSet.size());
+		//		LOG.info("给带有[{}]注解的类创建对象完成,个数={}", zc.getCanonicalName(), zcSet.size());
 	}
 
 	private static void injectParentFieldForProxy(final Object newInstance) {

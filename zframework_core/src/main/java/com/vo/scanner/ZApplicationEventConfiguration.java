@@ -24,8 +24,9 @@ public class ZApplicationEventConfiguration {
 
 	@ZBean
 	public ZE zeForApplicationEventPublisher() {
-		LOG.info("事件机制配置类开始初始化,{}={}", this.applicationEventConfigurationProperties.getClass().getSimpleName(),
-				this.applicationEventConfigurationProperties);
+		//		LOG.info("事件机制配置类开始初始化,{}={}", this.applicationEventConfigurationProperties.getClass().getSimpleName(),
+		//				this.applicationEventConfigurationProperties);
+
 		return ZES.newZE(this.applicationEventConfigurationProperties.getThreadCount(),
 				this.applicationEventConfigurationProperties.getThreadNamePrefix());
 	}

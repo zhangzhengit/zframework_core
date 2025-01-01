@@ -60,9 +60,9 @@ public class ZControllerScanner {
 	private static final HashSet<Class<? extends Annotation>> HTTP_METHOD_SET = Sets.newHashSet(ZRequestMapping.class);
 
 	public static Set<Class<?>> scanAndCreateObject(final String... packageName) {
-		ZControllerScanner.LOG.info("开始扫描带有[{}]的类", ZController.class.getCanonicalName());
+		//		ZControllerScanner.LOG.info("开始扫描带有[{}]的类", ZController.class.getCanonicalName());
 		final Set<Class<?>> zcSet = ClassMap.scanPackageByAnnotation(ZController.class, packageName);
-		ZControllerScanner.LOG.info("带有[{}]的类个数={}", ZController.class.getCanonicalName(), zcSet.size());
+		//		ZControllerScanner.LOG.info("带有[{}]的类个数={}", ZController.class.getCanonicalName(), zcSet.size());
 
 		final ServerConfigurationProperties serverConfiguration = ZSingleton.getSingletonByClass(ServerConfigurationProperties.class);
 
@@ -71,16 +71,16 @@ public class ZControllerScanner {
 			if (Boolean.FALSE.equals(staticControllerEnable)
 					&& cls.getCanonicalName().equals(StaticController.class.getCanonicalName())) {
 
-				ZControllerScanner.LOG.info("[{}] 未启用，不创建[{}]对象", StaticController.class.getSimpleName(),
-						StaticController.class.getSimpleName());
+				//				ZControllerScanner.LOG.info("[{}] 未启用，不创建[{}]对象", StaticController.class.getSimpleName(),
+				//						StaticController.class.getSimpleName());
 
 				continue;
 			}
 
 			final Object newZController1 = ZObjectGeneratorStarter.generate(cls);
 
-			LOG.info("带有[{}]的类[{}]创建对象[{}]完成", ZController.class.getCanonicalName(), cls.getCanonicalName(),
-					newZController1);
+			//			LOG.info("带有[{}]的类[{}]创建对象[{}]完成", ZController.class.getCanonicalName(), cls.getCanonicalName(),
+			//					newZController1);
 
 			ZContext.addBean(cls, newZController1);
 

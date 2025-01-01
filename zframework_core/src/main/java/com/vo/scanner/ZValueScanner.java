@@ -41,6 +41,8 @@ import cn.hutool.core.util.ReflectUtil;
  */
 public class ZValueScanner {
 
+	private static final ZLog2 LOG = ZLog2.getInstance();
+
 	/**
 	 * <@ZValue.listenForChanges = true的字段，此字段所在的对象>
 	 */
@@ -88,8 +90,6 @@ public class ZValueScanner {
 
 		setValue(field, value, bean);
 	}
-
-	private static final ZLog2 LOG = ZLog2.getInstance();
 
 	public static void updateValue(final String name, final Object value)  {
 		final Map<Field, Object> map = valueTable.row(name);
@@ -226,7 +226,7 @@ public class ZValueScanner {
 		try {
 			field.setAccessible(true);
 			field.set(object, value);
-			LOG.info("field赋值成功,field={},value={},object={}", field.getName(), value, object);
+			//			LOG.info("field赋值成功,field={},value={},object={}", field.getName(), value, object);
 		} catch (IllegalArgumentException | IllegalAccessException  e) {
 			e.printStackTrace();
 		}

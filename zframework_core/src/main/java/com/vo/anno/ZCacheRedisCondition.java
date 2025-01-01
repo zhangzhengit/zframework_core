@@ -21,10 +21,10 @@ public class ZCacheRedisCondition implements ZCondition {
 				.getConfigurationPropertie(ZCacheConfigurationProperties.class);
 		final String type = cacheConfigurationProperties.getType();
 
-		LOG.info("开始初始化cache配置bean,cacheConfigurationProperties={}",cacheConfigurationProperties);
+		//		LOG.info("开始初始化cache配置bean,cacheConfigurationProperties={}",cacheConfigurationProperties);
 		if (Boolean.TRUE.equals(cacheConfigurationProperties.getEnable())
 				&& (ZCacheConfiguration.REDIS.equals(type) || ZCacheConfiguration.MIXED.equals(type))) {
-			LOG.info("cache.type={},开始初始化Redis连接",cacheConfigurationProperties.getType());
+			//			LOG.info("cache.type={},开始初始化Redis连接",cacheConfigurationProperties.getType());
 			return true;
 		}
 

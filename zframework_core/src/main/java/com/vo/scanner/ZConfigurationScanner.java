@@ -30,11 +30,11 @@ public class ZConfigurationScanner {
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
 	public static void scanAndCreate(final String... packageName) throws Exception {
-		LOG.info("开始扫描带有@{}注解的类", ZConfiguration.class.getSimpleName());
+		//		LOG.info("开始扫描带有@{}注解的类", ZConfiguration.class.getSimpleName());
 
 		final Set<Class<?>> clsSet = ClassMap.scanPackageByAnnotation(ZConfiguration.class, packageName);
 		if (CU.isEmpty(clsSet)) {
-			LOG.info("没有带有@{}注解的类", ZConfiguration.class.getSimpleName());
+			//			LOG.info("没有带有@{}注解的类", ZConfiguration.class.getSimpleName());
 			return;
 		}
 
@@ -76,9 +76,9 @@ public class ZConfigurationScanner {
 				check(method);
 
 				try {
-					LOG.info("找到@{}类[{}]的@{}方法{},开始创建bean", ZConfiguration.class.getSimpleName(),
-							cls.getSimpleName(),
-							ZBean.class.getSimpleName(), method.getName());
+					//					LOG.info("找到@{}类[{}]的@{}方法{},开始创建bean", ZConfiguration.class.getSimpleName(),
+					//							cls.getSimpleName(),
+					//							ZBean.class.getSimpleName(), method.getName());
 
 					final Object r = method.invoke(newInstance, null);
 					if (r == null) {
@@ -92,8 +92,8 @@ public class ZConfigurationScanner {
 								"@" + ZBean.class.getSimpleName() + " 方法 " + method.getName() + " 不能返回null");
 					}
 
-					LOG.info("@{}类[{}]的@{}方法{},创建bean完成,bean={}", ZConfiguration.class.getSimpleName(), cls.getSimpleName(),
-							ZBean.class.getSimpleName(), method.getName(), r);
+					//					LOG.info("@{}类[{}]的@{}方法{},创建bean完成,bean={}", ZConfiguration.class.getSimpleName(), cls.getSimpleName(),
+					//							ZBean.class.getSimpleName(), method.getName(), r);
 
 					ZContext.addBean(method.getName(), r);
 					ZContext.addBean(r.getClass().getCanonicalName() + "@" + method.getName(), r);

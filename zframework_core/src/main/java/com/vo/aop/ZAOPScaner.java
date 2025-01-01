@@ -111,6 +111,7 @@ public class ZAOPScaner {
 			}
 
 			final String chiS = proxyZClass.toString();
+			// FIXME 2025年1月1日 下午10:52:07 zhangzhen : 这个整理一下格式
 			System.out.println("代理类源码 = \n" + chiS);
 
 			map.put(cls.getSimpleName(), proxyZClass);
@@ -301,7 +302,7 @@ public class ZAOPScaner {
 	}
 
 	public static Set<Class<?>> scanPackage_COM(final String... packageName) {
-		LOG.info("开始扫描类,scanPackage={}", Arrays.toString(packageName));
+		//		LOG.info("开始扫描类,scanPackage={}", Arrays.toString(packageName));
 		final Set<Class<?>> clsSet = ClassMap.scanPackage(packageName);
 		return clsSet;
 	}

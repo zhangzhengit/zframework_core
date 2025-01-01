@@ -34,10 +34,10 @@ public class ZAutowiredScanner {
 
 	public static Set<Class<?>> inject(final Class<? extends Annotation> annoClass, final String... packageName) {
 
-		ZAutowiredScanner.LOG.info("开始扫描带有[{}]注解的类", annoClass.getCanonicalName());
+		//		ZAutowiredScanner.LOG.info("开始扫描带有[{}]注解的类", annoClass.getCanonicalName());
 		final Set<Class<?>> zcSet = ClassMap.scanPackageByAnnotation(annoClass, packageName);
 
-		ZAutowiredScanner.LOG.info("带有[{}]注解的类个数={}", annoClass.getCanonicalName(), zcSet.size());
+		//		ZAutowiredScanner.LOG.info("带有[{}]注解的类个数={}", annoClass.getCanonicalName(), zcSet.size());
 
 
 		for (final Class<?> cls : zcSet) {
@@ -54,7 +54,7 @@ public class ZAutowiredScanner {
 			}
 
 			if (o2 == null) {
-				LOG.warn("无[{}]的对象,continue", cls.getCanonicalName());
+				//				LOG.warn("无[{}]的对象,continue", cls.getCanonicalName());
 				continue;
 			}
 
@@ -90,8 +90,8 @@ public class ZAutowiredScanner {
 		final List<Field> zafList = Lists.newArrayList(superClassObject.getClass().getDeclaredFields()).stream().filter(f -> f.isAnnotationPresent(ZAutowired.class)).collect(Collectors.toList());
 		for (final Field f : zafList) {
 
-			ZAutowiredScanner.LOG.info("找到[{}]对象的[{}]字段={}", object.getClass().getCanonicalName(),
-					ZAutowired.class.getCanonicalName(), f.getType().getCanonicalName());
+			//			ZAutowiredScanner.LOG.info("找到[{}]对象的[{}]字段={}", object.getClass().getCanonicalName(),
+			//					ZAutowired.class.getCanonicalName(), f.getType().getCanonicalName());
 
 			final ZAutowired autowired = f.getAnnotation(ZAutowired.class);
 			final String name = STU.isEmpty(autowired.name()) ? f.getType().getCanonicalName() : autowired.name();
@@ -122,8 +122,8 @@ public class ZAutowiredScanner {
 			return null;
 		}
 
-		ZAutowiredScanner.LOG.info("找到[{}]对象的[{}]字段={}", cls.getCanonicalName(),
-				ZAutowired.class.getCanonicalName(), f.getType().getCanonicalName());
+		//		ZAutowiredScanner.LOG.info("找到[{}]对象的[{}]字段={}", cls.getCanonicalName(),
+		//				ZAutowired.class.getCanonicalName(), f.getType().getCanonicalName());
 
 		final String name = STU.isEmpty(autowired.name()) ? f.getType().getCanonicalName() + "@" + f.getName() : autowired.name();
 
@@ -157,8 +157,8 @@ public class ZAutowiredScanner {
 		try {
 			f.setAccessible(true);
 			f.set(object, value);
-			ZAutowiredScanner.LOG.info("对象的[{}]字段赋值[{}]完成",
-					ZAutowired.class.getCanonicalName(),value);
+			//			ZAutowiredScanner.LOG.info("对象的[{}]字段赋值[{}]完成",
+			//					ZAutowired.class.getCanonicalName(),value);
 		} catch (IllegalArgumentException | IllegalAccessException e) {
 			e.printStackTrace();
 		}
