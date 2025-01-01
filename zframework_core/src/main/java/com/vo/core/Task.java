@@ -487,19 +487,7 @@ public class Task {
 
 	private ZResponse responseDefault_JSON(final ZRequest request, final Object r) {
 		final String json = J.toJSONString(r, Include.NON_NULL);
-		if (serverConfiguration.getGzipEnable()
-				&& serverConfiguration.gzipContains(DEFAULT_CONTENT_TYPE.getType())
-				&& request.isSupportGZIP()) {
-			final byte[] compress = ZGzip.compress(json);
-
-			return new ZResponse(this.socketChannel)
-					.header(HeaderEnum.CONTENT_ENCODING.getName(), HeaderEnum.GZIP.getName())
-					.contentType(DEFAULT_CONTENT_TYPE.getType()).body(compress);
-
-		}
-
-		return new ZResponse(this.socketChannel).contentType(DEFAULT_CONTENT_TYPE.getType())
-				.body(json);
+		return new ZResponse(this.socketChannel).contentType(DEFAULT_CONTENT_TYPE.getType()).body(json);
 	}
 
 	private ZResponse responseHtml(final ZRequest request, final Object r) {
@@ -510,17 +498,7 @@ public class Task {
 			final String html = ZTemplate.freemarker(htmlContent);
 			ZModel.clear();
 
-			if (serverConfiguration.getGzipEnable()
-					&& serverConfiguration.gzipContains(ContentTypeEnum.TEXT_HTML.getType())
-					&& request.isSupportGZIP()) {
-				final byte[] compress = ZGzip.compress(html);
-
-				return new ZResponse(this.socketChannel).contentType(ContentTypeEnum.TEXT_HTML.getType())
-						.header(HeaderEnum.CONTENT_ENCODING.getName(), HeaderEnum.GZIP.getName()).body(compress);
-			}
-
-			return new ZResponse(this.socketChannel)
-					.contentType(ContentTypeEnum.TEXT_HTML.getType()).body(html);
+			return new ZResponse(this.socketChannel).contentType(ContentTypeEnum.TEXT_HTML.getType()).body(html);
 
 		} catch (final Exception e) {
 			e.printStackTrace();

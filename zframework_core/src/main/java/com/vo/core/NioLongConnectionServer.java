@@ -358,12 +358,17 @@ public class NioLongConnectionServer {
 			setServer(response);
 			setDate(response);
 			setCacheControl(request, response);
-			setETag(socketChannel, request, response);
 
 			final boolean keepAlive = isConnectionKeepAlive(request);
 			setConnection(key, socketChannel, keepAlive, response);
 
-			response.write();
+			// setETag 放在最下面，因为次方法会write
+			final boolean setETag = setETag(socketChannel, request, response);
+			if (!setETag) {
+				// FIXME 2025年1月1日 下午7:30:35 zhangzhen : 记得把write改为private然后在此反射调用
+				setGzip(request, response);
+				response.write();
+			}
 
 			// 非长连接，直接关闭连接
 			if (!keepAlive) {
@@ -376,6 +381,32 @@ public class NioLongConnectionServer {
 			throw e;
 		}
 
+	}
+
+	/**
+	 * 根据配置项来选择是否
+	 * 启用gzip压缩并且设置header：Content-Encoding: gzip
+	 *
+	 * @param request
+	 * @param response
+	 */
+	private static void setGzip(final ZRequest request, final ZResponse response) {
+		if (!SERVER_CONFIGURATIONPROPERTIES.getGzipEnable()
+				|| (response.getBodyLength() <= (SERVER_CONFIGURATIONPROPERTIES.getGzipMinLength() * 1024))
+				|| !request.isSupportGZIP()) {
+			return;
+		}
+
+		final String contentType = response.getContentType();
+		if (!SERVER_CONFIGURATIONPROPERTIES.gzipContains(contentType)) {
+			return;
+		}
+
+		response.header(HeaderEnum.CONTENT_ENCODING.getName(), HeaderEnum.GZIP.getName());
+
+		final byte[] compress = ZGzip.compress(response.getBody());
+		response.clearBody();
+		response.body(compress);
 	}
 
 	private static boolean isConnectionKeepAlive(final ZRequest request) {
@@ -432,11 +463,13 @@ public class NioLongConnectionServer {
 
 	private static void setCustomHeader(final ZResponse response) {
 		final Map<String, String> responseHeaders = SERVER_CONFIGURATION.getResponseHeaders();
-		if (CU.isNotEmpty(responseHeaders)) {
-			final Set<Entry<String, String>> entrySet = responseHeaders.entrySet();
-			for (final Entry<String, String> entry : entrySet) {
-				response.header(entry.getKey(), entry.getValue());
-			}
+		if (CU.isEmpty(responseHeaders)) {
+			return;
+		}
+
+		final Set<Entry<String, String>> entrySet = responseHeaders.entrySet();
+		for (final Entry<String, String> entry : entrySet) {
+			response.header(entry.getKey(), entry.getValue());
 		}
 	}
 
@@ -448,14 +481,21 @@ public class NioLongConnectionServer {
 		response.header(HeaderEnum.DATE.getName(), ZDateUtil.gmt(new Date()));
 	}
 
-	private static void setETag(final SocketChannel socketChannel, final ZRequest request,
-			final ZResponse response) {
+	/**
+	 * 设置header：ETag
+	 *
+	 * @param socketChannel
+	 * @param request
+	 * @param response
+	 * @return 返回是否响应了304
+	 */
+	private static boolean setETag(final SocketChannel socketChannel, final ZRequest request, final ZResponse response) {
 		final ZETag methodETag = Task.getMethodAnnotation(request, ZETag.class);
 		if (methodETag == null) {
-			return;
+			return false;
 		}
 
-		final String newETagMd5 = MD5.c(response.getBodyList());
+		final String newETagMd5 = MD5.c(response.getBody());
 
 		// 执行目标方法前，先看请求头的ETag
 		final String requestIfNoneMatch = request.getHeader(HeaderEnum.IF_NONE_MATCH.getName());
@@ -469,9 +509,11 @@ public class NioLongConnectionServer {
 			}
 			r304.header(HeaderEnum.ETAG.getName(), requestIfNoneMatch);
 			r304.write();
-			return;
+			return true;
 		}
+
 		response.header(HeaderEnum.ETAG.getName(), newETagMd5);
+		return false;
 	}
 
 	@Data

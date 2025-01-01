@@ -16,7 +16,6 @@ import com.vo.core.ZRequest.ZHeader;
 import com.vo.http.HttpStatus;
 import com.vo.http.ZCookie;
 
-import lombok.Data;
 import lombok.Getter;
 
 /**
@@ -70,7 +69,6 @@ import lombok.Getter;
  * @date 2023年6月26日
  *
  */
-@Data
 public class ZResponse {
 
 	private static final int DEFAULT_BUFFER_SIZE = 1024 * 100;
@@ -90,13 +88,56 @@ public class ZResponse {
 	private final AtomicBoolean write = new AtomicBoolean(false);
 	private final AtomicBoolean setContentType  = new AtomicBoolean(false);
 
+	@Getter
+	private String contentType;
+
+	@Getter
 	private final AtomicReference<Integer> httpStatus = new AtomicReference<>(HttpStatus.HTTP_200.getCode());
 	private final AtomicReference<String> contentTypeAR = new AtomicReference<>(Task.DEFAULT_CONTENT_TYPE.getValue());
 
-	private SocketChannel socketChannel;
+	@Getter
+	private final SocketChannel socketChannel;
 
+	@Getter
 	private List<ZHeader> headerList;
+
 	private List<Byte> bodyList;
+
+	/**
+	 * 清空当前的body
+	 */
+	public void clearBody() {
+		if (CU.isNotEmpty(this.bodyList)) {
+			this.bodyList = new ArrayList<>();
+		}
+	}
+
+	/**
+	 * 获取body的字节数
+	 *
+	 * @return
+	 */
+	public int getBodyLength() {
+		return CU.isEmpty(this.bodyList) ? 0 : this.bodyList.size();
+	}
+
+	/**
+	 * 获取body的byte[]
+	 *
+	 * @return
+	 */
+	public byte[] getBody() {
+		if (CU.isEmpty(this.bodyList)) {
+			return new byte[0];
+		}
+
+		final byte[] ba = new byte[this.bodyList.size()];
+		for (int i = 0; i < this.bodyList.size(); i++) {
+			ba[i] = this.bodyList.get(i);
+		}
+
+		return ba;
+	}
 
 	public synchronized ZResponse contentType(final String contentType) {
 		if (!this.setContentType.get() && (contentType != null)) {
@@ -108,6 +149,7 @@ public class ZResponse {
 			}
 		}
 		this.setContentType.set(true);
+		this.contentType = contentType;
 		return this;
 	}
 

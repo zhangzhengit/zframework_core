@@ -57,6 +57,7 @@ public class StaticController {
 		response.contentType(cte.getType());
 	}
 
+	@ZETag
 	@ZRequestMapping(mapping = { "/.+\\.css$" }, isRegex = { true }, qps = 10000)
 	@ZQPSLimitation(qps = 500, type = ZQPSLimitationEnum.ZSESSIONID)
 	public void css(final ZResponse response,final ZRequest request) {
@@ -75,22 +76,8 @@ public class StaticController {
 			return;
 		}
 
-		final ServerConfigurationProperties serverConfiguration = ZSingleton.getSingletonByClass(ServerConfigurationProperties.class);
-
-		final Boolean gzipEnable = serverConfiguration.getGzipEnable();
-		final boolean gzipContains = serverConfiguration.gzipContains(ContentTypeEnum.TEXT_CSS.getType());
-		if (gzipEnable && gzipContains && request.isSupportGZIP()) {
-
-			final String string = ResourcesLoader.loadStaticResourceString(resourceName);
-			final byte[] ba = ZGzip.compress(string);
-
-			response.contentType(cte.getType()).header(HeaderEnum.CONTENT_ENCODING.getName(), HeaderEnum.GZIP.getName()).body(ba);
-
-		} else {
-			final byte[] ba = ResourcesLoader.loadStaticResourceAsByteArray(resourceName);
-
-			response.contentType(cte.getType()).body(ba);
-		}
+		final byte[] ba = ResourcesLoader.loadStaticResourceAsByteArray(resourceName);
+		response.contentType(cte.getType()).body(ba);
 
 	}
 
@@ -119,16 +106,17 @@ public class StaticController {
 			return;
 		}
 
-		final ServerConfigurationProperties serverConfiguration = ZSingleton.getSingletonByClass(ServerConfigurationProperties.class);
-		final Boolean gzipEnable = serverConfiguration.getGzipEnable();
-		final boolean gzipContains = serverConfiguration.gzipContains(ContentTypeEnum.TEXT_HTML.getType());
 		final String html = ResourcesLoader.loadStaticResourceString(resourceName);
 
-		if (gzipEnable && gzipContains && request.isSupportGZIP()) {
-			final byte[] ba = ZGzip.compress(html);
-			response.contentType(cte.getType()).header(HeaderEnum.CONTENT_ENCODING.getName(), HeaderEnum.GZIP.getName()).body(ba);
-		} else {
-			response.contentType(cte.getType()).body(html);
-		}
+		//		final ServerConfigurationProperties serverConfiguration = ZSingleton.getSingletonByClass(ServerConfigurationProperties.class);
+		//		final Boolean gzipEnable = serverConfiguration.getGzipEnable();
+		//		final boolean gzipContains = serverConfiguration.gzipContains(ContentTypeEnum.TEXT_HTML.getType());
+		//
+		//		if (gzipEnable && gzipContains && request.isSupportGZIP()) {
+		//			final byte[] ba = ZGzip.compress(html);
+		//			response.contentType(cte.getType()).header(HeaderEnum.CONTENT_ENCODING.getName(), HeaderEnum.GZIP.getName()).body(ba);
+		//		} else {
+		response.contentType(cte.getType()).body(html);
+		//		}
 	}
 }

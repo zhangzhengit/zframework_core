@@ -2,11 +2,10 @@ package com.vo.core;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
-
-import org.codehaus.groovy.runtime.StackTraceUtils;
 
 import com.vo.cache.AU;
 import com.vo.cache.STU;
@@ -49,14 +48,15 @@ public class ZGzip {
 		return null;
 	}
 
-	public static byte[] compress(final String string) {
-		if (STU.isNullOrEmpty(string)) {
+	public static byte[] compress(final byte[] ba) {
+		if (AU.isEmpty(ba)) {
 			return null;
 		}
+
 		try {
 			final ByteArrayOutputStream out = new ByteArrayOutputStream();
 			final GZIPOutputStream gzip = new GZIPOutputStream(out);
-			gzip.write(string.getBytes(Charset.defaultCharset().displayName()));
+			gzip.write(ba);
 			gzip.finish();
 
 			out.close();
@@ -67,7 +67,23 @@ public class ZGzip {
 		} catch (final Exception e) {
 			e.printStackTrace();
 		}
+
 		return null;
+	}
+
+	public static byte[] compress(final String string) {
+		if (STU.isNullOrEmpty(string)) {
+			return null;
+		}
+
+		byte[] ba = null;
+		try {
+			ba = string.getBytes(Charset.defaultCharset().displayName());
+		} catch (final UnsupportedEncodingException e1) {
+			e1.printStackTrace();
+		}
+
+		return compress(ba);
 	}
 
 }
