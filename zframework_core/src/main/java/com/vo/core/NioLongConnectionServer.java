@@ -349,7 +349,7 @@ public class NioLongConnectionServer {
 		try {
 			final ZResponse response = task.invoke(request, socketChannel);
 
-			if ((response == null) || response.getWrite().get()) {
+			if ((response == null) || response.isWritten()) {
 				return;
 			}
 

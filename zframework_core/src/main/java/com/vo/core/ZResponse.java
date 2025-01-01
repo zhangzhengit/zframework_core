@@ -84,7 +84,6 @@ public class ZResponse {
 	/**
 	 * write 方法是否执行过
 	 */
-	@Getter
 	private final AtomicBoolean write = new AtomicBoolean(false);
 	private final AtomicBoolean setContentType  = new AtomicBoolean(false);
 
@@ -102,6 +101,15 @@ public class ZResponse {
 	private List<ZHeader> headerList;
 
 	private List<Byte> bodyList;
+
+	/**
+	 * write()方法是否执行过了
+	 *
+	 * @return
+	 */
+	public boolean isWritten() {
+		return this.write.get();
+	}
 
 	/**
 	 * 清空当前的body
