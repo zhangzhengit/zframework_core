@@ -19,6 +19,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.vo.cache.CU;
+import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.core.Task;
 import com.vo.core.ZClass;
 import com.vo.core.ZContext;
@@ -112,7 +113,11 @@ public class ZAOPScaner {
 
 			final String chiS = proxyZClass.toString();
 			// FIXME 2025年1月1日 下午10:52:07 zhangzhen : 这个整理一下格式
-			System.out.println("代理类源码 = \n" + chiS);
+
+			final Boolean printProxyClass = ZContext.getBean(ServerConfigurationProperties.class).getPrintProxyClass();
+			if (printProxyClass) {
+				System.out.println("代理类源码 = \n" + chiS);
+			}
 
 			map.put(cls.getSimpleName(), proxyZClass);
 		}

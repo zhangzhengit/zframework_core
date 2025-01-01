@@ -303,6 +303,12 @@ public class ServerConfigurationProperties {
 	@ZNotNull
 	private Boolean printConfigurationProperties = false;
 
+	/**
+	 * 是否输出生成的代理类源码
+	 */
+	@ZNotNull
+	private Boolean printProxyClass = true;
+
 	public boolean gzipContains(final String contentType) {
 		final String[] a = this.getGzipContentType();
 		for (final String string : a) {
