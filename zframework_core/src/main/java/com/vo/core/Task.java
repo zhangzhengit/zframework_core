@@ -216,7 +216,6 @@ public class Task {
 				final Object object = ZControllerMap.getObjectByMethod(methodTarget);
 				final Object[] arraygP = this.generateParameters(methodTarget, request, path, this.socketChannel);
 				try {
-					ZMappingRegex.set(URLDecoder.decode(path, DEFAULT_CHARSET_NAME));
 					final ZResponse invokeAndResponse = this.invokeAndResponse(methodTarget, arraygP, object, request);
 					return invokeAndResponse;
 				} catch (IllegalAccessException | InvocationTargetException | UnsupportedEncodingException e) {
