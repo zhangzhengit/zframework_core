@@ -316,25 +316,22 @@ public class NioLongConnectionServer {
 				}
 
 			} catch (final Exception e) {
-				// FIXME 2023年10月27日 下午9:54:50 zhanghen: XXX postman form-data上传文件，一次请求会分两次发送？
-				// 导致 FormData.parse 解析出错。在此提示出来
-
-				//				String m = ZControllerAdviceThrowable.findCausedby(e);
-
 				final ZControllerAdviceActuator a = ZContext.getBean(ZControllerAdviceActuator.class);
-
 				final Object r = a.execute(e);
-				new ZResponse(taskRequest.getSocketChannel())
-				.httpStatus(HttpStatus.HTTP_500.getCode())
-				.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
-				.body(J.toJSONString(r, Include.NON_NULL))
-				.write();
+				final ZResponse response = new ZResponse(taskRequest.getSocketChannel())
+						.httpStatus(HttpStatus.HTTP_500.getCode())
+						.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
+						.body(J.toJSONString(r, Include.NON_NULL));
+
+				NioLongConnectionServer.setZSessionId(request, response);
+				response.write();
 
 				closeSocketChannelAndKeyCancel(taskRequest.getSelectionKey(), taskRequest.getSocketChannel());
 			} finally {
 				ReqeustInfo.remove();
 			}
 		}
+
 	}
 
 	public static void closeSocketChannelAndKeyCancel(final SelectionKey key, final SocketChannel socketChannel) {
@@ -397,7 +394,7 @@ public class NioLongConnectionServer {
 		}
 	}
 
-	private static void setZSessionId(final ZRequest request, final ZResponse response) {
+	public static void setZSessionId(final ZRequest request, final ZResponse response) {
 		if (!Boolean.TRUE.equals(SERVER_CONFIGURATION.getResponseZSessionId())) {
 			return;
 		}

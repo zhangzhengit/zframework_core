@@ -67,7 +67,7 @@ public class ResourcesLoader {
 		try {
 			fileReader = new FileReader(name);
 		} catch (final FileNotFoundException e1) {
-			throw new ResourceNotExistException("资源不存在,name = " + name);
+			throw new ResourceNotExistException("资源不存在,name = " + resourceName);
 		}
 
 		final BufferedReader bufferedReader = new BufferedReader(fileReader);
@@ -206,13 +206,38 @@ public class ResourcesLoader {
 	}
 
 	/**
-	 * 加载静态资源，resourceName 不用自己拼接前缀目录了，此方法内自动拼接
+	 * 加载静态资源为InputStream，适合较大的资源文件，边read边写入OutputStream
 	 *
-	 * @param resourceName
+	 * @param resourceName 资源名称，如：1.jpg/index.html 等等
 	 * @return
 	 *
 	 */
-	public static byte[] loadStaticResourceByteArray(final String resourceName) {
+	public static InputStream loadStaticResourceAsInputStream(final String resourceName) {
+		final String resourcePath = System.getProperty(STATIC_RESOURCES_PROPERTY_NAME);
+		if (STU.isNullOrEmptyOrBlank(resourcePath)) {
+			final ServerConfigurationProperties serverConfiguration = ZSingleton
+					.getSingletonByClass(ServerConfigurationProperties.class);
+			final String staticPrefix = serverConfiguration.getStaticPrefix();
+			final String key = staticPrefix + resourceName;
+			return checkInputStream(key);
+		}
+
+		final String fileName = resourcePath + (resourceName.replace("/", File.separator));
+		try {
+			return new FileInputStream(fileName);
+		} catch (final FileNotFoundException e1) {
+			throw new ResourceNotExistException("资源不存在,name = " + resourceName);
+		}
+	}
+
+	/**
+	 * 加载静态资源为byte[]，一次性读取出来
+	 *
+	 * @param resourceName 资源名称，如：1.jpg/index.html 等等
+	 * @return
+	 *
+	 */
+	public static byte[] loadStaticResourceAsByteArray(final String resourceName) {
 
 		final String resourcePath = System.getProperty(STATIC_RESOURCES_PROPERTY_NAME);
 		if (STU.isNullOrEmptyOrBlank(resourcePath)) {
@@ -223,6 +248,7 @@ public class ResourcesLoader {
 			final byte[] ba = loadByteArray0(key);
 			return ba;
 		}
+
 		//			final byte[] ba1 = loadByteArray(resourcePath + File.separator + (resourceName.replace("/", "")));
 		//			final String fileName = resourcePath + File.separator + (resourceName.replace("/", ""));
 		final String fileName = resourcePath + (resourceName.replace("/", File.separator));
@@ -346,12 +372,9 @@ public class ResourcesLoader {
 
 
 	private static InputStream checkInputStream(final String name) {
-		//		final URL resource = ResourcesLoader.class.getResource(name);
-		//		System.out.println("resource = " + resource);
 		final InputStream inputStream = ResourcesLoader.class.getResourceAsStream(name);
 		if (inputStream == null) {
 			throw new ResourceNotExistException("资源不存在,name = " + name);
-			//			throw new IllegalArgumentException("资源不存在,name = " + name);
 		}
 		return inputStream;
 	}

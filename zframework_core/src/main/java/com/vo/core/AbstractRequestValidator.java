@@ -18,20 +18,24 @@ import com.vo.configuration.TaskResponsiveModeEnum;
  */
 abstract class AbstractRequestValidator {
 
+	private static final Boolean RESPONSE_Z_SESSION_ID = ZContext.getBean(ServerConfigurationProperties.class)
+			.getResponseZSessionId();
+
 	private final RequestValidatorConfigurationProperties requestValidatorConfigurationProperties = ZContext
 			.getBean(RequestValidatorConfigurationProperties.class);
-	private final String mode = ZContext.getBean(ServerConfigurationProperties.class).getTaskResponsiveMode();
+
+	private static final String TASK_RESPONSIVE_MODE = ZContext.getBean(ServerConfigurationProperties.class).getTaskResponsiveMode();
 
 	public void handle(final ZRequest request, final TaskRequest taskRequest) {
 
 		// 如果任务执行模式为[排队执行]，则使用队列模式来执行
-		if (TaskResponsiveModeEnum.QUEUE.name().equals(this.mode)) {
+		if (TaskResponsiveModeEnum.QUEUE.name().equals(AbstractRequestValidator.TASK_RESPONSIVE_MODE)) {
 			// 直接放入线程队列等待处理
 			NioLongConnectionServer.ZE.executeInQueue(() -> this.handle0(request, taskRequest));
 			return;
 		}
 
-		if (TaskResponsiveModeEnum.IMMEDIATELY.name().equals(this.mode)) {
+		if (TaskResponsiveModeEnum.IMMEDIATELY.name().equals(AbstractRequestValidator.TASK_RESPONSIVE_MODE)) {
 
 			final boolean executeImmediately = NioLongConnectionServer.ZE
 					.executeImmediately(() -> this.handle0(request, taskRequest));
@@ -110,7 +114,7 @@ abstract class AbstractRequestValidator {
 
 		// 启用了响应
 		// ZSESSIONID，则认为ZSESSIONID相同就是同一个客户端(前提是服务器中存在对应的session，因为session可能是伪造的等，服务器重启就重启就认为是无效session)
-		if (this.responseZSessionId()) {
+		if (AbstractRequestValidator.responseZSessionId()) {
 			final ZSession session = request.getSession(false);
 			if (session != null) {
 				final String smoothUserAgentKeyword = HeaderEnum.Z_SESSION_ID.getName() + "@" + session.getId();
@@ -139,8 +143,8 @@ abstract class AbstractRequestValidator {
 	 * @return
 	 *
 	 */
-	public boolean responseZSessionId() {
-		return Boolean.TRUE.equals(ZContext.getBean(ServerConfigurationProperties.class).getResponseZSessionId());
+	public static boolean responseZSessionId() {
+		return Boolean.TRUE.equals(RESPONSE_Z_SESSION_ID);
 	}
 
 	/**

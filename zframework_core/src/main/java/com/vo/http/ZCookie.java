@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.StringJoiner;
+import com.vo.core.HeaderEnum;
+import com.vo.core.ZRequest;
+import com.vo.core.ZSession;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -115,8 +118,8 @@ public class ZCookie {
 	}
 
 	public String toCookieString() {
-//		Set-Cookie: sessionId=abc123; Expires=Sat, 01 Jan 2022 00:00:00 GMT; Max-Age=3600;
-//		Domain=example.com; Path=/; Secure; HttpOnly; SameSite=Strict
+		//		Set-Cookie: sessionId=abc123; Expires=Sat, 01 Jan 2022 00:00:00 GMT; Max-Age=3600;
+		//		Domain=example.com; Path=/; Secure; HttpOnly; SameSite=Strict
 
 		final StringJoiner joiner = new StringJoiner("");
 		// 不取name
@@ -131,6 +134,18 @@ public class ZCookie {
 		}
 
 		return joiner.toString();
+	}
+
+	public static ZCookie newCookie(final String zSessionId) {
+		final ZCookie cookie = new ZCookie(HeaderEnum.Z_SESSION_ID.getName(), zSessionId).path("/").httpOnly(true);
+		return cookie;
+	}
+
+	public static ZCookie newCookie() {
+		final ZSession newSession = ZRequest.newSession();
+		newSession.setLastAccessedTime(new Date());
+		final ZCookie cookie = new ZCookie(HeaderEnum.Z_SESSION_ID.getName(), newSession.getId()).path("/").httpOnly(true);
+		return cookie;
 	}
 
 	@Data

@@ -1,6 +1,7 @@
 package com.vo.core;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
@@ -72,6 +73,8 @@ import lombok.Getter;
 @Data
 public class ZResponse {
 
+	private static final int DEFAULT_BUFFER_SIZE = 1024 * 100;
+
 	private static final byte[] NEW_LINE_BYTES = Task.NEW_LINE.getBytes();
 
 	private static final String CHARSET = "charset";
@@ -136,6 +139,39 @@ public class ZResponse {
 			throw new IllegalArgumentException(HeaderEnum.CONTENT_TYPE.getName() + " 使用 setContentType 方法来设置");
 		}
 		this.header(new ZHeader(name, value));
+
+		return this;
+	}
+
+	// FIXME 2025年1月1日 下午6:47:20 zhangzhen : 现在的4个body方法要不要设置为只允许调用一次？
+	public ZResponse body(final InputStream inputStream) {
+		if (this.bodyList == null) {
+			this.bodyList = new ArrayList<>();
+		}
+
+		final byte[] b = new byte[DEFAULT_BUFFER_SIZE];
+		while (true) {
+			try {
+				final int read = inputStream.read(b);
+				if (read <= 0) {
+					break;
+				}
+				for (int i = 0; i < read; i++) {
+					this.bodyList.add(b[i]);
+				}
+				if (read < DEFAULT_BUFFER_SIZE) {
+					break;
+				}
+			} catch (final IOException e) {
+				e.printStackTrace();
+			}
+		}
+
+		try {
+			inputStream.close();
+		} catch (final IOException e) {
+			e.printStackTrace();
+		}
 
 		return this;
 	}

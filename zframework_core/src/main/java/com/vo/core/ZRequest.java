@@ -250,7 +250,6 @@ public class ZRequest {
 
 					final ZSession newSession = ZRequest.newSession();
 					ZSessionMap.put(newSession);
-
 					return newSession;
 				}
 			}
@@ -265,7 +264,7 @@ public class ZRequest {
 		return session;
 	}
 
-	private static ZSession newSession() {
+	public static ZSession newSession() {
 		final String zSessionID = ZRequest.gSessionID();
 		final ZSession session = new ZSession(zSessionID, new Date());
 

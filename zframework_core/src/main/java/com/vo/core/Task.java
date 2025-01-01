@@ -297,12 +297,16 @@ public class Task {
 				method.getName());
 		if (zqpsLimitation != null) {
 
+
 			switch (zqpsLimitation.type()) {
+
+
 			case ZSESSIONID:
+				final ZSession session = Task.getOrGSession(request);
 				final String keyword = controllerName
-				+ "@" + method.getName()
-				+ "@ZQPSLimitation" + '_'
-				+ request.getSession().getId();
+						+ "@" + method.getName()
+						+ "@ZQPSLimitation" + '_'
+						+ session.getId();
 
 				if (!QC.allow(keyword, zqpsLimitation.qps(), handlingEnum)) {
 
@@ -311,6 +315,9 @@ public class Task {
 					response.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 					.httpStatus(HttpStatus.HTTP_429.getCode())
 					.body(J.toJSONString(error, Include.NON_NULL));
+
+					NioLongConnectionServer.setZSessionId(request, response);
+
 					return response;
 				}
 				break;
@@ -383,6 +390,21 @@ public class Task {
 
 		// 默认响应json
 		return this.responseDefault_JSON(request, r);
+	}
+
+	/**
+	 * 优先从request中获取ZSESSIONID，如果服务器中不存在，则生成新的并Set-Cookie
+	 *
+	 * @param request
+	 * @return
+	 */
+	private static ZSession getOrGSession(final ZRequest request) {
+		final ZSession sessionFAlSE = request.getSession(false);
+		if (sessionFAlSE != null) {
+			return sessionFAlSE;
+		}
+
+		return request.getSession(true);
 	}
 
 	/**
