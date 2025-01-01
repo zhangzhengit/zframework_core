@@ -343,6 +343,15 @@ public class NioLongConnectionServer {
 		}
 	}
 
+	/**
+	 * 最终真正响应的方法，所有的响应(当前实现为非异常的响应)都在此方法中执行，以便于统一处理一些逻辑
+	 *
+	 * @param key
+	 * @param socketChannel
+	 * @param request
+	 * @param task
+	 * @throws Exception
+	 */
 	private static void response(final SelectionKey key, final SocketChannel socketChannel, final ZRequest request,
 			final Task task) throws Exception {
 
