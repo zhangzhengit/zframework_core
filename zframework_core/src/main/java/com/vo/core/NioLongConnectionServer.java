@@ -370,16 +370,13 @@ public class NioLongConnectionServer {
 			setServer(response);
 			setDate(response);
 			setCacheControl(request, response);
+			setETag(socketChannel, request, response);
+			setContentEncoding(request, response);
 
 			final boolean keepAlive = isConnectionKeepAlive(request);
 			setConnection(key, socketChannel, keepAlive, response);
 
-			// setETag 放在最下面，因为此方法会write
-			final boolean setETag = setETag(socketChannel, request, response);
-			if (!setETag) {
-				setContentEncoding(request, response);
-				response.write();
-			}
+			response.write();
 
 			if (!keepAlive) {
 				closeSocketChannelAndKeyCancel(key, socketChannel);
@@ -509,33 +506,25 @@ public class NioLongConnectionServer {
 	 * @param socketChannel
 	 * @param request
 	 * @param response
-	 * @return 返回是否响应了304
 	 */
-	private static boolean setETag(final SocketChannel socketChannel, final ZRequest request, final ZResponse response) {
+	private static void setETag(final SocketChannel socketChannel, final ZRequest request, final ZResponse response) {
 		final ZETag methodETag = Task.getMethodAnnotation(request, ZETag.class);
 		if (methodETag == null) {
-			return false;
+			return;
 		}
 
 		final String newETagMd5 = MD5.c(response.getBody());
 
 		// 执行目标方法前，先看请求头的ETag
-		final String requestIfNoneMatch = request.getHeader(HeaderEnum.IF_NONE_MATCH.getName());
-		if ((requestIfNoneMatch != null) && Objects.equals(newETagMd5, requestIfNoneMatch)) {
-			final ZResponse r304 = new ZResponse(socketChannel);
-			r304.httpStatus(304);
-			r304.contentType(null);
-			final List<ZHeader> rhl = response.getHeaderList();
-			for (final ZHeader zHeader : rhl) {
-				r304.header(zHeader.getName(),zHeader.getValue());
-			}
-			r304.header(HeaderEnum.ETAG.getName(), requestIfNoneMatch);
-			r304.write();
-			return true;
+		final String ifNoneMatch = request.getHeader(HeaderEnum.IF_NONE_MATCH.getName());
+		if ((ifNoneMatch != null) && Objects.equals(newETagMd5, ifNoneMatch)) {
+			response.httpStatus(304);
+			response.clearBody();
+			response.header(HeaderEnum.ETAG.getName(), ifNoneMatch);
+		} else {
+			response.header(HeaderEnum.ETAG.getName(), newETagMd5);
 		}
 
-		response.header(HeaderEnum.ETAG.getName(), newETagMd5);
-		return false;
 	}
 
 	@Data
