@@ -90,7 +90,6 @@ public class ZResponse {
 	@Getter
 	private String contentType;
 
-	@Getter
 	private final AtomicReference<Integer> httpStatus = new AtomicReference<>(HttpStatus.HTTP_200.getCode());
 	private final AtomicReference<String> contentTypeAR = new AtomicReference<>(Task.DEFAULT_CONTENT_TYPE.getValue());
 
@@ -245,6 +244,10 @@ public class ZResponse {
 		return this.body(body.getBytes());
 	}
 
+	public Integer getHttpStatus() {
+		return this.httpStatus.get();
+	}
+
 	/**
 	 * 根据header和body 来响应结果，只响应一次
 	 */
@@ -261,8 +264,7 @@ public class ZResponse {
 	}
 
 	private void closeSocketChannelIfStatusNot200() {
-		final Integer httpStatus = this.getHttpStatus().get();
-		if (!httpStatus.equals(HttpStatus.HTTP_200.getCode())) {
+		if (!this.getHttpStatus().equals(HttpStatus.HTTP_200.getCode())) {
 			try {
 				this.socketChannel.close();
 			} catch (final IOException e) {
@@ -293,7 +295,7 @@ public class ZResponse {
 		// FIXME 2024年12月22日 下午9:39:47 zhangzhen : 这个预估好一般有多少，或者自己写个扩容固定值的比如40
 		final ZArray array = new ZArray(contentLenght + 2048);
 
-		array.add((ZResponse.HTTP_1_1 + this.httpStatus.get()).getBytes());
+		array.add((ZResponse.HTTP_1_1 + this.getHttpStatus()).getBytes());
 		array.add(NEW_LINE_BYTES);
 
 		// header-Content-Length
