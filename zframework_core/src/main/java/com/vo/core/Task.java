@@ -196,13 +196,17 @@ public class Task {
 	private ZResponse handleNoMethodMatche(final ZRequest request,  final String path) throws Exception {
 		final Map<MethodEnum, Method> methodMap = ZControllerMap.getByPath(path);
 		if (CU.isNotEmpty(methodMap)) {
+
 			final String methodString = methodMap.keySet().stream().map(MethodEnum::getMethod).collect(Collectors.joining(","));
+
+			final String body = J.toJSONString(CR.error("请求Method不支持："
+					+ request.getMethodEnum().getMethod() + ", Method: " + methodString), Include.NON_NULL);
+
 			return new ZResponse(this.socketChannel)
 					.header(HeaderEnum.ALLOW.getName(), methodString)
 					.httpStatus(HttpStatus.HTTP_405.getCode())
 					.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
-					.body(J.toJSONString(CR.error("请求Method不支持："
-							+ request.getMethodEnum().getMethod() + ", Method: " + methodString), Include.NON_NULL));
+					.body(body);
 
 		}
 

@@ -374,14 +374,13 @@ public class NioLongConnectionServer {
 			final boolean keepAlive = isConnectionKeepAlive(request);
 			setConnection(key, socketChannel, keepAlive, response);
 
-			// setETag 放在最下面，因为次方法会write
+			// setETag 放在最下面，因为此方法会write
 			final boolean setETag = setETag(socketChannel, request, response);
 			if (!setETag) {
 				setContentEncoding(request, response);
 				response.write();
 			}
 
-			// 非长连接，直接关闭连接
 			if (!keepAlive) {
 				closeSocketChannelAndKeyCancel(key, socketChannel);
 			}

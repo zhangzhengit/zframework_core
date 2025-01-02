@@ -364,39 +364,14 @@ public class ZRequest {
 	}
 
 	private static ZRequest parseRequest(final ZRequest request) {
-		// FIXME 2024年12月19日 下午1:10:30 zhangzhen : 这由于改了很多东西，暂时先不用缓存。
-		// 后面记得再看是否还需要缓存
 		return parseRequest0(request);
-
-		//		final RequestLine rl = request.getRequestLine();
-		//		final List<String> lineList2 = request.getLineList();
-		//		final int hashCode = lineList2.hashCode();
-		//		final String k = "REQUEST" + hashCode;
-		//
-		//		final Object v = CACHE_MAP.get(k);
-		//		if (v != null) {
-		//			return (ZRequest) v;
-		//		}
-		//
-		//		synchronized (k) {
-		//			final ZRequest v2 = parseRequest0(request);
-		//			if (v2 == null) {
-		//				return v2;
-		//			}
-		//
-		//			CACHE_MAP.put(k, v2);
-		//			return v2;
-		//		}
-
 	}
 
 	private static ZRequest parseRequest0(final ZRequest request) {
 
-		//		final ZRequest.RequestLine requestLine = new ZRequest.RequestLine();
 		if (CU.isEmpty(request.getLineList())) {
 			return request;
 		}
-
 
 		// 0 为 请求行
 		final String line = request.getLineList().get(0);
@@ -412,8 +387,6 @@ public class ZRequest {
 		} else {
 			throw new IllegalArgumentException("请求行错误");
 		}
-
-		//		request.setRequestLine(requestLine);
 
 		// path
 		parsePath(line, request, methodIndex);
