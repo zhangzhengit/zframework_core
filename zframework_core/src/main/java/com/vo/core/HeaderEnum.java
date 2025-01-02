@@ -42,6 +42,8 @@ public enum HeaderEnum {
 
 	CONTENT_LENGTH("Content-Length"),
 
+	IF_MODIFIED_SINCE("If-Modified-Since"),
+
 	IF_NONE_MATCH("If-None-Match"),
 
 	DATE("Date"),

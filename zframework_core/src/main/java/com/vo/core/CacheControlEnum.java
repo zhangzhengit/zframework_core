@@ -30,7 +30,6 @@ public enum CacheControlEnum {
 	 */
 	PUBLIC("public"),
 
-
 	/**
 	 * 响应只允许客户端缓存，不允许中间缓存（如代理服务器）缓存。适用于用户特定的内容。
 	 */
@@ -56,6 +55,12 @@ public enum CacheControlEnum {
 	 * 指示缓存不要修改响应内容（例如，图像压缩等）。常用于保证响应的原始质量。
 	 */
 	NO_TRANSFORM("no-transform"),
+
+	/**
+	 * 表示是一个不变的资源
+	 */
+	IMMUTABLE("immutable"),
+
 	;
 
 	private String value;

@@ -3,11 +3,13 @@ package com.vo.api;
 import java.io.InputStream;
 
 import com.vo.anno.ZController;
+import com.vo.core.CacheControlEnum;
 import com.vo.core.ContentTypeEnum;
 import com.vo.core.ZRequest;
 import com.vo.core.ZResponse;
 import com.vo.html.ResourcesLoader;
 import com.vo.http.HttpStatus;
+import com.vo.http.ZCacheControl;
 import com.vo.http.ZETag;
 import com.vo.http.ZQPSLimitation;
 import com.vo.http.ZQPSLimitationEnum;
@@ -25,14 +27,16 @@ import com.votool.common.CR;
 @ZController
 public class StaticController {
 
-	@ZETag
 	@ZRequestMapping(mapping = { "/favicon\\.ico",
 			"/.+\\.png$",
 			"/.+\\.js$", "/.+\\.jpg$", "/.+\\.mp3$", "/.+\\.mp4$", "/.+\\.pdf$",
 			"/.+\\.gif$", "/.+\\.doc$" ,"/.+\\.css$","/.+\\.html$"},
-	isRegex = { true, true, true, true, true, true, true, true, true, true , true }, qps = 10000 * 5)
-	@ZQPSLimitation(qps = 1000, type = ZQPSLimitationEnum.ZSESSIONID)
-	public void staticResources(final ZResponse response,final ZRequest request) {
+			isRegex = { true, true, true, true, true, true, true, true, true, true , true }, qps = 10000 * 5)
+
+	@ZQPSLimitation(qps = 100, type = ZQPSLimitationEnum.ZSESSIONID)
+	@ZETag
+	@ZCacheControl(value = { CacheControlEnum.PRIVATE, CacheControlEnum.MUST_REVALIDATE }, maxAge = 60 * 10)
+	public void staticResources(final ZResponse response, final ZRequest request) {
 
 		final String resourceName = request.getRequestURI();
 

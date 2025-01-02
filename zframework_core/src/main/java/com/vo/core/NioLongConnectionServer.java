@@ -29,13 +29,13 @@ import com.vo.compression.ZGzip;
 import com.vo.compression.ZSTD;
 import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.configuration.TaskResponsiveModeEnum;
-import com.vo.core.ZRequest.ZHeader;
 import com.vo.enums.ConnectionEnum;
 import com.vo.exception.ZControllerAdviceActuator;
 import com.vo.http.HttpStatus;
 import com.vo.http.ZCacheControl;
 import com.vo.http.ZCookie;
 import com.vo.http.ZETag;
+import com.vo.http.ZLastModified;
 import com.votool.common.CR;
 import com.votool.ze.ThreadModeEnum;
 import com.votool.ze.ZE;
@@ -373,6 +373,11 @@ public class NioLongConnectionServer {
 			setETag(socketChannel, request, response);
 			setContentEncoding(request, response);
 
+			// FIXME 2025年1月3日 上午3:22:26 zhangzhen : Last-Modified
+			// FIXME 2025年1月3日 上午3:28:22 zhangzhen : last-modified头貌似不好写
+			// 因为只有在业务代码中才容易判断资源的修改时间
+			//			setLastModified(request, response);
+
 			final boolean keepAlive = isConnectionKeepAlive(request);
 			setConnection(key, socketChannel, keepAlive, response);
 
@@ -388,6 +393,23 @@ public class NioLongConnectionServer {
 			throw e;
 		}
 
+	}
+
+	private static void setLastModified(final ZRequest request,final ZResponse response) {
+
+		final ZLastModified lastModified = Task.getMethodAnnotation(request, ZLastModified.class);
+		if (lastModified == null) {
+			return;
+		}
+
+		final String ifModifiedSince = request.getHeader(HeaderEnum.IF_MODIFIED_SINCE.getName());
+		if (STU.isNullOrEmptyOrBlank(ifModifiedSince)) {
+			return;
+		}
+
+
+
+		response.header("Last-Modified", ZDateUtil.gmt(new Date()));
 	}
 
 	/**

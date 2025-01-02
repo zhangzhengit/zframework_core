@@ -31,7 +31,7 @@ public @interface ZCacheControl {
 	 *
 	 * @return
 	 */
-	CacheControlEnum[] value() default {};
+	CacheControlEnum[] value();
 
 	/**
 	 * max-age=<秒数>
