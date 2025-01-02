@@ -24,6 +24,9 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.vo.cache.CU;
 import com.vo.cache.J;
 import com.vo.cache.STU;
+import com.vo.compression.Deflater;
+import com.vo.compression.ZGzip;
+import com.vo.compression.ZSTD;
 import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.configuration.TaskResponsiveModeEnum;
 import com.vo.core.ZRequest.ZHeader;
@@ -399,20 +402,32 @@ public class NioLongConnectionServer {
 	 * @param response
 	 */
 	private static void setGzip(final ZRequest request, final ZResponse response) {
-		if (!SERVER_CONFIGURATIONPROPERTIES.getGzipEnable()
-				|| (response.getBodyLength() <= (SERVER_CONFIGURATIONPROPERTIES.getGzipMinLength() * 1024))
-				|| !request.isSupportGZIP()) {
+		if (!SERVER_CONFIGURATIONPROPERTIES.getCompressionEnable()
+				|| (response.getBodyLength() <= (SERVER_CONFIGURATIONPROPERTIES.getCompressionMinLength() * 1024))) {
 			return;
 		}
 
 		final String contentType = response.getContentType();
-		if (!SERVER_CONFIGURATIONPROPERTIES.gzipContains(contentType)) {
+
+		if (!SERVER_CONFIGURATIONPROPERTIES.compressionContains(contentType)) {
 			return;
 		}
 
-		response.header(HeaderEnum.CONTENT_ENCODING.getName(), HeaderEnum.GZIP.getName());
+		byte[] compress = null;
+		if (request.isSupportZSTD()) {
+			response.header(HeaderEnum.CONTENT_ENCODING.getName(), AcceptEncodingEnum.ZSTD.getValue());
+			compress = ZSTD.compress(response.getBody());
+			// FIXME 2025年1月2日 下午9:37:52 zhangzhen : 支持了br后，要再加一个ifelse
+		} else if (request.isSupportGZIP()) {
+			response.header(HeaderEnum.CONTENT_ENCODING.getName(), AcceptEncodingEnum.GZIP.getValue());
+			compress = ZGzip.compress(response.getBody());
+		} else if (request.isSupportDEFLATE()) {
+			response.header(HeaderEnum.CONTENT_ENCODING.getName(), AcceptEncodingEnum.DEFLATE.getValue());
+			compress = Deflater.compress(response.getBody());
+		} else {
+			compress = response.getBody();
+		}
 
-		final byte[] compress = ZGzip.compress(response.getBody());
 		response.clearBody();
 		response.body(compress);
 	}

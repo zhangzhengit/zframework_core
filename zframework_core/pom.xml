@@ -23,6 +23,19 @@
 	<dependencies>
 
 		<dependency>
+			<groupId>com.github.luben</groupId>
+			<artifactId>zstd-jni</artifactId>
+			<version>1.5.0-2</version>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/org.brotli/dec -->
+		<dependency>
+			<groupId>org.brotli</groupId>
+			<artifactId>dec</artifactId>
+			<version>0.1.2</version>
+		</dependency>
+
+		<dependency>
 			<groupId>redis.clients</groupId>
 			<artifactId>jedis</artifactId>
 		</dependency>
@@ -32,7 +45,7 @@
 			<artifactId>hutool-all</artifactId>
 			<version>5.3.5</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>com.vo</groupId>
 			<artifactId>sb_zlog2</artifactId>

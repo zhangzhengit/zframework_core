@@ -20,8 +20,6 @@ public enum HeaderEnum {
 
 	Z_SESSION_ID("ZSESSIONID"),
 
-	GZIP("gzip"),
-
 	HOST("Host"),
 
 	ACCEPT_ENCODING("Accept-Encoding"),

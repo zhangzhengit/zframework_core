@@ -273,23 +273,23 @@ public class ServerConfigurationProperties {
 	private String staticPrefix = "/static";
 
 	/**
-	 * 是否开启gzip压缩
+	 * 是否开启对响应body的压缩
 	 */
 	@ZNotNull
-	private Boolean gzipEnable = true;
+	private Boolean compressionEnable = true;
 
 	/**
-	 * 开启gzip的content-type,如需配置多个，则用,隔开，如： text/html,text/css
+	 * 开启压缩的content-type,如需配置多个，则用,隔开，如： text/html,text/css
 	 */
 	@ZNotNull
-	private String gzipTypes = "text/html,text/css,application/json";
+	private String compressionTypes = "text/html,text/css,application/json,application/javascript,text/plain";
 
 	/**
-	 * 资源大于多少KB才启用gzip压缩
+	 * body大于多少KB才启用压缩
 	 */
 	@ZNotNull
 	@ZMin(min = 1)
-	private Integer gzipMinLength = 1;
+	private Integer compressionMinLength = 1;
 
 	/**
 	 * 支持的自定义响应头header，如：解决CORS问题，配置如下：
@@ -309,8 +309,8 @@ public class ServerConfigurationProperties {
 	@ZNotNull
 	private Boolean printProxyClass = false;
 
-	public boolean gzipContains(final String contentType) {
-		final String[] a = this.getGzipContentType();
+	public boolean compressionContains(final String contentType) {
+		final String[] a = this.getCompressionType();
 		for (final String string : a) {
 			if (string.equals(contentType)) {
 				return true;
@@ -320,8 +320,8 @@ public class ServerConfigurationProperties {
 		return false;
 	}
 
-	public String[] getGzipContentType() {
-		return SCU.split(this.gzipTypes, ",");
+	public String[] getCompressionType() {
+		return SCU.split(this.compressionTypes, ",");
 	}
 
 }

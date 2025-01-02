@@ -12,7 +12,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.WeakHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.google.common.collect.Sets;
@@ -103,7 +102,19 @@ public class ZRequest {
 	 */
 	private String clientIp;
 
+	public boolean isSupportZSTD() {
+		return this.supportCompression(AcceptEncodingEnum.ZSTD);
+	}
+
+	public boolean isSupportDEFLATE() {
+		return this.supportCompression(AcceptEncodingEnum.DEFLATE);
+	}
+
 	public boolean isSupportGZIP() {
+		return this.supportCompression(AcceptEncodingEnum.GZIP);
+	}
+
+	private boolean supportCompression(final AcceptEncodingEnum aeEnum) {
 		final String a = this.getHeader(HeaderEnum.ACCEPT_ENCODING.getName());
 		if (STU.isEmpty(a)) {
 			return false;
@@ -111,7 +122,7 @@ public class ZRequest {
 
 		final String[] array = SCU.split(a, ",");
 		for (final String a2 : array) {
-			if (HeaderEnum.GZIP.getName().equalsIgnoreCase(a2)) {
+			if (aeEnum.getValue().equalsIgnoreCase(a2.trim())) {
 				return true;
 			}
 		}

@@ -1,24 +1,24 @@
-package com.vo.core;
+package com.vo.compression;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
+import java.util.zip.DeflaterInputStream;
+import java.util.zip.DeflaterOutputStream;
 
 import com.vo.cache.AU;
 import com.vo.cache.STU;
 
 /**
- *
- * gzip 压缩
+ * Deflater压缩
  *
  * @author zhangzhen
- * @date 2023年7月1日
+ * @date 2025年1月2日 下午8:32:51
  *
  */
-public class ZGzip {
+public class Deflater {
 
 	private static final String DEFAULT_CHARSET = Charset.defaultCharset().displayName();
 
@@ -29,16 +29,17 @@ public class ZGzip {
 
 		try {
 			final ByteArrayOutputStream out = new ByteArrayOutputStream();
-			final GZIPInputStream gzip = new GZIPInputStream(new ByteArrayInputStream(ba));
+
+			final DeflaterInputStream deflater = new DeflaterInputStream(new ByteArrayInputStream(ba));
 			final byte[] buffer = new byte[1024];
 			int n;
-			while ((n = gzip.read(buffer)) != -1) {
+			while ((n = deflater.read(buffer)) != -1) {
 				out.write(buffer, 0, n);
 			}
 
 			out.flush();
 			out.close();
-			gzip.close();
+			deflater.close();
 
 			return new String(out.toByteArray(), DEFAULT_CHARSET).intern();
 		} catch (final Exception e) {
@@ -48,27 +49,17 @@ public class ZGzip {
 		return null;
 	}
 
-	public static byte[] compress(final byte[] ba) {
-		if (AU.isEmpty(ba)) {
-			return null;
-		}
+	public static byte[] compress(final byte[] data) {
+		final ByteArrayOutputStream byteArrayOut = new ByteArrayOutputStream();
 
-		try {
-			final ByteArrayOutputStream out = new ByteArrayOutputStream();
-			final GZIPOutputStream gzip = new GZIPOutputStream(out);
-			gzip.write(ba);
-			gzip.finish();
-
-			out.close();
-			gzip.close();
-
-			return out.toByteArray();
-
-		} catch (final Exception e) {
+		try (DeflaterOutputStream deflaterOut = new DeflaterOutputStream(byteArrayOut,
+				new java.util.zip.Deflater(java.util.zip.Deflater.BEST_COMPRESSION))) {
+			deflaterOut.write(data);
+		} catch (final IOException e) {
 			e.printStackTrace();
 		}
 
-		return null;
+		return byteArrayOut.toByteArray();
 	}
 
 	public static byte[] compress(final String string) {
