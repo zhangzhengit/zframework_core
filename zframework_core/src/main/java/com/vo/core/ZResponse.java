@@ -247,23 +247,15 @@ public class ZResponse {
 
 	/**
 	 * 根据header和body 来响应结果，只响应一次
-	 *
 	 */
-	// FIXME 2023年7月6日 下午8:59:52 zhanghen: TODO 改为private不让调用，然后server中task.invoke后反射调用？
 	synchronized void write() {
 
 		if (this.write.get()) {
 			return;
 		}
 
-		if (this.socketChannel != null) {
-			this.writeSocketChannel();
-			this.closeSocketChannelIfStatusNot200();
-		} else {
-			this.write.set(true);
-			throw new IllegalArgumentException(
-					ZResponse.class.getSimpleName() + " outputStream 和 socketChannel 不能同时为空");
-		}
+		this.writeSocketChannel();
+		this.closeSocketChannelIfStatusNot200();
 
 		this.write.set(true);
 	}
