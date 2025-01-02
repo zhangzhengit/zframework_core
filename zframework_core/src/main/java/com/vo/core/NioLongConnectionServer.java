@@ -377,7 +377,7 @@ public class NioLongConnectionServer {
 			// setETag 放在最下面，因为次方法会write
 			final boolean setETag = setETag(socketChannel, request, response);
 			if (!setETag) {
-				setGzip(request, response);
+				setContentEncoding(request, response);
 				response.write();
 			}
 
@@ -396,12 +396,12 @@ public class NioLongConnectionServer {
 
 	/**
 	 * 根据配置项来选择是否
-	 * 启用gzip压缩并且设置header：Content-Encoding: gzip
+	 * 启用压缩并且设置header，如：Content-Encoding: gzip
 	 *
 	 * @param request
 	 * @param response
 	 */
-	private static void setGzip(final ZRequest request, final ZResponse response) {
+	private static void setContentEncoding(final ZRequest request, final ZResponse response) {
 		if (!SERVER_CONFIGURATIONPROPERTIES.getCompressionEnable()
 				|| (response.getBodyLength() <= (SERVER_CONFIGURATIONPROPERTIES.getCompressionMinLength() * 1024))) {
 			return;
