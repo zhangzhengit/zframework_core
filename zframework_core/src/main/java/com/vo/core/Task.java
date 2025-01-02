@@ -284,6 +284,13 @@ public class Task {
 		final boolean allow = QC.allow("API-" + controllerName + "@" + method.getName(), qps, handlingEnum);
 		if (!allow) {
 
+			// FIXME 2025年1月3日 上午4:19:33 zhangzhen : 这里有个严重的问题会导致可能浪费服务器性能和存储空间
+			// 尤其是上传文件尤其是很大的文件时，因为当前逻辑是解析完body并且save到临时文件之后，才会走到
+			// 什么的判断api.qps的部分，所以频繁上传可能再次导致不执行api
+			// 前几天写的功能[自定义http解析流程]，似乎可以把这个部分逻辑放进去，
+			// 即：先解析header如果API.qps超了，则不解析body
+
+
 			final CR<Object> error = CR.error(AccessDeniedCodeEnum.CLIENT.getCode(),
 					AccessDeniedCodeEnum.CLIENT.getMessageToClient());
 
