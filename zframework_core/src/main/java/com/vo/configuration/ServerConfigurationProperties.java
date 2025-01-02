@@ -101,7 +101,6 @@ public class ServerConfigurationProperties {
 	/**
 	 * 上传文件时存放临时文件的目录
 	 */
-	@ZNotEmtpy
 	private String uploadTempDir;
 
 	/**
