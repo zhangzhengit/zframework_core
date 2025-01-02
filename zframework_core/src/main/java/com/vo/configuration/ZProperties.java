@@ -215,8 +215,6 @@ public class ZProperties {
 
 		properties = p1;
 
-		System.out.println("p1 = " + p1);
-
 	}
 
 	private static Properties loadPResources(final String path) {
