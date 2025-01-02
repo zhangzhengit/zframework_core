@@ -16,7 +16,9 @@ import java.util.List;
 import java.util.Map;
 
 import com.vo.anno.ZComponent;
+import com.vo.cache.STU;
 import com.vo.configuration.ServerConfigurationProperties;
+import com.vo.configuration.TempDir;
 import com.vo.enums.MethodEnum;
 
 
@@ -504,7 +506,10 @@ public class DefaultHttpReader {
 
 	// FIXME 2024年12月20日 上午1:09:51 zhangzhen : 文件名重新考虑下
 	private static TF saveToTempFile(final String fileNameRandom, final String name, final String fileName) {
-		final String tempFilePath = SERVER_CONFIGURATIONPROPERTIES.getUploadTempDir() + fileNameRandom + ".temp";
+
+		final String tempDirPath = mkdir();
+		final String tempFilePath = tempDirPath + File.separator + fileNameRandom + ".temp";
+
 		final File file = new File(tempFilePath);
 		if (!file.exists()) {
 			try {
@@ -523,6 +528,25 @@ public class DefaultHttpReader {
 		}
 
 		return null;
+	}
+
+	private static String mkdir() {
+		final String uploadTempDir = SERVER_CONFIGURATIONPROPERTIES.getUploadTempDir();
+		if (STU.hasContent(uploadTempDir)) {
+			final File dir = new File(uploadTempDir);
+			if (!dir.exists()) {
+				dir.mkdirs();
+			}
+			return dir.getAbsolutePath();
+		}
+
+		final String userDir = TempDir.getUserDir();
+		final File dir = new File(userDir + File.separator + "temp");
+		if (!dir.exists()) {
+			dir.mkdirs();
+		}
+
+		return dir.getAbsolutePath();
 	}
 
 	public static Map<String, String> parseCDLine(final String cdLine ) {
