@@ -20,8 +20,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
-import org.apache.commons.configuration.PropertiesConfiguration;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -125,15 +123,14 @@ public class ZConfigurationPropertiesScanner {
 	}
 
 	private static void findValueAndSetValue(final String prefix, final Object object, final Field field) throws Exception {
-		final PropertiesConfiguration p = ZProperties.getInstance();
 		final Class<?> type = field.getType();
 
 		final AtomicReference<String> keyAR = new AtomicReference<>();
 		final String key = prefix + field.getName();
-		if (p.containsKey(key)) {
+		if (ZProperties.containsKey(key)) {
 			keyAR.set(key);
 
-			setValueByType(object, field, p, type, keyAR);
+			setValueByType(object, field, type, keyAR);
 
 			return;
 		}
@@ -142,13 +139,13 @@ public class ZConfigurationPropertiesScanner {
 		keyAR.set(convert);
 
 		// 无 java 字段直接对应的 配置项,则 把[orderCount]转为[order.count]再试，如果包含了则继续赋值
-		if (p.containsKey(convert)) {
-			setValueByType(object, field, p, type, keyAR);
+		if (ZProperties.containsKey(convert)) {
+			setValueByType(object, field, type, keyAR);
 		} else {
 			// 到此 [orderCount]和[order.count]形式的名称都不匹配，说明是List、Map、Set三种类型了，开始匹配这三种类型
 
 			if (field.getType().getCanonicalName().equals(Map.class.getCanonicalName())) {
-				setMap(object, field, p, key);
+				setMap(object, field, key);
 			} else if (field.getType().getCanonicalName().equals(List.class.getCanonicalName())) {
 				// FIXME 2023年11月9日 上午12:13:59 zhanghen: 支持三种类型要支持什么类型
 
@@ -177,9 +174,9 @@ public class ZConfigurationPropertiesScanner {
 					}
 				}
 
-				setList(object, field, p, key);
+				setList(object, field, key);
 			} else if (field.getType().getCanonicalName().equals(Set.class.getCanonicalName())) {
-				setSet(object, field, p, key);
+				setSet(object, field, key);
 			}
 
 			ZValidator.validatedAll(object, field);
@@ -209,8 +206,7 @@ public class ZConfigurationPropertiesScanner {
 
 
 
-	private static void setSet(final Object object, final Field field, final PropertiesConfiguration p,
-			final String key) {
+	private static void setSet(final Object object, final Field field, final String key) {
 
 		// 从1-N个[i]
 		final Set<Object> set = Sets.newLinkedHashSet();
@@ -225,13 +221,13 @@ public class ZConfigurationPropertiesScanner {
 			final String suffix = "[" + (i - 1) + "]";
 			final String k1 = key + suffix;
 
-			if (p.containsKey(k1)) {
-				iteratorSet(object, field, p, set, ts, k1);
+			if (ZProperties.containsKey(k1)) {
+				iteratorSet(object, field, set, ts, k1);
 			} else {
 
 				final String k2 = convert(key) + suffix;
-				if (p.containsKey(k2)) {
-					iteratorSet(object, field, p, set, ts, k2);
+				if (ZProperties.containsKey(k2)) {
+					iteratorSet(object, field, set, ts, k2);
 				}
 			}
 		}
@@ -245,14 +241,14 @@ public class ZConfigurationPropertiesScanner {
 		}
 	}
 
-	private static void iteratorSet(final Object object, final Field field, final PropertiesConfiguration p,
-			final Set<Object> set, final Class<?>[] ts, final String k1) {
-		final Iterator<String> sk = p.getKeys(k1);
+	private static void iteratorSet(final Object object, final Field field, final Set<Object> set,
+			final Class<?>[] ts, final String k1) {
+		final Iterator<String> sk = ZProperties.getKeys(k1);
 		while (sk.hasNext()) {
 			final String xa = sk.next();
 
 			final Class<?> gType = ts[0];
-			final Object value = getSetFiledValue(p, xa, gType);
+			final Object value = getSetFiledValue(xa, gType);
 
 			if (!set.add(value)) {
 				final String message = object.getClass().getSimpleName() + "." + field.getName() + " Set类型值重复：key="
@@ -262,26 +258,26 @@ public class ZConfigurationPropertiesScanner {
 		}
 	}
 
-	private static Object getSetFiledValue(final PropertiesConfiguration p, final String xa, final Class<?> gType) {
+	private static Object getSetFiledValue(final String xa, final Class<?> gType) {
 		Object value = null;
 		if (gType.equals(String.class)) {
-			value = p.getString(xa);
+			value = ZProperties.getString(xa);
 		} else if (gType.equals(Byte.class)) {
-			value = p.getByte(xa);
+			value = ZProperties.getByte(xa);
 		} else if (gType.equals(Short.class)) {
-			value = p.getShort(xa);
+			value = ZProperties.getShort(xa);
 		} else if (gType.equals(Integer.class)) {
-			value = p.getInteger(xa, null);
+			value = ZProperties.getInteger(xa, null);
 		} else if (gType.equals(Long.class)) {
-			value = p.getLong(xa);
+			value = ZProperties.getLong(xa);
 		} else if (gType.equals(Float.class)) {
-			value = p.getFloat(xa);
+			value = ZProperties.getFloat(xa);
 		} else if (gType.equals(Double.class)) {
-			value = p.getDouble(xa);
+			value = ZProperties.getDouble(xa);
 		} else if (gType.equals(Character.class)) {
-			value = STU.isEmpty(p.getString(xa)) ? null : p.getString(xa).charAt(0);
+			value = STU.isEmpty(ZProperties.getString(xa)) ? null : ZProperties.getString(xa).charAt(0);
 		} else if (gType.equals(Boolean.class)) {
-			value = p.getBoolean(xa);
+			value = ZProperties.getBoolean(xa);
 		} else {
 			final String message = "@" + ZConfigurationProperties.class.getSimpleName() + " Set类型的泛型参数不支持,type = "
 					+ gType.getCanonicalName();
@@ -290,8 +286,7 @@ public class ZConfigurationPropertiesScanner {
 		return value;
 	}
 
-	private static void setList(final Object object, final Field field, final PropertiesConfiguration p,
-			final String key) throws Exception {
+	private static void setList(final Object object, final Field field, final String key) throws Exception {
 
 		// 从1-N个[i]
 		final List<Object> list = Lists.newArrayList();
@@ -302,20 +297,19 @@ public class ZConfigurationPropertiesScanner {
 
 			final String suffix = "[" + (i - 1) + "]";
 			final String fullKey1 = key + suffix;
-			final Iterator<String> sk1 = p.getKeys(fullKey1);
-
+			final Iterator<String> sk1 = ZProperties.getKeys(fullKey1);
 
 			boolean sk1HasNext = false;
 
 			if (sk1.hasNext()) {
 				sk1HasNext = true;
-				iteratorList(field, p, list, fullKey1, sk1, newInstance);
+				iteratorList(field, list, fullKey1, sk1, newInstance);
 			}
 
 			final String fullKey2 = convert(key) + suffix;
 			if (!Objects.equals(fullKey1, fullKey2)) {
 
-				final Iterator<String> sk2 = p.getKeys(fullKey2);
+				final Iterator<String> sk2 = ZProperties.getKeys(fullKey2);
 
 				if (sk2.hasNext()) {
 					if (sk1HasNext) {
@@ -325,7 +319,7 @@ public class ZConfigurationPropertiesScanner {
 						throw new ZConfigurationPropertiesException(message);
 					}
 					sk1HasNext = true;
-					iteratorList(field, p, list, fullKey2, sk2, newInstance);
+					iteratorList(field, list, fullKey2, sk2, newInstance);
 				}
 			}
 
@@ -374,10 +368,10 @@ public class ZConfigurationPropertiesScanner {
 		}
 	}
 
-	private static Object iteratorList(final Field field, final PropertiesConfiguration p, final List<Object> list,
-			final String fullKey1, final Iterator<String> sk1, final Object newInstance) throws Exception {
+	private static Object iteratorList(final Field field, final List<Object> list, final String fullKey1,
+			final Iterator<String> sk1, final Object newInstance) throws Exception {
 		final String xa = sk1.next();
-		final String xaValue = p.getString(xa);
+		final String xaValue = ZProperties.getString(xa);
 		//		final Object newInstance = newInstance(field);
 		try {
 			setValue(newInstance, fullKey1, xa, xaValue);
@@ -389,7 +383,7 @@ public class ZConfigurationPropertiesScanner {
 
 		while (sk1.hasNext()) {
 			final String xa2 = sk1.next();
-			final String xaValue2 = p.getString(xa2);
+			final String xaValue2 = ZProperties.getString(xa2);
 			if (xaValue2 != null) {
 				setValue(newInstance, fullKey1, xa2, xaValue2);
 			}
@@ -460,16 +454,15 @@ public class ZConfigurationPropertiesScanner {
 		return newInstance;
 	}
 
-	private static void setMap(final Object object, final Field field, final PropertiesConfiguration p,
-			final String key) {
-		final Iterator<String> keys = p.getKeys(key);
+	private static void setMap(final Object object, final Field field, final String key) {
 		final Map<String, Object> map = new HashMap<>(16, 1F);
+		final Iterator<String> keys = ZProperties.getKeys(key);
 		while (keys.hasNext()) {
 			final String k = keys.next();
 
 			final String kName = StrUtil.removeAll(k, key + ".");
 
-			final String value = p.getString(k);
+			final String value = ZProperties.getString(k);
 			map.put(kName, value);
 		}
 
@@ -484,51 +477,51 @@ public class ZConfigurationPropertiesScanner {
 		}
 	}
 
-	private static void setValueByType(final Object object, final Field field, final PropertiesConfiguration p,
-			final Class<?> type, final AtomicReference<String> keyAR) {
+	private static void setValueByType(final Object object, final Field field, final Class<?> type,
+			final AtomicReference<String> keyAR) {
 
-		final String v1 = getStringValue(p, keyAR);
+		final String v1 = getStringValue(keyAR);
 
 
 		if (type.getCanonicalName().equals(String.class.getCanonicalName())) {
 			setValue(object, field, v1);
 		} else if (type.getCanonicalName().equals(Byte.class.getCanonicalName())) {
-			setValue(object, field, p.getByte(keyAR.get()));
+			setValue(object, field, ZProperties.getByte(keyAR.get()));
 		} else if (type.getCanonicalName().equals(Short.class.getCanonicalName())) {
-			setValue(object, field, p.getShort(keyAR.get()));
+			setValue(object, field, ZProperties.getShort(keyAR.get()));
 		} else if (type.getCanonicalName().equals(Integer.class.getCanonicalName())) {
-			setValue(object, field, p.getInt(keyAR.get()));
+			setValue(object, field, ZProperties.getInteger(keyAR.get()));
 		} else if (type.getCanonicalName().equals(Long.class.getCanonicalName())) {
-			setValue(object, field, p.getLong(keyAR.get()));
+			setValue(object, field, ZProperties.getLong(keyAR.get()));
 		} else if (type.getCanonicalName().equals(Float.class.getCanonicalName())) {
-			setValue(object, field, p.getFloat(keyAR.get()));
+			setValue(object, field, ZProperties.getFloat(keyAR.get()));
 		} else if (type.getCanonicalName().equals(Double.class.getCanonicalName())) {
-			setValue(object, field, p.getDouble(keyAR.get()));
+			setValue(object, field, ZProperties.getDouble(keyAR.get()));
 		} else if (type.getCanonicalName().equals(Character.class.getCanonicalName())) {
 			setValue(object, field, v1.charAt(0));
 		} else if (type.getCanonicalName().equals(Boolean.class.getCanonicalName())) {
-			setValue(object, field, p.getBoolean(keyAR.get()));
+			setValue(object, field, ZProperties.getBoolean(keyAR.get()));
 		} else if (type.getCanonicalName().equals(BigInteger.class.getCanonicalName())) {
-			setValue(object, field, p.getBigInteger(keyAR.get()));
+			setValue(object, field, ZProperties.getBigInteger(keyAR.get()));
 		} else if (type.getCanonicalName().equals(BigDecimal.class.getCanonicalName())) {
-			setValue(object, field, p.getBigDecimal(keyAR.get()));
+			setValue(object, field, ZProperties.getBigDecimal(keyAR.get()));
 		} else if (type.getCanonicalName().equals(AtomicInteger.class.getCanonicalName())) {
-			setValue(object, field, new AtomicInteger(p.getInt(keyAR.get())));
+			setValue(object, field, new AtomicInteger(ZProperties.getInteger(keyAR.get())));
 		} else if (type.getCanonicalName().equals(AtomicLong.class.getCanonicalName())) {
-			setValue(object, field, new AtomicLong(p.getInt(keyAR.get())));
+			setValue(object, field, new AtomicLong(ZProperties.getLong(keyAR.get())));
 		}
 
 		// 赋值以后才可以校验
 		ZValidator.validatedAll(object, field);
 	}
 
-	private static String getStringValue(final PropertiesConfiguration p, final AtomicReference<String> keyAR) {
+	private static String getStringValue(final AtomicReference<String> keyAR) {
 		final StringJoiner joiner = new StringJoiner(",");
 		try {
-			final String[] stringArray = p.getStringArray(keyAR.get());
+			final String[] stringArray = ZProperties.getStringArray(keyAR.get());
 			for (final String s : stringArray) {
 				final String s2 = new String(s.trim()
-						.getBytes(ZProperties.PROPERTIESCONFIGURATION_ENCODING.get()),
+						.getBytes(),
 						Charset.defaultCharset().displayName());
 				joiner.add(s2);
 			}
@@ -540,10 +533,6 @@ public class ZConfigurationPropertiesScanner {
 	}
 
 	@SuppressWarnings("boxing")
-
-
-
-
 	private static void setValue(final Object object, final Field field, final Object value) {
 		try {
 			field.setAccessible(true);

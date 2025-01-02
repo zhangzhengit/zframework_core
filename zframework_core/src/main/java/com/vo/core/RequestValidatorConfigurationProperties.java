@@ -82,6 +82,7 @@ public class RequestValidatorConfigurationProperties {
 			return DEFAULT_HANDLINGENUM;
 		}
 
+
 		if (uaL == null) {
 			synchronized (this) {
 				if (uaL == null) {

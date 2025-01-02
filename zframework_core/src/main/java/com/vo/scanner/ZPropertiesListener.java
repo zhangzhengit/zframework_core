@@ -2,7 +2,6 @@ package com.vo.scanner;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
@@ -20,8 +19,6 @@ import com.vo.configuration.ZProperties;
 import com.vo.core.ZLog2;
 import com.votool.ze.ZE;
 import com.votool.ze.ZES;
-
-import cn.hutool.core.io.IoUtil;
 
 /**
  * 配置文件监听器，监听配置变动，及时更新 @ZConfigurationProperties、 @ZValue 等

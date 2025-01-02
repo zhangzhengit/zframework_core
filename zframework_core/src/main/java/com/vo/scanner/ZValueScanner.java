@@ -13,8 +13,6 @@ import java.util.Set;
 import java.util.StringJoiner;
 import java.util.concurrent.ConcurrentMap;
 
-import org.apache.commons.configuration.PropertiesConfiguration;
-
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -165,13 +163,13 @@ public class ZValueScanner {
 	}
 
 
-	private static String getStringValue(final PropertiesConfiguration p, final String key) {
+	private static String getStringValue(final String key) {
 		final StringJoiner joiner = new StringJoiner(",");
 		try {
-			final String[] stringArray = p.getStringArray(key);
+			final String[] stringArray = ZProperties.getStringArray(key);
 			for (final String s : stringArray) {
 				final String s2 = new String(s.trim()
-						.getBytes(ZProperties.PROPERTIESCONFIGURATION_ENCODING.get()),
+						.getBytes(),
 						Charset.defaultCharset().displayName());
 				joiner.add(s2);
 			}
@@ -183,35 +181,34 @@ public class ZValueScanner {
 	}
 
 	private static void setValue(final Field field, final String fieldName, final Object object) {
-		final PropertiesConfiguration p = ZProperties.getInstance();
-		if (!p.containsKey(fieldName)) {
+		if (!ZProperties.containsKey(fieldName)) {
 			return;
 		}
 
 		final Class<?> type = field.getType();
 		if (type.getCanonicalName().equals(String.class.getCanonicalName())) {
-			final String v1 = getStringValue(p, fieldName);
+			final String v1 = getStringValue(fieldName);
 			setValue(field, object, v1);
 		} else if (type.getCanonicalName().equals(Byte.class.getCanonicalName())) {
-			setValue(field, object, p.getByte(fieldName));
+			setValue(field, object, ZProperties.getByte(fieldName));
 		} else if (type.getCanonicalName().equals(Short.class.getCanonicalName())) {
-			setValue(field, object, p.getShort(fieldName));
+			setValue(field, object, ZProperties.getShort(fieldName));
 		} else if (type.getCanonicalName().equals(Integer.class.getCanonicalName())) {
-			setValue(field, object, p.getInt(fieldName));
+			setValue(field, object, ZProperties.getInteger(fieldName));
 		} else if (type.getCanonicalName().equals(Long.class.getCanonicalName())) {
-			setValue(field, object, p.getLong(fieldName));
+			setValue(field, object, ZProperties.getLong(fieldName));
 		} else if (type.getCanonicalName().equals(BigInteger.class.getCanonicalName())) {
-			setValue(field, object, p.getBigInteger(fieldName));
+			setValue(field, object, ZProperties.getBigInteger(fieldName));
 		} else if (type.getCanonicalName().equals(BigDecimal.class.getCanonicalName())) {
-			setValue(field, object, p.getBigDecimal(fieldName));
+			setValue(field, object, ZProperties.getBigDecimal(fieldName));
 		} else if (type.getCanonicalName().equals(Boolean.class.getCanonicalName())) {
-			setValue(field, object, p.getBoolean(fieldName));
+			setValue(field, object, ZProperties.getBoolean(fieldName));
 		} else if (type.getCanonicalName().equals(Double.class.getCanonicalName())) {
-			setValue(field, object, p.getDouble(fieldName));
+			setValue(field, object, ZProperties.getDouble(fieldName));
 		} else if (type.getCanonicalName().equals(Float.class.getCanonicalName())) {
-			setValue(field, object, p.getFloat(fieldName));
+			setValue(field, object, ZProperties.getFloat(fieldName));
 		} else if (type.getCanonicalName().equals(Character.class.getCanonicalName())) {
-			setValue(field, object, p.getString(fieldName).charAt(0));
+			setValue(field, object, ZProperties.getString(fieldName).charAt(0));
 		} else {
 			throw new IllegalArgumentException("@" + ZValue.class.getSimpleName() + " 字段 " + field.getName() + " 的类型 "
 					+ field.getType().getSimpleName() + " 暂不支持");
