@@ -95,12 +95,7 @@ public class NioLongConnectionServer {
 
 	private static final ServerConfigurationProperties SERVER_CONFIGURATION = ZSingleton.getSingletonByClass(ServerConfigurationProperties.class);
 
-	private static final int BUFFER_SIZE = SERVER_CONFIGURATION.getByteBufferSize();
-
-	private final DefaultHttpReader httpReader = ZContext.getBean(DefaultHttpReader.class);
-
 	private final TaskRequestHandler requestHandler = new TaskRequestHandler();
-
 
 	public void startNIOServer(final Integer serverPort) {
 		final Thread thread = new Thread(() -> NioLongConnectionServer.this.startNIOServer0(serverPort));
@@ -111,11 +106,10 @@ public class NioLongConnectionServer {
 
 	private void startNIOServer0(final Integer serverPort) {
 		this.requestHandler.start();
+
 		ZContext.addBean(this.requestHandler.getClass(), this.requestHandler);
 
 		keepAliveTimeoutJOB();
-
-		LOG.trace("zNIOServer开始启动,serverPort={}", serverPort);
 
 		// 创建ServerSocketChannel
 		Selector selector = null;
@@ -134,7 +128,7 @@ public class NioLongConnectionServer {
 			System.exit(0);
 		}
 
-		LOG.trace("zNIOServer启动成功,等待连接,serverPort={}", serverPort);
+		LOG.trace("httpServer启动成功,等待连接,serverPort={}", serverPort);
 
 		if (selector == null) {
 			return;
