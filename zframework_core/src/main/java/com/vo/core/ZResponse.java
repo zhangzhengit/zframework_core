@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import com.vo.cache.CU;
 import com.vo.cache.STU;
 import com.vo.core.ZRequest.ZHeader;
-import com.vo.http.HttpStatus;
+import com.vo.http.HttpStatusEnum;
 import com.vo.http.ZCookie;
 
 import lombok.Getter;
@@ -26,9 +26,9 @@ import lombok.Getter;
  *
  * 	new ZResponse(socketChannel)
 		.header("Allow", "GET")
-		.httpStatus(HttpStatus.HTTP_405.getCode())
+		.httpStatus(HttpStatusEnum.HTTP_405.getCode())
 		.contentType(ContentTypeEnum.JSON.getType())
-		.body(JSON.toJSONString(CR.error(HttpStatus.HTTP_405.getCode(), HttpStatus.HTTP_405.getMessage())))
+		.body(JSON.toJSONString(CR.error(HttpStatusEnum.HTTP_405.getCode(), HttpStatusEnum.HTTP_405.getMessage())))
 		.write();
 ---------------------------------------------------------
 	响应如下：
@@ -90,7 +90,7 @@ public class ZResponse {
 	@Getter
 	private String contentType;
 
-	private final AtomicReference<Integer> httpStatus = new AtomicReference<>(HttpStatus.HTTP_200.getCode());
+	private final AtomicReference<Integer> httpStatus = new AtomicReference<>(HttpStatusEnum.HTTP_200.getCode());
 	private final AtomicReference<String> contentTypeAR = new AtomicReference<>(Task.DEFAULT_CONTENT_TYPE.getValue());
 
 	@Getter
@@ -264,7 +264,7 @@ public class ZResponse {
 	}
 
 	private void closeSocketChannelIfStatusNot200() {
-		if (!this.getHttpStatus().equals(HttpStatus.HTTP_200.getCode())) {
+		if (!this.getHttpStatus().equals(HttpStatusEnum.HTTP_200.getCode())) {
 			try {
 				this.socketChannel.close();
 			} catch (final IOException e) {

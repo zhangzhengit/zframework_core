@@ -31,7 +31,7 @@ import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.configuration.TaskResponsiveModeEnum;
 import com.vo.enums.ConnectionEnum;
 import com.vo.exception.ZControllerAdviceActuator;
-import com.vo.http.HttpStatus;
+import com.vo.http.HttpStatusEnum;
 import com.vo.http.ZCacheControl;
 import com.vo.http.ZCookie;
 import com.vo.http.ZETag;
@@ -190,10 +190,10 @@ public class NioLongConnectionServer {
 								final String message = e.getMessage();
 								final ZResponse response = new ZResponse((SocketChannel) selectionKey.channel());
 								response.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
-								.httpStatus(HttpStatus.HTTP_400.getCode())
+								.httpStatus(HttpStatusEnum.HTTP_400.getCode())
 								.header(HeaderEnum.CONNECTION.getName(), "close")
 								.body(J.toJSONString(
-										CR.error(HttpStatus.HTTP_400.getMessage() + SPACE + message),
+										CR.error(HttpStatusEnum.HTTP_400.getMessage() + SPACE + message),
 										Include.NON_NULL));
 								response.write();
 
@@ -221,7 +221,7 @@ public class NioLongConnectionServer {
 
 		final SocketChannel socketChannel = (SocketChannel) key.channel();
 		final ZResponse response = new ZResponse(socketChannel);
-		response.contentType(ContentTypeEnum.APPLICATION_JSON.getType()).httpStatus(HttpStatus.HTTP_429.getCode())
+		response.contentType(ContentTypeEnum.APPLICATION_JSON.getType()).httpStatus(HttpStatusEnum.HTTP_429.getCode())
 		.body(J.toJSONString(CR.error(message), Include.NON_NULL));
 		response.write();
 		closeSocketChannelAndKeyCancel(key, socketChannel);
@@ -322,7 +322,7 @@ public class NioLongConnectionServer {
 				final ZControllerAdviceActuator a = ZContext.getBean(ZControllerAdviceActuator.class);
 				final Object r = a.execute(e);
 				final ZResponse response = new ZResponse(taskRequest.getSocketChannel())
-						.httpStatus(HttpStatus.HTTP_500.getCode())
+						.httpStatus(HttpStatusEnum.HTTP_500.getCode())
 						.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 						.body(J.toJSONString(r, Include.NON_NULL));
 
@@ -540,7 +540,7 @@ public class NioLongConnectionServer {
 		// 执行目标方法前，先看请求头的ETag
 		final String ifNoneMatch = request.getHeader(HeaderEnum.IF_NONE_MATCH.getName());
 		if ((ifNoneMatch != null) && Objects.equals(newETagMd5, ifNoneMatch)) {
-			response.httpStatus(304);
+			response.httpStatus(HttpStatusEnum.HTTP_304.getCode());
 			response.clearBody();
 			response.header(HeaderEnum.ETAG.getName(), ifNoneMatch);
 		} else {

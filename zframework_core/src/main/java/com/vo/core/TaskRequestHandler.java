@@ -8,7 +8,7 @@ import com.google.common.collect.ImmutableCollection;
 import com.vo.cache.J;
 import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.exception.StartupException;
-import com.vo.http.HttpStatus;
+import com.vo.http.HttpStatusEnum;
 import com.votool.common.CR;
 
 /**
@@ -99,9 +99,9 @@ public final class TaskRequestHandler extends Thread {
 
 				final ZResponse response = new ZResponse(taskRequest.getSocketChannel());
 				response.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
-				.httpStatus(HttpStatus.HTTP_400.getCode())
+				.httpStatus(HttpStatusEnum.HTTP_400.getCode())
 				.header(HeaderEnum.CONNECTION.getName(), "close")
-				.body(J.toJSONString(CR.error(HttpStatus.HTTP_400.getMessage() + " " +
+				.body(J.toJSONString(CR.error(HttpStatusEnum.HTTP_400.getMessage() + " " +
 						message), Include.NON_NULL));
 				response.write();
 

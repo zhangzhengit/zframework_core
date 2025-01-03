@@ -12,10 +12,12 @@ import lombok.Getter;
  */
 @Getter
 @AllArgsConstructor
-public enum HttpStatus {
+public enum HttpStatusEnum {
 
 
 	HTTP_200(200, "200 OK"),
+
+	HTTP_304(304, "304 Not Modified"),
 
 	HTTP_400(400, "400 Bad Request"),
 

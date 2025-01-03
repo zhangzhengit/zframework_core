@@ -8,7 +8,7 @@ import com.vo.core.ContentTypeEnum;
 import com.vo.core.ZRequest;
 import com.vo.core.ZResponse;
 import com.vo.html.ResourcesLoader;
-import com.vo.http.HttpStatus;
+import com.vo.http.HttpStatusEnum;
 import com.vo.http.ZCacheControl;
 import com.vo.http.ZETag;
 import com.vo.http.ZQPSLimitation;
@@ -42,13 +42,13 @@ public class StaticController {
 
 		final int i = resourceName.indexOf(".");
 		if (i <= -1) {
-			response.httpStatus(HttpStatus.HTTP_500.getCode()).body(CR.error("不支持无后缀的文件"));
+			response.httpStatus(HttpStatusEnum.HTTP_500.getCode()).body(CR.error("不支持无后缀的文件"));
 			return;
 		}
 
 		final ContentTypeEnum cte = ContentTypeEnum.gType(resourceName.substring(i + 1));
 		if (cte == null) {
-			response.httpStatus(HttpStatus.HTTP_500.getCode()).body(CR.error("不支持的文件类型"));
+			response.httpStatus(HttpStatusEnum.HTTP_500.getCode()).body(CR.error("不支持的文件类型"));
 			return;
 		}
 

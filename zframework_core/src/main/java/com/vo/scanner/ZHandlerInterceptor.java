@@ -44,7 +44,7 @@ public interface ZHandlerInterceptor {
 	 * 接口执行之前执行本方法，如果符合放行规则，则返回true让目标方法继续执行。
 	 * 不符合则返回false终止后续所有方法执行，返回false时需要自行处理 response.xx.xx，如：
 	 *
-	 * 	response.httpStatus(HttpStatus.HTTP_403.getCode()).body(J.toJSONString("403-拒绝访问"));
+	 * 	response.httpStatus(HttpStatusEnum.HTTP_403.getCode()).body(J.toJSONString("403-拒绝访问"));
 	 *
 	 * 否则服务器会默认返回一个200的空响应。
 	 *

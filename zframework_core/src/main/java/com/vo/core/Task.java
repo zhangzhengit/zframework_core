@@ -50,7 +50,7 @@ import com.vo.exception.PathVariableException;
 import com.vo.exception.ZControllerAdviceThrowable;
 import com.vo.html.ResourcesLoader;
 import com.vo.http.AccessDeniedCodeEnum;
-import com.vo.http.HttpStatus;
+import com.vo.http.HttpStatusEnum;
 import com.vo.http.ZControllerMap;
 import com.vo.http.ZCookie;
 import com.vo.http.ZHtml;
@@ -204,7 +204,7 @@ public class Task {
 
 			return new ZResponse(this.socketChannel)
 					.header(HeaderEnum.ALLOW.getName(), methodString)
-					.httpStatus(HttpStatus.HTTP_405.getCode())
+					.httpStatus(HttpStatusEnum.HTTP_405.getCode())
 					.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 					.body(body);
 
@@ -232,7 +232,7 @@ public class Task {
 
 		// 无匹配的正则表达式接口，返回404
 		return	new ZResponse(this.socketChannel)
-				.httpStatus(HttpStatus.HTTP_404.getCode())
+				.httpStatus(HttpStatusEnum.HTTP_404.getCode())
 				.contentType(DEFAULT_CONTENT_TYPE.getType())
 				.body(J.toJSONString(CR.error("请求方法不存在 [" + path+"]"), Include.NON_NULL))	;
 	}
@@ -296,7 +296,7 @@ public class Task {
 
 			final ZResponse response = new ZResponse(this.socketChannel);
 			response.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
-			.httpStatus(HttpStatus.HTTP_429.getCode())
+			.httpStatus(HttpStatusEnum.HTTP_429.getCode())
 			.body(J.toJSONString(error, Include.NON_NULL));
 
 			return response;
@@ -323,7 +323,7 @@ public class Task {
 					final CR<Object> error = CR.error(AccessDeniedCodeEnum.ZSESSIONID.getCode(), AccessDeniedCodeEnum.ZSESSIONID.getMessageToClient());
 					final ZResponse response = new ZResponse(this.socketChannel);
 					response.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
-					.httpStatus(HttpStatus.HTTP_429.getCode())
+					.httpStatus(HttpStatusEnum.HTTP_429.getCode())
 					.body(J.toJSONString(error, Include.NON_NULL));
 
 					NioLongConnectionServer.setZSessionId(request, response);
@@ -514,7 +514,7 @@ public class Task {
 			e.printStackTrace();
 			final String em = Task.gExceptionMessage(e);
 			return new ZResponse(this.socketChannel)
-					.httpStatus(HttpStatus.HTTP_500.getCode())
+					.httpStatus(HttpStatusEnum.HTTP_500.getCode())
 					.contentType(DEFAULT_CONTENT_TYPE.getType())
 					.body(J.toJSONString(CR.error(em),Include.NON_NULL));
 		}
