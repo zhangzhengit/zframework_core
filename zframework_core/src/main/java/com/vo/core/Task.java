@@ -664,7 +664,7 @@ public class Task {
 
 					} else {
 
-						if (!p.getName().equals(request.getTf().getName())) {
+						if ((request.getTf() == null) || !p.getName().equals(request.getTf().getName())) {
 							throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
 						}
 
