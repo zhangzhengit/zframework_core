@@ -19,6 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.vo.cache.CU;
@@ -62,6 +63,7 @@ public class NioLongConnectionServer {
 
 	public static final String Z_SERVER_QPS = "ZServer_QPS";
 
+	private final AtomicBoolean serverStarted = new AtomicBoolean(false);
 
 	private static final ServerConfigurationProperties SERVER_CONFIGURATIONPROPERTIES= ZContext.getBean(ServerConfigurationProperties.class);
 
@@ -102,6 +104,14 @@ public class NioLongConnectionServer {
 		thread.setName("nio-Thread");
 		thread.setPriority(Thread.MAX_PRIORITY);
 		thread.start();
+
+		while (!this.serverStarted.get()) {
+			try {
+				Thread.sleep(1);
+			} catch (final InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 	private void startNIOServer0(final Integer serverPort) {
@@ -129,6 +139,7 @@ public class NioLongConnectionServer {
 		}
 
 		LOG.trace("httpServer启动成功,等待连接,serverPort={}", serverPort);
+		this.serverStarted.set(true);
 
 		if (selector == null) {
 			return;
