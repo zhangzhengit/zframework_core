@@ -281,7 +281,22 @@ public class ServerConfigurationProperties {
 	 * 开启压缩的content-type,如需配置多个，则用,隔开，如： text/html,text/css
 	 */
 	@ZNotNull
-	private String compressionTypes = "text/html,text/css,application/json,application/javascript,text/plain";
+	private String compressionTypes =
+	"text/html,"
+			+ "text/xml,"
+			+ "text/csv,"
+			+ "text/css,"
+			+ "text/plain,"
+			+ "text/javascript,"
+			+ "application/json,"
+			+ "application/xml,"
+			+ "application/javascript,"
+			+ "image/svg+xml,"
+			+ "font/woff2,"
+			+ "font/woff,"
+			+ "font/otf,"
+			+ "font/ttf"
+			;
 
 	/**
 	 * body大于多少KB才启用压缩
