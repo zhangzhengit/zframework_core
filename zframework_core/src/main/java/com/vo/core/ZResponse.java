@@ -71,6 +71,9 @@ import lombok.Getter;
  */
 public class ZResponse {
 
+
+	private static final String DEFAULTCHARSET_DISPLAY_NAME = Charset.defaultCharset().displayName();
+
 	private static final int DEFAULT_BUFFER_SIZE = 1024 * 100;
 
 	private static final byte[] NEW_LINE_BYTES = Task.NEW_LINE.getBytes();
@@ -148,9 +151,9 @@ public class ZResponse {
 
 	public synchronized ZResponse contentType(final String contentType) {
 		if (!this.setContentType.get() && (contentType != null)) {
-			if (!contentType.toLowerCase().contains(CHARSET.toLowerCase())) {
-				this.contentTypeAR.set(HeaderEnum.CONTENT_TYPE.getName() + ":" + contentType + ";" + CHARSET.toLowerCase() + "="
-						+ Charset.defaultCharset().displayName());
+			if (!contentType.toLowerCase().contains(CHARSET)) {
+				this.contentTypeAR.set(
+						HeaderEnum.CONTENT_TYPE.getName() + ":" + contentType + ";" + CHARSET + "=" + DEFAULTCHARSET_DISPLAY_NAME);
 			} else {
 				this.contentTypeAR.set(HeaderEnum.CONTENT_TYPE.getName() + ":" + contentType);
 			}

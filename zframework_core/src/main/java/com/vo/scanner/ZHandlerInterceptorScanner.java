@@ -83,11 +83,12 @@ public class ZHandlerInterceptorScanner {
 	public static List<ZHandlerInterceptor> match(final String requestURI) {
 
 		final String key = "match-" + requestURI;
+		final List<ZHandlerInterceptor> v = map.get(requestURI);
+		if (v != null) {
+			return v;
+		}
+
 		synchronized (key) {
-			final List<ZHandlerInterceptor> v = map.get(requestURI);
-			if (v != null) {
-				return v;
-			}
 
 			final List<ZHandlerInterceptor> v2 = match0(requestURI);
 			map.put(requestURI, v2);

@@ -15,7 +15,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.net.SocketAddress;
-import java.net.URLDecoder;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -347,7 +346,7 @@ public class Task {
 		} else {
 			final ZResponse response = new ZResponse(this.socketChannel);
 			final InterceptorParameter interceptorParameter = new InterceptorParameter(method.getName(), method,
-					method.getReturnType().getCanonicalName().equals(Void.class.getCanonicalName()),
+					method.getReturnType().getName().equals(Void.class.getName()),
 					Lists.newArrayList(arraygP), zController);
 			// 1 按从小到大执行pre
 			boolean stop = false;
@@ -530,7 +529,7 @@ public class Task {
 	private Object[] generateParameters(final Method method, final Object[] parametersArray, final ZRequest request,
 			final String path, final SocketChannel socketChannel) {
 
-		final Parameter[] ps = method.getParameters();
+		final Parameter[] ps = RU.getParameters(method);
 		if (ps.length < parametersArray.length) {
 			throw new IllegalArgumentException("方法参数个数小于数组length,method = " + method.getName()
 			+ " parametersArray.length = " + parametersArray.length);
@@ -540,7 +539,7 @@ public class Task {
 		int zpvPI = 0;
 		for (final Parameter p : ps) {
 			if (p.isAnnotationPresent(ZRequestHeader.class)) {
-				final ZRequestHeader a = p.getAnnotation(ZRequestHeader.class);
+				final ZRequestHeader a = RU.getAnnotation(p, ZRequestHeader.class);
 				final String name = a.value();
 				final String headerValue = request.getHeaderMap().get(name);
 				if ((headerValue == null) && a.required()) {
@@ -550,8 +549,8 @@ public class Task {
 				pI++;
 			} else {
 				final Class<?> pType = p.getType();
-				if (p.isAnnotationPresent(ZCookieValue.class)) {
-					final ZCookieValue cookieValue = p.getAnnotation(ZCookieValue.class);
+				if (RU.isAnnotationPresent(p, ZCookieValue.class)) {
+					final ZCookieValue cookieValue = RU.getAnnotation(p, ZCookieValue.class);
 					final String cookieName = STU.isEmpty(cookieValue.name()) ? p.getName() : cookieValue.name();
 					final ZCookie[] cookies = request.getCookies();
 					if (AU.isEmpty(cookies)) {
@@ -590,7 +589,7 @@ public class Task {
 					final ZModel model = new ZModel();
 					parametersArray[pI] = model;
 					pI++;
-				} else if (p.isAnnotationPresent(ZRequestBody.class)) {
+				} else if (RU.isAnnotationPresent(p, ZRequestBody.class)) {
 					final byte[] body = request.getBody();
 					if (AU.isEmpty(body)) {
 						final String simpleName = pType.getSimpleName();
@@ -610,9 +609,9 @@ public class Task {
 					parametersArray[pI] = object;
 					pI++;
 
-				} else if (p.isAnnotationPresent(ZRequestParam.class)) {
+				} else if (RU.isAnnotationPresent(p, ZRequestParam.class)) {
 					pI = Task.hZRequestParam(parametersArray, request, path, pI, p);
-				} else if (p.isAnnotationPresent(ZPathVariable.class)) {
+				} else if (RU.isAnnotationPresent(p, ZPathVariable.class)) {
 					final List<Object> list = ZPVTL.get();
 					final Class<?> type = pType;
 					// FIXME 2023年11月8日 下午4:39:18 zhanghen: @ZRM 启动校验是否此类型
@@ -622,11 +621,11 @@ public class Task {
 						zpvPI++;
 
 						// FIXME 2023年11月8日 下午10:47:54 zhanghen: TODO 继续支持 校验注解
-						if (p.isAnnotationPresent(ZPositive.class)) {
+						if (RU.isAnnotationPresent(p, ZPositive.class)) {
 							ZValidator.validatedZPositive(p, parametersArray[pI]);
 						}
-						if (p.isAnnotationPresent(ZMin.class)) {
-							ZValidator.validatedZMin(p, parametersArray[pI], p.getAnnotation(ZMin.class).min());
+						if (RU.isAnnotationPresent(p, ZMin.class)) {
+							ZValidator.validatedZMin(p, parametersArray[pI], RU.getAnnotation(p, ZMin.class).min());
 						}
 
 					} catch (final Exception e) {
@@ -698,30 +697,28 @@ public class Task {
 	 * @ZPathVariable 支持的类型
 	 */
 	public final static ImmutableSet<String> ZPV_TYPE = ImmutableSet.copyOf(Lists.newArrayList(
-			Byte.class.getCanonicalName(), Short.class.getCanonicalName(), Integer.class.getCanonicalName(),
-			Long.class.getCanonicalName(), Float.class.getCanonicalName(), Double.class.getCanonicalName(),
-			Boolean.class.getCanonicalName(), Character.class.getCanonicalName(), String.class.getCanonicalName()));
+			Byte.class.getName(), Short.class.getName(), Integer.class.getName(),
+			Long.class.getName(), Float.class.getName(), Double.class.getName(),
+			Boolean.class.getName(), Character.class.getName(), String.class.getName()));
 
 	private static void setZPathVariableValue(final Object[] parametersArray, final int pI, final Class<?> type, final Object a) {
-		if (type.getCanonicalName().equals(Byte.class.getCanonicalName())) {
+		if (type.getName().equals(Byte.class.getName())) {
 			parametersArray[pI] = Byte.valueOf(String.valueOf(a));
-		} else if (type.getCanonicalName().equals(Short.class.getCanonicalName())) {
+		} else if (type.getName().equals(Short.class.getName())) {
 			parametersArray[pI] = Short.valueOf(String.valueOf(a));
-		} else if (type.getCanonicalName().equals(Integer.class.getCanonicalName())) {
+		} else if (type.getName().equals(Integer.class.getName())) {
 			parametersArray[pI] = Integer.valueOf(String.valueOf(a));
-		} else if (type.getCanonicalName().equals(Long.class.getCanonicalName())) {
+		} else if (type.getName().equals(Long.class.getName())) {
 			parametersArray[pI] = Long.valueOf(String.valueOf(a));
-		} else if (type.getCanonicalName().equals(Float.class.getCanonicalName())) {
+		} else if (type.getName().equals(Float.class.getName())) {
 			parametersArray[pI] = Float.valueOf(String.valueOf(a));
-		} else if (type.getCanonicalName().equals(Double.class.getCanonicalName())) {
+		} else if (type.getName().equals(Double.class.getName())) {
 			parametersArray[pI] = Double.valueOf(String.valueOf(a));
-		} else if (type.getCanonicalName().equals(Boolean.class.getCanonicalName())) {
+		} else if (type.getName().equals(Boolean.class.getName())) {
 			parametersArray[pI] = Boolean.valueOf(String.valueOf(a));
-		} else if (type.getCanonicalName().equals(Character.class.getCanonicalName())) {
+		} else if (type.getName().equals(Character.class.getName())) {
 			parametersArray[pI] = Character.valueOf(String.valueOf(a).charAt(0));
-		}
-
-		else if (type.getCanonicalName().equals(String.class.getCanonicalName())) {
+		} else if (type.getName().equals(String.class.getName())) {
 			parametersArray[pI] = String.valueOf(a);
 		}
 	}
@@ -846,21 +843,29 @@ public class Task {
 		final Class<?> pppppppppp = p.getType();
 		final AtomicInteger nI = new AtomicInteger(pI);
 		if (pppppppppp == Byte.class) {
-			parametersArray[nI.getAndIncrement()] = Byte.valueOf(String.valueOf(value));
+			parametersArray[nI.getAndIncrement()] = Byte.valueOf(
+					value instanceof String ? (String)value : String.valueOf(value));
 		} else if (pppppppppp == Short.class) {
-			parametersArray[nI.getAndIncrement()] = Short.valueOf(String.valueOf(value));
+			parametersArray[nI.getAndIncrement()] = Short.valueOf(
+					value instanceof String ? (String)value : String.valueOf(value));
 		} else if (pppppppppp == Integer.class) {
-			parametersArray[nI.getAndIncrement()] = Integer.valueOf(String.valueOf(value));
+			parametersArray[nI.getAndIncrement()] = Integer.valueOf(
+					value instanceof String ? (String)value : String.valueOf(value));
 		} else if (pppppppppp == Long.class) {
-			parametersArray[nI.getAndIncrement()] = Long.valueOf(String.valueOf(value));
+			parametersArray[nI.getAndIncrement()] = Long.valueOf(
+					value instanceof String ? (String)value : String.valueOf(value));
 		} else if (pppppppppp == Float.class) {
-			parametersArray[nI.getAndIncrement()] = Float.valueOf(String.valueOf(value));
+			parametersArray[nI.getAndIncrement()] = Float.valueOf(
+					value instanceof String ? (String)value : String.valueOf(value));
 		} else if (pppppppppp == Double.class) {
-			parametersArray[nI.getAndIncrement()] = Double.valueOf(String.valueOf(value));
+			parametersArray[nI.getAndIncrement()] = Double.valueOf(
+					value instanceof String ? (String)value : String.valueOf(value));
 		} else if (pppppppppp == Character.class) {
-			parametersArray[nI.getAndIncrement()] = Character.valueOf(String.valueOf(value).charAt(0));
+			parametersArray[nI.getAndIncrement()] = Character.valueOf((
+					value instanceof String ? (String)value : String.valueOf(value)).charAt(0));
 		} else if (pppppppppp == Boolean.class) {
-			parametersArray[nI.getAndIncrement()] = Boolean.valueOf(String.valueOf(value));
+			parametersArray[nI.getAndIncrement()] = Boolean.valueOf(
+					value instanceof String ? (String)value : String.valueOf(value));
 		} else {
 			parametersArray[nI.getAndIncrement()] = value;
 		}
@@ -870,7 +875,7 @@ public class Task {
 
 	private Object[] generateParameters(final Method method, final ZRequest request, final String path,
 			final SocketChannel socketChannel) {
-		final Object[] parametersArray = new Object[method.getParameters().length];
+		final Object[] parametersArray = new Object[method.getParameterCount()];
 
 		return this.generateParameters(method, parametersArray, request, path, socketChannel);
 	}

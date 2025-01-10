@@ -14,7 +14,7 @@ public class QC {
 
 	private static final int QPS_THRESHOLD = 100;
 
-	private static final Map<String, Integer> C = new ConcurrentHashMap<>();
+	private static final Map<String, Integer> C = new ConcurrentHashMap<>(16, 1F);
 
 	public static boolean allow(final String keyPrefix, final long qps, final QPSHandlingEnum handlingEnum) {
 		switch (handlingEnum) {

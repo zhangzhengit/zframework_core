@@ -23,14 +23,14 @@ public class ZCacheMemory implements ZCache<ZCacheR> {
 
 	@Override
 	public void add(final String key, final ZCacheR value, final long expire) {
-		synchronized (key.intern()) {
+		synchronized (key) {
 			this.map.put(key, value);
 		}
 	}
 
 	@Override
 	public ZCacheR get(final String key) {
-		synchronized (key.intern()) {
+		synchronized (key) {
 
 			final ZCacheR vC = this.map.get(key);
 			if (vC == null) {
@@ -50,14 +50,14 @@ public class ZCacheMemory implements ZCache<ZCacheR> {
 
 	@Override
 	public void remove(final String key) {
-		synchronized (key.intern()) {
+		synchronized (key) {
 			this.map.remove(key);
 		}
 	}
 
 	@Override
 	public boolean contains(final String key) {
-		synchronized (key.intern()) {
+		synchronized (key) {
 			return this.map.containsKey(key);
 		}
 	}

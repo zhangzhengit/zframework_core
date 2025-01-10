@@ -12,7 +12,7 @@ import java.util.WeakHashMap;
  */
 public class SCU {
 
-	private static final Map<String, Object> C = new WeakHashMap<>(8, 1F);
+	private static final Map<String, Object> C = new WeakHashMap<>(32, 1F);
 
 	/**
 	 * String.split 方法
@@ -40,7 +40,7 @@ public class SCU {
 
 	private static String[] split0(final String string, final String regex) {
 		final String[] v = string.split(regex);
-		final Map<String, Object> c = new WeakHashMap<>(4, 1F);
+		final Map<String, Object> c = new WeakHashMap<>(2, 1F);
 		c.put(regex, v);
 		SCU.C.put(string, c);
 		return v;

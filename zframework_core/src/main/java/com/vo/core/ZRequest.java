@@ -198,8 +198,13 @@ public class ZRequest {
 			return null;
 		}
 		final String ct = this.getHeaderMap().get(HeaderEnum.CONTENT_TYPE.getName());
-		final String[] a = ct.split(BOUNDARY);
-		return a[1].trim();
+
+		final int i = ct.indexOf(BOUNDARY);
+		if (i > -1) {
+			return ct.substring(i + BOUNDARY.length());
+		}
+
+		return null;
 	}
 
 	/**
@@ -297,11 +302,11 @@ public class ZRequest {
 			return null;
 		}
 
-		final String[] a = cookisString.split(";");
+		final String[] a = SCU.split(cookisString, ";");
 		final ZCookie[] c = new ZCookie[a.length];
 		int cI = 0;
 		for (final String s : a) {
-			final String[] c1 = s.split("=");
+			final String[] c1 = SCU.split(s, "=");
 			final ZCookie zCookie = new ZCookie(c1[0].trim(),c1[1].trim());
 
 			c[cI] = zCookie;

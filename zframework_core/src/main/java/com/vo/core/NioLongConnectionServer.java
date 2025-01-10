@@ -166,6 +166,7 @@ public class NioLongConnectionServer {
 						final SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
 						final String keyword = socketChannel.toString();
 
+
 						NioLongConnectionServer.ZE.executeByNameInASpecificThread(keyword, () -> {
 
 							ZArray array = null;
@@ -540,16 +541,16 @@ public class NioLongConnectionServer {
 			return;
 		}
 
-		final String newETagMd5 = MD5.c(response.getBody());
+		final String newETagValue = Hash.c(response.getBody());
 
 		// 执行目标方法前，先看请求头的ETag
 		final String ifNoneMatch = request.getHeader(HeaderEnum.IF_NONE_MATCH.getName());
-		if ((ifNoneMatch != null) && Objects.equals(newETagMd5, ifNoneMatch)) {
+		if ((ifNoneMatch != null) && Objects.equals(newETagValue, ifNoneMatch)) {
 			response.httpStatus(HttpStatusEnum.HTTP_304.getCode());
 			response.clearBody();
 			response.header(HeaderEnum.ETAG.getName(), ifNoneMatch);
 		} else {
-			response.header(HeaderEnum.ETAG.getName(), newETagMd5);
+			response.header(HeaderEnum.ETAG.getName(), newETagValue);
 		}
 
 	}

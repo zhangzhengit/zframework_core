@@ -12,6 +12,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.vo.cache.STU;
+import com.vo.configuration.SCU;
 import com.vo.core.QPSEnum;
 import com.vo.enums.MethodEnum;
 import com.vo.exception.StartupException;
@@ -133,10 +134,10 @@ public class ZControllerMap {
 
 	private static String getx(final String path, final Set<String> keySet) {
 
-		final String[] s = path.replaceAll("//+", "/").split("/");
+		final String[] s = SCU.split(path.replaceAll("//+", "/"), "/");
 
 		for (final String k : keySet) {
-			final String[] a = k.split("/");
+			final String[] a = SCU.split(k, "/");
 			if (a.length != s.length) {
 				continue;
 			}

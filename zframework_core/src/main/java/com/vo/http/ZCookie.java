@@ -124,7 +124,8 @@ public class ZCookie {
 		final StringJoiner joiner = new StringJoiner("");
 		// 不取name
 		joiner.add(this.getValue()).add(";");
-		for (final Node node : this.nodeList) {
+		for (int i = 0; i < this.nodeList.size(); i++) {
+			final Node node = this.nodeList.get(i);
 			joiner.add(node.getName());
 			if (node.getValue() == null) {
 				joiner.add(";");

@@ -10,6 +10,8 @@ import com.vo.anno.ZAutowired;
 import com.vo.aop.AOPParameter;
 import com.vo.aop.ZAOP;
 import com.vo.aop.ZIAOP;
+import com.vo.core.Hash;
+import com.vo.core.RU;
 import com.vo.exception.CacheKeyDeclarationException;
 
 /**
@@ -74,17 +76,16 @@ public class ZCacheableAOP implements ZIAOP {
 	}
 
 	public static String gKey(final AOPParameter aopParameter, final String key, final String group) {
-		final Parameter[] ps = aopParameter.getMethod().getParameters();
+		final Parameter[] ps = RU.getParameters(aopParameter.getMethod());
 		for (int i = 0; i < ps.length; i++) {
 
 			final Parameter parameter = ps[i];
 			if (parameter.getName().equals(key)) {
 
-				final String canonicalName = aopParameter.getTarget().getClass().getCanonicalName();
+				final String canonicalName = aopParameter.getTarget().getClass().getName();
 				final List<Object> pl = aopParameter.getParameterList();
 				final String cacheKey = PREFIX + "@" + canonicalName + "@" + group + "@" + parameter.getName() + "="
 						+ hash(pl.get(i));
-				//						+ pl.get(i);
 
 				return cacheKey;
 			}
@@ -94,9 +95,6 @@ public class ZCacheableAOP implements ZIAOP {
 	}
 
 	public static String hash(final Object object) {
-		final Hasher putString2 = Hashing.goodFastHash(256).newHasher().putString(String.valueOf(object),
-				Charset.defaultCharset());
-		final String v = putString2.hash().toString();
-		return v;
+		return Hash.c(String.valueOf(object));
 	}
 }
