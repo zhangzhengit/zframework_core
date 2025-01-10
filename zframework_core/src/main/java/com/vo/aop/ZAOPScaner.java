@@ -6,7 +6,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +19,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.vo.cache.CU;
 import com.vo.configuration.ServerConfigurationProperties;
+import com.vo.core.RU;
 import com.vo.core.Task;
 import com.vo.core.ZClass;
 import com.vo.core.ZContext;
@@ -69,8 +69,8 @@ public class ZAOPScaner {
 			final ZClass proxyZClass = new ZClass();
 			proxyZClass.setPackage1(new ZPackage(cls.getPackage().getName()));
 			proxyZClass.setName(cls.getSimpleName() + PROXY_ZCLASS_NAME_SUFFIX);
-			proxyZClass.setSuperClass(cls.getCanonicalName());
-			proxyZClass.setAnnotationSet(Sets.newHashSet(ZAOPProxyClass.class.getCanonicalName()));
+			proxyZClass.setSuperClass(cls.getName());
+			proxyZClass.setAnnotationSet(Sets.newHashSet(ZAOPProxyClass.class.getName()));
 
 			final Method[] mss = cls.getDeclaredMethods();
 
@@ -87,12 +87,12 @@ public class ZAOPScaner {
 					f.setAccessible(true);
 					final ZField zf = new ZField();
 
-					zf.setType(f.getType().getCanonicalName());
+					zf.setType(f.getType().getName());
 					zf.setName(f.getName());
 
-					ZFH.set(cls.getCanonicalName() + "@" + f.getType().getCanonicalName(), f.get(cls.newInstance()));
-					zf.setValue(ZFH.class.getCanonicalName() + ".get(\"" + cls.getCanonicalName() + "@"
-							+ f.getType().getCanonicalName() + "\")");
+					ZFH.set(cls.getName() + "@" + f.getType().getName(), f.get(cls.newInstance()));
+					zf.setValue(ZFH.class.getName() + ".get(\"" + cls.getName() + "@"
+							+ f.getType().getName() + "\")");
 
 					final Annotation[] fas = f.getAnnotations();
 					if (fas != null) {
@@ -172,16 +172,16 @@ public class ZAOPScaner {
 				final ZMethod copyZAOPMethod = ZMethod.copyFromMethod(m);
 
 				final String zFieldName = "ziaop_" + m.getName() + i;
-				final String zFieldType = ZIAOP.class.getCanonicalName();
+				final String zFieldType = ZIAOP.class.getName();
 				final ZField zField = new ZField(zFieldType, zFieldName,
-						"(" + zFieldType + ")" + ZSingleton.class.getCanonicalName()
-						+ ".getSingletonByClassName(\"" + aopClass.getCanonicalName() + "\")",Lists.newArrayList());
+						"(" + zFieldType + ")" + ZSingleton.class.getName()
+						+ ".getSingletonByClassName(\"" + aopClass.getName() + "\")",Lists.newArrayList());
 
 				proxyZClass.addField(zField);
 
 				copyZAOPMethod.setgReturn(false);
 
-				final String nnn = cls.getCanonicalName() + "@" + m.getName();
+				final String nnn = cls.getName() + "@" + m.getName();
 				cmap.put(nnn, m);
 
 				final String returnTypeT = getReturnTypeT(m);
@@ -206,9 +206,9 @@ public class ZAOPScaner {
 
 					final String name = p.getName();
 					final String insertBody =
-							"if ("+ name +".getClass().isAnnotationPresent(" + ZValidated.class.getCanonicalName() + ".class)) {"  + Task.NEW_LINE
-							+  "for (final " + Field.class.getCanonicalName() + " field : " + name + ".getClass().getDeclaredFields()) {"  + Task.NEW_LINE
-							+  		 ZValidator.class.getCanonicalName() + ".validatedAll("+name+", field);"  + Task.NEW_LINE
+							"if ("+ name +".getClass().isAnnotationPresent(" + ZValidated.class.getName() + ".class)) {"  + Task.NEW_LINE
+							+  "for (final " + Field.class.getName() + " field : " + name + ".getClass().getDeclaredFields()) {"  + Task.NEW_LINE
+							+  		 ZValidator.class.getName() + ".validatedAll("+name+", field);"  + Task.NEW_LINE
 							+   "}" + Task.NEW_LINE
 							+ "}";
 
@@ -250,25 +250,25 @@ public class ZAOPScaner {
 		final String body =
 				VOID.equals(returnTypeT)
 				?
-						"final "+AOPParameter.class.getCanonicalName()+" parameter = new "+AOPParameter.class.getCanonicalName()+"();" + "\n\t"
+						"final "+AOPParameter.class.getName()+" parameter = new "+AOPParameter.class.getName()+"();" + "\n\t"
 						+ "parameter.setIsVOID(true);" + "\n\t"
-						+ "parameter.setTarget("+ZContext.class.getCanonicalName()+".getBean(this.getClass().getSuperclass().getCanonicalName() + "+ZAOPScaner.class.getCanonicalName() + ".PROXY_ZCLASS_NAME_SUFFIX));" + "\n\t"
+						+ "parameter.setTarget("+ZContext.class.getName()+".getBean("+RU.class.getCanonicalName()+".getSuperclass(this.getClass()).getName() + "+ZAOPScaner.class.getName() + ".PROXY_ZCLASS_NAME_SUFFIX));" + "\n\t"
 						+ "parameter.setMethodName(\"" + m.getName() + "\");" + "\n\t"
-						+  Method.class.getCanonicalName() + " m = "+ZAOPScaner.class.getCanonicalName()+".cmap.get(\""+nnn+"\");" + "\n\t"
+						+  Method.class.getName() + " m = "+ZAOPScaner.class.getName()+".cmap.get(\""+nnn+"\");" + "\n\t"
 						+ "parameter.setMethod(m);" + "\n\t"
-						+ "parameter.setParameterList("+Lists.class.getCanonicalName()+".newArrayList("+a+"));" + "\n\t"
+						+ "parameter.setParameterList("+Lists.class.getName()+".newArrayList("+a+"));" + "\n\t"
 						+ "\n\t"
 						+ aop + "\n\t"
 
 						:
 
-							"final "+AOPParameter.class.getCanonicalName()+" parameter = new "+AOPParameter.class.getCanonicalName()+"();" + "\n\t"
+							"final "+AOPParameter.class.getName()+" parameter = new "+AOPParameter.class.getName()+"();" + "\n\t"
 							+ "parameter.setIsVOID(false);" + "\n\t"
-							+ "parameter.setTarget("+ZContext.class.getCanonicalName()+".getBean(this.getClass().getSuperclass().getCanonicalName() + "+ZAOPScaner.class.getCanonicalName() + ".PROXY_ZCLASS_NAME_SUFFIX));" + "\n\t"
+							+ "parameter.setTarget("+ZContext.class.getName()+".getBean("+RU.class.getCanonicalName()+".getSuperclass(this.getClass()).getName() + "+ZAOPScaner.class.getName() + ".PROXY_ZCLASS_NAME_SUFFIX));" + "\n\t"
 							+ "parameter.setMethodName(\"" + m.getName() + "\");" + "\n\t"
-							+  Method.class.getCanonicalName() + " m = "+ZAOPScaner.class.getCanonicalName()+".cmap.get(\""+nnn+"\");" + "\n\t"
+							+  Method.class.getName() + " m = "+ZAOPScaner.class.getName()+".cmap.get(\""+nnn+"\");" + "\n\t"
 							+ "parameter.setMethod(m);" + "\n\t"
-							+ "parameter.setParameterList("+Lists.class.getCanonicalName()+".newArrayList("+a+"));" + "\n\t"
+							+ "parameter.setParameterList("+Lists.class.getName()+".newArrayList("+a+"));" + "\n\t"
 							+ "\n\t"
 							+ aop + "\n\t"
 							+ "return (" + returnTypeT + ")v"+(aopClassList.size()-1)+";" + "\n\t";
@@ -326,12 +326,12 @@ public class ZAOPScaner {
 
 					final List<Class<?>> aL = cs.stream()
 							.filter(c2 -> c2.isAnnotationPresent(ZAOP.class))
-							.filter(c2 -> c2.getAnnotation(ZAOP.class).interceptType().getCanonicalName()
-									.equals(a.annotationType().getCanonicalName()))
+							.filter(c2 -> c2.getAnnotation(ZAOP.class).interceptType().getName()
+									.equals(a.annotationType().getName()))
 							.collect(Collectors.toList());
 
 					if (aL.size() > 1) {
-						throw new IllegalArgumentException("注解 @" + a.annotationType().getCanonicalName()
+						throw new IllegalArgumentException("注解 @" + a.annotationType().getName()
 								+ " 只能只允许有一个AOP类!现在有 " + aL.size() + " 个 = " + aL);
 					}
 

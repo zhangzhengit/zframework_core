@@ -25,6 +25,11 @@ public class RU {
 		return t != null;
 	}
 
+	public static <T> Class<?> getSuperclass( final Class<T> cls) {
+		final String key = cls.getName();
+		return ZRC.computeIfAbsent(key, () -> cls.getSuperclass());
+	}
+
 	public static <T extends Annotation> T getAnnotation(final Parameter parameter, final Class<T> annoClass) {
 
 		// FIXME 2025年1月10日 上午8:49:09 zhangzhen : 记得key要尽量防止冲突，使用 parameter.getName() + '-' + annoClass.getName()冲突了
