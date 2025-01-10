@@ -265,7 +265,7 @@ public class NioLongConnectionServer {
 						}
 
 						ss.getSelectionKey().cancel();
-						LOG.info("长连接超时({}秒)已关闭.当前剩余长连接数[{}]个", keepAliveTimeout, SOCKET_CHANNEL_MAP.size());
+						//						LOG.info("长连接超时({}秒)已关闭.当前剩余长连接数[{}]个", keepAliveTimeout, SOCKET_CHANNEL_MAP.size());
 
 						SOCKET_CHANNEL_MAP.remove(k);
 					} catch (final IOException e) {
