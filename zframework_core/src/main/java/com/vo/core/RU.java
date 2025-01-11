@@ -40,7 +40,11 @@ public class RU {
 
 	public static Parameter[] getParameters(final Method method){
 
-		final String key = method.getModifiers() + '-' + method.getName();
+		// FIXME 2025年1月10日 下午5:14:06 zhangzhen : 还有可能冲突，暂时先这样
+		final int parameterCount = method.getParameterCount();
+		final String key = parameterCount + "-" + method.isAccessible() + "-" + method.getModifiers() + '-'
+				+ method.getName();
+
 		final Object v = V_CACHE.get(key);
 		if (v != null) {
 			return (Parameter[]) v;
