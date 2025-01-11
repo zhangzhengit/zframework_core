@@ -162,8 +162,8 @@ public class ServerConfigurationProperties {
 	/**
 	 * 当前待处理的请求数最大值限制，来新请求时如果当前待处理请求数已经达到此值，则拒绝本次请求并返回错误码
 	 */
-	@ZMin(min = 1)
-	@ZMax(max = ZServerQPSValidator.MAX_VALUE)
+	@ZMin(min = 4)
+	@ZMax(max = 100)
 	// FIXME 2024年1月30日 下午7:28:32 zhanghen: 此值按现在的代码逻辑不好实现自动更新，
 	// 因为 queue 是程序启动时就初始化了的，改变此值时，若直接set一个新的容量的queue，则有可能queue中有带处理的
 	// 考虑是否这么做？还是不用自动更新
