@@ -99,7 +99,9 @@ public class ServerConfigurationProperties {
 	private Integer uploadFileToTempSize = 1024;
 
 	/**
-	 * 上传文件时存放临时文件的目录
+	 * 上传文件时存放临时文件的目录，
+	 * 默认为[user.dir]下的temp目录
+	 *
 	 */
 	private String uploadTempDir;
 
