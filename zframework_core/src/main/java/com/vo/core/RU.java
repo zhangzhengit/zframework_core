@@ -40,10 +40,11 @@ public class RU {
 
 	public static Parameter[] getParameters(final Method method){
 
-		// FIXME 2025年1月10日 下午5:14:06 zhangzhen : 还有可能冲突，暂时先这样
+		// FIXME 2025年1月11日 下午1:13:41 zhangzhen : key加入了method.getDecalringClass ，加入了所在类，应该不会再冲突了
+		final Class<?> declaringClass = method.getDeclaringClass();
 		final int parameterCount = method.getParameterCount();
-		final String key = parameterCount + "-" + method.isAccessible() + "-" + method.getModifiers() + '-'
-				+ method.getName();
+		final String key = declaringClass.getName() + "-" + parameterCount + '-' + method.isAccessible() + '-'
+				+ method.getModifiers() + '-' + method.getName();
 
 		final Object v = V_CACHE.get(key);
 		if (v != null) {
