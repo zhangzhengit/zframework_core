@@ -1,5 +1,6 @@
 package com.vo.core;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -202,10 +203,13 @@ public class ZResponse {
 		}
 
 		final byte[] b = new byte[DEFAULT_BUFFER_SIZE];
+
+		final BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
+
 		while (true) {
 			try {
-				final int read = inputStream.read(b);
-				if (read <= 0) {
+				final int read = bufferedInputStream.read(b);
+				if (read == -1) {
 					break;
 				}
 				for (int i = 0; i < read; i++) {
@@ -220,6 +224,7 @@ public class ZResponse {
 		}
 
 		try {
+			bufferedInputStream.close();
 			inputStream.close();
 		} catch (final IOException e) {
 			e.printStackTrace();

@@ -89,6 +89,8 @@ public class ResourcesLoader {
 
 	/**
 	 * 加载静态资源为InputStream，适合较大的资源文件，边read边写入OutputStream
+	 * 注意：使用后请关闭此 InputStream ，
+	 * 		并且使用 BufferedInputStream 来包装此类来读取，否则可能出现读取不完整的情况
 	 *
 	 * @param resourceName 资源名称，如：1.jpg/index.html 等等
 	 * @return
@@ -134,6 +136,8 @@ public class ResourcesLoader {
 		//			final byte[] ba1 = loadByteArray(resourcePath + File.separator + (resourceName.replace("/", "")));
 		//			final String fileName = resourcePath + File.separator + (resourceName.replace("/", ""));
 		final String fileName = resourcePath + (resourceName.replace("/", File.separator));
+
+		System.out.println("loadStaticResourceAsByteArray - fileName = " + fileName);
 		try {
 			final FileInputStream fileInputStream = new FileInputStream(new File(fileName));
 
@@ -223,7 +227,7 @@ public class ResourcesLoader {
 		return builder.toString();
 	}
 
-	private static byte[] readByteArray0(final InputStream inputStream) {
+	public static byte[] readByteArray0(final InputStream inputStream) {
 		final BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
 		final byte[] ba = new byte[1000 * 10];
 		final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
@@ -256,6 +260,7 @@ public class ResourcesLoader {
 		if (inputStream == null) {
 			throw new ResourceNotExistException("资源不存在,name = " + name);
 		}
+
 		return inputStream;
 	}
 

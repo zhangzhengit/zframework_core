@@ -386,7 +386,6 @@ public class NioLongConnectionServer {
 
 			final boolean keepAlive = isConnectionKeepAlive(request);
 			setConnection(key, socketChannel, keepAlive, response);
-
 			response.write();
 
 			if (!keepAlive) {

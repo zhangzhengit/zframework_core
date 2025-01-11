@@ -85,8 +85,9 @@ public class ZMultipartFile {
 	 * 获取上传的文件的输入流，适用于比较大的文件分批读取。
 	 * 如果接收到的文件比较小(由 @see ServerConfigurationProperties.uploadFileToTempSize 控制)
 	 * 用 getContent 来读取更方便
-	 * 
-	 * 注意：使用本方法后记得把inputStream给close掉
+	 *
+	 * 注意：使用本方法后记得把inputStream给close掉，
+	 * 		并且使用 BufferedInputStream 来包装此类来读取，否则可能出现读取不完整的情况
 	 *
 	 * @return	返回接收到的文件的输入流，不管文件大小都会返回一个InputStream对象
 	 */
