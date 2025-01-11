@@ -1,6 +1,7 @@
 package com.vo.core;
 
 import java.util.List;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -28,7 +29,8 @@ public final class TaskRequestHandler extends Thread {
 
 	public static final String USER_AGENT = "User-Agent";
 
-	private final TQ<TaskRequest> queue = new TQ<>(ZContext.getBean(ServerConfigurationProperties.class).getPendingTasks());
+	private final LinkedBlockingDeque<TaskRequest> queue = new LinkedBlockingDeque<>(
+			ZContext.getBean(ServerConfigurationProperties.class).getPendingTasks());
 
 	private final AbstractRequestValidator requestValidator;
 
@@ -70,43 +72,44 @@ public final class TaskRequestHandler extends Thread {
 
 		while (true) {
 
-			final TaskRequest taskRequest = this.queue.pollFirst();
-			if (taskRequest == null) {
-				try {
-					Thread.sleep(1);
-				} catch (final InterruptedException e) {
-					e.printStackTrace();
-				}
-				continue;
-			}
-
+			TaskRequest taskRequest = null;
 			try {
-				final ZRequest request = BodyReader.readHeader(taskRequest.getRequestData());
-				if (request == null) {
-					taskRequest.getSocketChannel().close();
-					taskRequest.getSelectionKey().cancel();
-					continue;
-				}
-
-				request.setTf(taskRequest.getTf());
-
-				this.requestValidator.handle(request, taskRequest);
-
-			} catch (final Exception e) {
-				e.printStackTrace();
-
-				final String message = e.getMessage();
-
-				final ZResponse response = new ZResponse(taskRequest.getSocketChannel());
-				response.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
-				.httpStatus(HttpStatusEnum.HTTP_400.getCode())
-				.header(HeaderEnum.CONNECTION.getName(), "close")
-				.body(J.toJSONString(CR.error(HttpStatusEnum.HTTP_400.getMessage() + " " +
-						message), Include.NON_NULL));
-				response.write();
-
-				continue;
+				taskRequest = this.queue.take();
+			} catch (final InterruptedException e1) {
+				e1.printStackTrace();
 			}
+
+			this.h(taskRequest);
+		}
+	}
+
+	private void h(final TaskRequest taskRequest) {
+		try {
+			final ZRequest request = BodyReader.readHeader(taskRequest.getRequestData());
+			if (request == null) {
+				taskRequest.getSocketChannel().close();
+				taskRequest.getSelectionKey().cancel();
+				return;
+			}
+
+			request.setTf(taskRequest.getTf());
+
+			this.requestValidator.handle(request, taskRequest);
+
+		} catch (final Exception e) {
+			e.printStackTrace();
+
+			final String message = e.getMessage();
+
+			final ZResponse response = new ZResponse(taskRequest.getSocketChannel());
+			response.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
+			.httpStatus(HttpStatusEnum.HTTP_400.getCode())
+			.header(HeaderEnum.CONNECTION.getName(), "close")
+			.body(J.toJSONString(CR.error(HttpStatusEnum.HTTP_400.getMessage() + " " +
+					message), Include.NON_NULL));
+			response.write();
+
+			return;
 		}
 	}
 
@@ -120,10 +123,10 @@ public final class TaskRequestHandler extends Thread {
 	 *
 	 */
 	public boolean addLast(final TaskRequest taskRequest) {
-		return this.queue.addLast(taskRequest);
+		return this.queue.offerLast(taskRequest);
 	}
 
 	public boolean addFirst(final TaskRequest taskRequest) {
-		return this.queue.addFirst(taskRequest);
+		return this.queue.offerFirst(taskRequest);
 	}
 }
