@@ -42,20 +42,31 @@ public class ZTemplate {
 	}
 
 	private static String freemarker0(final String templateString) {
+		final Map<String, Object> dataModel = ZModel.get();
 
-		try {
-			final Template template = getTemplate(templateString);
+		final String key =
+				"f0-" + dataModel.hashCode()
+				+ "-" + dataModel.size()
+				+ "-" + templateString;
 
-			final StringWriter writer = new StringWriter();
-			final Map<String, Object> dataModel = ZModel.get();
-			template.process(dataModel, writer);
-			final String output = writer.toString();
-			return output;
-		} catch (IOException | TemplateException e) {
-			e.printStackTrace();
-		}
+		final String v = ZRC.computeIfAbsent(key, () ->{
 
-		return templateString;
+			try {
+				final Template template = getTemplate(templateString);
+
+				final StringWriter writer = new StringWriter();
+
+				template.process(dataModel, writer);
+				final String output = writer.toString();
+				return output;
+			} catch (IOException | TemplateException e) {
+				e.printStackTrace();
+			}
+
+			return null;
+		});
+
+		return v;
 	}
 
 	private static Template getTemplate(final String templateString) throws IOException {
