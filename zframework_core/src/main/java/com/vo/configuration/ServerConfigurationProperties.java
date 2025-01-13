@@ -164,14 +164,14 @@ public class ServerConfigurationProperties {
 	/**
 	 * 当前待处理的请求数最大值限制，来新请求时如果当前待处理请求数已经达到此值，则拒绝本次请求并返回错误码
 	 */
-	@ZMin(min = 4)
-	@ZMax(max = 10000 * 10)
+	@ZMin(min = 52)
+	@ZMax(max = 10000 * 1)
 	// FIXME 2024年1月30日 下午7:28:32 zhanghen: 此值按现在的代码逻辑不好实现自动更新，
 	// 因为 queue 是程序启动时就初始化了的，改变此值时，若直接set一个新的容量的queue，则有可能queue中有带处理的
 	// 考虑是否这么做？还是不用自动更新
 	//	@ZValue(name = "server.pending.tasks", listenForChanges = true)
 	// XXX 考虑好默认为什么比较好
-	private Integer pendingTasks = Runtime.getRuntime().availableProcessors();
+	private Integer pendingTasks = 100;
 
 	/**
 	 *	请求超过 [server.pending.tasks] 配置值时给客户端的提示信息
