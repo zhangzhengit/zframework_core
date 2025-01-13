@@ -6,7 +6,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.WeakHashMap;
+
+import com.vo.configuration.SCU;
 
 /**
  *
@@ -36,11 +37,7 @@ public class BodyReader {
 		final int headerEndIndex = search(ba, RNRN, 1, 0);
 
 		final byte[] headerBA = Arrays.copyOfRange(ba, 0, headerEndIndex);
-		final String[] headerKVString = new String(headerBA).split(RN);
-
-
-
-
+		final String[] headerKVString = SCU.split(new String(headerBA), RN);
 
 		final ZRequest request= new ZRequest(headerKVString);
 
@@ -98,33 +95,17 @@ public class BodyReader {
 	 * @param boundary
 	 * @return
 	 */
-	public static List<FD2> readFormDate(final byte[] ba, final String contentType, final String boundary) {
+	public static List<FD2> readFormData(final byte[] ba, final String contentType, final String boundary) {
 
 		// final int hash = ba.hashCode();
 		// final int hash = Arrays.hashCode(ba);
 		final String k = "ba" + "-" + ba.length + "-" + boundary.hashCode();
-		final List<FD2> v1 = c.get(k);
-		if (v1 != null) {
-			return v1;
-		}
 
-		synchronized (k.intern()) {
-			final List<FD2> v2 = c.get(k);
-			if (v2 != null) {
-				return v2;
-			}
-
-			final List<FD2> v = readFormDate0(ba, contentType, boundary);
-			c.put(k, v);
-			final long t2 = System.currentTimeMillis();
-			return v;
-		}
-
+		final List<FD2> computeIfAbsent = ZRC.computeIfAbsent(k, () -> readFormData0(ba, contentType, boundary));
+		return computeIfAbsent;
 	}
 
-	static Map<String, List<FD2>> c = new WeakHashMap<>(16, 1F);
-
-	private static List<FD2> readFormDate0(final byte[] ba, final String contentType, final String boundary) {
+	private static List<FD2> readFormData0(final byte[] ba, final String contentType, final String boundary) {
 		if (boundary == null) {
 			return Collections.emptyList();
 		}

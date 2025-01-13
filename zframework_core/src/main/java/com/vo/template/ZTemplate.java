@@ -3,7 +3,9 @@ package com.vo.template;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Map;
-import java.util.WeakHashMap;
+import java.util.function.Supplier;
+
+import com.vo.core.ZRC;
 
 import freemarker.template.Configuration;
 import freemarker.template.Template;
@@ -19,7 +21,6 @@ import freemarker.template.TemplateException;
 public class ZTemplate {
 
 	private static final Configuration CFG = new Configuration();
-	//	private static final Configuration CFG = new Configuration(Configuration.VERSION_2_3_31);
 
 	/**
 	 * 从一个带有freemarker标签的html文档的字符串形式，处理其中的freemarker标签，而生成一个完整的可以被浏览器直接解析的html文档。
@@ -40,12 +41,10 @@ public class ZTemplate {
 
 	}
 
-	static WeakHashMap<String, Template> c = new WeakHashMap<>();
-
 	private static String freemarker0(final String templateString) {
 
 		try {
-			final Template template = getT(templateString);
+			final Template template = getTemplate(templateString);
 
 			final StringWriter writer = new StringWriter();
 			final Map<String, Object> dataModel = ZModel.get();
@@ -59,20 +58,19 @@ public class ZTemplate {
 		return templateString;
 	}
 
-	private static Template getT(final String templateString) throws IOException {
+	private static Template getTemplate(final String templateString) throws IOException {
+		return ZRC.computeIfAbsent(templateString, supplier(templateString));
+	}
 
-		final Template tC = c.get(templateString);
-		if (tC != null) {
-			return tC;
-		}
-
-		synchronized (templateString) {
-			final Template template = new Template("template-" + templateString.hashCode(), templateString, CFG);
-
-			c.put(templateString, template);
-			return template;
-		}
-
+	private static Supplier<Template> supplier(final String templateString) {
+		return () -> {
+			try {
+				return new Template("template-" + templateString.hashCode(), templateString, CFG);
+			} catch (final IOException e) {
+				e.printStackTrace();
+			}
+			return null;
+		};
 	}
 
 }

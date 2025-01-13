@@ -1,7 +1,5 @@
 package com.vo.core;
 
-import java.util.Map;
-import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import com.google.common.collect.ImmutableMap;
@@ -29,8 +27,6 @@ public class ZContext {
 		return BEAN_MAP.remove(gUK(beanClass));
 	}
 
-
-	static	Map<String, String> c =new WeakHashMap<>();
 	public synchronized static <T> String gUK(final Class<T> beanClass) {
 		//		return "ZContent_Bean-" + beanClass.getName();
 

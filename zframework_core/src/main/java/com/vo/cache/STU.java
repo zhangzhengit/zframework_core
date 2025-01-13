@@ -1,7 +1,6 @@
 package com.vo.cache;
 
-import java.util.Map;
-import java.util.WeakHashMap;
+import com.vo.core.ZRC;
 
 /**
  * String相关
@@ -12,26 +11,9 @@ import java.util.WeakHashMap;
  */
 public class STU {
 
-	private final static Map<String, Object> CACHE = new WeakHashMap<>(128, 1F);
 
 	public static String toLowerCase(final String string) {
-
-		final Object l = CACHE.get(string);
-		if (l != null) {
-			return (String) l;
-		}
-
-		synchronized (string) {
-
-			final Object l2 = CACHE.get(string);
-			if (l2 != null) {
-				return (String) l2;
-			}
-
-			final String lowerCase = string.toLowerCase();
-			CACHE.put(string, lowerCase);
-			return lowerCase;
-		}
+		return ZRC.computeIfAbsent(string, () -> string.toLowerCase());
 	}
 
 	public static boolean isNull(final String string) {

@@ -2,8 +2,9 @@ package com.vo.core;
 
 import java.util.List;
 import java.util.Map;
-import java.util.WeakHashMap;
 import java.util.function.Supplier;
+
+import com.vo.cache.ZCapacityMap;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.lang.UUID;
@@ -19,15 +20,17 @@ import cn.hutool.core.util.StrUtil;
 public class ZRC {
 
 	private final static String PRIFEX = "cache:";
-	private final static String NULL_VALUE = "ZRC@NULL_VALUE-" + UUID.randomUUID();
-	private final static Map<String, Object> CACHE = new WeakHashMap<>(32, 1F);
+	private final static String STORE_NULL_VALUE = "ZRC@STORE_NULL_VALUE-" + UUID.randomUUID();
+	private static final int CAPACITY = 10000 * 50;
+
+	private static final Map<String, Object> CACHE = new ZCapacityMap<>(CAPACITY);
 
 	@SuppressWarnings("unchecked")
 	public static <T> T computeIfAbsent(final String key, final Supplier<T> supplier, final boolean storeNull) {
 		final String k = buildKey(key);
 		final Object v = CACHE.get(k);
 		if (v != null) {
-			if (NULL_VALUE.equals(v)) {
+			if (STORE_NULL_VALUE.equals(v)) {
 				return null;
 			}
 			return (T) v;
@@ -37,14 +40,14 @@ public class ZRC {
 
 			final Object vF1 = CACHE.get(k);
 			if (vF1 != null) {
-				if (NULL_VALUE.equals(vF1)) {
+				if (STORE_NULL_VALUE.equals(vF1)) {
 					return null;
 				}
 				return (T) vF1;
 			}
 
 			final Object v2 = supplier.get();
-			final Object vStore = v2 != null ? v2 : (storeNull ? NULL_VALUE : null);
+			final Object vStore = v2 != null ? v2 : (storeNull ? STORE_NULL_VALUE : null);
 			CACHE.put(k, vStore);
 
 			return (T) v2;

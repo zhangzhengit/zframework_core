@@ -166,46 +166,45 @@ public class NioLongConnectionServer {
 						final SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
 						final String keyword = socketChannel.toString();
 
-
 						NioLongConnectionServer.ZE.executeByNameInASpecificThread(keyword, () -> {
 
-							ZArray array = null;
-							try {
-								array = HTTPProcessor.process(socketChannel, selectionKey);
-								if (array != null) {
-									if (Boolean.TRUE.equals(SERVER_CONFIGURATION.getQpsLimitEnabled())
-											&& !QC.allow(NioLongConnectionServer.Z_SERVER_QPS,
-													SERVER_CONFIGURATION.getQps(), QPSHandlingEnum.UNEVEN)) {
+						ZArray array = null;
+						try {
+							array = HTTPProcessor.process(socketChannel, selectionKey);
+							if (array != null) {
+								if (Boolean.TRUE.equals(SERVER_CONFIGURATION.getQpsLimitEnabled())
+										&& !QC.allow(NioLongConnectionServer.Z_SERVER_QPS,
+												SERVER_CONFIGURATION.getQps(), QPSHandlingEnum.UNEVEN)) {
 
+									NioLongConnectionServer.response429Async(selectionKey,
+											SERVER_CONFIGURATION.getQpsExceedMessage());
+
+								} else {
+									final TaskRequest taskRequest = new TaskRequest(selectionKey,
+											(SocketChannel) selectionKey.channel(), array.get(), array.getTf(),
+											new Date());
+									final boolean responseAsync = NioLongConnectionServer.this.requestHandler
+											.addLast(taskRequest);
+									if (!responseAsync) {
 										NioLongConnectionServer.response429Async(selectionKey,
-												SERVER_CONFIGURATION.getQpsExceedMessage());
-
-									} else {
-										final TaskRequest taskRequest = new TaskRequest(selectionKey,
-												(SocketChannel) selectionKey.channel(), array.get(), array.getTf(),
-												new Date());
-										final boolean responseAsync = NioLongConnectionServer.this.requestHandler
-												.addLast(taskRequest);
-										if (!responseAsync) {
-											NioLongConnectionServer.response429Async(selectionKey,
-													SERVER_CONFIGURATION.getPendingTasksExceedMessage());
-										}
+												SERVER_CONFIGURATION.getPendingTasksExceedMessage());
 									}
 								}
-							} catch (final Exception e) {
-								final String message = e.getMessage();
-								final ZResponse response = new ZResponse((SocketChannel) selectionKey.channel());
-								response.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
-								.httpStatus(HttpStatusEnum.HTTP_400.getCode())
-								.header(HeaderEnum.CONNECTION.getName(), "close")
-								.body(J.toJSONString(
-										CR.error(HttpStatusEnum.HTTP_400.getMessage() + SPACE + message),
-										Include.NON_NULL));
-								response.write();
-
-								closeSocketChannelAndKeyCancel(selectionKey, (SocketChannel) selectionKey.channel());
-								e.printStackTrace();
 							}
+						} catch (final Exception e) {
+							final String message = e.getMessage();
+							final ZResponse response = new ZResponse((SocketChannel) selectionKey.channel());
+							response.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
+							.httpStatus(HttpStatusEnum.HTTP_400.getCode())
+							.header(HeaderEnum.CONNECTION.getName(), "close")
+							.body(J.toJSONString(
+									CR.error(HttpStatusEnum.HTTP_400.getMessage() + SPACE + message),
+									Include.NON_NULL));
+							response.write();
+
+							closeSocketChannelAndKeyCancel(selectionKey, (SocketChannel) selectionKey.channel());
+							e.printStackTrace();
+						}
 
 						});
 
@@ -489,6 +488,7 @@ public class NioLongConnectionServer {
 	}
 
 	private static void setCacheControl(final ZRequest request, final ZResponse response) {
+
 		final ZCacheControl cacheControl = Task.getMethodAnnotation(request, ZCacheControl.class);
 		if (cacheControl != null) {
 

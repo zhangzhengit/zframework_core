@@ -26,7 +26,6 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.WeakHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -41,7 +40,6 @@ import com.vo.cache.AU;
 import com.vo.cache.CU;
 import com.vo.cache.J;
 import com.vo.cache.STU;
-import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.core.ZRequest.RequestParam;
 import com.vo.enums.MethodEnum;
 import com.vo.exception.FormPairParseException;
@@ -87,9 +85,6 @@ public class Task {
 	public static final String INTERNAL_SERVER_ERROR = "Internal Server Error";
 	public static final ContentTypeEnum DEFAULT_CONTENT_TYPE = ContentTypeEnum.APPLICATION_JSON;
 	public static final String NEW_LINE = "\r\n";
-	private static final Map<Object, Object> CACHE_MAP = new WeakHashMap<>(1024, 1F);
-
-	private static final ServerConfigurationProperties serverConfiguration = ZSingleton.getSingletonByClass(ServerConfigurationProperties.class);
 
 	public static final ThreadLocal<SocketChannel> SCTL = new ThreadLocal<>();
 	private final SocketChannel socketChannel;
@@ -109,18 +104,9 @@ public class Task {
 	 */
 	public static <T extends Annotation> T getMethodAnnotation(final ZRequest request, final Class<T> annoClass) {
 
-		final String key = request.getRequestURI() + "@" + annoClass.getName()  + "-" + annoClass.hashCode();
-		final Object v = CACHE_MAP.get(key);
-		if (v != null) {
-			return (T) v;
-		}
+		final String key = request.getRequestURI() + '@' + annoClass.getName()  + '-' + annoClass.hashCode();
 
-		synchronized (key) {
-
-			final T v2 = getMethodAnnotation0(request, annoClass);
-			CACHE_MAP.put(key, v2);
-			return v2;
-		}
+		return ZRC.computeIfAbsent(key, () -> getMethodAnnotation0(request, annoClass));
 	}
 
 	private static <T extends Annotation> T getMethodAnnotation0(final ZRequest request, final Class<T> annoClass) {
@@ -646,7 +632,7 @@ public class Task {
 						throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
 					}
 
-					final List<FD2> fdList = BodyReader.readFormDate(request.getOriginalRequestBytes(),
+					final List<FD2> fdList = BodyReader.readFormData(request.getOriginalRequestBytes(),
 							request.getContentType(), request.getBoundary());
 					final Optional<FD2> findAny = fdList.stream().filter(fd -> fd.getName().equals(p.getName()))
 							.findAny();
@@ -763,7 +749,7 @@ public class Task {
 				throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
 			}
 
-			final List<FD2> fdList = BodyReader.readFormDate(request.getOriginalRequestBytes(),
+			final List<FD2> fdList = BodyReader.readFormData(request.getOriginalRequestBytes(),
 					request.getContentType(), request.getBoundary());
 			if (CU.isEmpty(fdList)) {
 				throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
