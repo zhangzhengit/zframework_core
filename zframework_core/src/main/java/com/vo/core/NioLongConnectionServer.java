@@ -82,7 +82,8 @@ public class NioLongConnectionServer {
 	//			//			Runtime.getRuntime().availableProcessors(),
 	//			"nio-read-Group", "nio-read-Thread-", ThreadModeEnum.LAZY);
 
-	public static final String SERVER_VALUE = ZContext.getBean(ServerConfigurationProperties.class).getName();
+	public static final String SERVER_NAME = ZContext.getBean(ServerConfigurationProperties.class).getName();
+
 	/**
 	 * 执行长连接超时任务的线程池
 	 */
@@ -168,43 +169,43 @@ public class NioLongConnectionServer {
 
 						NioLongConnectionServer.ZE.executeByNameInASpecificThread(keyword, () -> {
 
-						ZArray array = null;
-						try {
-							array = HTTPProcessor.process(socketChannel, selectionKey);
-							if (array != null) {
-								if (Boolean.TRUE.equals(SERVER_CONFIGURATION.getQpsLimitEnabled())
-										&& !QC.allow(NioLongConnectionServer.Z_SERVER_QPS,
-												SERVER_CONFIGURATION.getQps(), QPSHandlingEnum.UNEVEN)) {
+							ZArray array = null;
+							try {
+								array = HTTPProcessor.process(socketChannel, selectionKey);
+								if (array != null) {
+									if (Boolean.TRUE.equals(SERVER_CONFIGURATION.getQpsLimitEnabled())
+											&& !QC.allow(NioLongConnectionServer.Z_SERVER_QPS,
+													SERVER_CONFIGURATION.getQps(), QPSHandlingEnum.UNEVEN)) {
 
-									NioLongConnectionServer.response429Async(selectionKey,
-											SERVER_CONFIGURATION.getQpsExceedMessage());
-
-								} else {
-									final TaskRequest taskRequest = new TaskRequest(selectionKey,
-											(SocketChannel) selectionKey.channel(), array.get(), array.getTf(),
-											new Date());
-									final boolean responseAsync = NioLongConnectionServer.this.requestHandler
-											.addLast(taskRequest);
-									if (!responseAsync) {
 										NioLongConnectionServer.response429Async(selectionKey,
-												SERVER_CONFIGURATION.getPendingTasksExceedMessage());
+												SERVER_CONFIGURATION.getQpsExceedMessage());
+
+									} else {
+										final TaskRequest taskRequest = new TaskRequest(selectionKey,
+												(SocketChannel) selectionKey.channel(), array.get(), array.getTf(),
+												new Date());
+										final boolean responseAsync = NioLongConnectionServer.this.requestHandler
+												.addLast(taskRequest);
+										if (!responseAsync) {
+											NioLongConnectionServer.response429Async(selectionKey,
+													SERVER_CONFIGURATION.getPendingTasksExceedMessage());
+										}
 									}
 								}
-							}
-						} catch (final Exception e) {
-							final String message = e.getMessage();
-							final ZResponse response = new ZResponse((SocketChannel) selectionKey.channel());
-							response.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
-							.httpStatus(HttpStatusEnum.HTTP_400.getCode())
-							.header(HeaderEnum.CONNECTION.getName(), "close")
-							.body(J.toJSONString(
-									CR.error(HttpStatusEnum.HTTP_400.getMessage() + SPACE + message),
-									Include.NON_NULL));
-							response.write();
+							} catch (final Exception e) {
+								final String message = e.getMessage();
+								final ZResponse response = new ZResponse((SocketChannel) selectionKey.channel());
+								response.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
+								.httpStatus(HttpStatusEnum.HTTP_400.getCode())
+								.header(HeaderEnum.CONNECTION.getName(), "close")
+								.body(J.toJSONString(
+										CR.error(HttpStatusEnum.HTTP_400.getMessage() + SPACE + message),
+										Include.NON_NULL));
+								response.write();
 
-							closeSocketChannelAndKeyCancel(selectionKey, (SocketChannel) selectionKey.channel());
-							e.printStackTrace();
-						}
+								closeSocketChannelAndKeyCancel(selectionKey, (SocketChannel) selectionKey.channel());
+								e.printStackTrace();
+							}
 
 						});
 
@@ -489,22 +490,29 @@ public class NioLongConnectionServer {
 
 	private static void setCacheControl(final ZRequest request, final ZResponse response) {
 
-		final ZCacheControl cacheControl = Task.getMethodAnnotation(request, ZCacheControl.class);
-		if (cacheControl != null) {
+		final String key = request.getRequestURI() + '@' + ZCacheControl.class.getName() + '-'
+				+ ZCacheControl.class.hashCode();
 
-			final CacheControlEnum[] vs = cacheControl.value();
-			final StringJoiner joiner = new StringJoiner(",");
-			for (final CacheControlEnum v : vs) {
-				joiner.add(v.getValue());
-			}
+		final ZCacheControl cacheControl = ZRC.computeIfAbsent("cc" + '-' + key,
+				() -> Task.getMethodAnnotation0(request, ZCacheControl.class));
 
-			final int maxAge = cacheControl.maxAge();
-			if (maxAge != ZCacheControl.IGNORE_MAX_AGE) {
-				joiner.add(CacheControlEnum.MAX_AGE.getValue().toLowerCase() + "=" + maxAge);
-			}
-
-			response.header(HeaderEnum.CACHE_CONTROL.getName(), joiner.toString());
+		if (cacheControl == null) {
+			return;
 		}
+
+		final StringJoiner joiner = new StringJoiner(",");
+
+		final CacheControlEnum[] vs = cacheControl.value();
+		for (final CacheControlEnum v : vs) {
+			joiner.add(v.getValue());
+		}
+
+		final int maxAge = cacheControl.maxAge();
+		if (maxAge != ZCacheControl.IGNORE_MAX_AGE) {
+			joiner.add(CacheControlEnum.MAX_AGE.getValue().toLowerCase() + "=" + maxAge);
+		}
+
+		response.header(HeaderEnum.CACHE_CONTROL.getName(), joiner.toString());
 	}
 
 	private static void setCustomHeader(final ZResponse response) {
@@ -520,7 +528,7 @@ public class NioLongConnectionServer {
 	}
 
 	private static void setServer(final ZResponse response) {
-		response.header(HeaderEnum.SERVER.getName(), SERVER_VALUE);
+		response.header(HeaderEnum.SERVER.getName(), SERVER_NAME);
 	}
 
 	private static void setDate(final ZResponse response) {

@@ -109,7 +109,7 @@ public class Task {
 		return ZRC.computeIfAbsent(key, () -> getMethodAnnotation0(request, annoClass));
 	}
 
-	private static <T extends Annotation> T getMethodAnnotation0(final ZRequest request, final Class<T> annoClass) {
+	public static <T extends Annotation> T getMethodAnnotation0(final ZRequest request, final Class<T> annoClass) {
 		// 匹配path
 		if (CU.isEmpty(request.getLineList())) {
 			return null;

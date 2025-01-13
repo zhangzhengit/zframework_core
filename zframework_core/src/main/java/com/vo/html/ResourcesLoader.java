@@ -97,6 +97,8 @@ public class ResourcesLoader {
 	 *
 	 */
 	public static InputStream loadStaticResourceAsInputStream(final String resourceName) {
+
+
 		final String resourcePath = System.getProperty(STATIC_RESOURCES_PROPERTY_NAME);
 		if (STU.isNullOrEmptyOrBlank(resourcePath)) {
 			final ServerConfigurationProperties serverConfiguration = ZSingleton
@@ -227,7 +229,7 @@ public class ResourcesLoader {
 		return builder.toString();
 	}
 
-	public static byte[] readByteArray0(final InputStream inputStream) {
+	private static byte[] readByteArray0(final InputStream inputStream) {
 		final BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
 		final byte[] ba = new byte[1000 * 10];
 		final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
