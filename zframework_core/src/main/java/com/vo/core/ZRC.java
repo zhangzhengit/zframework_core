@@ -21,7 +21,7 @@ public class ZRC {
 
 	private final static String PRIFEX = "cache:";
 	private final static String STORE_NULL_VALUE = "ZRC@STORE_NULL_VALUE-" + UUID.randomUUID();
-	private static final int CAPACITY = 10000 * 50;
+	private static final int CAPACITY = 10000 * 2;
 
 	private static final Map<String, Object> CACHE = new ZCapacityMap<>(CAPACITY);
 
