@@ -5,6 +5,8 @@ import java.io.StringWriter;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import com.vo.configuration.ServerConfigurationProperties;
+import com.vo.core.ZContext;
 import com.vo.core.ZRC;
 
 import freemarker.template.Configuration;
@@ -35,9 +37,9 @@ public class ZTemplate {
 
 	static {
 
-		// FIXME 2024年2月13日 下午5:29:45 zhanghen: 目录不能在此写死，改为配置项，并且考虑好如果配置了读取硬盘上的
-		// 的静态文件（包括html）时，是否优先使用静态文件的目录
-		CFG.setClassForTemplateLoading(ZTemplate.class, "/static");
+		final ServerConfigurationProperties serverConfigurationProperties = ZContext.getBean(ServerConfigurationProperties.class);
+		final String staticPrefix = serverConfigurationProperties.getStaticPrefix();
+		CFG.setClassForTemplateLoading(ZTemplate.class, staticPrefix);
 
 	}
 
