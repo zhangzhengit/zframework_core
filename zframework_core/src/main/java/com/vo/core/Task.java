@@ -513,7 +513,7 @@ public class Task {
 	}
 
 	private Object[] generateParameters(final Method method, final Object[] parametersArray, final ZRequest request,
-			final String path, final SocketChannel socketChannel) {
+			final String path) {
 
 		final Parameter[] ps = RU.getParameters(method);
 		if (ps.length < parametersArray.length) {
@@ -863,7 +863,7 @@ public class Task {
 			final SocketChannel socketChannel) {
 		final Object[] parametersArray = new Object[method.getParameterCount()];
 
-		return this.generateParameters(method, parametersArray, request, path, socketChannel);
+		return this.generateParameters(method, parametersArray, request, path);
 	}
 
 	private void setZRequestAndZResponse(final Object[] arraygP, final ZRequest request) {
