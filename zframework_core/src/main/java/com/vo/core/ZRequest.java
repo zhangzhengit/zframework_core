@@ -36,8 +36,8 @@ import lombok.NoArgsConstructor;
  * @date 2023年6月12日
  *
  */
+
 @Data
-@NoArgsConstructor
 public class ZRequest {
 
 	public static final String HTTP_11 = "HTTP/1.1";
@@ -100,7 +100,7 @@ public class ZRequest {
 	/**
 	 * 客户端IP
 	 */
-	private String clientIp;
+	private final String clientIp;
 
 	public boolean isSupportZSTD() {
 		return this.supportCompression(AcceptEncodingEnum.ZSTD);
@@ -365,6 +365,7 @@ public class ZRequest {
 			this.lineList.add(line);
 		}
 
+		this.clientIp = getClientIp0();
 		parseRequest(this);
 	}
 
@@ -411,9 +412,6 @@ public class ZRequest {
 		// parseBody
 		// FIXME 2024年12月9日 下午6:32:57 zhangzhen : 不需要parseBody了，在BodyReader里面已经setBody(byte[])了
 		//		parseBody(request, requestLine);
-
-		// clientIp
-		request.setClientIp(getClientIp0());
 
 		return request;
 	}

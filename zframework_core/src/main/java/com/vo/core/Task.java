@@ -90,7 +90,6 @@ public class Task {
 	private final SocketChannel socketChannel;
 
 	public Task(final SocketChannel socketChannel) {
-		SCTL.set(socketChannel);
 		this.socketChannel = socketChannel;
 	}
 
@@ -156,11 +155,6 @@ public class Task {
 		}
 
 		try {
-
-			final SocketAddress remoteAddress = socketChannel.getRemoteAddress();
-			final String ci = remoteAddress.toString();
-			final String clientIp = ci.substring(1, ci.indexOf(":"));
-			request.setClientIp(clientIp);
 
 			final Object[] p = this.generateParameters(method, request, path, socketChannel);
 			if (p == null) {

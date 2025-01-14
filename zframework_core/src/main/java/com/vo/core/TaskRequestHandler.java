@@ -21,13 +21,7 @@ import com.votool.common.CR;
  */
 public final class TaskRequestHandler extends Thread {
 
-	private static final String BOUNDARY = "boundary=";
-
-	private static final ZLog2 LOG = ZLog2.getInstance();
-
 	public static final String NAME = "request-Dispatcher-Thread";
-
-	public static final String USER_AGENT = "User-Agent";
 
 	private final LinkedBlockingDeque<TaskRequest> queue = new LinkedBlockingDeque<>(
 			ZContext.getBean(ServerConfigurationProperties.class).getPendingTasks());
@@ -67,9 +61,6 @@ public final class TaskRequestHandler extends Thread {
 	@Override
 	public void run() {
 
-		final RequestValidatorConfigurationProperties p = ZContext
-				.getBean(RequestValidatorConfigurationProperties.class);
-
 		while (true) {
 
 			TaskRequest taskRequest = null;
@@ -83,7 +74,9 @@ public final class TaskRequestHandler extends Thread {
 		}
 	}
 
+	@SuppressWarnings("resource")
 	private void h(final TaskRequest taskRequest) {
+		Task.SCTL.set(taskRequest.getSocketChannel());
 		try {
 			final ZRequest request = BodyReader.readHeader(taskRequest.getRequestData());
 			if (request == null) {
