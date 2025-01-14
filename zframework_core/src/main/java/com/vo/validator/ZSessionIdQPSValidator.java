@@ -18,7 +18,7 @@ public class ZSessionIdQPSValidator implements ZCustomValidator{
 
 	public static final int MAX_VALUE = 10000 * 20;
 
-	public static final int DEFAULT_VALUE = 100;
+	public static final int DEFAULT_VALUE = 1000;
 
 	@Override
 	public void validated(final Object object, final Field field) throws Exception {
@@ -27,12 +27,12 @@ public class ZSessionIdQPSValidator implements ZCustomValidator{
 			final Object value = field.get(object);
 			final Integer v = (Integer) value;
 
-			if (v % MIN_VALUE != 0) {
+			if ((v % MIN_VALUE) != 0) {
 				final String message = field.getAnnotation(ZCustom.class).message();
 
 				final String pName = field.isAnnotationPresent(ZValue.class)
 						? "[" + field.getAnnotation(ZValue.class).name() + "]"
-						: "";
+								: "";
 				final String t = object.getClass().getSimpleName() + "." + field.getName() + " " + pName + " 必须配置为可以被 "
 						+ MIN_VALUE + " (" + ZSessionIdQPSValidator.class.getCanonicalName() + ".MIN_VALUE)"
 						+ " 整除";
