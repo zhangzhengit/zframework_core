@@ -336,7 +336,6 @@ public class NioLongConnectionServer {
 				NioLongConnectionServer.setZSessionId(request, response);
 				response.write();
 
-				closeSocketChannelAndKeyCancel(taskRequest.getSelectionKey(), taskRequest.getSocketChannel());
 			} finally {
 				ReqeustInfo.remove();
 			}
