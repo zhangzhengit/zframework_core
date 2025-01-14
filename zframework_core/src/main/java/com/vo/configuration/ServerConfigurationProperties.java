@@ -111,7 +111,7 @@ public class ServerConfigurationProperties {
 	@ZNotNull
 	@ZMin(min = 1)
 	@ZMax(max = 2000)
-	private Integer threadCount = Runtime.getRuntime().availableProcessors() * 2;
+	private Integer threadCount = Runtime.getRuntime().availableProcessors() * 4;
 
 	/**
 	 * 处理http请求的线程的名称前缀，生成的线程以此为前缀分别命名为1、2、3以此类推
