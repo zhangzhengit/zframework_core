@@ -65,7 +65,7 @@ public class NioLongConnectionServer {
 
 	private static final ServerConfigurationProperties SERVER_CONFIGURATIONPROPERTIES= ZContext.getBean(ServerConfigurationProperties.class);
 
-	private static final Boolean ENABLE_SERVER_QPS_LIMITED = Boolean.TRUE.equals(SERVER_CONFIGURATIONPROPERTIES.getQpsLimitEnabled());
+	private static final boolean ENABLE_SERVER_QPS_LIMITED = Boolean.TRUE.equals(SERVER_CONFIGURATIONPROPERTIES.getQpsLimitEnabled());
 
 	private final AtomicBoolean serverStarted = new AtomicBoolean(false);
 
