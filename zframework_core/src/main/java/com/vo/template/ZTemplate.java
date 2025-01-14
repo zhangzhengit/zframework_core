@@ -47,11 +47,13 @@ public class ZTemplate {
 		final Map<String, Object> dataModel = ZModel.get();
 
 		final String key =
-				"f0-" + dataModel.hashCode()
-				+ "-" + dataModel.size()
-				+ "-" + templateString;
+				dataModel != null ?
+						("f0-" + dataModel.hashCode()
+						+ "-" + dataModel.size()
+						+ "-" + templateString) :
+							templateString;
 
-		final String v = ZRC.computeIfAbsent(key, () ->{
+		final String v = ZRC.computeIfAbsent("freemarker0" + '-' + key, () ->{
 
 			try {
 				final Template template = getTemplate(templateString);
@@ -72,7 +74,7 @@ public class ZTemplate {
 	}
 
 	private static Template getTemplate(final String templateString) throws IOException {
-		return ZRC.computeIfAbsent(templateString, supplier(templateString));
+		return ZRC.computeIfAbsent("getTemplate" + '-' + templateString, supplier(templateString));
 	}
 
 	private static Supplier<Template> supplier(final String templateString) {
