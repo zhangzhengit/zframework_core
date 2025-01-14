@@ -53,14 +53,22 @@ public class ZRedisConfiguration {
 		// 设置最大空闲连接数
 		poolConfig.setMaxIdle(this.redisConfigurationProperties.getMaxIdle());
 
-		final JedisPool jedisPool = new JedisPool(poolConfig,
-				this.redisConfigurationProperties.getHost(),
-				this.redisConfigurationProperties.getPort(),
-				this.redisConfigurationProperties.getTimeout(),
-				this.redisConfigurationProperties.getPassword());
+		final JedisPool jedisPool =
+				STU.hasContent(this.redisConfigurationProperties.getPassword())
+				?
+						new JedisPool(poolConfig,
+								this.redisConfigurationProperties.getHost(),
+								this.redisConfigurationProperties.getPort(),
+								this.redisConfigurationProperties.getTimeout(),
+								this.redisConfigurationProperties.getPassword()
+								)
+						:
+							new JedisPool(poolConfig,
+									this.redisConfigurationProperties.getHost(),
+									this.redisConfigurationProperties.getPort(),
+									this.redisConfigurationProperties.getTimeout());
 
 		ZContext.addBean(jedisPool.getClass(), jedisPool);
-
 
 		try {
 			// 测试一下，什么也不做，只为及时抛出异常
