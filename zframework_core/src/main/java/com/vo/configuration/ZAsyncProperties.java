@@ -26,7 +26,7 @@ public class ZAsyncProperties {
 	/**
 	 * 默认 最低的线程数量
 	 */
-	private static final int MIN = 4;
+	private static final int MIN = 10;
 
 	/**
 	 * 最大线程数量
