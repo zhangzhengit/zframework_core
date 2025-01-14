@@ -331,6 +331,10 @@ public class ZRequest {
 		return null;
 	}
 
+	public String getUserAgent() {
+		return this.getHeaderMap().get(HeaderEnum.USER_AGENT.getName());
+	}
+
 	public String getHeader(final String name) {
 		return this.getHeaderMap().get(name);
 	}

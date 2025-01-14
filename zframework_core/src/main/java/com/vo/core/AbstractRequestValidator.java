@@ -1,9 +1,8 @@
 package com.vo.core;
 
-import org.springframework.cache.config.CacheNamespaceHandler;
-
 import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.configuration.TaskResponsiveModeEnum;
+
 
 /**
  *
@@ -25,6 +24,7 @@ abstract class AbstractRequestValidator {
 			.getBean(RequestValidatorConfigurationProperties.class);
 
 	private static final String TASK_RESPONSIVE_MODE = ZContext.getBean(ServerConfigurationProperties.class).getTaskResponsiveMode();
+	private static final RequestVerificationResult ALLOW = new RequestVerificationResult(true);
 
 	public void handle(final ZRequest request, final TaskRequest taskRequest) {
 
@@ -107,7 +107,7 @@ abstract class AbstractRequestValidator {
 	public RequestVerificationResult validated(final ZRequest request, final TaskRequest taskRequest) {
 		final Boolean enableClientQps = ZContext.getBean(ServerConfigurationProperties.class).getEnableClientQps();
 		if (!Boolean.TRUE.equals(enableClientQps)) {
-			return new RequestVerificationResult(true, "");
+			return ALLOW;
 		}
 
 		final String userAgent = request.getHeader(HeaderEnum.USER_AGENT.getName());
@@ -121,7 +121,14 @@ abstract class AbstractRequestValidator {
 				final QPSHandlingEnum handlingEnum = this.requestValidatorConfigurationProperties
 						.getHandlingEnum(userAgent);
 				final boolean allow = QC.allow(smoothUserAgentKeyword, this.getSessionIdQps(), handlingEnum);
-				return new RequestVerificationResult(allow, allow ? "" : "ZSESSIONID访问频繁");
+
+
+				if (allow) {
+					return ALLOW;
+				}
+
+				return new RequestVerificationResult(false, "ZSESSIONID访问频繁", request.getClientIp(),
+						request.getHeader(HeaderEnum.USER_AGENT.getName()));
 			}
 		}
 
@@ -134,7 +141,13 @@ abstract class AbstractRequestValidator {
 		final QPSHandlingEnum handlingEnum = this.requestValidatorConfigurationProperties.getHandlingEnum(userAgent);
 		final boolean allow = QC.allow(keyword, this.getClientQps(), handlingEnum);
 
-		return new RequestVerificationResult(allow, allow ? "" : "CLIENT访问频繁");
+		if (allow) {
+			return ALLOW;
+		}
+
+		return new RequestVerificationResult(false, "CLIENT访问频繁", request.getClientIp(),
+				request.getHeader(HeaderEnum.USER_AGENT.getName()));
+
 	}
 
 	/**
