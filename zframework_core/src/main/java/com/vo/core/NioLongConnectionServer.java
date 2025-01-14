@@ -63,9 +63,12 @@ public class NioLongConnectionServer {
 
 	public static final String Z_SERVER_QPS = "ZServer_QPS";
 
+	private static final ServerConfigurationProperties SERVER_CONFIGURATIONPROPERTIES= ZContext.getBean(ServerConfigurationProperties.class);
+
+	private static final Boolean ENABLE_SERVER_QPS_LIMITED = Boolean.TRUE.equals(SERVER_CONFIGURATIONPROPERTIES.getQpsLimitEnabled());
+
 	private final AtomicBoolean serverStarted = new AtomicBoolean(false);
 
-	private static final ServerConfigurationProperties SERVER_CONFIGURATIONPROPERTIES= ZContext.getBean(ServerConfigurationProperties.class);
 
 	public final static ZE ZE = ZES.newZE(SERVER_CONFIGURATIONPROPERTIES.getThreadCount(),
 			"zf-Worker-Group",
@@ -95,8 +98,6 @@ public class NioLongConnectionServer {
 	 */
 	// FIXME 2023年7月5日 上午6:56:44 zhanghen: 改为自最后一次活动后开始计时，超时后关闭
 	private final static Map<Long, SS> SOCKET_CHANNEL_MAP = new ConcurrentHashMap<>(16, 1F);
-
-	private static final ServerConfigurationProperties SERVER_CONFIGURATION = ZSingleton.getSingletonByClass(ServerConfigurationProperties.class);
 
 	private final TaskRequestHandler requestHandler = new TaskRequestHandler();
 
@@ -173,12 +174,11 @@ public class NioLongConnectionServer {
 							try {
 								array = HTTPProcessor.process(socketChannel, selectionKey);
 								if (array != null) {
-									if (Boolean.TRUE.equals(SERVER_CONFIGURATION.getQpsLimitEnabled())
-											&& !QC.allow(NioLongConnectionServer.Z_SERVER_QPS,
-													SERVER_CONFIGURATION.getQps(), QPSHandlingEnum.UNEVEN)) {
+									if (ENABLE_SERVER_QPS_LIMITED && !QC.allow(NioLongConnectionServer.Z_SERVER_QPS,
+											SERVER_CONFIGURATIONPROPERTIES.getQps(), QPSHandlingEnum.SMOOTH)) {
 
 										NioLongConnectionServer.response429Async(selectionKey,
-												SERVER_CONFIGURATION.getQpsExceedMessage());
+												SERVER_CONFIGURATIONPROPERTIES.getQpsExceedMessage());
 
 									} else {
 										final TaskRequest taskRequest = new TaskRequest(selectionKey,
@@ -188,7 +188,7 @@ public class NioLongConnectionServer {
 												.addLast(taskRequest);
 										if (!responseAsync) {
 											NioLongConnectionServer.response429Async(selectionKey,
-													SERVER_CONFIGURATION.getPendingTasksExceedMessage());
+													SERVER_CONFIGURATIONPROPERTIES.getPendingTasksExceedMessage());
 										}
 									}
 								}
@@ -226,17 +226,18 @@ public class NioLongConnectionServer {
 	public static void response429(final SelectionKey key, final String message) {
 
 		final SocketChannel socketChannel = (SocketChannel) key.channel();
-		final ZResponse response = new ZResponse(socketChannel);
-		response.contentType(ContentTypeEnum.APPLICATION_JSON.getType()).httpStatus(HttpStatusEnum.HTTP_429.getCode())
-		.body(J.toJSONString(CR.error(message), Include.NON_NULL));
-		response.write();
-		closeSocketChannelAndKeyCancel(key, socketChannel);
+
+		new ZResponse(socketChannel)
+		.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
+		.httpStatus(HttpStatusEnum.HTTP_429.getCode())
+		.body(J.toJSONString(CR.error(message), Include.NON_NULL))
+		.write();
 	}
 
 	private static void keepAliveTimeoutJOB() {
 
-		final Integer keepAliveTimeout = SERVER_CONFIGURATION.getKeepAliveTimeout();
-		LOG.info("长连接超时任务启动,keepAliveTimeout=[{}]秒", SERVER_CONFIGURATION.getKeepAliveTimeout());
+		final Integer keepAliveTimeout = SERVER_CONFIGURATIONPROPERTIES.getKeepAliveTimeout();
+		LOG.info("长连接超时任务启动,keepAliveTimeout=[{}]秒", SERVER_CONFIGURATIONPROPERTIES.getKeepAliveTimeout());
 
 		TIMEOUT_ZE.scheduleAtFixedRate(() -> {
 
@@ -472,7 +473,7 @@ public class NioLongConnectionServer {
 	}
 
 	public static void setZSessionId(final ZRequest request, final ZResponse response) {
-		if (!Boolean.TRUE.equals(SERVER_CONFIGURATION.getResponseZSessionId())) {
+		if (!Boolean.TRUE.equals(SERVER_CONFIGURATIONPROPERTIES.getResponseZSessionId())) {
 			return;
 		}
 
@@ -516,7 +517,7 @@ public class NioLongConnectionServer {
 	}
 
 	private static void setCustomHeader(final ZResponse response) {
-		final Map<String, String> responseHeaders = SERVER_CONFIGURATION.getResponseHeaders();
+		final Map<String, String> responseHeaders = SERVER_CONFIGURATIONPROPERTIES.getResponseHeaders();
 		if (CU.isEmpty(responseHeaders)) {
 			return;
 		}
