@@ -9,12 +9,13 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
+
+import com.vo.cache.STU;
 
 /**
  * 读取配置文件
@@ -47,7 +48,7 @@ public class ZProperties {
 
 	public static Byte getByte(final String key) {
 		final String v = properties.getProperty(key);
-		if (v == null) {
+		if (!STU.hasContent(v)) {
 			return null;
 		}
 
@@ -56,7 +57,7 @@ public class ZProperties {
 
 	public static Short getShort(final String key) {
 		final String v = properties.getProperty(key);
-		if (v == null) {
+		if (!STU.hasContent(v)) {
 			return null;
 		}
 
@@ -65,7 +66,7 @@ public class ZProperties {
 
 	public static Integer getInteger(final String key, final Integer defaultValue) {
 		final String v = properties.getProperty(key);
-		if (v == null) {
+		if (!STU.hasContent(v)) {
 			return defaultValue;
 		}
 
@@ -74,7 +75,7 @@ public class ZProperties {
 
 	public static Integer getInteger(final String key) {
 		final String v = properties.getProperty(key);
-		if (v == null) {
+		if (!STU.hasContent(v)) {
 			return null;
 		}
 
@@ -83,7 +84,7 @@ public class ZProperties {
 
 	public static Long getLong(final String key) {
 		final String v = properties.getProperty(key);
-		if (v == null) {
+		if (!STU.hasContent(v)) {
 			return null;
 		}
 
@@ -92,7 +93,7 @@ public class ZProperties {
 
 	public static BigInteger getBigInteger(final String key) {
 		final String v = properties.getProperty(key);
-		if (v == null) {
+		if (!STU.hasContent(v)) {
 			return null;
 		}
 
@@ -101,7 +102,7 @@ public class ZProperties {
 
 	public static BigDecimal getBigDecimal(final String key) {
 		final String v = properties.getProperty(key);
-		if (v == null) {
+		if (!STU.hasContent(v)) {
 			return null;
 		}
 
@@ -110,7 +111,7 @@ public class ZProperties {
 
 	public static Float getFloat(final String key) {
 		final String v = properties.getProperty(key);
-		if (v == null) {
+		if (!STU.hasContent(v)) {
 			return null;
 		}
 
@@ -118,7 +119,7 @@ public class ZProperties {
 	}
 	public static Double getDouble(final String key) {
 		final String v = properties.getProperty(key);
-		if (v == null) {
+		if (!STU.hasContent(v)) {
 			return null;
 		}
 
@@ -127,16 +128,16 @@ public class ZProperties {
 
 	public static Integer readInteger(final String key) {
 		final String v = properties.getProperty(key);
-		if (v == null) {
+		if (!STU.hasContent(v)) {
 			return null;
 		}
-		final int i = Integer.parseInt(v);
-		return i;
+
+		return Integer.parseInt(v);
 	}
 
 	public static Boolean getBoolean(final String key) {
 		final String v = properties.getProperty(key);
-		if (v == null) {
+		if (!STU.hasContent(v)) {
 			return null;
 		}
 
@@ -145,7 +146,7 @@ public class ZProperties {
 
 	public static Long readLong(final String key) {
 		final String v = properties.getProperty(key);
-		if (v == null) {
+		if (!STU.hasContent(v)) {
 			return null;
 		}
 
