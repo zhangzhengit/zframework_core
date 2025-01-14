@@ -66,7 +66,7 @@ abstract class AbstractRequestValidator {
 		if (r.isPassed()) {
 			this.passed(request, taskRequest);
 		} else {
-			this.failed(request, taskRequest, r.getMessage());
+			this.failed(request, taskRequest, r);
 		}
 	}
 
@@ -105,6 +105,7 @@ abstract class AbstractRequestValidator {
 	 *
 	 */
 	public RequestVerificationResult validated(final ZRequest request, final TaskRequest taskRequest) {
+
 		final Boolean enableClientQps = ZContext.getBean(ServerConfigurationProperties.class).getEnableClientQps();
 		if (!Boolean.TRUE.equals(enableClientQps)) {
 			return ALLOW;
@@ -122,13 +123,12 @@ abstract class AbstractRequestValidator {
 						.getHandlingEnum(userAgent);
 				final boolean allow = QC.allow(smoothUserAgentKeyword, this.getSessionIdQps(), handlingEnum);
 
-
 				if (allow) {
 					return ALLOW;
 				}
 
 				return new RequestVerificationResult(false, "ZSESSIONID访问频繁", request.getClientIp(),
-						request.getHeader(HeaderEnum.USER_AGENT.getName()));
+						request.getUserAgent());
 			}
 		}
 
@@ -145,9 +145,7 @@ abstract class AbstractRequestValidator {
 			return ALLOW;
 		}
 
-		return new RequestVerificationResult(false, "CLIENT访问频繁", request.getClientIp(),
-				request.getHeader(HeaderEnum.USER_AGENT.getName()));
-
+		return new RequestVerificationResult(false, "CLIENT访问频繁", request.getClientIp(), request.getUserAgent());
 	}
 
 	/**
@@ -161,14 +159,14 @@ abstract class AbstractRequestValidator {
 	}
 
 	/**
-	 * 不放行怎么处理，默认实现为返回 429 并且关闭连接
+	 * 不放行怎么处理，默认实现为返回 429
 	 *
 	 * @param request
-	 * @param message
-	 *
+	 * @param taskRequest
+	 * @param requestVerificationResult
 	 */
-	public void failed(final ZRequest request, final TaskRequest taskRequest, final String message) {
-		NioLongConnectionServer.response429(taskRequest.getSelectionKey(), message);
+	public void failed(final ZRequest request, final TaskRequest taskRequest, final RequestVerificationResult requestVerificationResult) {
+		NioLongConnectionServer.response429(taskRequest.getSelectionKey(), requestVerificationResult.getMessage());
 	}
 
 	/**
