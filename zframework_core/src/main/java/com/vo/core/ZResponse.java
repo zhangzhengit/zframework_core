@@ -266,19 +266,8 @@ public class ZResponse {
 		}
 
 		this.writeSocketChannel();
-		this.closeSocketChannelIfStatusNot200();
 
 		this.write.set(true);
-	}
-
-	private void closeSocketChannelIfStatusNot200() {
-		if (!this.getHttpStatus().equals(HttpStatusEnum.HTTP_200.getCode())) {
-			try {
-				this.socketChannel.close();
-			} catch (final IOException e) {
-				e.printStackTrace();
-			}
-		}
 	}
 
 	private void writeSocketChannel() {
