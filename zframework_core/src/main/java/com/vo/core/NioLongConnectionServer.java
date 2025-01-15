@@ -172,39 +172,52 @@ public class NioLongConnectionServer {
 						// FIXME 2025年1月15日 下午7:45:55 zhangzhen : 在尝试：只在NIO线程read
 						// 如果content-length>0再用线程池继续读取body部分，但是同步还有问题，并且上传大文件会导致其他的socketChannel.read阻塞，继续查什么原因
 						// 只试了测试100W次简单get接口，上述方法5W/S左右，而如下方式4.2W左右
-
-						NioLongConnectionServer.ZE.executeByNameInASpecificThread(keyword, () -> {
-							final ZArray array = HTTPProcessor.process(socketChannel, selectionKey);
-
-							try {
-								if (array != null) {
-									if (NioLongConnectionServer.allow()) {
-										this.response(selectionKey, array);
-									} else {
-										NioLongConnectionServer.response429Async(selectionKey,
-												SERVER_CONFIGURATIONPROPERTIES.getQpsExceedMessage());
-									}
-								}
-							} catch (final Exception e) {
-								e.printStackTrace();
-								final String message = e.getMessage();
-
-								final String errorMessage = J.toJSONString(CR.error(HttpStatusEnum.HTTP_500.getMessage() + SPACE + message),
-										Include.NON_NULL);
-
-								NioLongConnectionServer.r500AndCloseSocketChannel(selectionKey, socketChannel, errorMessage);
-							}
-
-						});
+						NioLongConnectionServer.ZE.executeByNameInASpecificThread(keyword,
+								() -> this.action(selectionKey, socketChannel));
 
 					}
 				} catch (final Exception e) {
-					e.printStackTrace();
+					final String message = Task.gExceptionMessage(e);
+					LOG.error("foreach-selector.selectedKeys-异常,message={}", message);
 					continue;
 				}
 			}
 			selectedKeys.clear();
 		}
+	}
+
+	private void action(final SelectionKey selectionKey, final SocketChannel socketChannel) {
+
+		final ZArray array = HTTPProcessor.process(socketChannel, selectionKey);
+		if (array == null) {
+			return;
+		}
+
+		if (!NioLongConnectionServer.allow()) {
+			try {
+				NioLongConnectionServer.response429Async(selectionKey,
+						SERVER_CONFIGURATIONPROPERTIES.getQpsExceedMessage());
+			} catch (final Exception e) {
+				final String message = Task.gExceptionMessage(e);
+				LOG.error("response429Async-异常,message={}", message);
+				closeSocketChannelAndKeyCancel(selectionKey, socketChannel);
+			}
+
+		} else {
+
+			try {
+				this.response(selectionKey, array);
+			} catch (final Exception e) {
+				final String message = Task.gExceptionMessage(e);
+				LOG.error("response-异常,message={}", message);
+
+				final String errorMessage = J.toJSONString(
+						CR.error(HttpStatusEnum.HTTP_500.getMessage() + SPACE + message), Include.NON_NULL);
+
+				NioLongConnectionServer.r500AndCloseSocketChannel(selectionKey, socketChannel, errorMessage);
+			}
+		}
+
 	}
 
 	private static String gKeyword(final SocketChannel socketChannel) {
