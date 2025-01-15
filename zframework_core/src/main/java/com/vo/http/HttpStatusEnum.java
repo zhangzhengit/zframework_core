@@ -29,7 +29,7 @@ public enum HttpStatusEnum {
 
 	HTTP_429(429, "429 Too Many Requests"),
 
-	HTTP_500(500, "500-Internal Server Error"),;
+	HTTP_500(500, "500 Internal Server Error"),;
 
 	private int code;
 	private String message;
