@@ -166,8 +166,8 @@ public class NioLongConnectionServer {
 					} else if (selectionKey.isValid() && selectionKey.isReadable()) {
 
 						final SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
-						final String keyword = socketChannel.isOpen() ? socketChannel.getRemoteAddress().toString()
-								: socketChannel.toString();
+
+						final String keyword = NioLongConnectionServer.gKeyword(socketChannel);
 
 						// FIXME 2025年1月15日 下午7:45:55 zhangzhen : 在尝试：只在NIO线程read
 						// 如果content-length>0再用线程池继续读取body部分，但是同步还有问题，并且上传大文件会导致其他的socketChannel.read阻塞，继续查什么原因
@@ -186,18 +186,13 @@ public class NioLongConnectionServer {
 									}
 								}
 							} catch (final Exception e) {
-								final String message = e.getMessage();
-								final ZResponse response = new ZResponse((SocketChannel) selectionKey.channel());
-								response.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
-								.httpStatus(HttpStatusEnum.HTTP_400.getCode())
-								.header(HeaderEnum.CONNECTION.getName(), "close")
-								.body(J.toJSONString(
-										CR.error(HttpStatusEnum.HTTP_400.getMessage() + SPACE + message),
-										Include.NON_NULL));
-								response.write();
-
-								closeSocketChannelAndKeyCancel(selectionKey, (SocketChannel) selectionKey.channel());
 								e.printStackTrace();
+								final String message = e.getMessage();
+
+								final String errorMessage = J.toJSONString(CR.error(HttpStatusEnum.HTTP_500.getMessage() + SPACE + message),
+										Include.NON_NULL);
+
+								NioLongConnectionServer.r500AndCloseSocketChannel(selectionKey, socketChannel, errorMessage);
 							}
 
 						});
@@ -210,6 +205,25 @@ public class NioLongConnectionServer {
 			}
 			selectedKeys.clear();
 		}
+	}
+
+	private static String gKeyword(final SocketChannel socketChannel) {
+		try {
+			return socketChannel.getRemoteAddress().toString();
+		} catch (final IOException e) {
+			return socketChannel.toString();
+		}
+	}
+
+	public static void r500AndCloseSocketChannel(final SelectionKey selectionKey, final SocketChannel socketChannel, final String errorMessage) {
+		new ZResponse(socketChannel)
+		.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
+		.httpStatus(HttpStatusEnum.HTTP_500.getCode())
+		.header(HeaderEnum.CONNECTION.getName(), "close")
+		.body(errorMessage)
+		.write();
+
+		closeSocketChannelAndKeyCancel(selectionKey, socketChannel);
 	}
 
 	private void response(final SelectionKey selectionKey, final ZArray array) {
@@ -336,12 +350,16 @@ public class NioLongConnectionServer {
 				}
 
 			} catch (final Exception e) {
+
 				final ZControllerAdviceActuator a = ZContext.getBean(ZControllerAdviceActuator.class);
 				final Object r = a.execute(e);
+
+				final String errorMessage = J.toJSONString(r, Include.NON_NULL);
+
 				final ZResponse response = new ZResponse(taskRequest.getSocketChannel())
 						.httpStatus(HttpStatusEnum.HTTP_500.getCode())
 						.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
-						.body(J.toJSONString(r, Include.NON_NULL));
+						.body(errorMessage);
 
 				NioLongConnectionServer.setZSessionId(request, response);
 				response.write();
@@ -404,7 +422,6 @@ public class NioLongConnectionServer {
 
 		} catch (final Exception e) {
 			// 这里不能关闭，因为外面的异常处理器类还要write
-			// socketChannelCloseAndKeyCancel(key, socketChannel);
 			throw e;
 		}
 
