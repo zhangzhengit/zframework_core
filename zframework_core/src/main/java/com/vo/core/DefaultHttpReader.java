@@ -413,7 +413,14 @@ public class DefaultHttpReader {
 									array.add(fdBA2);
 								}
 							}
-							tf.getBufferedOutputStream().write(baContent);
+
+							final String xx = new String(baContent);
+							if (!xx.contains(fm.getBoundary())) {
+								// FIXME 2025年1月15日 下午7:41:17 zhangzhen : 测试文本时发现，偶尔会有最下面有boundary和其他form字段，
+								// 暂时先这样处理，以后再看为什么，并且这个方法写得太乱，记得重构
+								// final int debug = 0;
+								tf.getBufferedOutputStream().write(baContent);
+							}
 						} else {
 							byte[] copyOfRange = null;
 							if (!writeB1) {
@@ -426,8 +433,15 @@ public class DefaultHttpReader {
 							} else {
 								copyOfRange = Arrays.copyOfRange(temp, 0, read);
 							}
-							tf.getBufferedOutputStream().write(copyOfRange);
-							writeB1 = true;
+
+							final String xx = new String(copyOfRange);
+							if (!xx.contains(fm.getBoundary())) {
+								// FIXME 2025年1月15日 下午7:41:17 zhangzhen : 测试文本时发现，偶尔会有最下面有boundary和其他form字段，
+								// 暂时先这样处理，以后再看为什么，并且这个方法写得太乱，记得重构
+								// final int debug = 0;
+								tf.getBufferedOutputStream().write(copyOfRange);
+								writeB1 = true;
+							}
 						}
 					} else {
 						array.add(temp);
