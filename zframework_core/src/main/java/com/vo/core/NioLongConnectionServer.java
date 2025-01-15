@@ -168,6 +168,11 @@ public class NioLongConnectionServer {
 						final SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
 						final String keyword = socketChannel.getRemoteAddress().toString();
 
+
+						// FIXME 2025年1月15日 下午7:45:55 zhangzhen : 在尝试：只在NIO线程read
+						// 如果content-length>0再用线程池继续读取body部分，但是同步还有问题，并且上传大文件会导致其他的socketChannel.read阻塞，继续查什么原因
+						// 只试了测试100W次简单get接口，上述方法5W/S左右，而如下方式4.2W左右
+
 						NioLongConnectionServer.ZE.executeByNameInASpecificThread(keyword, () -> {
 							final ZArray array = HTTPProcessor.process(socketChannel, selectionKey);
 
