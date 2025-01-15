@@ -166,30 +166,18 @@ public class NioLongConnectionServer {
 					} else if (selectionKey.isValid() && selectionKey.isReadable()) {
 
 						final SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
-						final String keyword = socketChannel.toString();
+						final String keyword = socketChannel.getRemoteAddress().toString();
 
 						NioLongConnectionServer.ZE.executeByNameInASpecificThread(keyword, () -> {
+							final ZArray array = HTTPProcessor.process(socketChannel, selectionKey);
 
-							ZArray array = null;
 							try {
-								array = HTTPProcessor.process(socketChannel, selectionKey);
 								if (array != null) {
-									if (ENABLE_SERVER_QPS_LIMITED && !QC.allow(NioLongConnectionServer.Z_SERVER_QPS,
-											SERVER_CONFIGURATIONPROPERTIES.getQps(), QPSHandlingEnum.SMOOTH)) {
-
+									if (NioLongConnectionServer.allow()) {
+										this.response(selectionKey, array);
+									} else {
 										NioLongConnectionServer.response429Async(selectionKey,
 												SERVER_CONFIGURATIONPROPERTIES.getQpsExceedMessage());
-
-									} else {
-										final TaskRequest taskRequest = new TaskRequest(selectionKey,
-												(SocketChannel) selectionKey.channel(), array.get(), array.getTf(),
-												new Date());
-										final boolean responseAsync = NioLongConnectionServer.this.requestHandler
-												.addLast(taskRequest);
-										if (!responseAsync) {
-											NioLongConnectionServer.response429Async(selectionKey,
-													SERVER_CONFIGURATIONPROPERTIES.getPendingTasksExceedMessage());
-										}
 									}
 								}
 							} catch (final Exception e) {
@@ -217,6 +205,23 @@ public class NioLongConnectionServer {
 			}
 			selectedKeys.clear();
 		}
+	}
+
+	private void response(final SelectionKey selectionKey, final ZArray array) {
+		final TaskRequest taskRequest = new TaskRequest(selectionKey,
+				(SocketChannel) selectionKey.channel(), array.get(), array.getTf(),
+				new Date());
+		final boolean responseAsync = NioLongConnectionServer.this.requestHandler
+				.addLast(taskRequest);
+		if (!responseAsync) {
+			NioLongConnectionServer.response429Async(selectionKey,
+					SERVER_CONFIGURATIONPROPERTIES.getPendingTasksExceedMessage());
+		}
+	}
+
+	private static boolean allow() {
+		return ENABLE_SERVER_QPS_LIMITED && QC.allow(NioLongConnectionServer.Z_SERVER_QPS,
+				SERVER_CONFIGURATIONPROPERTIES.getQps(), QPSHandlingEnum.SMOOTH);
 	}
 
 	public static void response429Async(final SelectionKey key, final String message) {
