@@ -2,6 +2,7 @@ package com.vo.core;
 
 import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.configuration.TaskResponsiveModeEnum;
+import com.vo.http.AccessDeniedCodeEnum;
 
 
 /**
@@ -111,7 +112,7 @@ abstract class AbstractRequestValidator {
 			return ALLOW;
 		}
 
-		final String userAgent = request.getHeader(HeaderEnum.USER_AGENT.getName());
+		final String userAgent = request.getUserAgent();
 
 		// 启用了响应
 		// ZSESSIONID，则认为ZSESSIONID相同就是同一个客户端(前提是服务器中存在对应的session，因为session可能是伪造的等，服务器重启就重启就认为是无效session)
@@ -127,16 +128,12 @@ abstract class AbstractRequestValidator {
 					return ALLOW;
 				}
 
-				return new RequestVerificationResult(false, "ZSESSIONID访问频繁", request.getClientIp(),
-						request.getUserAgent());
+				return new RequestVerificationResult(false, AccessDeniedCodeEnum.ZSESSIONID.getInternalMessage(),
+						request.getClientIp(), request.getUserAgent());
 			}
 		}
 
-		// -------------------------------------------------
-		// [没]启用响应 ZSESSIONID，则认为 clientIp和User-Agent都相同就是同一个客户端
-		// -------------------------------------------------
-		final String clientIp = request.getClientIp();
-		final String keyword = clientIp + "@" + userAgent;
+		final String keyword = request.getClientIp() + "@" + userAgent;
 
 		final QPSHandlingEnum handlingEnum = this.requestValidatorConfigurationProperties.getHandlingEnum(userAgent);
 		final boolean allow = QC.allow(keyword, this.getClientQps(), handlingEnum);
@@ -145,7 +142,8 @@ abstract class AbstractRequestValidator {
 			return ALLOW;
 		}
 
-		return new RequestVerificationResult(false, "CLIENT访问频繁", request.getClientIp(), request.getUserAgent());
+		return new RequestVerificationResult(false, AccessDeniedCodeEnum.CLIENT.getInternalMessage(),
+				request.getClientIp(), request.getUserAgent());
 	}
 
 	/**

@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Properties;
 
 import com.vo.cache.STU;
+import com.vo.scanner.ZPropertiesListener;
 
 /**
  * 读取配置文件
@@ -198,13 +199,20 @@ public class ZProperties {
 
 	static {
 
+		String filePath = getUseDir() + File.separator + ZProperties.PROPERTIES_1;
+
 		Properties p1 = loadDirConfig(File.separator + ZProperties.PROPERTIES_1);
 		if (p1 == null) {
 			p1 = loadDirConfig(File.separator + ZProperties.PROPERTIES_2);
+			filePath = getUseDir() + File.separator + ZProperties.PROPERTIES_2;
 			if (p1 == null) {
 				p1 = loadPResources("/" + ZProperties.PROPERTIES_1);
+				filePath = getUseDir() + File.separator + "src" + File.separator + "main" + File.separator + "resources"
+						+ File.separator + ZProperties.PROPERTIES_1;
 				if (p1 == null) {
 					p1 = loadPResources("/" + ZProperties.PROPERTIES_2);
+					filePath = getUseDir() + File.separator + "src" + File.separator + "main" + File.separator + "resources"
+							+ File.separator + ZProperties.PROPERTIES_2;
 				}
 			}
 		}
@@ -213,6 +221,8 @@ public class ZProperties {
 			System.out.println("ERROR: 启动失败," + ZProperties.PROPERTIES_1 + "配置文件不存在,请编写此配置文件");
 			System.exit(0);
 		}
+
+		ZPropertiesListener.listen(filePath);
 
 		properties = p1;
 

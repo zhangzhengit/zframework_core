@@ -19,6 +19,8 @@ public enum AccessDeniedCodeEnum {
 
 	CLIENT(10005,"CLIENT访问频繁","访问频繁,请稍后再试"),
 
+	API(10008,"API访问频繁","访问频繁,请稍后再试"),
+
 	;
 
 

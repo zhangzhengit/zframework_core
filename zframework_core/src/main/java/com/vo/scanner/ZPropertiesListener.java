@@ -34,7 +34,7 @@ public class ZPropertiesListener {
 
 	public static void listen(final String filePath) {
 
-		LOG.info("{} 变动监听器启动...", ZProperties.PROPERTIES_NAME);
+		LOG.info("配置热更新监听器启动,filePath={}", filePath);
 
 		ZE.executeInQueue(() -> {
 
@@ -81,7 +81,7 @@ public class ZPropertiesListener {
 
 						if (fileName.equals(new File(filePath).getName())) {
 							try {
-								final Properties  properties = new Properties();
+								final Properties properties = new Properties();
 
 								final FileInputStream fileInputStream = new FileInputStream(new File(filePath));
 								final InputStreamReader isr = new InputStreamReader(fileInputStream,

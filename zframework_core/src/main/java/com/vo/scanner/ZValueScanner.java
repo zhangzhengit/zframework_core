@@ -89,7 +89,8 @@ public class ZValueScanner {
 		setValue(field, value, bean);
 	}
 
-	public static void updateValue(final String name, final Object value)  {
+	public static void updateValue(final String name, final Object newValue) {
+
 		final Map<Field, Object> map = valueTable.row(name);
 		if (CU.isEmpty(map)) {
 			return;
@@ -104,33 +105,33 @@ public class ZValueScanner {
 			try {
 				field.setAccessible(true);
 				oldValue = field.get(object);
-				LOG.info("开始更新配置项key={},原value={},新value={}", name, oldValue, value);
 			} catch (IllegalArgumentException | IllegalAccessException e) {
 				e.printStackTrace();
+			}
+
+			// 新值和原值一样，continue
+			if (((newValue == null) && (newValue == oldValue))
+					|| (String.valueOf(newValue).equals(String.valueOf(oldValue)))) {
+				continue;
 			}
 
 			final Class<?> type = field.getType();
 
 			// 1 先赋值为新值
-			setValue(value, field, object, type);
+			setValue(newValue, field, object, type);
 
 			try {
 				// 2 校验新值
 				ZValidator.validatedAll(object, field);
+				LOG.info("配置热更新:配置项[{}]已从原值[{}]更新为新值[{}]", name, oldValue, newValue);
 			} catch (final Exception e) {
-
 				final String message = Task.gExceptionMessage(e);
-				LOG.error("更新新值{}异常,开始重置为旧值{},field={}.{},message={}", value, oldValue,
-						object.getClass().getSimpleName(), field.getName(), message);
-
+				LOG.error("配置热更新:配置项[{}]更新异常,开始重置为旧值[{}],message={}", name, oldValue, message);
 				// 3 如果新值校验不通过，则重新赋值为旧值
 				setValue(oldValue, field, object, type);
 			}
-
-
-			LOG.info("更新配置项完成key={},新value={}", name, value);
-
 		}
+
 	}
 
 	private static void setValue(final Object value, final Field field, final Object object, final Class<?> type) {

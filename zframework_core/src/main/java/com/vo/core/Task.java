@@ -270,8 +270,8 @@ public class Task {
 			// 即：先解析header如果API.qps超了，则不解析body
 
 
-			final CR<Object> error = CR.error(AccessDeniedCodeEnum.CLIENT.getCode(),
-					AccessDeniedCodeEnum.CLIENT.getMessageToClient());
+			final CR<Object> error = CR.error(AccessDeniedCodeEnum.API.getCode(),
+					AccessDeniedCodeEnum.API.getInternalMessage());
 
 			final ZResponse response = new ZResponse(this.socketChannel);
 			response.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
