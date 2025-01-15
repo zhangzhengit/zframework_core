@@ -71,18 +71,20 @@ public final class TaskRequestHandler extends Thread {
 				e1.printStackTrace();
 			}
 
-			this.h(taskRequest);
+			this.handle(taskRequest);
 		}
 	}
 
 	@SuppressWarnings("resource")
-	private void h(final TaskRequest taskRequest) {
+	private void handle(final TaskRequest taskRequest) {
+
 		Task.SCTL.set(taskRequest.getSocketChannel());
+
 		try {
+
 			final ZRequest request = BodyReader.readHeader(taskRequest.getRequestData());
 			if (request == null) {
-				taskRequest.getSocketChannel().close();
-				taskRequest.getSelectionKey().cancel();
+				NioLongConnectionServer.closeSocketChannelAndKeyCancel(taskRequest.getSelectionKey(), taskRequest.getSocketChannel());
 				return;
 			}
 
@@ -97,9 +99,9 @@ public final class TaskRequestHandler extends Thread {
 
 			final ZResponse response = new ZResponse(taskRequest.getSocketChannel());
 			response.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
-			.httpStatus(HttpStatusEnum.HTTP_400.getCode())
+			.httpStatus(HttpStatusEnum.HTTP_500.getCode())
 			.header(HeaderEnum.CONNECTION.getName(), ConnectionEnum.CLOSE.getValue())
-			.body(J.toJSONString(CR.error(HttpStatusEnum.HTTP_400.getMessage() + " " +
+			.body(J.toJSONString(CR.error(HttpStatusEnum.HTTP_500.getMessage() + " " +
 					message), Include.NON_NULL));
 			response.write();
 
