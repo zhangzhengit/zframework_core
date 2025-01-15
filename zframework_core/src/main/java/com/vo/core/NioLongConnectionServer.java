@@ -166,8 +166,8 @@ public class NioLongConnectionServer {
 					} else if (selectionKey.isValid() && selectionKey.isReadable()) {
 
 						final SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
-						final String keyword = socketChannel.getRemoteAddress().toString();
-
+						final String keyword = socketChannel.isOpen() ? socketChannel.getRemoteAddress().toString()
+								: socketChannel.toString();
 
 						// FIXME 2025年1月15日 下午7:45:55 zhangzhen : 在尝试：只在NIO线程read
 						// 如果content-length>0再用线程池继续读取body部分，但是同步还有问题，并且上传大文件会导致其他的socketChannel.read阻塞，继续查什么原因
