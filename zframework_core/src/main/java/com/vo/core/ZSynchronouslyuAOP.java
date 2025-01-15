@@ -25,7 +25,7 @@ import com.votool.ze.ZETaskResult;
 @ZAOP(interceptType = ZSynchronously.class)
 public class ZSynchronouslyuAOP implements ZIAOP {
 
-	private static final ZE ZE = ZES.newZE("ZSynchronouslyuAOP-Thread-");
+	private static final ZE ZE = ZES.newZE("synchronouslyAOP-Group","ZSynchronouslyAOP-Thread-");
 
 	@Override
 	public Object before(final AOPParameter AOPParameter) {

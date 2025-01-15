@@ -23,6 +23,7 @@ import com.votool.common.CR;
 public final class TaskRequestHandler extends Thread {
 
 	public static final String NAME = "request-Dispatcher-Thread";
+	public static final String GROUP_NAME = "dispatcher-Group";
 
 	private final LinkedBlockingDeque<TaskRequest> queue = new LinkedBlockingDeque<>(
 			ZContext.getBean(ServerConfigurationProperties.class).getPendingTasks());
@@ -30,6 +31,7 @@ public final class TaskRequestHandler extends Thread {
 	private final AbstractRequestValidator requestValidator;
 
 	public TaskRequestHandler() {
+		super(new ThreadGroup(GROUP_NAME), GROUP_NAME + "@" + NAME);
 
 		this.setName(NAME);
 

@@ -71,7 +71,7 @@ public class NioLongConnectionServer {
 
 
 	public final static ZE ZE = ZES.newZE(SERVER_CONFIGURATIONPROPERTIES.getThreadCount(),
-			"zf-Worker-Group",
+			"zf",
 			SERVER_CONFIGURATIONPROPERTIES.getThreadName(),
 			TaskResponsiveModeEnum.IMMEDIATELY.name().equals(SERVER_CONFIGURATIONPROPERTIES.getTaskResponsiveMode())
 			? ThreadModeEnum.IMMEDIATELY
@@ -102,7 +102,8 @@ public class NioLongConnectionServer {
 	private final TaskRequestHandler requestHandler = new TaskRequestHandler();
 
 	public void startNIOServer(final Integer serverPort) {
-		final Thread thread = new Thread(() -> NioLongConnectionServer.this.startNIOServer0(serverPort));
+		final ThreadGroup group = new ThreadGroup("nio");
+		final Thread thread = new Thread(group, () -> NioLongConnectionServer.this.startNIOServer0(serverPort));
 		thread.setName("nio-Thread");
 		thread.setPriority(Thread.MAX_PRIORITY);
 		thread.start();
