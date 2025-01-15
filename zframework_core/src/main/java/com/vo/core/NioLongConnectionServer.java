@@ -219,7 +219,7 @@ public class NioLongConnectionServer {
 		new ZResponse(socketChannel)
 		.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 		.httpStatus(HttpStatusEnum.HTTP_500.getCode())
-		.header(HeaderEnum.CONNECTION.getName(), "close")
+		.header(HeaderEnum.CONNECTION.getName(), ConnectionEnum.CLOSE.getValue())
 		.body(errorMessage)
 		.write();
 

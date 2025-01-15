@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.google.common.collect.ImmutableCollection;
 import com.vo.cache.J;
 import com.vo.configuration.ServerConfigurationProperties;
+import com.vo.enums.ConnectionEnum;
 import com.vo.exception.StartupException;
 import com.vo.http.HttpStatusEnum;
 import com.votool.common.CR;
@@ -97,7 +98,7 @@ public final class TaskRequestHandler extends Thread {
 			final ZResponse response = new ZResponse(taskRequest.getSocketChannel());
 			response.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 			.httpStatus(HttpStatusEnum.HTTP_400.getCode())
-			.header(HeaderEnum.CONNECTION.getName(), "close")
+			.header(HeaderEnum.CONNECTION.getName(), ConnectionEnum.CLOSE.getValue())
 			.body(J.toJSONString(CR.error(HttpStatusEnum.HTTP_400.getMessage() + " " +
 					message), Include.NON_NULL));
 			response.write();
