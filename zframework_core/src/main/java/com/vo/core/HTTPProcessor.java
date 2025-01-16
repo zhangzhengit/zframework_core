@@ -23,7 +23,7 @@ public class HTTPProcessor {
 
 		final boolean checkHeader = httpReader.checkHeader(ar);
 		if (checkHeader) {
-			final ZArray array = httpReader.readBody(socketChannel, ar);
+			final ZArray array = httpReader.readBody(key, socketChannel, ar);
 			return array;
 		}
 
