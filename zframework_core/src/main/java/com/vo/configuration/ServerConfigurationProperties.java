@@ -82,7 +82,7 @@ public class ServerConfigurationProperties {
 	 * 单位：KB
 	 */
 	@ZMin(min = 1)
-	@ZMax(max = 1024 * 1000)
+	@ZMax(max = 1024 * 10000)
 	@ZNotNull
 	private Integer uploadFileSize = 1024 * 50;
 
