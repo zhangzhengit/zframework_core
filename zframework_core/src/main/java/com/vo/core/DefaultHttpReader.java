@@ -54,8 +54,12 @@ import com.vo.enums.MethodEnum;
 // SocketChannel 或者ZArray等等，尽可能屏蔽内部实现，只让用户关注业务逻辑即可
 @ZComponent
 public class DefaultHttpReader {
-	static
-	ZLog2 LOG = ZLog2.getInstance();
+
+	private static final int OPTIONS_LENGTH = MethodEnum.OPTIONS.name().length();
+
+	private static final int GET_LENGTH = MethodEnum.GET.name().length();
+
+	static ZLog2 LOG = ZLog2.getInstance();
 
 	private static final int _1024 = 1024;
 
@@ -73,21 +77,21 @@ public class DefaultHttpReader {
 	// 考虑好如下情况：
 	// POST PUT PATCH 有content-type则一定有body，但是
 	// GET HEAD OPTIONS 有CT不一定有body，想好怎么处理
-//	public ZArray handleRead(final SelectionKey key) throws Exception {
-//
-//		final SocketChannel socketChannel = (SocketChannel) key.channel();
-//		if (!socketChannel.isOpen()) {
-//			NioLongConnectionServer.closeSocketChannelAndKeyCancel(key, socketChannel);
-//			return null;
-//		}
-//
-//		final AR ar = this.readHeader(key, socketChannel);
-//		if (ar == null) {
-//			return null;
-//		}
-//
-//		return this.readBody(se, socketChannel, ar);
-//	}
+	//	public ZArray handleRead(final SelectionKey key) throws Exception {
+	//
+	//		final SocketChannel socketChannel = (SocketChannel) key.channel();
+	//		if (!socketChannel.isOpen()) {
+	//			NioLongConnectionServer.closeSocketChannelAndKeyCancel(key, socketChannel);
+	//			return null;
+	//		}
+	//
+	//		final AR ar = this.readHeader(key, socketChannel);
+	//		if (ar == null) {
+	//			return null;
+	//		}
+	//
+	//		return this.readBody(se, socketChannel, ar);
+	//	}
 
 	public ZArray readBody(final SelectionKey key, final SocketChannel socketChannel, final AR ar) {
 		final ZArray array = ar.getArray();
@@ -146,19 +150,20 @@ public class DefaultHttpReader {
 		return array;
 	}
 
+
 	private MR readMethod(final SelectionKey key, final SocketChannel socketChannel) {
 
 		// FIXME 2024年12月20日 下午4:17:48 zhangzhen : 这个方法是妥协，不想debug
 		// post时的提取body存入临时文件并且把普通表单字段继续存入内存了
 		// 直接 无body 使用配置值，有body一个byte一个byte读header
 
-		final int maxLength = MethodEnum.OPTIONS.name().length();
-
-		final ByteBuffer byteBuffer = ByteBuffer.allocate(maxLength);
-
-		if (!socketChannel.isOpen()) {
+		if (!socketChannel.isOpen() || !key.isReadable()) {
 			return null;
 		}
+
+		final int maxLength = OPTIONS_LENGTH + 10;
+
+		final ByteBuffer byteBuffer = ByteBuffer.allocate(maxLength);
 
 		int tR = 0;
 		try {
@@ -166,6 +171,11 @@ public class DefaultHttpReader {
 		} catch (final IOException e1) {
 			e1.printStackTrace();
 			NioLongConnectionServer.closeSocketChannelAndKeyCancel(key, socketChannel);
+			return null;
+		}
+
+		if (tR == 0) {
+			return null;
 		}
 
 		if (tR == -1) {
@@ -176,17 +186,19 @@ public class DefaultHttpReader {
 			return null;
 		}
 
-		if (tR > 0) {
-			final byte[] array = byteBuffer.array();
-			final String x = new String(array, 0, tR);
-			final int i = x.indexOf(NioLongConnectionServer.SPACE);
-			if (i > -1) {
-				final String method = x.substring(0, i);
-				final MethodEnum valueOfString = MethodEnum.valueOfString(method);
-				if (valueOfString != null) {
-					final MR mr = new MR(maxLength, method, array);
-					return mr;
-				}
+		if (tR < GET_LENGTH) {
+			return null;
+		}
+
+		final byte[] array = byteBuffer.array();
+		final String x = new String(array, 0, tR);
+		final int i = x.indexOf(NioLongConnectionServer.SPACE);
+		if (i > -1) {
+			final String method = x.substring(0, i);
+			final MethodEnum valueOfString = MethodEnum.valueOfString(method);
+			if (valueOfString != null) {
+				final MR mr = new MR(maxLength, method, array);
+				return mr;
 			}
 		}
 
