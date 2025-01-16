@@ -9,6 +9,7 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -159,7 +160,10 @@ public class NioLongConnectionServer {
 			}
 
 			final Set<SelectionKey> selectedKeys = selector.selectedKeys();
-			for (final SelectionKey selectionKey : selectedKeys) {
+			final Iterator<SelectionKey> iterator = selectedKeys.iterator();
+			while (iterator.hasNext()) {
+				final SelectionKey selectionKey = iterator.next();
+				iterator.remove();
 
 				try {
 					if (selectionKey.isValid() && selectionKey.isAcceptable()) {
@@ -183,7 +187,6 @@ public class NioLongConnectionServer {
 					continue;
 				}
 			}
-			selectedKeys.clear();
 		}
 	}
 
