@@ -156,13 +156,13 @@ public class Task {
 
 		try {
 
-			final Object[] p = this.generateParameters(method, request, path, socketChannel);
-			if (p == null) {
+			final Object[] parameterArray = this.generateParameters(method, request, path);
+			if (parameterArray == null) {
 				return null;
 			}
 
 			final Object zController = ZControllerMap.getObjectByMethod(method);
-			final ZResponse re = this.invokeAndResponse(method, p, zController, request);
+			final ZResponse re = this.invokeAndResponse(method, parameterArray, zController, request);
 			return re;
 
 		} catch (final Exception e) {
@@ -197,9 +197,9 @@ public class Task {
 			if (Boolean.TRUE.equals(ZControllerMap.getIsregexByMethodEnumAndPath(methodTarget, requestMapping)) &&path.matches(requestMapping)) {
 
 				final Object object = ZControllerMap.getObjectByMethod(methodTarget);
-				final Object[] arraygP = this.generateParameters(methodTarget, request, path, this.socketChannel);
+				final Object[] parametersArray = this.generateParameters(methodTarget, request, path);
 				try {
-					final ZResponse invokeAndResponse = this.invokeAndResponse(methodTarget, arraygP, object, request);
+					final ZResponse invokeAndResponse = this.invokeAndResponse(methodTarget, parametersArray, object, request);
 					return invokeAndResponse;
 				} catch (IllegalAccessException | InvocationTargetException | UnsupportedEncodingException e) {
 					//					e.printStackTrace();
@@ -251,10 +251,10 @@ public class Task {
 	}
 
 	@SuppressWarnings("boxing")
-	private ZResponse invokeAndResponse(final Method method, final Object[] arraygP, final Object zController, final ZRequest request)
+	private ZResponse invokeAndResponse(final Method method, final Object[] parametersArray, final Object zControllerObject, final ZRequest request)
 			throws IllegalAccessException, InvocationTargetException, IOException {
 
-		final String controllerName = zController.getClass().getName();
+		final String controllerName = zControllerObject.getClass().getName();
 		final Integer qps = ZControllerMap.getQPSByControllerNameAndMethodName(controllerName, method.getName());
 
 		final String userAgent = request.getHeader(HeaderEnum.USER_AGENT.getName());
@@ -316,18 +316,18 @@ public class Task {
 			}
 		}
 
-		this.setZRequestAndZResponse(arraygP, request);
+		this.setZRequestAndZResponse(parametersArray, request);
 
 		Object r = null;
 		// 在此zhi执行
 		final List<ZHandlerInterceptor> zhiList = ZHandlerInterceptorScanner.match(request.getRequestURI());
 		if (CU.isEmpty(zhiList)) {
-			r = invoke0(method, arraygP, zController);
+			r = invoke0(method, parametersArray, zControllerObject);
 		} else {
 			final ZResponse response = new ZResponse(this.socketChannel);
 			final InterceptorParameter interceptorParameter = new InterceptorParameter(method.getName(), method,
 					method.getReturnType().getName().equals(Void.class.getName()),
-					Lists.newArrayList(arraygP), zController);
+					Lists.newArrayList(parametersArray), zControllerObject);
 			// 1 按从小到大执行pre
 			boolean stop = false;
 			for (final ZHandlerInterceptor zhi : zhiList) {
@@ -345,10 +345,10 @@ public class Task {
 
 			if (!stop) {
 
-				r = invoke0(method, arraygP, zController);
+				r = invoke0(method, parametersArray, zControllerObject);
 				final ZModelAndView modelAndView = method.isAnnotationPresent(ZHtml.class)
 						? new ZModelAndView(true, String.valueOf(r), readHtmlContent(r), ZModel.get(),
-								(ZModel) Arrays.stream(arraygP).filter(arg -> arg.getClass().equals(ZModel.class))
+								(ZModel) Arrays.stream(parametersArray).filter(arg -> arg.getClass().equals(ZModel.class))
 								.findAny().orElse(null),
 								null)
 								: new ZModelAndView(false, null, null, null, (ZModel) null, r);
@@ -399,55 +399,25 @@ public class Task {
 	/**
 	 * 真正的API目标方法执行，统一在本方法里面执行，方便统一处理
 	 *
-	 * @param method
-	 * @param arraygP
-	 * @param zController
+	 * @param apiMethod		要执行的API的method
+	 * @param pArray		此method的参数数组，如：ZRequest/ZModel/@ZRequestHeader/@ZRequestParam等等
+	 * @param zControllerObject	此method所在的 @ZController 标记的对象
 	 * @return
 	 * @throws IllegalAccessException
+	 * @throws IllegalArgumentException
 	 * @throws InvocationTargetException
-	 * @throws IOException
 	 */
-	private static Object invoke0(final Method method, final Object[] arraygP, final Object zController)
-			throws IllegalAccessException, InvocationTargetException, IOException {
+	private static Object invoke0(final Method apiMethod, final Object[] pArray, final Object zControllerObject)
+			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+		final Object r = apiMethod.invoke(zControllerObject, pArray);
 
-		// FIXME 2024年5月27日 下午1:13:41 zhangzhen: 这个要不要这么写死？或者直接用拦截器算了，定义一个内置的[API方法执行信息]拦截器，并且提供一个开关参数？
-		// admin页面要完成的功能有点复杂，包含排序/过滤等，要不要使用derby/h2?
-		// FIXME 2024年5月27日 下午3:50:39 zhangzhen: sb_zrepository 已支持sqlite，支持依赖进来使用sqlite吧
-		// FIXME 2024年5月29日 下午6:02:36 zhangzhen : 试了还有点问题：
-		/*
-		 * 以来进来了 sb_zrepository 并且数据源配置为sqlite，单如果A工程依赖了本工程并且也依赖了sb_zrepository，
-		 * 则会导致 sb_zrepository 读取数据源时使用A的配置项，而不是本工程配置的sqlite。想好怎么做
-		 *
-		 * 并且 sb_zrepository 中的log输出也有问题，比如：不希望本工程showsql，而要Ashowsql，zlog2也暂时不支持这么配置。
-		 *
-		 */
-
-
-		//		final List<Object> al = Arrays.stream(arraygP)
-		//				.filter(a -> a.getClass() != ZRequest.class)
-		//				.filter(a -> a.getClass() != ZResponse.class)
-		//				.collect(Collectors.toList());
-
-		//		System.out.println("API开始执行,method = " + method.getName() + "\t\t" + "Controller = " + zController.getClass().getSimpleName()
-		//				+ "\t" + "arg = " + al
-		//				);
-
-		//		final MethodInvocationLogsRepository mr = ZContext.getBean(MethodInvocationLogsRepository.class);
-		//
-		//		final long t1 = System.currentTimeMillis();
-
-		final Object r = method.invoke(zController, arraygP);
-
-		if (arraygP.length > 0) {
-			closeZMFInputStreamAndDeleteTempFile(arraygP);
+		if (pArray.length > 0) {
+			try {
+				closeZMFInputStreamAndDeleteTempFile(pArray);
+			} catch (final IOException e) {
+				e.printStackTrace();
+			}
 		}
-
-		//		final long t2 = System.currentTimeMillis();
-		//
-		//		final MethodInvocationLogsEntity entity = new MethodInvocationLogsEntity();
-		//		entity.setMethodName(method.getName());
-		//		entity.setTimeConsuming((int) (t2 - t1));
-		//		mr.save(entity);
 
 		return r;
 	}
@@ -853,23 +823,21 @@ public class Task {
 		return nI.get();
 	}
 
-	private Object[] generateParameters(final Method method, final ZRequest request, final String path,
-			final SocketChannel socketChannel) {
+	private Object[] generateParameters(final Method method, final ZRequest request, final String path) {
 		final Object[] parametersArray = new Object[method.getParameterCount()];
-
 		return this.generateParameters(method, parametersArray, request, path);
 	}
 
-	private void setZRequestAndZResponse(final Object[] arraygP, final ZRequest request) {
+	private void setZRequestAndZResponse(final Object[] parameterArray, final ZRequest request) {
 
-		if (arraygP == null) {
+		if (parameterArray == null) {
 			return;
 		}
 
 		ZHttpContext.setZRequest(request);
 
 		boolean sR = false;
-		for (final Object object : arraygP) {
+		for (final Object object : parameterArray) {
 			if (object == null) {
 				continue;
 			}
