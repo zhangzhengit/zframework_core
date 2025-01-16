@@ -43,6 +43,27 @@ public class RU {
 		return ZRC.computeIfAbsent(key, () -> method.getParameters());
 	}
 
+
+	public static <T extends Annotation>  Field getDeclaredFieldByAnnotation(final Class<?> type,final Class<T> annoClass) {
+		final String key = type.getName() + '-' + "getDeclaredFieldByAnnotation";
+
+		return ZRC.computeIfAbsent(key, () -> {
+			final Field[] fs = getDeclaredFields(type);
+			for (final Field field : fs) {
+				if (field.isAnnotationPresent(annoClass)) {
+					return field;
+				}
+			}
+			return null;
+		});
+	}
+
+
+	public static Field[] getDeclaredFields(final Class<?> type) {
+		final String key = type.getName() + '-' + "getDeclaredFields";
+		return ZRC.computeIfAbsent(key, () -> type.getDeclaredFields());
+	}
+
 	public static Field getDeclaredField(final Class<?> type, final String javaFieldName)
 			throws NoSuchFieldException, SecurityException {
 
