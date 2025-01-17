@@ -31,9 +31,9 @@ public class StaticController {
 			"/.+\\.png$",
 			"/.+\\.js$", "/.+\\.jpg$", "/.+\\.mp3$", "/.+\\.mp4$", "/.+\\.pdf$",
 			"/.+\\.gif$", "/.+\\.doc$" ,"/.+\\.css$","/.+\\.html$"},
-			isRegex = { true, true, true, true, true, true, true, true, true, true , true }, qps = 10000 * 5)
+			isRegex = { true, true, true, true, true, true, true, true, true, true , true }, qps = 10000 * 10)
 
-	@ZQPSLimitation(qps = 100, type = ZQPSLimitationEnum.ZSESSIONID)
+	@ZQPSLimitation(qps = 2000, type = ZQPSLimitationEnum.ZSESSIONID)
 	@ZETag
 	@ZCacheControl(value = { CacheControlEnum.PRIVATE, CacheControlEnum.MUST_REVALIDATE }, maxAge = 60 * 10)
 	public void staticResources(final ZResponse response, final ZRequest request) {
