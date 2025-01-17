@@ -170,15 +170,29 @@ public class NioLongConnectionServer {
 						handleAccept(selectionKey, selector);
 					} else if (selectionKey.isValid() && selectionKey.isReadable()) {
 
+						// FIXME 2025年1月15日 下午7:45:55 zhangzhen : 在尝试：只在NIO线程read
+						// 如果content-length>0再用线程池继续读取body部分，但是同步还有问题，并且上传大文件会导致其他的socketChannel.read阻塞，继续查什么原因
+						// 只试了测试100W次简单get接口，上述方法5W/S左右，而如下方式4.2W左右
+
+						synchronized (selectionKey) {
+							final Object attachment = selectionKey.attachment();
+							if ((attachment != null) && (attachment == SKStatusEnum.READING)) {
+								continue;
+							}
+						}
+
+						synchronized (selectionKey) {
+							selectionKey.attach(SKStatusEnum.READING);
+						}
+
 						final SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
 
 						final String keyword = NioLongConnectionServer.gKeyword(socketChannel);
 
-						// FIXME 2025年1月15日 下午7:45:55 zhangzhen : 在尝试：只在NIO线程read
-						// 如果content-length>0再用线程池继续读取body部分，但是同步还有问题，并且上传大文件会导致其他的socketChannel.read阻塞，继续查什么原因
-						// 只试了测试100W次简单get接口，上述方法5W/S左右，而如下方式4.2W左右
-						NioLongConnectionServer.ZE.executeByNameInASpecificThread(keyword,
-								() -> this.action(selectionKey, socketChannel));
+						if (SKStatusEnum.READING == selectionKey.attachment()) {
+							NioLongConnectionServer.ZE.executeByNameInASpecificThread(keyword,
+									() -> this.action(selectionKey, socketChannel));
+						}
 
 					}
 				} catch (final Exception e) {
@@ -192,36 +206,42 @@ public class NioLongConnectionServer {
 
 	private void action(final SelectionKey selectionKey, final SocketChannel socketChannel) {
 
-		final ZArray array = HTTPProcessor.process(socketChannel, selectionKey);
-		if (array == null) {
-			return;
-		}
-
-		if (!NioLongConnectionServer.allow()) {
-			try {
-				NioLongConnectionServer.response429Async(selectionKey,
-						SERVER_CONFIGURATIONPROPERTIES.getQpsExceedMessage());
-			} catch (final Exception e) {
-				final String message = Task.gExceptionMessage(e);
-				LOG.error("response429Async-异常,message={}", message);
-				closeSocketChannelAndKeyCancel(selectionKey, socketChannel);
+		try {
+			final ZArray array = HTTPProcessor.process(socketChannel, selectionKey);
+			if (array == null) {
+				return;
 			}
 
-		} else {
+			if (!NioLongConnectionServer.allow()) {
+				try {
+					NioLongConnectionServer.response429Async(selectionKey,
+							SERVER_CONFIGURATIONPROPERTIES.getQpsExceedMessage());
+				} catch (final Exception e) {
+					final String message = Task.gExceptionMessage(e);
+					LOG.error("response429Async-异常,message={}", message);
+					closeSocketChannelAndKeyCancel(selectionKey, socketChannel);
+				}
 
-			try {
-				this.response(selectionKey, array);
-			} catch (final Exception e) {
-				final String message = Task.gExceptionMessage(e);
-				LOG.error("response-异常,message={}", message);
+			} else {
 
-				final String errorMessage = J.toJSONString(
-						CR.error(HttpStatusEnum.HTTP_500.getMessage() + SPACE + message), Include.NON_NULL);
+				try {
+					this.response(selectionKey, array);
+				} catch (final Exception e) {
+					final String message = Task.gExceptionMessage(e);
+					LOG.error("response-异常,message={}", message);
 
-				NioLongConnectionServer.r500AndCloseSocketChannel(selectionKey, socketChannel, errorMessage);
+					final String errorMessage = J.toJSONString(
+							CR.error(HttpStatusEnum.HTTP_500.getMessage() + SPACE + message), Include.NON_NULL);
+
+					NioLongConnectionServer.r500AndCloseSocketChannel(selectionKey, socketChannel, errorMessage);
+				}
+			}
+
+		} finally {
+			synchronized (selectionKey) {
+				selectionKey.attach(SKStatusEnum.IDLE);
 			}
 		}
-
 	}
 
 	private static String gKeyword(final SocketChannel socketChannel) {
