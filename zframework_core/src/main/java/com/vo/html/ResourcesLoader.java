@@ -109,6 +109,7 @@ public class ResourcesLoader {
 		}
 
 		final String fileName = resourcePath + (resourceName.replace("/", File.separator));
+
 		try {
 			return new FileInputStream(fileName);
 		} catch (final FileNotFoundException e1) {
@@ -135,26 +136,25 @@ public class ResourcesLoader {
 			return ba;
 		}
 
-		//			final byte[] ba1 = loadByteArray(resourcePath + File.separator + (resourceName.replace("/", "")));
-		//			final String fileName = resourcePath + File.separator + (resourceName.replace("/", ""));
 		final String fileName = resourcePath + (resourceName.replace("/", File.separator));
 
-		System.out.println("loadStaticResourceAsByteArray - fileName = " + fileName);
+		final FileInputStream fileInputStream;
 		try {
-			final FileInputStream fileInputStream = new FileInputStream(new File(fileName));
+			fileInputStream = new FileInputStream(new File(fileName));
+		} catch (final FileNotFoundException e1) {
+			throw new ResourceNotExistException("资源不存在,name = " + resourceName);
+		}
 
-			final FastByteArrayOutputStream read = IoUtil.read(fileInputStream);
+		final FastByteArrayOutputStream read = IoUtil.read(fileInputStream);
+		final byte[] byteArray = read.toByteArray();
 
-			final byte[] byteArray = read.toByteArray();
-
+		try {
 			fileInputStream.close();
-
-			return byteArray;
 		} catch (final IOException e) {
 			e.printStackTrace();
 		}
 
-		return null;
+		return byteArray;
 	}
 
 	private static byte[] loadByteArray0(final String resourceName) {

@@ -1,8 +1,7 @@
 package com.vo.api;
 
-import java.io.InputStream;
-
 import com.vo.anno.ZController;
+import com.vo.cache.ZMC;
 import com.vo.core.CacheControlEnum;
 import com.vo.core.ContentTypeEnum;
 import com.vo.core.ZRequest;
@@ -26,6 +25,13 @@ import com.votool.common.CR;
  */
 @ZController
 public class StaticController {
+
+	/**
+	 * 100MB
+	 */
+	private static final int CAPACITY = 1024 * 1024 * 100;
+
+	private final ZMC zmc = new ZMC(CAPACITY);
 
 	@ZRequestMapping(mapping = { "/favicon\\.ico",
 			"/.+\\.png$",
@@ -54,8 +60,14 @@ public class StaticController {
 
 		response.contentType(cte.getType());
 
-		final InputStream inputStream = ResourcesLoader.loadStaticResourceAsInputStream(resourceName);
-		response.body(inputStream);
+		final String key = "staticResources" + '-' + resourceName;
+
+		// FIXME 2025年1月17日 下午5:38:27 zhangzhen : 可以判断一下，如果请求的文件时.html/.css等可被压缩的，
+		// 可以先压缩再add，get后再解压缩
+		final byte[] ba = this.zmc.computeIfAbsent(key,
+				() -> ResourcesLoader.loadStaticResourceAsByteArray(resourceName));
+
+		response.body(ba);
 	}
 
 }
