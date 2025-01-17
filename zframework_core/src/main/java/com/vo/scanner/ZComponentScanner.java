@@ -14,19 +14,16 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.vo.anno.ZAutowired;
-import com.vo.anno.ZComponent;
 import com.vo.aop.ZAOPProxyClass;
 import com.vo.aop.ZAOPScaner;
 import com.vo.cache.STU;
 import com.vo.core.Task;
 import com.vo.core.ZClass;
 import com.vo.core.ZContext;
-import com.vo.core.ZLog2;
 import com.vo.core.ZMethod;
 import com.vo.core.ZMethodArg;
 import com.vo.core.ZObjectGeneratorStarter;
 import com.vo.core.ZPackage;
-import com.vo.core.ZSingleton;
 import com.vo.validator.ZValidated;
 import com.vo.validator.ZValidator;
 
@@ -39,28 +36,16 @@ import com.vo.validator.ZValidator;
  */
 public class ZComponentScanner {
 
-	private static final ZLog2 LOG = ZLog2.getInstance();
-
-	public static void scanAndCreate(final String... packageName) {
-		scanAndCreate(ZComponent.class, packageName);
-	}
-
 	public static void scanAndCreate(final Class<? extends Annotation> cls,final String... packageName) {
 		scanAndCreate0(cls, packageName);
 	}
 
 	private static void scanAndCreate0(final Class<? extends Annotation> zc, final String... packageName) {
 		final Map<String, ZClass> map = ZAOPScaner.scanAndGenerateProxyClass1(packageName);
-		//		LOG.info("开始扫描带有[{}]注解的类", zc.getCanonicalName());
-		final Set<Class<?>> zcSet = ClassMap.scanPackageByAnnotation(zc, packageName);
-		//		LOG.info("扫描到带有[{}]注解的类个数={}", zc.getCanonicalName(),zcSet.size());
-		//		LOG.info("开始给带有[{}]注解的类创建对象",zc.getCanonicalName());
-		for (final Class<?> cls : zcSet) {
-			//			LOG.info("开始给待有[{}]注解的类[{}]创建对象",zc.getCanonicalName(),cls.getCanonicalName());
-			final Object object = ZSingleton.getSingletonByClass(cls);
-			//			LOG.info("给带有[{}]注解的类[{}]创建对象[{}]完成", zc.getCanonicalName(),
-			//					cls.getCanonicalName(), object);
 
+		final Set<Class<?>> zcSet = ClassMap.scanPackageByAnnotation(zc, packageName);
+
+		zcSet.parallelStream().forEach(cls -> {
 			final Object newComponent = ZObjectGeneratorStarter.generate(cls);
 			final ZClass proxyClass = map.get(newComponent.getClass().getSimpleName());
 			if (proxyClass != null) {
@@ -88,9 +73,8 @@ public class ZComponentScanner {
 				}
 
 			}
-		}
+		});
 
-		//		LOG.info("给带有[{}]注解的类创建对象完成,个数={}", zc.getCanonicalName(), zcSet.size());
 	}
 
 	private static void injectParentFieldForProxy(final Object newInstance) {
