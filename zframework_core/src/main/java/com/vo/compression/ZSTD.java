@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.zip.DeflaterInputStream;
 import java.util.zip.DeflaterOutputStream;
 
@@ -29,7 +30,7 @@ public class ZSTD {
 		final byte[] buffer = new byte[ba.length];
 
 		final long decompress = Zstd.decompress(buffer, ba);
-		return buffer;
+		return Arrays.copyOf(buffer, (int) decompress);
 	}
 
 	public static byte[] compress(final byte[] ba) {
