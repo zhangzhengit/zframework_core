@@ -27,7 +27,9 @@ public class ZSTD {
 			return null;
 		}
 
-		final byte[] buffer = new byte[ba.length];
+		final long decompressedSize = Zstd.decompressedSize(ba);
+
+		final byte[] buffer = new byte[(int) decompressedSize];
 
 		final long decompress = Zstd.decompress(buffer, ba);
 		return Arrays.copyOf(buffer, (int) decompress);
