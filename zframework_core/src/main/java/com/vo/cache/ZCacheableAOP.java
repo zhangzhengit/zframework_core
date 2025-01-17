@@ -39,6 +39,7 @@ public class ZCacheableAOP implements ZIAOP {
 
 	@Override
 	public Object around(final AOPParameter aopParameter) {
+		// FIXME 2025年1月17日 下午11:48:24 zhangzhen : 这个偶尔NPE，查找原因
 		if (!Boolean.TRUE.equals(this.cacheConfigurationProperties.getEnable())) {
 			return aopParameter.invoke();
 		}

@@ -1,9 +1,12 @@
 package com.vo.api;
 
 import com.vo.anno.ZController;
+import com.vo.cache.STU;
 import com.vo.cache.ZMC;
+import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.core.CacheControlEnum;
 import com.vo.core.ContentTypeEnum;
+import com.vo.core.ZContext;
 import com.vo.core.ZRequest;
 import com.vo.core.ZResponse;
 import com.vo.html.ResourcesLoader;
@@ -30,7 +33,9 @@ public class StaticController {
 	 * 100MB
 	 */
 	private static final int CAPACITY = 1024 * 1024 * 100;
-
+	
+	private static final ServerConfigurationProperties SERVER_CONFIGURATION = ZContext.getBean(ServerConfigurationProperties.class);
+	
 	private final ZMC zmc = new ZMC(CAPACITY);
 
 	@ZRequestMapping(mapping = { "/favicon\\.ico",
@@ -43,6 +48,17 @@ public class StaticController {
 	@ZETag
 	@ZCacheControl(value = { CacheControlEnum.PRIVATE, CacheControlEnum.MUST_REVALIDATE }, maxAge = 60 * 10)
 	public void staticResources(final ZResponse response, final ZRequest request) {
+
+		// FIXME 2025年1月17日 下午11:50:49 zhangzhen : 要不要判断：
+		// getStaticPath 为空(即没启用静态文件服务器)并且referer不是来自页面(Referer值要可配置的)
+		// 则不允许访问?
+		//		if (!STU.hasContent(SERVER_CONFIGURATION.getStaticPath())) {
+		//			final String referer = request.getHeader("Referer");
+		//			if ((referer == null) || !referer.contains("localhost")) {
+		//				response.contentType(ContentTypeEnum.TEXT_PLAIN.getType()).body("无权访问");
+		//				return;
+		//			}
+		//		}
 
 		final String resourceName = request.getRequestURI();
 
