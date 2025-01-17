@@ -169,7 +169,6 @@ public class DefaultHttpReader {
 		try {
 			tR = socketChannel.read(byteBuffer);
 		} catch (final IOException e1) {
-			e1.printStackTrace();
 			NioLongConnectionServer.closeSocketChannelAndKeyCancel(key, socketChannel);
 			return null;
 		}
