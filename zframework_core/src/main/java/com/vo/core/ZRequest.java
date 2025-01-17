@@ -369,8 +369,9 @@ public class ZRequest {
 			this.lineList.add(line);
 		}
 
-		this.clientIp = getClientIp0();
 		parseRequest(this);
+
+		this.clientIp = this.getClientIp0();
 	}
 
 	private static ZRequest parseRequest(final ZRequest request) {
@@ -420,18 +421,29 @@ public class ZRequest {
 		return request;
 	}
 
-	// FIXME 2024年12月19日 下午12:23:50 zhangzhen : 这个改掉
-	private static String getClientIp0() {
+	private String getClientIp0() {
+
+		final String xRealIp = this.getHeader(HeaderEnum.X_REAL_IP.getName());
+		if (xRealIp != null) {
+			return xRealIp;
+		}
+
+		final String xForwardedFor = this.getHeader(HeaderEnum.X_Forwarded_For.getName());
+		if (xForwardedFor != null) {
+			return xForwardedFor;
+		}
 
 		final SocketChannel socketChannel = Task.SCTL.get();
 		if (socketChannel == null) {
 			return null;
 		}
+
 		// FIXME 2023年11月16日 下午2:47:38 zhanghen: ab 测试这里可能取不到,修复掉
 		final Socket socket = socketChannel.socket();
 		if (socket == null) {
 			return null;
 		}
+
 		final InetSocketAddress inetSocketAddress = (InetSocketAddress) socket.getRemoteSocketAddress();
 		if (inetSocketAddress == null) {
 			return null;

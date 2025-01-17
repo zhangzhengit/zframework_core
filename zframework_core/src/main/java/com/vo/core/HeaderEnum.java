@@ -50,6 +50,10 @@ public enum HeaderEnum {
 
 	ETAG("ETag"),
 
+	X_REAL_IP("X-Real-IP"),
+
+	X_Forwarded_For("X-Forwarded-For"),
+
 	;
 
 	private final String name;
