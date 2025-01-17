@@ -78,15 +78,7 @@ public class NioLongConnectionServer {
 			? ThreadModeEnum.IMMEDIATELY
 					: ThreadModeEnum.LAZY);
 
-	/**
-	 * 专门用于读取http请求报文的池
-	 */
-	//	private final static com.votool.ze.ZE ZE_READ = ZES.newZE(
-	//			Math.min(4, Runtime.getRuntime().availableProcessors()),
-	//			//			Runtime.getRuntime().availableProcessors(),
-	//			"nio-read-Group", "nio-read-Thread-", ThreadModeEnum.LAZY);
-
-	public static final String SERVER_NAME = ZContext.getBean(ServerConfigurationProperties.class).getName();
+	private static final String SERVER_NAME = ZContext.getBean(ServerConfigurationProperties.class).getName();
 
 	/**
 	 * 执行长连接超时任务的线程池
@@ -142,7 +134,7 @@ public class NioLongConnectionServer {
 			System.exit(0);
 		}
 
-		LOG.trace("httpServer启动成功,等待连接,serverPort={}", serverPort);
+		LOG.info("httpServer启动成功,等待连接,serverPort={}", serverPort);
 		this.serverStarted.set(true);
 
 		if (selector == null) {
