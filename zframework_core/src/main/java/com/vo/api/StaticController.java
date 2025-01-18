@@ -1,11 +1,17 @@
 package com.vo.api;
 
+import java.util.Optional;
+import java.util.Set;
+
 import com.vo.anno.ZController;
+import com.vo.cache.J;
 import com.vo.cache.STU;
 import com.vo.cache.ZMC;
+import com.vo.common.CU;
 import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.core.CacheControlEnum;
 import com.vo.core.ContentTypeEnum;
+import com.vo.core.HeaderEnum;
 import com.vo.core.ZContext;
 import com.vo.core.ZRequest;
 import com.vo.core.ZResponse;
@@ -33,9 +39,9 @@ public class StaticController {
 	 * 100MB
 	 */
 	private static final int CAPACITY = 1024 * 1024 * 100;
-	
+
 	private static final ServerConfigurationProperties SERVER_CONFIGURATION = ZContext.getBean(ServerConfigurationProperties.class);
-	
+
 	private final ZMC zmc = new ZMC(CAPACITY);
 
 	@ZRequestMapping(mapping = { "/favicon\\.ico",
@@ -49,16 +55,10 @@ public class StaticController {
 	@ZCacheControl(value = { CacheControlEnum.PRIVATE, CacheControlEnum.MUST_REVALIDATE }, maxAge = 60 * 10)
 	public void staticResources(final ZResponse response, final ZRequest request) {
 
-		// FIXME 2025年1月17日 下午11:50:49 zhangzhen : 要不要判断：
-		// getStaticPath 为空(即没启用静态文件服务器)并且referer不是来自页面(Referer值要可配置的)
-		// 则不允许访问?
-		//		if (!STU.hasContent(SERVER_CONFIGURATION.getStaticPath())) {
-		//			final String referer = request.getHeader("Referer");
-		//			if ((referer == null) || !referer.contains("localhost")) {
-		//				response.contentType(ContentTypeEnum.TEXT_PLAIN.getType()).body("无权访问");
-		//				return;
-		//			}
-		//		}
+		if (!checkReferer(request)) {
+			httpStatus403(response);
+			return;
+		}
 
 		final String resourceName = request.getRequestURI();
 
@@ -84,6 +84,34 @@ public class StaticController {
 				() -> ResourcesLoader.loadStaticResourceAsByteArray(resourceName));
 
 		response.body(ba);
+	}
+
+	private static boolean checkReferer(final ZRequest request) {
+		if (!STU.hasContent(SERVER_CONFIGURATION.getStaticPath())
+				&& CU.isNotEmpty(SERVER_CONFIGURATION.getStaticControllerReferersAllowed())) {
+
+			final Set<String> staticControllerReferersAllowed = SERVER_CONFIGURATION.getStaticControllerReferersAllowed();
+
+			final String referer = request.getHeader(HeaderEnum.REFERER.getName());
+			if (!STU.hasContent(referer)) {
+				return false;
+			}
+
+			final Optional<String> findAny = staticControllerReferersAllowed.stream().filter(v -> referer.contains(v))
+					.findAny();
+			if (!findAny.isPresent()) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	private static void httpStatus403(final ZResponse response) {
+		response
+		.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
+		.httpStatus(HttpStatusEnum.HTTP_403.getCode())
+		.body(J.toJSONString(CR.error("无权访问")));
 	}
 
 }

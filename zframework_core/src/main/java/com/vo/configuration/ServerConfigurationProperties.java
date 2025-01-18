@@ -1,6 +1,7 @@
 package com.vo.configuration;
 
 import java.util.Map;
+import java.util.Set;
 
 import com.vo.anno.ZConfigurationProperties;
 import com.vo.anno.ZOrder;
@@ -231,6 +232,20 @@ public class ServerConfigurationProperties {
 	 */
 	@ZNotNull
 	private Boolean staticControllerEnable = true;
+
+	/**
+	 * StaticController 中允许的Referer，
+	 * 如：http://xxx.com/
+	 * 非来自此Referer的请求会被拒绝
+	 *
+	 * 注意：本配置项仅在[staticPath]未配置的情况下，
+	 * 		即未启用静态文件服务器的情况下才生效。
+	 * 		因为未启用静态文件服务器时，StaticController
+	 * 		只处理一些比如html页面上发起的css js image等请求，
+	 * 		此时，这些css js image等文件就不是作为静态资源提供出去的，
+	 * 		所以非本配置项来源的请求直接拒绝
+	 */
+	private Set<String> staticControllerReferersAllowed;
 
 	/**
 	 * 长连接超时时间，一个长连接超过此时间则关闭，单位：秒
