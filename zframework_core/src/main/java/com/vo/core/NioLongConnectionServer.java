@@ -188,8 +188,8 @@ public class NioLongConnectionServer {
 
 					}
 				} catch (final Exception e) {
-					final String message = Task.gExceptionMessage(e);
-					LOG.error("foreach-selector.selectedKeys-异常,message={}", message);
+					//					final String message = Task.gExceptionMessage(e);
+					//					LOG.error("foreach-selector.selectedKeys-异常,message={}", message);
 					continue;
 				}
 			}
