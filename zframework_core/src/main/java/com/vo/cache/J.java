@@ -36,7 +36,7 @@ public class J {
 	}
 
 	public static String toJSONString(final Object object) {
-		return toJSONString(object, null);
+		return toJSONString(object, Include.NON_NULL);
 	}
 
 }
