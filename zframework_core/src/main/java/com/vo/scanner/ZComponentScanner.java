@@ -45,7 +45,11 @@ public class ZComponentScanner {
 
 		final Set<Class<?>> zcSet = ClassMap.scanPackageByAnnotation(zc, packageName);
 
-		zcSet.parallelStream().forEach(cls -> {
+		zcSet
+		// FIXME 2025年1月18日 上午10:13:56 zhangzhen : 在armbian的pantherX2上这行并行导致启动报错NPE了，暂时注释掉
+		// 以后再看时什么原因
+		//		.parallelStream()
+		.forEach(cls -> {
 			final Object newComponent = ZObjectGeneratorStarter.generate(cls);
 			final ZClass proxyClass = map.get(newComponent.getClass().getSimpleName());
 			if (proxyClass != null) {
