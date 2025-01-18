@@ -544,6 +544,18 @@ public class ZValidator {
 			return;
 		}
 
+		if (zc.ignoreNull()) {
+			field.setAccessible(true);
+			try {
+				final Object v = field.get(object);
+				if (v == null) {
+					return;
+				}
+			} catch (IllegalArgumentException | IllegalAccessException e) {
+				e.printStackTrace();
+			}
+		}
+
 		final Class<? extends ZCustomValidator> cls = zc.cls();
 
 		final ZCustomValidator customValidator = ZSingleton.getSingletonByClass(cls);

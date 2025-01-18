@@ -1,5 +1,8 @@
 package com.vo.exception;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 import com.vo.anno.ZComponent;
 import com.vo.core.ReqeustInfo;
 import com.vo.core.ZContext;
@@ -32,13 +35,24 @@ public class ZControllerAdviceThrowable {
 
 		final ZRequest request = ReqeustInfo.get();
 
-
 		final ZCookie zsessionid = request.getZSESSIONID();
 
 		LOG.error("请求出错：path={},clientIp={},ZSESSIONID={}",
 				request.getRequestURI(), request.getClientIp(), zsessionid ==null ? "无" : zsessionid.getValue());
 
 		return CR.error(conf.getErrorCode(), m);
+	}
+
+	public static String getHostName() {
+		InetAddress inetAddress = null;
+		try {
+			inetAddress = InetAddress.getLocalHost();
+		} catch (final UnknownHostException e) {
+			e.printStackTrace();
+		}
+		final String hostName = inetAddress.getHostName();
+
+		return hostName;
 	}
 
 	public static String findCausedby(final Throwable e) {

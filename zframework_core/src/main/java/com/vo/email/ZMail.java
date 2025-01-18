@@ -11,6 +11,7 @@ import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
+import com.vo.anno.ZAsync;
 import com.vo.anno.ZComponent;
 import com.vo.core.ZContext;
 
@@ -33,7 +34,17 @@ public class ZMail {
 
 	static Session session;
 
+	@ZAsync
+	public boolean sendTextPlainAsync(final String subject, final String body, final String receiver) {
+		return this.send(subject, body, receiver, "text/plain; charset=UTF-8");
+	}
+
 	public boolean sendTextPlain(final String subject, final String body, final String receiver) {
+		return this.send(subject, body, receiver, "text/plain; charset=UTF-8");
+	}
+
+	@ZAsync
+	public boolean sendAsync(final String subject, final String body, final String receiver, final String contentType) {
 		return this.send(subject, body, receiver, "text/plain; charset=UTF-8");
 	}
 
