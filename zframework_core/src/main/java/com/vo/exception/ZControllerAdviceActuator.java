@@ -36,7 +36,8 @@ public class ZControllerAdviceActuator {
 		LOG.error("执行异常,message={}", message);
 
 		final ZMailNotificationConfigurationProperties mn = ZContext.getBean(ZMailNotificationConfigurationProperties.class);
-		if (Boolean.TRUE.equals(mn.getEnable()) || CU.isEmpty(mn.getReceiver())) {
+		if (Boolean.TRUE.equals(mn.getEnable()) && CU.isNotEmpty(mn.getReceiver())
+				&& CU.isNotEmpty(mn.getMonitoredEvents())) {
 
 			final ZMail mail = ZContext.getBean(ZMail.class);
 
