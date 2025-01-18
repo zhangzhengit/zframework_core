@@ -13,6 +13,7 @@ import javax.mail.internet.MimeMessage;
 
 import com.vo.anno.ZAsync;
 import com.vo.anno.ZComponent;
+import com.vo.cache.STU;
 import com.vo.core.ZContext;
 
 /**
@@ -67,11 +68,19 @@ public class ZMail {
 	}
 
 	static {
+
 		final Properties properties = new Properties();
 		properties.put("mail.smtp.auth", "true");
 		properties.put("mail.smtp.starttls.enable", "true");
-		properties.put("mail.smtp.host", mailNotificationConfigurationProperties.getHost());
-		properties.put("mail.smtp.port", mailNotificationConfigurationProperties.getPort());
+
+		// FIXME 2025年1月18日 下午9:59:48 zhangzhen : 暂时这样，再看host和port怎么校验
+		if (STU.hasContent(mailNotificationConfigurationProperties.getHost())) {
+			properties.put("mail.smtp.host", mailNotificationConfigurationProperties.getHost());
+		}
+
+		if (mailNotificationConfigurationProperties.getPort() != null) {
+			properties.put("mail.smtp.port", mailNotificationConfigurationProperties.getPort());
+		}
 
 		// 获取 Session 对象
 		session = Session.getInstance(properties, new Authenticator() {
