@@ -50,6 +50,8 @@ public enum HeaderEnum {
 
 	ETAG("ETag"),
 
+	REFERER("Referer"),
+
 	X_REAL_IP("X-Real-IP"),
 
 	X_Forwarded_For("X-Forwarded-For"),
