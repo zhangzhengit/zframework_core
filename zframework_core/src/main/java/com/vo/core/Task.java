@@ -683,21 +683,24 @@ public class Task {
 					.filter(rp -> rp.getName().equals(p.getName()))
 					.findAny();
 			if (!findAny.isPresent()) {
+				throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
+			}
 
+			final Object value = findAny.get().getValue();
+			if (value != null) {
+				piR = Task.setValue(parametersArray, pI, p, findAny.get().getValue());
+			} else {
 				final String defaultValue = p.getAnnotation(ZRequestParam.class).defaultValue();
 				if (defaultValue != null) {
 					try {
 						piR = Task.setValue(parametersArray, pI, p, defaultValue);
 					} catch (final Exception e) {
+						e.printStackTrace();
 						throw new FormPairParseException(p.getName() + " = " + defaultValue);
 					}
-					return piR;
 				}
-
-				throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
 			}
 
-			piR = Task.setValue(parametersArray, pI, p, findAny.get().getValue());
 		} else {
 			final byte[] body = request.getBody();
 			if (AU.isEmpty(body)) {
