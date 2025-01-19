@@ -14,7 +14,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import java.net.SocketAddress;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -44,7 +43,6 @@ import com.vo.core.ZRequest.RequestParam;
 import com.vo.enums.MethodEnum;
 import com.vo.exception.FormPairParseException;
 import com.vo.exception.PathVariableException;
-import com.vo.exception.ZControllerAdviceThrowable;
 import com.vo.html.ResourcesLoader;
 import com.vo.http.AccessDeniedCodeEnum;
 import com.vo.http.HttpStatusEnum;
@@ -59,6 +57,7 @@ import com.vo.scanner.ZHandlerInterceptorScanner;
 import com.vo.scanner.ZModelAndView;
 import com.vo.template.ZModel;
 import com.vo.template.ZTemplate;
+import com.vo.validator.ParsingRequestParamException;
 import com.vo.validator.ZFException;
 import com.vo.validator.ZMin;
 import com.vo.validator.ZPositive;
@@ -477,7 +476,7 @@ public class Task {
 	}
 
 	private Object[] generateParameters(final Method method, final Object[] parametersArray, final ZRequest request,
-			final String path) {
+			final String path) throws NumberFormatException {
 
 		final Parameter[] ps = RU.getParameters(method);
 		if (ps.length < parametersArray.length) {
@@ -565,25 +564,21 @@ public class Task {
 					final List<Object> list = ZPVTL.get();
 					final Class<?> type = pType;
 					// FIXME 2023年11月8日 下午4:39:18 zhanghen: @ZRM 启动校验是否此类型
+					final Object v = list.get(zpvPI);
 					try {
-						final Object a = list.get(zpvPI);
-						Task.setZPathVariableValue(parametersArray, pI, type, a);
+						Task.setZPathVariableValue(parametersArray, pI, type, v);
 						zpvPI++;
-
-						// FIXME 2023年11月8日 下午10:47:54 zhanghen: TODO 继续支持 校验注解
-						if (RU.isAnnotationPresent(p, ZPositive.class)) {
-							ZValidator.validatedZPositive(p, parametersArray[pI]);
-						}
-						if (RU.isAnnotationPresent(p, ZMin.class)) {
-							ZValidator.validatedZMin(p, parametersArray[pI], RU.getAnnotation(p, ZMin.class).min());
-						}
-
-					} catch (final Exception e) {
-						e.printStackTrace();
-						final String causedby = ZControllerAdviceThrowable.findCausedby(e);
-						throw new PathVariableException(causedby);
+					} catch (final NumberFormatException e) {
+						throw new PathVariableException(p.getName() + "=" + v, HttpStatusEnum.HTTP_400.getCode());
 					}
 
+					// FIXME 2023年11月8日 下午10:47:54 zhanghen: TODO 继续支持 校验注解
+					if (RU.isAnnotationPresent(p, ZPositive.class)) {
+						ZValidator.validatedZPositive(p, parametersArray[pI]);
+					}
+					if (RU.isAnnotationPresent(p, ZMin.class)) {
+						ZValidator.validatedZMin(p, parametersArray[pI], RU.getAnnotation(p, ZMin.class).min());
+					}
 					pI++;
 				} else if (pType == ZMultipartFile.class) {
 
@@ -651,25 +646,25 @@ public class Task {
 			Long.class.getName(), Float.class.getName(), Double.class.getName(),
 			Boolean.class.getName(), Character.class.getName(), String.class.getName()));
 
-	private static void setZPathVariableValue(final Object[] parametersArray, final int pI, final Class<?> type, final Object a) {
+	private static void setZPathVariableValue(final Object[] parametersArray, final int pI, final Class<?> type, final Object value) {
 		if (type.getName().equals(Byte.class.getName())) {
-			parametersArray[pI] = Byte.valueOf(String.valueOf(a));
+			parametersArray[pI] = Byte.valueOf(String.valueOf(value));
 		} else if (type.getName().equals(Short.class.getName())) {
-			parametersArray[pI] = Short.valueOf(String.valueOf(a));
+			parametersArray[pI] = Short.valueOf(String.valueOf(value));
 		} else if (type.getName().equals(Integer.class.getName())) {
-			parametersArray[pI] = Integer.valueOf(String.valueOf(a));
+			parametersArray[pI] = Integer.valueOf(String.valueOf(value));
 		} else if (type.getName().equals(Long.class.getName())) {
-			parametersArray[pI] = Long.valueOf(String.valueOf(a));
+			parametersArray[pI] = Long.valueOf(String.valueOf(value));
 		} else if (type.getName().equals(Float.class.getName())) {
-			parametersArray[pI] = Float.valueOf(String.valueOf(a));
+			parametersArray[pI] = Float.valueOf(String.valueOf(value));
 		} else if (type.getName().equals(Double.class.getName())) {
-			parametersArray[pI] = Double.valueOf(String.valueOf(a));
+			parametersArray[pI] = Double.valueOf(String.valueOf(value));
 		} else if (type.getName().equals(Boolean.class.getName())) {
-			parametersArray[pI] = Boolean.valueOf(String.valueOf(a));
+			parametersArray[pI] = Boolean.valueOf(String.valueOf(value));
 		} else if (type.getName().equals(Character.class.getName())) {
-			parametersArray[pI] = Character.valueOf(String.valueOf(a).charAt(0));
+			parametersArray[pI] = Character.valueOf(String.valueOf(value).charAt(0));
 		} else if (type.getName().equals(String.class.getName())) {
-			parametersArray[pI] = String.valueOf(a);
+			parametersArray[pI] = String.valueOf(value);
 		}
 	}
 
@@ -688,10 +683,12 @@ public class Task {
 
 			final Object value = findAny.get().getValue();
 			if (value != null) {
-				// FIXME 2025年1月19日 下午12:07:03 zhangzhen : 类似setValue的方法
-				// 要具体细分错误码，而不是用统一异常处理器响应500，比如/user?id=1
-				// 调用如：/user?id=ABC 就应该响应400 Bad Request，而不是现在默认的写死的500
-				piR = Task.setValue(parametersArray, pI, p, findAny.get().getValue());
+				try {
+					piR = Task.setValue(parametersArray, pI, p, findAny.get().getValue());
+				} catch (final NumberFormatException e) {
+					throw new ParsingRequestParamException(p.getName() + "=" + findAny.get().getValue(),
+							HttpStatusEnum.HTTP_400.getCode());
+				}
 			} else {
 				final String defaultValue = p.getAnnotation(ZRequestParam.class).defaultValue();
 				if (defaultValue != null) {
@@ -794,7 +791,8 @@ public class Task {
 		}
 	}
 
-	private static int setValue(final Object[] parametersArray, final int pI, final Parameter p, final Object value) {
+	private static int setValue(final Object[] parametersArray, final int pI, final Parameter p, final Object value)
+			throws NumberFormatException {
 
 		final Class<?> pppppppppp = p.getType();
 		final AtomicInteger nI = new AtomicInteger(pI);
@@ -829,7 +827,10 @@ public class Task {
 		return nI.get();
 	}
 
-	private Object[] generateParameters(final Method method, final ZRequest request, final String path) {
+	private Object[] generateParameters(final Method method, final ZRequest request, final String path)
+			throws
+			NumberFormatException
+	{
 		final Object[] parametersArray = new Object[method.getParameterCount()];
 		return this.generateParameters(method, parametersArray, request, path);
 	}

@@ -55,6 +55,14 @@ public class ZControllerAdviceThrowable {
 		return hostName;
 	}
 
+	public static Integer findHttpStatus(final Throwable e) {
+		if (e instanceof ZFException) {
+			return ((ZFException) e).getHttpStatus();
+		}
+
+		return null;
+	}
+
 	public static String findCausedby(final Throwable e) {
 		if (e instanceof ZFException) {
 			return ((ZFException) e).getMessagezf();

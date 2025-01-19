@@ -14,10 +14,14 @@ public class PathVariableException extends ZFException {
 
 	private static final long serialVersionUID = 1L;
 
-	public static final String PREFIX = "@" + ZPathVariable.class.getSimpleName() + " 字段解析异常：";
+	public static final String PREFIX = "@" + ZPathVariable.class.getSimpleName() + " 参数解析异常：";
 
 	public PathVariableException(final String message) {
 		super(PREFIX + message);
+	}
+
+	public PathVariableException(final String message, final Integer httpStatus) {
+		super(PREFIX + message, httpStatus);
 	}
 
 }

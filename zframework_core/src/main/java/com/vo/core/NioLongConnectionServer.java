@@ -33,6 +33,7 @@ import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.configuration.TaskResponsiveModeEnum;
 import com.vo.enums.ConnectionEnum;
 import com.vo.exception.ZControllerAdviceActuator;
+import com.vo.exception.ZControllerAdviceThrowable;
 import com.vo.http.HttpStatusEnum;
 import com.vo.http.ZCacheControl;
 import com.vo.http.ZCookie;
@@ -383,12 +384,12 @@ public class NioLongConnectionServer {
 				final ZControllerAdviceActuator a = ZContext.getBean(ZControllerAdviceActuator.class);
 				final Object r = a.execute(e);
 
-				final String errorMessage = J.toJSONString(r, Include.NON_NULL);
-
-				final ZResponse response = new ZResponse(taskRequest.getSocketChannel())
-						.httpStatus(HttpStatusEnum.HTTP_500.getCode())
+				final Integer httpStatus = ZControllerAdviceThrowable.findHttpStatus(e);
+				final ZResponse response =
+						new ZResponse(taskRequest.getSocketChannel())
+						.httpStatus(httpStatus != null ? httpStatus : HttpStatusEnum.HTTP_500.getCode())
 						.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
-						.body(errorMessage);
+						.body(J.toJSONString(r));
 
 				NioLongConnectionServer.setZSessionId(request, response);
 				response.write();
