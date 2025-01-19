@@ -503,9 +503,10 @@ public class Task {
 					final ZCookieValue cookieValue = RU.getAnnotation(p, ZCookieValue.class);
 					final String cookieName = STU.isEmpty(cookieValue.name()) ? p.getName() : cookieValue.name();
 					final ZCookie[] cookies = request.getCookies();
+					final String message = "请求方法[" + path + "]缺少名为[" + cookieName + "]的Cookie";
 					if (AU.isEmpty(cookies)) {
 						if (cookieValue.required()) {
-							throw new FormPairParseException("请求方法[" + path + "]缺少名为[" + cookieName + "]的Cookie");
+							throw new FormPairParseException(message, HttpStatusEnum.HTTP_400.getCode());
 						}
 					} else {
 
@@ -521,7 +522,7 @@ public class Task {
 							}
 						} else {
 							if (cookieValue.required()) {
-								throw new FormPairParseException("请求方法[" + path + "]缺少名为[" + cookieName + "]的Cookie");
+								throw new FormPairParseException(message, HttpStatusEnum.HTTP_400.getCode());
 							}
 							parametersArray[pI] = null;
 							pI++;
@@ -589,7 +590,7 @@ public class Task {
 					// 以后再看要不要修复，反正这个bug可以正常运行
 
 					if (AU.isEmpty(request.getOriginalRequestBytes())) {
-						throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
+						throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在", HttpStatusEnum.HTTP_400.getCode());
 					}
 
 					final List<FD2> fdList = BodyReader.readFormData(request.getOriginalRequestBytes(),
@@ -610,7 +611,7 @@ public class Task {
 					} else {
 
 						if ((request.getTf() == null) || !p.getName().equals(request.getTf().getName())) {
-							throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
+							throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在", HttpStatusEnum.HTTP_400.getCode());
 						}
 
 						InputStream inputStream = null;
@@ -679,7 +680,8 @@ public class Task {
 					.filter(rp -> rp.getName().equals(p.getName()))
 					.findAny();
 			if (!findAny.isPresent()) {
-				throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
+				throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在",
+						HttpStatusEnum.HTTP_400.getCode());
 			}
 
 			final Object value = findAny.get().getValue();
@@ -697,7 +699,8 @@ public class Task {
 						piR = Task.setValue(parametersArray, pI, p, defaultValue);
 					} catch (final Exception e) {
 						e.printStackTrace();
-						throw new FormPairParseException(p.getName() + " = " + defaultValue);
+						throw new FormPairParseException(p.getName() + " = " + defaultValue,
+								HttpStatusEnum.HTTP_400.getCode());
 					}
 				}
 			}
@@ -710,17 +713,20 @@ public class Task {
 					try {
 						piR = Task.setValue(parametersArray, pI, p, defaultValue);
 					} catch (final Exception e) {
-						throw new FormPairParseException(p.getName() + " = " + defaultValue);
+						throw new FormPairParseException(p.getName() + " = " + defaultValue,
+								HttpStatusEnum.HTTP_400.getCode());
 					}
 					return piR;
 				}
-				throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
+				throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在",
+						HttpStatusEnum.HTTP_400.getCode());
 			}
 
 			final List<FD2> fdList = BodyReader.readFormData(request.getOriginalRequestBytes(),
 					request.getContentType(), request.getBoundary());
 			if (CU.isEmpty(fdList)) {
-				throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
+				throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在",
+						HttpStatusEnum.HTTP_400.getCode());
 			}
 
 			final Optional<FD2> findAny = fdList.stream()
@@ -729,7 +735,8 @@ public class Task {
 					.filter(f -> f.getName().equals(p.getName()))
 					.findAny();
 			if (!findAny.isPresent()) {
-				throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
+				throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在",
+						HttpStatusEnum.HTTP_400.getCode());
 			}
 
 			piR = Task.setValue(parametersArray, pI, p, findAny.get().getValue());
