@@ -35,14 +35,9 @@ import com.votool.common.CR;
 @ZController
 public class StaticController {
 
-	/**
-	 * 100MB
-	 */
-	private static final int CAPACITY = 1024 * 1024 * 100;
-
 	private static final ServerConfigurationProperties SERVER_CONFIGURATION = ZContext.getBean(ServerConfigurationProperties.class);
 
-	private final ZMC zmc = new ZMC(CAPACITY);
+	private final ZMC zmc = new ZMC(SERVER_CONFIGURATION.getStaticControllerMemoryCacheCapacity());
 
 	@ZRequestMapping(mapping = { "/favicon\\.ico",
 			"/.+\\.png$",

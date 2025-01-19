@@ -248,6 +248,13 @@ public class ServerConfigurationProperties {
 	private Set<String> staticControllerReferersAllowed;
 
 	/**
+	 * StaticController 放静态文件的内存缓存的最大容量，单位：字节
+	 */
+	@ZMin(min = 1024 * 1024 * 1)
+	@ZMax(max = Integer.MAX_VALUE)
+	private Integer staticControllerMemoryCacheCapacity = 1024 * 1024 * 100;
+
+	/**
 	 * 长连接超时时间，一个长连接超过此时间则关闭，单位：秒
 	 */
 	@ZNotNull
