@@ -688,6 +688,9 @@ public class Task {
 
 			final Object value = findAny.get().getValue();
 			if (value != null) {
+				// FIXME 2025年1月19日 下午12:07:03 zhangzhen : 类似setValue的方法
+				// 要具体细分错误码，而不是用统一异常处理器响应500，比如/user?id=1
+				// 调用如：/user?id=ABC 就应该响应400 Bad Request，而不是现在默认的写死的500
 				piR = Task.setValue(parametersArray, pI, p, findAny.get().getValue());
 			} else {
 				final String defaultValue = p.getAnnotation(ZRequestParam.class).defaultValue();
