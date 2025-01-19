@@ -28,6 +28,8 @@ public class ZMail {
 
 	// FIXME 2025年1月18日 下午7:51:03 zhangzhen :本类加一个private构造器不让用户来new，并且把扫描代码改为调用private构造器
 
+	private static final String TEXT_PLAIN_CHARSET_UTF_8 = "text/plain; charset=UTF-8";
+
 	private static final String CONTENT_TYPE = "Content-Type";
 
 	static final ZMailNotificationConfigurationProperties mailNotificationConfigurationProperties = ZContext
@@ -37,16 +39,16 @@ public class ZMail {
 
 	@ZAsync
 	public boolean sendTextPlainAsync(final String subject, final String body, final String receiver) {
-		return this.send(subject, body, receiver, "text/plain; charset=UTF-8");
+		return this.send(subject, body, receiver, TEXT_PLAIN_CHARSET_UTF_8);
 	}
 
 	public boolean sendTextPlain(final String subject, final String body, final String receiver) {
-		return this.send(subject, body, receiver, "text/plain; charset=UTF-8");
+		return this.send(subject, body, receiver, TEXT_PLAIN_CHARSET_UTF_8);
 	}
 
 	@ZAsync
 	public boolean sendAsync(final String subject, final String body, final String receiver, final String contentType) {
-		return this.send(subject, body, receiver, "text/plain; charset=UTF-8");
+		return this.send(subject, body, receiver, TEXT_PLAIN_CHARSET_UTF_8);
 	}
 
 	public boolean send(final String subject, final String body, final String receiver, final String contentType) {

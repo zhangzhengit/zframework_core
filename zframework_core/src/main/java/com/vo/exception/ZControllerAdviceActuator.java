@@ -41,13 +41,15 @@ public class ZControllerAdviceActuator {
 
 			final ZMail mail = ZContext.getBean(ZMail.class);
 
+
 			for (final String event : mn.getMonitoredEvents()) {
 				if (message.contains(event)) {
-					for (final String r : mn.getReceiver()) {
-						final String subject = "[" + ZControllerAdviceThrowable.getHostName() + "]关注的事件[" + event
-								+ "]发生了";
-						final String body = "事件详情：" + message;
-						mail.sendTextPlainAsync(subject, body, r);
+					final String subject = "[" + ZControllerAdviceThrowable.getHostName() + "]关注的事件[" + event
+							+ "]发生了";
+					final String body = "事件详情：" + message;
+
+					for (final String receiver : mn.getReceiver()) {
+						mail.sendTextPlainAsync(subject, body, receiver);
 					}
 				}
 			}
