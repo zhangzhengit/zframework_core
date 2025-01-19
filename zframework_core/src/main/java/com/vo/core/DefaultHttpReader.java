@@ -545,7 +545,7 @@ public class DefaultHttpReader {
 				}
 				if (bbBody != null) {
 					bbBody.flip();
-					array.add(bbBody.array());
+					array.add(bbBody.array(), 0, read);
 					bbBody.clear();
 				}
 			}
