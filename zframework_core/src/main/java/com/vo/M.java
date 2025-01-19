@@ -1,6 +1,8 @@
 package com.vo;
 
 import java.io.File;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 /**
  *
@@ -20,4 +22,16 @@ public class M {
 		final String projectName = projectPath.substring(projectPath.lastIndexOf(File.separator) + 1);
 		return projectName;
 	}
+
+	public static String getHostName() {
+		InetAddress inetAddress = null;
+		try {
+			inetAddress = InetAddress.getLocalHost();
+		} catch (final UnknownHostException e) {
+			e.printStackTrace();
+		}
+		final String hostName = inetAddress.getHostName();
+		return hostName;
+	}
+
 }
