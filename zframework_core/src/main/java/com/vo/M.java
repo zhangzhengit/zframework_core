@@ -1,5 +1,7 @@
 package com.vo;
 
+import java.io.File;
+
 /**
  *
  *
@@ -11,5 +13,11 @@ public class M {
 
 	public static void main(final String[] args) {
 
+	}
+
+	public static String getAppName() {
+		final String projectPath = System.getProperty("user.dir");
+		final String projectName = projectPath.substring(projectPath.lastIndexOf(File.separator) + 1);
+		return projectName;
 	}
 }
