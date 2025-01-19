@@ -1,13 +1,18 @@
 package com.vo.exception;
 
 import java.lang.reflect.InvocationTargetException;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
+import com.vo.M;
 import com.vo.anno.ZComponent;
 import com.vo.cache.CU;
+import com.vo.core.ReqeustInfo;
 import com.vo.core.Task;
 import com.vo.core.ZContext;
 import com.vo.core.ZLog2;
+import com.vo.core.ZRequest;
 import com.vo.email.ZMail;
 import com.vo.email.ZMailNotificationConfigurationProperties;
 
@@ -41,12 +46,33 @@ public class ZControllerAdviceActuator {
 
 			final ZMail mail = ZContext.getBean(ZMail.class);
 
+			final ZRequest request = ReqeustInfo.get();
 
 			for (final String event : mn.getMonitoredEvents()) {
 				if (message.contains(event)) {
-					final String subject = "[" + ZControllerAdviceThrowable.getHostName() + "]关注的事件[" + event
-							+ "]发生了";
-					final String body = "事件详情：" + message;
+					final UUID eId = UUID.randomUUID();
+
+					// FIXME 2025年1月19日 下午6:41:44 zhangzhen : reqeust.body不要写入log，因其可能很大
+					LOG.error("邮件通知关注的事件[{}]发生了,事件id=[{}],request=[{}]", event, eId, request);
+
+					final String projectName = M.getAppName();
+
+					final String subject = "[" + projectName + "]工程里关注的事件[" + event + "]在机器["
+							+ ZControllerAdviceThrowable.getHostName() + "]上发生了";
+
+					// FIXME 2025年1月19日 下午7:17:23 zhangzhen : 考虑好：敏感信息要不要放入邮件的subject和body？
+					// 因为配置的邮箱可能不是自己的邮箱服务器
+					// 还是只写入日志，然后把eId放在邮件里通知一下让查看日志就好了？
+					final String body =
+							"request信息已写入LOG,请查看\r\n"
+									+ "事件ID:"+eId+"\r\n"
+									+ "\r\n"
+									+ "request信息:\r\n"+request+"\r\n"
+									+ "\r\n"
+									+ "事件详情:\r\n"+message+"\r\n"
+									+ "\r\n"
+									+ "发送时间:"+LocalDateTime.now()+"\r\n"
+									;
 
 					for (final String receiver : mn.getReceiver()) {
 						mail.sendTextPlainAsync(subject, body, receiver);
