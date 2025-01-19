@@ -16,6 +16,6 @@ public class ZControllerAdviceValidatedException {
 	@ZExceptionHandler(value = ValidatedException.class)
 	public Object zva(final Throwable throwable) {
 		final String findCausedby = ZControllerAdviceThrowable.findCausedby(throwable);
-		return CR.error(throwable.getClass().getCanonicalName() + ":" + findCausedby);
+		return CR.error(findCausedby);
 	}
 }

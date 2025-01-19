@@ -20,4 +20,8 @@ public class ValidatedException extends ZFException {
 		super(PREFIX + message);
 	}
 
+	public ValidatedException(final String message, final Integer httpStatus) {
+		super(PREFIX + message, httpStatus);
+	}
+
 }
