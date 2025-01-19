@@ -492,7 +492,8 @@ public class Task {
 				final String name = a.value();
 				final String headerValue = request.getHeaderMap().get(name);
 				if ((headerValue == null) && a.required()) {
-					throw new FormPairParseException("请求方法[" + path + "]的header[" + p.getName() + "]不存在");
+					final String message = "请求方法[" + path + "]的header[" + p.getName() + "]不存在";
+					throw new FormPairParseException(message, HttpStatusEnum.HTTP_400.getCode());
 				}
 				parametersArray[pI] = headerValue;
 				pI++;

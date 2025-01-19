@@ -19,4 +19,8 @@ public class FormPairParseException extends ZFException {
 		super(PREFIX + message);
 	}
 
+	public FormPairParseException(final String message, final Integer httpStatus) {
+		super(PREFIX + message, httpStatus);
+	}
+
 }
