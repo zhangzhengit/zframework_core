@@ -166,7 +166,7 @@ public class Task {
 			return re;
 
 		} catch (final Exception e) {
-			e.printStackTrace();
+			//			e.printStackTrace();
 			throw e;
 		}
 
