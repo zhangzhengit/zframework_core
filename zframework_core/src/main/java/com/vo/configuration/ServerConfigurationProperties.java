@@ -327,6 +327,7 @@ public class ServerConfigurationProperties {
 	 */
 	@ZNotNull
 	@ZMin(min = 1)
+	@ZMax(max = 1000)
 	private Integer compressionMinLength = 1;
 
 	/**
