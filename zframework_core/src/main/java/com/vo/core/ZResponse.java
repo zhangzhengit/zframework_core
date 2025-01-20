@@ -10,8 +10,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -120,9 +120,7 @@ public class ZResponse {
 	@Getter
 	private List<ZHeader> headerList;
 
-	// FIXME 2025年1月20日 下午7:19:43 zhangzhen : 既然限制了body(byte[] ) 只能调用一次，那么bodyList就不要用List了，还会扩容浪费空间什么
-	// 直接用byte[] 在byte(byte[])中赋值就行了
-	private List<Byte> bodyList;
+	private byte[] body;
 
 	private int bIC = 0;
 
@@ -139,7 +137,7 @@ public class ZResponse {
 	 * 清空当前的body
 	 */
 	public synchronized void clearBody() {
-		this.bodyList = null;
+		this.body = null;
 		this.bIC = 0;
 	}
 
@@ -149,7 +147,7 @@ public class ZResponse {
 	 * @return
 	 */
 	public int getBodyLength() {
-		return CU.isEmpty(this.bodyList) ? 0 : this.bodyList.size();
+		return this.body == null ? 0 : this.body.length;
 	}
 
 	/**
@@ -158,16 +156,7 @@ public class ZResponse {
 	 * @return
 	 */
 	public byte[] getBody() {
-		if (CU.isEmpty(this.bodyList)) {
-			return new byte[0];
-		}
-
-		final byte[] ba = new byte[this.bodyList.size()];
-		for (int i = 0; i < this.bodyList.size(); i++) {
-			ba[i] = this.bodyList.get(i);
-		}
-
-		return ba;
+		return this.body;
 	}
 
 	public synchronized ZResponse contentType(final String contentType) {
@@ -436,13 +425,7 @@ public class ZResponse {
 	public synchronized ZResponse body(final byte[] body) {
 		this.checkBIC();
 
-		if (this.bodyList == null) {
-			this.bodyList = new ArrayList<>(body.length);
-		}
-
-		for (final byte b : body) {
-			this.bodyList.add(b);
-		}
+		this.body = body;
 		return this;
 	}
 
@@ -543,7 +526,7 @@ public class ZResponse {
 		this.checkContentType();
 
 
-		final int contentLenght = CU.isNotEmpty(this.bodyList) ? this.bodyList.size() : 0;
+		final int contentLenght = this.getBodyLength();
 		// FIXME 2024年12月22日 下午9:39:47 zhangzhen : 这个预估好一般有多少，或者自己写个扩容固定值的比如40
 		final ZArray array = new ZArray(contentLenght + 2048);
 
@@ -551,7 +534,7 @@ public class ZResponse {
 		array.add(NEW_LINE_BYTES);
 
 		// header-Content-Length
-		if (CU.isNotEmpty(this.bodyList)) {
+		if (this.body != null) {
 			array.add((HeaderEnum.CONTENT_LENGTH.getName() + ":" + contentLenght).getBytes());
 		} else {
 			array.add((HeaderEnum.CONTENT_LENGTH.getName() + ":" + 0).getBytes());
@@ -571,15 +554,9 @@ public class ZResponse {
 		array.add(NEW_LINE_BYTES);
 
 		// body
-		if (CU.isNotEmpty(this.bodyList)) {
-			final byte[] ba = new byte[this.bodyList.size()];
-			for (int b = 0; b < this.bodyList.size(); b++) {
-				ba[b] = this.bodyList.get(b);
-			}
-
-			array.add(ba);
+		if (this.body != null) {
+			array.add(this.body);
 			array.add(NEW_LINE_BYTES);
-
 		} else {
 			//			array.add(JSON.toJSONString(CR.ok()).getBytes());
 		}
