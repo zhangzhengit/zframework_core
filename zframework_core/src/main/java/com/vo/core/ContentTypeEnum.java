@@ -28,9 +28,12 @@ public enum ContentTypeEnum {
 	APPLICATION_PDF("Content-Type: application/pdf;", "application/pdf"),
 
 	APPLICATION_XML("Content-Type: application/xml;charset=UTF-8", "application/xml"),
+	
 	TEXT_HTML("Content-Type: text/html;charset=UTF-8", "text/html"),
 
 	AUDIO_MP3("Content-Type: audio/mp3;", "audio/mp3"),
+
+	AUDIO_WAV("Content-Type: audio/wav;", "audio/wav"),
 
 	TEXT_CSS("Content-Type: text/css;", "text/css"),
 
