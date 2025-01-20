@@ -122,6 +122,8 @@ public class ZResponse {
 
 	private List<Byte> bodyList;
 
+	private int bIC = 0;
+
 	/**
 	 * write()方法是否执行过了
 	 *
@@ -134,10 +136,9 @@ public class ZResponse {
 	/**
 	 * 清空当前的body
 	 */
-	public void clearBody() {
-		if (CU.isNotEmpty(this.bodyList)) {
-			this.bodyList = new ArrayList<>();
-		}
+	public synchronized void clearBody() {
+		bodyList = null;
+		this.bIC = 0;
 	}
 
 	/**
@@ -231,6 +232,8 @@ public class ZResponse {
 	 * @param inputStream
 	 */
 	public synchronized void body(final InputStream inputStream) {
+
+		this.checkBIC();
 
 		if (this.write.get()) {
 			return;
@@ -428,7 +431,9 @@ public class ZResponse {
 		return bbH;
 	}
 
-	public ZResponse body(final byte[] body) {
+	public synchronized ZResponse body(final byte[] body) {
+		this.checkBIC();
+
 		if (this.bodyList == null) {
 			this.bodyList = new ArrayList<>(body.length);
 		}
@@ -439,19 +444,25 @@ public class ZResponse {
 		return this;
 	}
 
-	public ZResponse body(final Object body) {
+	private void checkBIC() {
+		if (this.bIC > 0) {
+			throw new IllegalArgumentException("body 只能设置一次");
+		}
+
+		this.bIC++;
+	}
+
+	public synchronized ZResponse body(final Object body) {
 		return this.body(String.valueOf(body));
 	}
 
-	public ZResponse body(final String body) {
+	public synchronized ZResponse body(final String body) {
 		return this.body(body.getBytes());
 	}
 
 	public Integer getHttpStatus() {
 		return this.httpStatus.get();
 	}
-
-
 
 	/**
 	 * 根据header和body 来响应结果，只响应一次
