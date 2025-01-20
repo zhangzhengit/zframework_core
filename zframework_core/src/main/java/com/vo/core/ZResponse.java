@@ -228,11 +228,8 @@ public class ZResponse {
 		// header部分
 		final ZRequest request = ReqeustInfo.get();
 
-		this.setContentEncodingIngoreCompressionMinLength(request);
-
 		this.beforeWrite();
 		this.header(HeaderEnum.TRANSFER_ENCODING.getName(), "chunked");
-		this.write(this.headerArray());
 
 		// body部分
 		final byte[] b = new byte[DEFAULT_BUFFER_SIZE];
@@ -241,6 +238,8 @@ public class ZResponse {
 		final BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
 
 
+		boolean readFirst = true;
+		boolean exceedsCompressionMinLength = false;
 		while (true) {
 			try {
 				final int read = bufferedInputStream.read(b);
@@ -248,12 +247,23 @@ public class ZResponse {
 					break;
 				}
 
+				exceedsCompressionMinLength =
+						exceedsCompressionMinLength ||
+						(readFirst && (read > (SERVER_CONFIGURATIONPROPERTIES.getCompressionMinLength() * 1024)));
+
+				if (readFirst) {
+					this.setContentEncoding(request, exceedsCompressionMinLength);
+					this.write(this.headerArray());
+				}
+
+				readFirst = false;
+
 				for (int i = 0; i < read; i++) {
 					bbB.put(b[i]);
 				}
 
 				bbB.flip();
-				this.compressBody(request, bbB, read);
+				this.compressBody(request, bbB, read, exceedsCompressionMinLength);
 				bbB.clear();
 
 				this.write(ByteBuffer.wrap(NEW_LINE_BYTES));
@@ -283,11 +293,9 @@ public class ZResponse {
 		return this;
 	}
 
+	private void compressBody(final ZRequest request, final ByteBuffer bbB, final int read, final boolean exceedsCompressionMinLength) {
 
-	private void compressBody(final ZRequest request, final ByteBuffer bbB, final int read) {
-
-		final boolean compressIngoreCompressionMinLength = this.compressIngoreCompressionMinLength();
-		if (!compressIngoreCompressionMinLength) {
+		if (!this.compress(exceedsCompressionMinLength)) {
 			final String chunkHeader = Integer.toHexString(read) + "\r\n";
 			final ByteBuffer chunkHeaderBuffer = ByteBuffer.wrap(chunkHeader.getBytes());
 			this.write(chunkHeaderBuffer);
@@ -336,14 +344,15 @@ public class ZResponse {
 	}
 
 
-	private boolean compressIngoreCompressionMinLength() {
-		return SERVER_CONFIGURATIONPROPERTIES.getCompressionEnable()
+	private boolean compress(final boolean exceedsCompressionMinLength) {
+		return exceedsCompressionMinLength
+				&& SERVER_CONFIGURATIONPROPERTIES.getCompressionEnable()
 				&& SERVER_CONFIGURATIONPROPERTIES.compressionContains(this.getContentType());
 	}
 
-	private void setContentEncodingIngoreCompressionMinLength(final ZRequest request) {
+	private void setContentEncoding(final ZRequest request, final boolean exceedsCompressionMinLength) {
 
-		if (!this.compressIngoreCompressionMinLength()) {
+		if (!this.compress(exceedsCompressionMinLength)) {
 			return;
 		}
 
