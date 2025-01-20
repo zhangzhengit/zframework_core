@@ -22,6 +22,7 @@ import com.vo.cache.AU;
 import com.vo.cache.CU;
 import com.vo.cache.STU;
 import com.vo.configuration.SCU;
+import com.vo.enums.ConnectionEnum;
 import com.vo.enums.MethodEnum;
 import com.vo.http.ZCookie;
 
@@ -337,6 +338,14 @@ public class ZRequest {
 
 	public String getHeader(final String name) {
 		return this.getHeaderMap().get(name);
+	}
+
+	public boolean isConnectionKeepAlive() {
+		final String connection = this.getHeader(HeaderEnum.CONNECTION.getName());
+		final boolean keepAlive = STU.isNotEmpty(connection)
+				&& (connection.equalsIgnoreCase(ConnectionEnum.KEEP_ALIVE.getValue())
+						|| connection.toLowerCase().contains(ConnectionEnum.KEEP_ALIVE.getValue().toLowerCase()));
+		return keepAlive;
 	}
 
 	public Object getParameter(final String name) {

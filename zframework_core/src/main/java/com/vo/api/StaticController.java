@@ -1,5 +1,8 @@
 package com.vo.api;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.util.Optional;
 import java.util.Set;
 
@@ -48,7 +51,7 @@ public class StaticController {
 	@ZQPSLimitation(qps = 2000, type = ZQPSLimitationEnum.ZSESSIONID)
 	@ZETag
 	@ZCacheControl(value = { CacheControlEnum.PRIVATE, CacheControlEnum.MUST_REVALIDATE }, maxAge = 60 * 10)
-	public void staticResources(final ZResponse response, final ZRequest request) {
+	public void staticResources(final ZResponse response, final ZRequest request) throws URISyntaxException, IOException {
 
 		if (!checkReferer(request)) {
 			httpStatus403(response);
@@ -71,14 +74,9 @@ public class StaticController {
 
 		response.contentType(cte.getType());
 
-		final String key = "staticResources" + '-' + resourceName;
+		final InputStream inputStream= ResourcesLoader.loadStaticResourceAsInputStream(resourceName);
+		response.body(inputStream);
 
-		// FIXME 2025年1月17日 下午5:38:27 zhangzhen : 可以判断一下，如果请求的文件时.html/.css等可被压缩的，
-		// 可以先压缩再add，get后再解压缩
-		final byte[] ba = this.zmc.computeIfAbsent(key,
-				() -> ResourcesLoader.loadStaticResourceAsByteArray(resourceName));
-
-		response.body(ba);
 	}
 
 	private static boolean checkReferer(final ZRequest request) {

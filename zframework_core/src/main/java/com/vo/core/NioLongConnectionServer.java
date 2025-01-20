@@ -403,8 +403,13 @@ public class NioLongConnectionServer {
 
 	public static void closeSocketChannelAndKeyCancel(final SelectionKey key, final SocketChannel socketChannel) {
 		try {
-			socketChannel.close();
-			key.cancel();
+			if (key != null) {
+				key.cancel();
+			}
+
+			if (socketChannel != null) {
+				socketChannel.close();
+			}
 		} catch (final IOException e) {
 			e.printStackTrace();
 		}
@@ -429,11 +434,9 @@ public class NioLongConnectionServer {
 				return;
 			}
 
-			setZSessionId(request, response);
-			setCustomHeader(response);
-			setServer(response);
-			setDate(response);
-			setCacheControl(request, response);
+			final boolean keepAlive = request.isConnectionKeepAlive();
+			addConnectionToKAMap(key, socketChannel, keepAlive);
+
 			setETag(socketChannel, request, response);
 			setContentEncoding(request, response);
 
@@ -442,8 +445,6 @@ public class NioLongConnectionServer {
 			// 因为只有在业务代码中才容易判断资源的修改时间
 			//			setLastModified(request, response);
 
-			final boolean keepAlive = isConnectionKeepAlive(request);
-			setConnection(key, socketChannel, keepAlive, response);
 			response.write();
 
 			if (!keepAlive) {
@@ -481,7 +482,7 @@ public class NioLongConnectionServer {
 	 * @param request
 	 * @param response
 	 */
-	private static void setContentEncoding(final ZRequest request, final ZResponse response) {
+	public static void setContentEncoding(final ZRequest request, final ZResponse response) {
 		if (!SERVER_CONFIGURATIONPROPERTIES.getCompressionEnable()
 				|| (response.getBodyLength() <= (SERVER_CONFIGURATIONPROPERTIES.getCompressionMinLength() * 1024))) {
 			return;
@@ -512,18 +513,9 @@ public class NioLongConnectionServer {
 		response.body(compress);
 	}
 
-	private static boolean isConnectionKeepAlive(final ZRequest request) {
-		final String connection = request.getHeader(HeaderEnum.CONNECTION.getName());
-		final boolean keepAlive = STU.isNotEmpty(connection)
-				&& (connection.equalsIgnoreCase(ConnectionEnum.KEEP_ALIVE.getValue())
-						|| connection.toLowerCase().contains(ConnectionEnum.KEEP_ALIVE.getValue().toLowerCase()));
-		return keepAlive;
-	}
-
-	private static void setConnection(final SelectionKey key, final SocketChannel socketChannel,
-			final boolean keepAlive, final ZResponse response) {
+	private static void addConnectionToKAMap(final SelectionKey key, final SocketChannel socketChannel,
+			final boolean keepAlive) {
 		if (keepAlive) {
-			response.header(HeaderEnum.CONNECTION.getName(), ConnectionEnum.KEEP_ALIVE.getValue());
 			SOCKET_CHANNEL_MAP.put((System.currentTimeMillis() / 1000) * 1000, new SS(socketChannel, key));
 		}
 	}
@@ -545,7 +537,7 @@ public class NioLongConnectionServer {
 		response.cookie(cookie);
 	}
 
-	private static void setCacheControl(final ZRequest request, final ZResponse response) {
+	public static void setCacheControl(final ZRequest request, final ZResponse response) {
 
 		final String key = request.getRequestURI() + '@' + ZCacheControl.class.getName() + '-'
 				+ ZCacheControl.class.hashCode();
@@ -572,23 +564,7 @@ public class NioLongConnectionServer {
 		response.header(HeaderEnum.CACHE_CONTROL.getName(), joiner.toString());
 	}
 
-	private static void setCustomHeader(final ZResponse response) {
-		final Map<String, String> responseHeaders = SERVER_CONFIGURATIONPROPERTIES.getResponseHeaders();
-		if (CU.isEmpty(responseHeaders)) {
-			return;
-		}
-
-		final Set<Entry<String, String>> entrySet = responseHeaders.entrySet();
-		for (final Entry<String, String> entry : entrySet) {
-			response.header(entry.getKey(), entry.getValue());
-		}
-	}
-
-	private static void setServer(final ZResponse response) {
-		response.header(HeaderEnum.SERVER.getName(), SERVER_NAME);
-	}
-
-	private static void setDate(final ZResponse response) {
+	public static void setDate(final ZResponse response) {
 		response.header(HeaderEnum.DATE.getName(), ZDateUtil.gmt(new Date()));
 	}
 
@@ -599,7 +575,7 @@ public class NioLongConnectionServer {
 	 * @param request
 	 * @param response
 	 */
-	private static void setETag(final SocketChannel socketChannel, final ZRequest request, final ZResponse response) {
+	public static void setETag(final SocketChannel socketChannel, final ZRequest request, final ZResponse response) {
 		final ZETag methodETag = Task.getMethodAnnotation(request, ZETag.class);
 		if (methodETag == null) {
 			return;
