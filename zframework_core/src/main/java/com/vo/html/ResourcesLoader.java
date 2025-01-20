@@ -18,6 +18,7 @@ import com.vo.core.Task;
 import com.vo.core.ZContext;
 import com.vo.core.ZSingleton;
 import com.vo.exception.ResourceNotExistException;
+import com.vo.http.HttpStatusEnum;
 
 import cn.hutool.core.io.FastByteArrayOutputStream;
 import cn.hutool.core.io.IoUtil;
@@ -52,7 +53,7 @@ public class ResourcesLoader {
 					.getSingletonByClass(ServerConfigurationProperties.class);
 			final String staticPrefix = serverConfiguration.getStaticPrefix();
 			final String key = staticPrefix + resourceName;
-			return loadString(key);
+			return loadString(key, resourceName);
 		}
 
 		final String name = resourcePath + (resourceName.replace("/", File.separator));
@@ -60,7 +61,7 @@ public class ResourcesLoader {
 		try {
 			fileReader = new FileReader(name);
 		} catch (final FileNotFoundException e1) {
-			throw new ResourceNotExistException("资源不存在,name = " + resourceName);
+			throw new ResourceNotExistException("资源不存在,name = " + resourceName, HttpStatusEnum.HTTP_404.getCode());
 		}
 
 		final BufferedReader bufferedReader = new BufferedReader(fileReader);
@@ -105,7 +106,7 @@ public class ResourcesLoader {
 					.getSingletonByClass(ServerConfigurationProperties.class);
 			final String staticPrefix = serverConfiguration.getStaticPrefix();
 			final String key = staticPrefix + resourceName;
-			return checkInputStream(key);
+			return checkInputStream(key, resourceName);
 		}
 
 		final String fileName = resourcePath + (resourceName.replace("/", File.separator));
@@ -113,7 +114,7 @@ public class ResourcesLoader {
 		try {
 			return new FileInputStream(fileName);
 		} catch (final FileNotFoundException e1) {
-			throw new ResourceNotExistException("资源不存在,name = " + resourceName);
+			throw new ResourceNotExistException("资源不存在,name = " + resourceName, HttpStatusEnum.HTTP_404.getCode());
 		}
 	}
 
@@ -142,7 +143,7 @@ public class ResourcesLoader {
 		try {
 			fileInputStream = new FileInputStream(new File(fileName));
 		} catch (final FileNotFoundException e1) {
-			throw new ResourceNotExistException("资源不存在,name = " + resourceName);
+			throw new ResourceNotExistException("资源不存在,name = " + resourceName, HttpStatusEnum.HTTP_404.getCode());
 		}
 
 		final FastByteArrayOutputStream read = IoUtil.read(fileInputStream);
@@ -159,7 +160,7 @@ public class ResourcesLoader {
 
 	private static byte[] loadByteArray0(final String resourceName) {
 		if (Boolean.FALSE.equals(SERVER_CONFIGURATION.getStaticResourceCacheEnable())) {
-			return readByteArray0(checkInputStream(resourceName));
+			return readByteArray0(checkInputStream(resourceName, resourceName));
 		}
 
 		final Object v = CACHE_TABLE.get(ResourcesTypeEnum.BINARY, resourceName);
@@ -174,7 +175,7 @@ public class ResourcesLoader {
 				return (byte[]) vN;
 			}
 
-			final InputStream in = checkInputStream(resourceName);
+			final InputStream in = checkInputStream(resourceName, resourceName);
 			final byte[] ba2 = readByteArray0(in);
 
 			CACHE_TABLE.put(ResourcesTypeEnum.BINARY, resourceName, ba2);
@@ -182,10 +183,10 @@ public class ResourcesLoader {
 		}
 	}
 
-	private static String loadString(final String name) {
+	private static String loadString(final String name, final String resourceName) {
 
 		if (Boolean.FALSE.equals(SERVER_CONFIGURATION.getStaticResourceCacheEnable())) {
-			return loadSring0(name);
+			return loadSring0(name, resourceName);
 		}
 
 		final Object v = CACHE_TABLE.get(ResourcesTypeEnum.STRING, name);
@@ -194,14 +195,14 @@ public class ResourcesLoader {
 		}
 
 		synchronized (name) {
-			final String v2 = loadSring0(name);
+			final String v2 = loadSring0(name, resourceName);
 			CACHE_TABLE.put(ResourcesTypeEnum.STRING, name, v2);
 			return v2;
 		}
 	}
 
-	private static String loadSring0(final String name) {
-		final InputStream inputStream = checkInputStream(name);
+	private static String loadSring0(final String name, final String resourceName) {
+		final InputStream inputStream = checkInputStream(name, resourceName);
 		final InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
 		final BufferedReader reader = new BufferedReader(inputStreamReader);
 
@@ -257,10 +258,11 @@ public class ResourcesLoader {
 		return byteArrayOutputStream.toByteArray();
 	}
 
-	private static InputStream checkInputStream(final String name) {
+
+	private static InputStream checkInputStream(final String name, final String resourceName) {
 		final InputStream inputStream = ResourcesLoader.class.getResourceAsStream(name);
 		if (inputStream == null) {
-			throw new ResourceNotExistException("资源不存在,name = " + name);
+			throw new ResourceNotExistException("资源不存在:" + resourceName, HttpStatusEnum.HTTP_404.getCode());
 		}
 
 		return inputStream;

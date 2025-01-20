@@ -20,4 +20,8 @@ public class ResourceNotExistException extends ZFException {
 		super(PREFIX + message);
 	}
 
+	public ResourceNotExistException(final String messagezf, final Integer httpStatus) {
+		super(PREFIX + messagezf, httpStatus);
+	}
+
 }

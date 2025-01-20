@@ -62,6 +62,15 @@ public class ZControllerAdviceThrowable {
 			return ((ZFException) e).getHttpStatus();
 		}
 
+		final Throwable cause = e.getCause();
+		if (cause == null) {
+			return null;
+		}
+
+		if (cause instanceof ZFException) {
+			return ((ZFException) cause).getHttpStatus();
+		}
+
 		return null;
 	}
 
