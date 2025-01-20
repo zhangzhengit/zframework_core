@@ -17,6 +17,9 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import com.vo.cache.CU;
 import com.vo.cache.STU;
+import com.vo.compression.Deflater;
+import com.vo.compression.ZGzip;
+import com.vo.compression.ZSTD;
 import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.core.ZRequest.ZHeader;
 import com.vo.enums.ConnectionEnum;
@@ -87,7 +90,7 @@ public class ZResponse {
 
 	private static final String SERVER_NAME = SERVER_CONFIGURATIONPROPERTIES.getName();
 
-	private static final int DEFAULT_BUFFER_SIZE = 1024 * 100;
+	private static final int DEFAULT_BUFFER_SIZE = 1024 * 1024 * 1;
 
 	private static final byte[] NEW_LINE_BYTES = Task.NEW_LINE.getBytes();
 
@@ -223,6 +226,10 @@ public class ZResponse {
 		// 那么body方法要不要再提供一个带压缩枚举参数的?
 
 		// header部分
+		final ZRequest request = ReqeustInfo.get();
+
+		this.setContentEncodingIngoreCompressionMinLength(request);
+
 		this.beforeWrite();
 		this.header(HeaderEnum.TRANSFER_ENCODING.getName(), "chunked");
 		this.write(this.headerArray());
@@ -232,6 +239,7 @@ public class ZResponse {
 
 		final ByteBuffer bbB = ByteBuffer.allocate(DEFAULT_BUFFER_SIZE);
 		final BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
+
 
 		while (true) {
 			try {
@@ -244,13 +252,8 @@ public class ZResponse {
 					bbB.put(b[i]);
 				}
 
-				final String chunkHeader = Integer.toHexString(read) + "\r\n";
-				final ByteBuffer chunkHeaderBuffer = ByteBuffer.wrap(chunkHeader.getBytes());
-
-				this.write(chunkHeaderBuffer);
-
 				bbB.flip();
-				this.write(bbB);
+				this.compressBody(request, bbB, read);
 				bbB.clear();
 
 				this.write(ByteBuffer.wrap(NEW_LINE_BYTES));
@@ -278,6 +281,80 @@ public class ZResponse {
 		}
 
 		return this;
+	}
+
+
+	private void compressBody(final ZRequest request, final ByteBuffer bbB, final int read) {
+
+		final boolean compressIngoreCompressionMinLength = this.compressIngoreCompressionMinLength();
+		if (!compressIngoreCompressionMinLength) {
+			final String chunkHeader = Integer.toHexString(read) + "\r\n";
+			final ByteBuffer chunkHeaderBuffer = ByteBuffer.wrap(chunkHeader.getBytes());
+			this.write(chunkHeaderBuffer);
+			this.write(bbB);
+
+			return;
+		}
+
+		if (request.isSupportZSTD()) {
+
+			final byte[] bfZSTD = new byte[bbB.remaining()];
+			bbB.get(bfZSTD);
+			final byte[] compress = ZSTD.compress(bfZSTD);
+			final String chunkHeader = Integer.toHexString(compress.length) + "\r\n";
+			final ByteBuffer chunkHeaderBuffer = ByteBuffer.wrap(chunkHeader.getBytes());
+			this.write(chunkHeaderBuffer);
+
+			this.write(ByteBuffer.wrap(compress));
+		} else if (request.isSupportGZIP()) {
+			// FIXME 2025年1月20日 下午5:34:10 zhangzhen : qq浏览器和360极速浏览器 gzip 解码 2MB的.css文件不完整？后面有一部分不显示？
+			// 而上面的支持zstd的Edge和Firefox 解码zstd是正常的。
+
+			final byte[] bfGZIP = new byte[bbB.remaining()];
+			bbB.get(bfGZIP);
+			final byte[] compress = ZGzip.compress(bfGZIP);
+			final String chunkHeader = Integer.toHexString(compress.length) + "\r\n";
+			final ByteBuffer chunkHeaderBuffer = ByteBuffer.wrap(chunkHeader.getBytes());
+			this.write(chunkHeaderBuffer);
+
+			this.write(ByteBuffer.wrap(compress));
+		} else if (request.isSupportDEFLATE()) {
+			final byte[] bfDEFLATE = new byte[bbB.remaining()];
+			bbB.get(bfDEFLATE);
+			final byte[] compress = Deflater.compress(bfDEFLATE);
+			final String chunkHeader = Integer.toHexString(compress.length) + "\r\n";
+			final ByteBuffer chunkHeaderBuffer = ByteBuffer.wrap(chunkHeader.getBytes());
+			this.write(chunkHeaderBuffer);
+
+			this.write(ByteBuffer.wrap(compress));
+		} else {
+			final String chunkHeader = Integer.toHexString(read) + "\r\n";
+			final ByteBuffer chunkHeaderBuffer = ByteBuffer.wrap(chunkHeader.getBytes());
+			this.write(chunkHeaderBuffer);
+			this.write(bbB);
+		}
+	}
+
+
+	private boolean compressIngoreCompressionMinLength() {
+		return SERVER_CONFIGURATIONPROPERTIES.getCompressionEnable()
+				&& SERVER_CONFIGURATIONPROPERTIES.compressionContains(this.getContentType());
+	}
+
+	private void setContentEncodingIngoreCompressionMinLength(final ZRequest request) {
+
+		if (!this.compressIngoreCompressionMinLength()) {
+			return;
+		}
+
+		// FIXME 2025年1月20日 下午4:41:18 zhangzhen : 记得以后支持了br以后再加一个else
+		if (request.isSupportZSTD()) {
+			this.header(HeaderEnum.CONTENT_ENCODING.getName(), AcceptEncodingEnum.ZSTD.getValue());
+		} else if (request.isSupportGZIP()) {
+			this.header(HeaderEnum.CONTENT_ENCODING.getName(), AcceptEncodingEnum.GZIP.getValue());
+		} else if (request.isSupportDEFLATE()) {
+			this.header(HeaderEnum.CONTENT_ENCODING.getName(), AcceptEncodingEnum.DEFLATE.getValue());
+		}
 	}
 
 	private void checkContentType() {
