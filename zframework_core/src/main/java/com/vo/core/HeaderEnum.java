@@ -22,6 +22,8 @@ public enum HeaderEnum {
 
 	HOST("Host"),
 
+	TRANSFER_ENCODING("Transfer-Encoding"),
+
 	ACCEPT_ENCODING("Accept-Encoding"),
 
 	COOKIE("Cookie"),
