@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -25,6 +26,7 @@ import com.vo.core.ZRequest.ZHeader;
 import com.vo.enums.ConnectionEnum;
 import com.vo.http.HttpStatusEnum;
 import com.vo.http.ZCookie;
+import com.vo.http.ZETag;
 
 import lombok.Getter;
 
@@ -213,17 +215,28 @@ public class ZResponse {
 
 
 	// FIXME 2025年1月1日 下午6:47:20 zhangzhen : 现在的4个body方法要不要设置为只允许调用一次？
-	// FIXME 2025年1月20日 下午4:14:39 zhangzhen : 几个头大多都好了，记得ETag和压缩的头都加上
-	public ZResponse body(final InputStream inputStream) {
+
+	/**
+	 * 使用 InputStream Transfer-Encoding:chunked 边读边写入响应
+	 *
+	 * 注意：本方法设置的ETag头只用了第一次读取的byte[]来计算，为了尽量防止冲突
+	 * 而用了几个hash算法的结果拼接在一起作为ETag的值。可以一边读一边算直到读取完毕，
+	 * 但这样就失去了本方法传参InputStream的意思，因为在设置ETag头之前，body不能写入
+	 * 到客户端，就只能放在内存，或者只为了计算ETag而再重新read一遍。但都不是好办法，
+	 * 现在就暂时如上用几个hash方法的结果拼接而成。
+	 *
+	 * 注意：本方法(InputStream inputStream)的，只能在一个ZResponse响应对象的最后调用
+	 * 因为本方法会write到客户端，在调用本方法之后再调用任何方法都无意义了
+	 *
+	 * @param inputStream
+	 */
+	public synchronized void body(final InputStream inputStream) {
+
+		if (this.write.get()) {
+			return;
+		}
 
 		this.checkContentType();
-
-		// FIXME 2025年1月20日 下午3:30:58 zhangzhen : 想好下面这几个怎么处理，以及后面可能新增的header都要怎么处理
-		// 因为现在有两个地方write了
-		// 1、可以在write()之前抽出一个writeHeader()，但是 setETag和setContentEncoding都要改动
-		// 因为本方法是边读边写的，没法一次性获取到body
-		// 2、直接不管了？如果用户调用本方法，就默认为除了本方法自动处理的body和Transfer-Encoding头外，都由用户自己处理？
-		// 那么body方法要不要再提供一个带压缩枚举参数的?
 
 		// header部分
 		final ZRequest request = ReqeustInfo.get();
@@ -252,6 +265,7 @@ public class ZResponse {
 						(readFirst && (read > (SERVER_CONFIGURATIONPROPERTIES.getCompressionMinLength() * 1024)));
 
 				if (readFirst) {
+					this.setETag(request, b);
 					this.setContentEncoding(request, exceedsCompressionMinLength);
 					this.write(this.headerArray());
 				}
@@ -278,6 +292,8 @@ public class ZResponse {
 
 		this.write(ByteBuffer.wrap(ZERO_RNRN_BYTES));
 
+		this.write.set(true);
+
 		try {
 			bufferedInputStream.close();
 			inputStream.close();
@@ -290,7 +306,29 @@ public class ZResponse {
 			NioLongConnectionServer.closeSocketChannelAndKeyCancel(null, this.socketChannel);
 		}
 
-		return this;
+	}
+
+
+	private void setETag(final ZRequest request, final byte[] b) {
+		final ZETag methodETag = Task.getMethodAnnotation(request, ZETag.class);
+		if (methodETag != null) {
+
+			final String murmur3 = Hash.murmur3(b);
+			final String md5 = Hash.md5(b);
+			final String goodFastHash = Hash.goodFastHash(b);
+			final String sha256 = Hash.sha256(b);
+			final String newETagValue = murmur3 + md5 + goodFastHash + sha256;
+
+			// 执行目标方法前，先看请求头的ETag
+			final String ifNoneMatch = request.getHeader(HeaderEnum.IF_NONE_MATCH.getName());
+			if ((ifNoneMatch != null) && Objects.equals(newETagValue, ifNoneMatch)) {
+				this.httpStatus(HttpStatusEnum.HTTP_304.getCode());
+				this.clearBody();
+				this.header(HeaderEnum.ETAG.getName(), ifNoneMatch);
+			} else {
+				this.header(HeaderEnum.ETAG.getName(), newETagValue);
+			}
+		}
 	}
 
 	private void compressBody(final ZRequest request, final ByteBuffer bbB, final int read, final boolean exceedsCompressionMinLength) {
@@ -420,11 +458,11 @@ public class ZResponse {
 	 */
 	synchronized void write() {
 
-		this.beforeWrite();
-
 		if (this.write.get()) {
 			return;
 		}
+
+		this.beforeWrite();
 
 		this.writeSocketChannel();
 
@@ -442,7 +480,7 @@ public class ZResponse {
 			this.header(HeaderEnum.CONNECTION.getName(), ConnectionEnum.KEEP_ALIVE.getValue());
 		}
 
-		this.setCustomHeader(this);
+		this.setCustomHeader();
 		this.setServer(SERVER_NAME);
 		this.setDate(new Date());
 
@@ -458,7 +496,8 @@ public class ZResponse {
 		this.header(HeaderEnum.SERVER.getName(), server);
 	}
 
-	void setCustomHeader(final ZResponse response) {
+
+	void setCustomHeader() {
 		final Map<String, String> responseHeaders = SERVER_CONFIGURATIONPROPERTIES.getResponseHeaders();
 		if (CU.isEmpty(responseHeaders)) {
 			return;
@@ -466,7 +505,7 @@ public class ZResponse {
 
 		final Set<Entry<String, String>> entrySet = responseHeaders.entrySet();
 		for (final Entry<String, String> entry : entrySet) {
-			response.header(entry.getKey(), entry.getValue());
+			this.header(entry.getKey(), entry.getValue());
 		}
 	}
 

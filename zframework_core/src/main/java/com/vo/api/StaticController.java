@@ -52,7 +52,7 @@ public class StaticController {
 	@ZQPSLimitation(qps = 2000, type = ZQPSLimitationEnum.ZSESSIONID)
 	@ZETag
 	@ZCacheControl(value = { CacheControlEnum.PRIVATE, CacheControlEnum.MUST_REVALIDATE }, maxAge = 60 * 10)
-	public void staticResources(final ZResponse response, final ZRequest request) throws URISyntaxException, IOException {
+	public void staticResources(final ZResponse response, final ZRequest request) {
 
 		if (!checkReferer(request)) {
 			httpStatus403(response);
