@@ -163,6 +163,15 @@ public class ServerConfigurationProperties {
 	private String qpsExceedMessage = "访问频繁,请稍后再试";
 
 	/**
+	 * 请求信息的header的大小限制，单位：字节
+	 * 任意一个header的value超过此值，会响应431
+	 */
+	@ZNotNull
+	@ZMin(min = 1)
+	@ZMax(max = 1024 * 16)
+	private Integer requestHeaderSizeLimit = 500;
+
+	/**
 	 * 当前待处理的请求数最大值限制，来新请求时如果当前待处理请求数已经达到此值，则拒绝本次请求并返回错误码
 	 */
 	@ZMin(min = 52)

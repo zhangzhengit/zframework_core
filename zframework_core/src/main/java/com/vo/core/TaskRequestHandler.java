@@ -4,12 +4,12 @@ import java.util.List;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.google.common.collect.ImmutableCollection;
 import com.vo.cache.J;
 import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.enums.ConnectionEnum;
 import com.vo.exception.StartupException;
+import com.vo.exception.ZControllerAdviceThrowable;
 import com.vo.http.HttpStatusEnum;
 import com.votool.common.CR;
 
@@ -97,14 +97,15 @@ public final class TaskRequestHandler extends Thread {
 		} catch (final Exception e) {
 			e.printStackTrace();
 
-			final String message = e.getMessage();
+			final String message = ZControllerAdviceThrowable.findCausedby(e);
+			final Integer httpStatus = ZControllerAdviceThrowable.findHttpStatus(e);
 
 			final ZResponse response = new ZResponse(taskRequest.getSocketChannel());
+			final String error = J.toJSONString(CR.error(message));
 			response.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
-			.httpStatus(HttpStatusEnum.HTTP_500.getCode())
+			.httpStatus(httpStatus != null ? httpStatus : HttpStatusEnum.HTTP_500.getCode())
 			.header(HeaderEnum.CONNECTION.getName(), ConnectionEnum.CLOSE.getValue())
-			.body(J.toJSONString(CR.error(HttpStatusEnum.HTTP_500.getMessage() + " " +
-					message), Include.NON_NULL));
+			.body(error);
 			response.write();
 
 			return;

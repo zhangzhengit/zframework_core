@@ -19,4 +19,8 @@ public class ParseHTTPRequestException extends ZFException {
 		super(PREFIX + message);
 	}
 
+	public ParseHTTPRequestException(final String messagezf, final Integer httpStatus) {
+		super(messagezf, httpStatus);
+	}
+
 }

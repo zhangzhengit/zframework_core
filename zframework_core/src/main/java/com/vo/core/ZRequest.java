@@ -22,8 +22,11 @@ import com.vo.cache.AU;
 import com.vo.cache.CU;
 import com.vo.cache.STU;
 import com.vo.configuration.SCU;
+import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.enums.ConnectionEnum;
 import com.vo.enums.MethodEnum;
+import com.vo.exception.ParseHTTPRequestException;
+import com.vo.http.HttpStatusEnum;
 import com.vo.http.ZCookie;
 
 import lombok.AllArgsConstructor;
@@ -43,6 +46,9 @@ public class ZRequest {
 
 	public static final String HTTP_11 = "HTTP/1.1";
 	public static final String BOUNDARY = "boundary=";
+	public static final ServerConfigurationProperties SERVERCONFIGURATIONPROPERTIES = ZContext
+			.getBean(ServerConfigurationProperties.class);
+	public static final Integer requestHeaderSizeLimit = SERVERCONFIGURATIONPROPERTIES.getRequestHeaderSizeLimit();
 	public static final String MULTIPART_FORM_DATA = "multipart/form-data";
 	private static final AtomicLong GZSESSIONID = new AtomicLong(1L);
 
@@ -549,9 +555,23 @@ public class ZRequest {
 				final String key = l.substring(0, k).trim();
 				final String value = l.substring(k + 1).trim();
 				// CONTENT_LENGTH 头在bodyreader.readHeader时已经校验过了，在此肯定非负的整数
+
+				if (STU.hasContent(value)) {
+
+					final int length = value.length();
+					// FIXME 2025年1月20日 下午8:45:36 zhangzhen : 要不要用value.getBytes().length 判断？
+					// 判断的话会太费性能
+					if (length > requestHeaderSizeLimit) {
+						throw new ParseHTTPRequestException(HttpStatusEnum.HTTP_431.getMessage(),
+								HttpStatusEnum.HTTP_431.getCode());
+					}
+				}
+
+
 				hm.put(key, value);
 			}
 		}
+
 		request.setHeaderMap(hm);
 	}
 

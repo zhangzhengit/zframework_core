@@ -15,21 +15,23 @@ import lombok.Getter;
 public enum HttpStatusEnum {
 
 
-	HTTP_200(200, "200 OK"),
+	HTTP_200(200, "OK"),
 
-	HTTP_304(304, "304 Not Modified"),
+	HTTP_304(304, "Not Modified"),
 
-	HTTP_400(400, "400 Bad Request"),
+	HTTP_400(400, "Bad Request"),
 
-	HTTP_403(403, "403 拒绝服务"),
+	HTTP_403(403, "拒绝服务"),
 
-	HTTP_404(404, "404 not-found"),
+	HTTP_404(404, "not-found"),
 
-	HTTP_405(405, "405 Method Not Allowed"),
+	HTTP_405(405, "Method Not Allowed"),
 
-	HTTP_429(429, "429 Too Many Requests"),
+	HTTP_429(429, "Too Many Requests"),
 
-	HTTP_500(500, "500 Internal Server Error"),;
+	HTTP_431(431, "Request Header Fields Too Large"),
+
+	HTTP_500(500, "Internal Server Error"),;
 
 	private int code;
 	private String message;

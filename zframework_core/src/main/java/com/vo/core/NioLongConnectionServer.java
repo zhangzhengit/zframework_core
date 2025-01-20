@@ -521,9 +521,10 @@ public class NioLongConnectionServer {
 	}
 
 	public static void setZSessionId(final ZRequest request, final ZResponse response) {
-		if (!Boolean.TRUE.equals(SERVER_CONFIGURATIONPROPERTIES.getResponseZSessionId())) {
+		if (!Boolean.TRUE.equals(SERVER_CONFIGURATIONPROPERTIES.getResponseZSessionId()) || (request == null)) {
 			return;
 		}
+
 
 		final ZSession sessionFALSE = request.getSession(false);
 		if (sessionFALSE != null) {
@@ -538,6 +539,10 @@ public class NioLongConnectionServer {
 	}
 
 	public static void setCacheControl(final ZRequest request, final ZResponse response) {
+
+		if (request == null) {
+			return;
+		}
 
 		final String key = request.getRequestURI() + '@' + ZCacheControl.class.getName() + '-'
 				+ ZCacheControl.class.hashCode();
