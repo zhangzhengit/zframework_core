@@ -199,8 +199,24 @@ public class NioLongConnectionServer {
 
 	private void action(final SelectionKey selectionKey, final SocketChannel socketChannel) {
 
+		ZArray array = null;
 		try {
-			final ZArray array = HTTPProcessor.process(socketChannel, selectionKey);
+			array = HTTPProcessor.process(socketChannel, selectionKey);
+		} catch (final Exception e) {
+
+			final ZControllerAdviceActuator a = ZContext.getBean(ZControllerAdviceActuator.class);
+			final Object r = a.execute(e);
+
+			final Integer httpStatus = ZControllerAdviceThrowable.findHttpStatus(e);
+			final ZResponse response = new ZResponse(socketChannel)
+					.httpStatus(httpStatus != null ? httpStatus : HttpStatusEnum.HTTP_500.getCode())
+					.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
+					.body(J.toJSONString(r));
+			response.write();
+			return;
+		}
+
+		try {
 			if (array == null) {
 				return;
 			}

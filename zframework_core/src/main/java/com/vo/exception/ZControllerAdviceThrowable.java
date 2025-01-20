@@ -34,11 +34,13 @@ public class ZControllerAdviceThrowable {
 		final ZControllerAdviceThrowableConfigurationProperties conf = ZContext.getBean(ZControllerAdviceThrowableConfigurationProperties.class);
 
 		final ZRequest request = ReqeustInfo.get();
-
-		final ZCookie zsessionid = request.getZSESSIONID();
-
-		LOG.error("请求出错：path={},clientIp={},ZSESSIONID={}",
-				request.getRequestURI(), request.getClientIp(), zsessionid ==null ? "无" : zsessionid.getValue());
+		if (request != null) {
+			final ZCookie zsessionid = request.getZSESSIONID();
+			LOG.error("请求出错：path={},clientIp={},ZSESSIONID={}", request.getRequestURI(), request.getClientIp(),
+					zsessionid == null ? "无" : zsessionid.getValue());
+		}
+		// FIXME 2025年1月20日 下午9:09:12 zhangzhen : 如果reqeust
+		// ==null，则要打印的ERROR也没法打印了，因为要打印的内容都在request中
 
 		return CR.error(conf.getErrorCode(), m);
 	}

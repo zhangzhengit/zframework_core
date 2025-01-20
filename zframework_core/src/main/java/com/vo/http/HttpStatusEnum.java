@@ -27,6 +27,8 @@ public enum HttpStatusEnum {
 
 	HTTP_405(405, "Method Not Allowed"),
 
+	HTTP_413(413, "Content Too Large"),
+
 	HTTP_429(429, "Too Many Requests"),
 
 	HTTP_431(431, "Request Header Fields Too Large"),

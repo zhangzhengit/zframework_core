@@ -20,7 +20,7 @@ public class ParseHTTPRequestException extends ZFException {
 	}
 
 	public ParseHTTPRequestException(final String messagezf, final Integer httpStatus) {
-		super(messagezf, httpStatus);
+		super(PREFIX + messagezf, httpStatus);
 	}
 
 }

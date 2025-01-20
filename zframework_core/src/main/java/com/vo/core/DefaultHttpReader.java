@@ -20,6 +20,8 @@ import com.vo.cache.STU;
 import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.configuration.TempDir;
 import com.vo.enums.MethodEnum;
+import com.vo.exception.BodyTooLargeException;
+import com.vo.http.HttpStatusEnum;
 
 
 
@@ -115,7 +117,12 @@ public class DefaultHttpReader {
 
 				final Integer uploadFileSize = SERVER_CONFIGURATIONPROPERTIES.getUploadFileSize();
 				if (contentLength >= (uploadFileSize * _1024)) {
-					throw new IllegalArgumentException("上传文件过大: Content-Length = " + contentLength);
+					// FIXME 2025年1月20日 下午9:12:49 zhangzhen : 又遇到问题：
+					// 比如 /upload 限制zsessiond.qps=1，则到此throw了就走不到限制qps的逻辑了，
+					// 导致可以恶意刷接口，故意上传特别大的文件来浪费服务器性能
+					// 要不要readHeader后就解析request然后去 QC.allow(API) ?
+					throw new BodyTooLargeException(HttpStatusEnum.HTTP_413.getMessage(),
+							HttpStatusEnum.HTTP_413.getCode());
 				}
 
 				// 根据Content-Length和读header多出的部分，重新计算出body需要读的字节数
