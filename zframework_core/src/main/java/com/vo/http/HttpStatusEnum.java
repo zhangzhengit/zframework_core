@@ -15,6 +15,8 @@ import lombok.Getter;
 public enum HttpStatusEnum {
 
 
+	// FIXME 2025年1月20日 下午9:34:47 zhangzhen : 继续支持41X和42X，要不要先支持个418？
+
 	HTTP_200(200, "OK"),
 
 	HTTP_304(304, "Not Modified"),
