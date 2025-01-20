@@ -470,6 +470,17 @@ public class ZConfigurationPropertiesScanner {
 			map.put(kName, value);
 		}
 
+		final String convert = convert(key);
+		final Iterator<String> keys2 = ZProperties.getKeys(convert);
+		while (keys2.hasNext()) {
+			final String k = keys2.next();
+
+			final String kName = StrUtil.removeAll(k, convert + ".");
+
+			final String value = ZProperties.getString(k);
+			map.put(kName, value);
+		}
+
 		try {
 			if (!map.isEmpty()) {
 				field.setAccessible(true);
