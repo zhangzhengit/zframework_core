@@ -120,6 +120,8 @@ public class ZResponse {
 	@Getter
 	private List<ZHeader> headerList;
 
+	// FIXME 2025年1月20日 下午7:19:43 zhangzhen : 既然限制了body(byte[] ) 只能调用一次，那么bodyList就不要用List了，还会扩容浪费空间什么
+	// 直接用byte[] 在byte(byte[])中赋值就行了
 	private List<Byte> bodyList;
 
 	private int bIC = 0;
@@ -137,7 +139,7 @@ public class ZResponse {
 	 * 清空当前的body
 	 */
 	public synchronized void clearBody() {
-		bodyList = null;
+		this.bodyList = null;
 		this.bIC = 0;
 	}
 
