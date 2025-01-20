@@ -581,7 +581,7 @@ public class NioLongConnectionServer {
 			return;
 		}
 
-		final String newETagValue = Hash.c(response.getBody());
+		final String newETagValue = Hash.murmur3(response.getBody());
 
 		// 执行目标方法前，先看请求头的ETag
 		final String ifNoneMatch = request.getHeader(HeaderEnum.IF_NONE_MATCH.getName());

@@ -96,6 +96,6 @@ public class ZCacheableAOP implements ZIAOP {
 	}
 
 	public static String hash(final Object object) {
-		return Hash.c(String.valueOf(object));
+		return Hash.murmur3(String.valueOf(object));
 	}
 }
