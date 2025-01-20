@@ -44,9 +44,10 @@ public class StaticController {
 
 	@ZRequestMapping(mapping = { "/favicon\\.ico",
 			"/.+\\.png$",
+			"/.+\\.wav$",
 			"/.+\\.js$", "/.+\\.jpg$", "/.+\\.mp3$", "/.+\\.mp4$", "/.+\\.pdf$",
 			"/.+\\.gif$", "/.+\\.doc$" ,"/.+\\.css$","/.+\\.html$"},
-			isRegex = { true, true, true, true, true, true, true, true, true, true , true }, qps = 10000 * 10)
+			isRegex = { true, true, true, true, true, true, true, true, true, true, true , true }, qps = 10000 * 10)
 
 	@ZQPSLimitation(qps = 2000, type = ZQPSLimitationEnum.ZSESSIONID)
 	@ZETag
