@@ -250,6 +250,10 @@ public class ZConfigurationPropertiesScanner {
 			final Class<?> gType = ts[0];
 			final Object value = getSetFiledValue(xa, gType);
 
+			if (Objects.isNull(value) || !STU.hasContent(String.valueOf(value))) {
+				continue;
+			}
+
 			if (!set.add(value)) {
 				final String message = object.getClass().getSimpleName() + "." + field.getName() + " Set类型值重复：key="
 						+ xa + "" + ",value=" + value;
