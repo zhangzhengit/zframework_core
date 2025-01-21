@@ -26,6 +26,7 @@ public class ZCacheRedis implements ZCache<ZCacheR> {
 		try (Jedis jedis = ZContext.getBean(JedisPool.class).getResource()) {
 			final byte[] ba = ZPU.serialize(value);
 			jedis.set(key.getBytes(), ba);
+			jedis.pexpire(key.getBytes(), expire);
 		}
 
 	}
