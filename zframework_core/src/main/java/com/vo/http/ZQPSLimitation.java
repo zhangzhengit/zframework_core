@@ -6,8 +6,10 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import com.vo.core.QCTimeEnum;
+
 /**
- * 用在接口方法上，表示此接口根据什么来限制QPS
+ * 用在接口方法上，表示此接口根据什么来限制单位时间内允许的查询数
  *
  * @author zhangzhen
  * @date 2023年7月17日
@@ -19,12 +21,19 @@ import java.lang.annotation.Target;
 public @interface ZQPSLimitation {
 
 	/**
-	 * 最大QPS限制
+	 * 单位时间，默认：秒
+	 *
+	 * @return
+	 */
+	QCTimeEnum time() default QCTimeEnum.SECOND;
+	
+	/**
+	 * 单位时间内最大count限制
 	 *
 	 * @return
 	 *
 	 */
-	int qps();
+	int count();
 
 	/**
 	 * 根据什么来限制

@@ -298,7 +298,8 @@ public class Task {
 						+ "@ZQPSLimitation" + '_'
 						+ session.getId();
 
-				if (!QC.allow(QCTimeEnum.SECOND, keyword, zqpsLimitation.qps(), handlingEnum)) {
+				if (!QC.allow(zqpsLimitation.time(), keyword, zqpsLimitation.count(), handlingEnum)) {
+					//				if (!QC.allow(QCTimeEnum.SECOND, keyword, zqpsLimitation.count(), handlingEnum)) {
 
 					final CR<Object> error = CR.error(AccessDeniedCodeEnum.ZSESSIONID.getCode(), AccessDeniedCodeEnum.ZSESSIONID.getMessageToClient());
 					final ZResponse response = new ZResponse(this.socketChannel);

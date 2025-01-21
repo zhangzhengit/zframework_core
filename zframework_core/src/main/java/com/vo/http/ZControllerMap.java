@@ -75,7 +75,7 @@ public class ZControllerMap {
 				throw new IllegalArgumentException(
 						"@" + ZQPSLimitation.class.getSimpleName() + ".type 不能为空,method = " + method.getName());
 			}
-			final int qpsL = zqpsl.qps();
+			final int qpsL = zqpsl.count();
 			if (qpsL <= 0) {
 				throw new IllegalArgumentException(
 						"@" + ZQPSLimitation.class.getSimpleName() + ".qps 必须大于0,method = " + method.getName());

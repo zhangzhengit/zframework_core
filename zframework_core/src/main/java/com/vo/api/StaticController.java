@@ -49,7 +49,7 @@ public class StaticController {
 			"/.+\\.gif$", "/.+\\.doc$" ,"/.+\\.css$","/.+\\.html$"},
 			isRegex = { true, true, true, true, true, true, true, true, true, true, true , true }, qps = 10000 * 10)
 
-	@ZQPSLimitation(qps = 2000, type = ZQPSLimitationEnum.ZSESSIONID)
+	@ZQPSLimitation(count = 2000, type = ZQPSLimitationEnum.ZSESSIONID)
 	@ZETag
 	@ZCacheControl(value = { CacheControlEnum.PRIVATE, CacheControlEnum.MUST_REVALIDATE }, maxAge = 60 * 10)
 	public void staticResources(final ZResponse response, final ZRequest request) {
