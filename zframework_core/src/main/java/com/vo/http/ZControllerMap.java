@@ -114,7 +114,6 @@ public class ZControllerMap {
 		return object;
 	}
 
-
 	public static Method getMethodByMethodEnumAndPath(final MethodEnum methodEnum, final String path) {
 		final Method method = methodPathTable.get(methodEnum, path);
 
@@ -177,6 +176,7 @@ public class ZControllerMap {
 		final Map<MethodEnum, Method> column = methodPathTable.column(path);
 		return column;
 	}
+
 	public static Map<String, Method> getByMethodEnum(final MethodEnum methodEnum) {
 
 		final Map<String, Method> row = methodPathTable.row(methodEnum);

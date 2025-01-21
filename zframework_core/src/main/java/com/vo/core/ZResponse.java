@@ -481,7 +481,11 @@ public class ZResponse {
 		this.setDate(new Date());
 
 		NioLongConnectionServer.setZSessionId(request, this);
-		NioLongConnectionServer.setCacheControl(request, this);
+
+		if (this.getHttpStatus() == HttpStatusEnum.HTTP_200.getCode()) {
+			NioLongConnectionServer.setCacheControl(request, this);
+		}
+
 	}
 
 	public void setDate(final Date date) {

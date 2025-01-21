@@ -12,7 +12,6 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.StringJoiner;
@@ -23,7 +22,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.vo.cache.CU;
 import com.vo.cache.J;
 import com.vo.cache.STU;
 import com.vo.compression.Deflater;
@@ -185,6 +183,7 @@ public class NioLongConnectionServer {
 						if (SKStatusEnum.READING == selectionKey.attachment()) {
 							NioLongConnectionServer.ZE.executeByNameInASpecificThread(keyword,
 									() -> this.action(selectionKey, socketChannel));
+
 						}
 
 					}
@@ -453,7 +452,11 @@ public class NioLongConnectionServer {
 			final boolean keepAlive = request.isConnectionKeepAlive();
 			addConnectionToKAMap(key, socketChannel, keepAlive);
 
-			setETag(socketChannel, request, response);
+			final Integer httpStatus = response.getHttpStatus();
+			if (httpStatus == HttpStatusEnum.HTTP_200.getCode()) {
+				setETag(socketChannel, request, response);
+			}
+
 			setContentEncoding(request, response);
 
 			// FIXME 2025年1月3日 上午3:22:26 zhangzhen : Last-Modified

@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.io.UnsupportedEncodingException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -26,7 +25,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
+import java.util.function.Supplier;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.google.common.collect.ImmutableSet;
@@ -146,11 +145,36 @@ public class Task {
 	public ZResponse invoke(final ZRequest request, final SocketChannel socketChannel) throws Exception {
 
 		final String path = request.getPath();
-		final Method method = ZControllerMap.getMethodByMethodEnumAndPath(request.getMethodEnum(), path);
+		Method method = ZControllerMap.getMethodByMethodEnumAndPath(request.getMethodEnum(), path);
 
 		// 查找对应的控制器来处理
 		if (method == null) {
-			return this.handleNoMethodMatche(request, path);
+
+			// 用非请求的METHOD看是否有，有则响应405
+			final Method noRequestMethodMethod = ZRC.computeIfAbsent("MethodEnum.values-" + path, () -> {
+				final MethodEnum[] es = MethodEnum.values();
+				for (final MethodEnum methodEnum : es) {
+					if (methodEnum != request.getMethodEnum()) {
+						final Method methodT = ZControllerMap.getMethodByMethodEnumAndPath(methodEnum, path);
+						if (methodT != null) {
+							return methodT;
+						}
+					}
+				}
+				return null;
+			}, true);
+
+			if (noRequestMethodMethod != null) {
+				return ReU.response405(socketChannel, request.getMethodEnum().getMethod());
+			}
+
+			// 用正则依然匹配不到，响应404
+			final Method matcheMethod = Task.getMatcheMethod(request, path);
+			if (matcheMethod == null) {
+				return ReU.response404(socketChannel, path);
+			}
+
+			method = matcheMethod;
 		}
 
 		try {
@@ -171,48 +195,25 @@ public class Task {
 
 	}
 
-	private ZResponse handleNoMethodMatche(final ZRequest request,  final String path) throws Exception {
-		final Map<MethodEnum, Method> methodMap = ZControllerMap.getByPath(path);
-		if (CU.isNotEmpty(methodMap)) {
+	private static Method getMatcheMethod(final ZRequest request,  final String path) throws Exception {
 
-			final String methodString = methodMap.keySet().stream().map(MethodEnum::getMethod).collect(Collectors.joining(","));
+		final Supplier<Method> supplier = () -> {
+			final Map<String, Method> rowMap = ZControllerMap.getByMethodEnum(request.getMethodEnum());
+			final Set<Entry<String, Method>> entrySet = rowMap.entrySet();
+			for (final Entry<String, Method> entry : entrySet) {
+				final Method methodTarget = entry.getValue();
+				final String requestMapping = entry.getKey();
+				if (Boolean.TRUE.equals(ZControllerMap.getIsregexByMethodEnumAndPath(methodTarget, requestMapping))
+						&& path.matches(requestMapping)) {
 
-			final String body = J.toJSONString(CR.error("请求Method不支持："
-					+ request.getMethodEnum().getMethod() + ", Method: " + methodString), Include.NON_NULL);
-
-			return new ZResponse(this.socketChannel)
-					.header(HeaderEnum.ALLOW.getName(), methodString)
-					.httpStatus(HttpStatusEnum.HTTP_405.getCode())
-					.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
-					.body(body);
-
-		}
-
-		final Map<String, Method> rowMap = ZControllerMap.getByMethodEnum(request.getMethodEnum());
-		final Set<Entry<String, Method>> entrySet = rowMap.entrySet();
-		for (final Entry<String, Method> entry : entrySet) {
-			final Method methodTarget = entry.getValue();
-			final String requestMapping = entry.getKey();
-			if (Boolean.TRUE.equals(ZControllerMap.getIsregexByMethodEnumAndPath(methodTarget, requestMapping)) &&path.matches(requestMapping)) {
-
-				final Object object = ZControllerMap.getObjectByMethod(methodTarget);
-				final Object[] parametersArray = this.generateParameters(methodTarget, request, path);
-				try {
-					final ZResponse invokeAndResponse = this.invokeAndResponse(methodTarget, parametersArray, object, request);
-					return invokeAndResponse;
-				} catch (IllegalAccessException | InvocationTargetException | UnsupportedEncodingException e) {
-					//					e.printStackTrace();
-					// 继续抛出，抛给默认的异常处理器来处理
-					throw e;
+					return methodTarget;
 				}
 			}
-		}
+			return null;
+		};
 
-		// 无匹配的正则表达式接口，返回404
-		return	new ZResponse(this.socketChannel)
-				.httpStatus(HttpStatusEnum.HTTP_404.getCode())
-				.contentType(DEFAULT_CONTENT_TYPE.getType())
-				.body(J.toJSONString(CR.error("请求方法不存在 [" + path+"]"), Include.NON_NULL))	;
+		final String key = "getMatcheMethod-" + path;
+		return ZRC.computeIfAbsent(key, supplier, true);
 	}
 
 	public static String gExceptionMessage(final Throwable e) {
