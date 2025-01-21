@@ -12,21 +12,43 @@ public enum QCTimeEnum {
 	/**
 	 * 秒
 	 */
-	SECOND,
+	SECOND {
+		@Override
+		public long convert(final long currentTimeMillis) {
+			return currentTimeMillis / 1000;
+		}
+	},
 
 	/**
 	 * 分
 	 */
-	MINUTE,
+	MINUTE {
+		@Override
+		public long convert(final long currentTimeMillis) {
+			return SECOND.convert(currentTimeMillis) / 60;
+		}
+	},
 
 	/**
 	 * 一刻钟
 	 */
-	QUARTER,
+	QUARTER {
+		@Override
+		public long convert(final long currentTimeMillis) {
+			return MINUTE.convert(currentTimeMillis) / 15;
+		}
+	},
 
 	/**
 	 * 小时
 	 */
-	HOUR,;
+	HOUR {
+		@Override
+		public long convert(final long currentTimeMillis) {
+			return MINUTE.convert(currentTimeMillis) / 60;
+		}
+	},;
+
+	public abstract long convert(long currentTimeMillis);
 
 }
