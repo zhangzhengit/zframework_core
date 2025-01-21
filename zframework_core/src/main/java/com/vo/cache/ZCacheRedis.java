@@ -3,10 +3,8 @@ package com.vo.cache;
 import java.util.List;
 import java.util.Set;
 
-import org.springframework.util.StringUtils;
-
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.vo.core.ZContext;
+import com.votool.common.ZPU;
 
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
@@ -26,8 +24,8 @@ public class ZCacheRedis implements ZCache<ZCacheR> {
 	@Override
 	public void add(final String key, final ZCacheR value, final long expire) {
 		try (Jedis jedis = ZContext.getBean(JedisPool.class).getResource()) {
-			jedis.set(key, J.toJSONString(value, Include.NON_NULL));
-			jedis.pexpire(key, expire);
+			final byte[] ba = ZPU.serialize(value);
+			jedis.set(key.getBytes(), ba);
 		}
 
 	}
@@ -36,12 +34,11 @@ public class ZCacheRedis implements ZCache<ZCacheR> {
 	public ZCacheR get(final String key) {
 
 		try (Jedis jedis = ZContext.getBean(JedisPool.class).getResource()) {
-			final String v = jedis.get(key);
-			if (!StringUtils.hasText(v)) {
+			final byte[] bs = jedis.get(key.getBytes());
+			if (bs == null) {
 				return null;
 			}
-
-			return J.parseObject(v, ZCacheR.class);
+			return ZPU.deserialize(bs, ZCacheR.class);
 		}
 
 	}
