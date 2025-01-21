@@ -284,7 +284,7 @@ public class NioLongConnectionServer {
 	}
 
 	private static boolean allow() {
-		return ENABLE_SERVER_QPS_LIMITED && QC.allow(NioLongConnectionServer.Z_SERVER_QPS,
+		return ENABLE_SERVER_QPS_LIMITED && QC.allow(QCTimeEnum.SECOND, NioLongConnectionServer.Z_SERVER_QPS,
 				SERVER_CONFIGURATIONPROPERTIES.getQps(), QPSHandlingEnum.SMOOTH);
 	}
 

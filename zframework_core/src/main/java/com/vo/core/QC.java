@@ -16,13 +16,14 @@ public class QC {
 
 	private static final Map<String, Integer> C = new ConcurrentHashMap<>(16, 1F);
 
-	public static boolean allow(final String keyPrefix, final long qps, final QPSHandlingEnum handlingEnum) {
+
+	public static boolean allow(final QCTimeEnum timeEnum, final String keyPrefix, final long qps, final QPSHandlingEnum handlingEnum) {
 		switch (handlingEnum) {
 		case SMOOTH:
-			return allowSmooth(keyPrefix, qps);
+			return allowSmooth(timeEnum, keyPrefix, qps);
 
 		case UNEVEN:
-			return allowUneven(keyPrefix, qps);
+			return allowUneven(timeEnum, keyPrefix, qps);
 
 		default:
 			break;
@@ -31,7 +32,7 @@ public class QC {
 		throw new UnsupportedOperationException("QPSHandlingEnum.value = " + handlingEnum);
 	}
 
-	public static boolean allowUneven(final String keyPrefix, final long qps) {
+	public static boolean allowUneven(final QCTimeEnum timeEnum, final String keyPrefix, final long qps) {
 		if (qps <= 0) {
 			return false;
 		}
@@ -43,7 +44,8 @@ public class QC {
 		return ok;
 	}
 
-	public static boolean allowSmooth(final String keyPrefix, final long qps) {
+
+	public static boolean allowSmooth(final QCTimeEnum timeEnum, final String keyPrefix, final long qps) {
 		if (qps <= 0) {
 			return false;
 		}

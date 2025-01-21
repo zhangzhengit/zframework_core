@@ -260,7 +260,8 @@ public class Task {
 		final String userAgent = request.getHeader(HeaderEnum.USER_AGENT.getName());
 		final QPSHandlingEnum handlingEnum = ZContext
 				.getBean(RequestValidatorConfigurationProperties.class).getHandlingEnum(userAgent);
-		final boolean allow = QC.allow("API-" + controllerName + "@" + method.getName(), qps, handlingEnum);
+		final boolean allow = QC.allow(QCTimeEnum.SECOND, "API-" + controllerName + "@" + method.getName(), qps,
+				handlingEnum);
 		if (!allow) {
 
 			// FIXME 2025年1月3日 上午4:19:33 zhangzhen : 这里有个严重的问题会导致可能浪费服务器性能和存储空间
@@ -297,7 +298,7 @@ public class Task {
 						+ "@ZQPSLimitation" + '_'
 						+ session.getId();
 
-				if (!QC.allow(keyword, zqpsLimitation.qps(), handlingEnum)) {
+				if (!QC.allow(QCTimeEnum.SECOND, keyword, zqpsLimitation.qps(), handlingEnum)) {
 
 					final CR<Object> error = CR.error(AccessDeniedCodeEnum.ZSESSIONID.getCode(), AccessDeniedCodeEnum.ZSESSIONID.getMessageToClient());
 					final ZResponse response = new ZResponse(this.socketChannel);

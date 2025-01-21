@@ -122,7 +122,8 @@ abstract class AbstractRequestValidator {
 				final String smoothUserAgentKeyword = HeaderEnum.Z_SESSION_ID.getName() + "@" + session.getId();
 				final QPSHandlingEnum handlingEnum = this.requestValidatorConfigurationProperties
 						.getHandlingEnum(userAgent);
-				final boolean allow = QC.allow(smoothUserAgentKeyword, this.getSessionIdQps(), handlingEnum);
+				final boolean allow = QC.allow(QCTimeEnum.SECOND, smoothUserAgentKeyword, this.getSessionIdQps(),
+						handlingEnum);
 
 				if (allow) {
 					return ALLOW;
@@ -136,7 +137,7 @@ abstract class AbstractRequestValidator {
 		final String keyword = request.getClientIp() + "@" + userAgent;
 
 		final QPSHandlingEnum handlingEnum = this.requestValidatorConfigurationProperties.getHandlingEnum(userAgent);
-		final boolean allow = QC.allow(keyword, this.getClientQps(), handlingEnum);
+		final boolean allow = QC.allow(QCTimeEnum.SECOND,keyword, this.getClientQps(), handlingEnum);
 
 		if (allow) {
 			return ALLOW;
