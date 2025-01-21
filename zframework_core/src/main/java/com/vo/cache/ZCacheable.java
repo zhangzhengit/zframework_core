@@ -34,6 +34,8 @@ import java.lang.annotation.Target;
 @Target({ ElementType.METHOD })
 public @interface ZCacheable {
 
+	// FIXME 2025年1月21日 下午9:02:21 zhangzhen : 缓存相关注解要不要加一个字段：从哪个缓存(内存/redis/混合)中存取？
+
 	public static final int NEVER = -1;
 
 
