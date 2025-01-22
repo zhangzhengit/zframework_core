@@ -115,6 +115,8 @@ public class ZControllerMap {
 	}
 
 	public static Method getMethodByMethodEnumAndPath(final MethodEnum methodEnum, final String path) {
+
+
 		final Method method = methodPathTable.get(methodEnum, path);
 
 		if (method != null) {
@@ -122,6 +124,7 @@ public class ZControllerMap {
 		}
 
 		final Set<String> keySet = methodPathTable.row(methodEnum).keySet();
+		// FIXME 2025年1月22日 下午3:21:16 zhangzhen : 访问 @ZPV的接口值，jp分析getx方法耗时比较长
 		final String pathM = getx(path, keySet);
 		if (STU.isEmpty(pathM)) {
 			return null;
@@ -145,7 +148,7 @@ public class ZControllerMap {
 			int pipei = 0;
 			int empty = 0;
 
-			final ArrayList<Object> list = Lists.newArrayList();
+			final ArrayList<Object> valueList = Lists.newArrayList();
 			for (int i = 0; i < s.length; i++) {
 				final String t = s[i];
 				if (STU.isEmpty(t)) {
@@ -154,7 +157,7 @@ public class ZControllerMap {
 				}
 				if (a[i].startsWith("{") && a[i].endsWith("}")) {
 					pipeiM++;
-					list.add(t);
+					valueList.add(t);
 					continue;
 				}
 
@@ -164,7 +167,7 @@ public class ZControllerMap {
 			}
 
 			if ((pipei + pipeiM + empty) == s.length) {
-				ZPVTL.set(list);
+				ZPVTL.set(valueList);
 				return k;
 			}
 		}
