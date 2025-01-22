@@ -47,7 +47,7 @@ public class StaticController {
 			"/.+\\.wav$",
 			"/.+\\.js$", "/.+\\.jpg$", "/.+\\.mp3$", "/.+\\.mp4$", "/.+\\.pdf$",
 			"/.+\\.gif$", "/.+\\.doc$" ,"/.+\\.css$","/.+\\.html$"},
-			isRegex = { true, true, true, true, true, true, true, true, true, true, true , true }, qps = 10000 * 10)
+			isRegex = { true, true, true, true, true, true, true, true, true, true, true , true }, count = 10000 * 10)
 
 	@ZQPSLimitation(count = 2000, type = ZQPSLimitationEnum.ZSESSIONID)
 	@ZETag

@@ -6,6 +6,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import com.vo.core.QCTimeEnum;
 import com.vo.enums.MethodEnum;
 
 /**
@@ -20,20 +21,11 @@ import com.vo.enums.MethodEnum;
 @Target({ElementType.METHOD })
 public @interface ZRequestMapping {
 
-	/**
-	 * 本注解 qps 允许的最小值
-	 */
-	public static final int MIN_QPS = ZRequestMappingConfigurationProperties.MIN_VALUE;
+	public static final int MIN_COUNT = ZRequestMappingConfigurationProperties.MIN_VALUE;
 
-	/**
-	 * 本注解 qps 允许的最大值
-	 */
-	public static final int MAX_QPS = ZRequestMappingConfigurationProperties.MAX_VALUE;
+	public static final int MAX_COUNT = ZRequestMappingConfigurationProperties.MAX_VALUE;
 
-	/**
-	 * 本注解 qps 的默认值
-	 */
-	public static final int DEFAULT_QPS = ZRequestMappingConfigurationProperties.DEFAULT_VALUE;
+	public static final int DEFAULT_COUNT = ZRequestMappingConfigurationProperties.DEFAULT_VALUE;
 
 	/**
 	 * 请求路径，如：/index
@@ -60,12 +52,19 @@ public @interface ZRequestMapping {
 	MethodEnum method() default MethodEnum.GET;
 
 	/**
-	 * 此方法最大QPS限制，所有请求共享此值，不管是浏览器/脚本/命令行都共享此值
+	 * 单位时间，默认：秒
+	 *
+	 * @return
+	 */
+	QCTimeEnum time() default QCTimeEnum.SECOND;
+
+	/**
+	 * 单位时间内最大count限制，所有请求共享此值，不管是浏览器/脚本/命令行都共享此值
 	 *
 	 * @return
 	 *
 	 */
-	int qps() default DEFAULT_QPS;
+	int count() default DEFAULT_COUNT;
 
 	/**
 	 * API描述信息，非必填项，只为了展示API信息(展示一个API文档)，和代码逻辑无关

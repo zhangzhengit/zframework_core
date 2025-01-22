@@ -55,18 +55,18 @@ public class ZControllerMap {
 		objectMap.put(method, object);
 
 		//		final ZRequestMappingConfigurationProperties zrmConf = ZContext.getBean(ZRequestMappingConfigurationProperties.class);
-		final int qps = requestMapping.qps() == ZRequestMapping.DEFAULT_QPS ? ZRequestMapping.DEFAULT_QPS : requestMapping.qps();
-		if (qps <= 0) {
+		final int count = requestMapping.count() == ZRequestMapping.DEFAULT_COUNT ? ZRequestMapping.DEFAULT_COUNT : requestMapping.count();
+		if (count <= 0) {
 			throw new StartupException(
-					"接口qps必须大于0,method = " + method.getName() + ",\t" + "qps = " + qps);
+					"接口count必须大于0,method = " + method.getName() + ",\t" + "count = " + count);
 		}
 
-		if ((qps % QPSEnum.API_METHOD.getMinValue()) != 0) {
-			throw new StartupException("接口qps必须可以被 " + QPSEnum.API_METHOD.getMinValue() + "整除,method = "
-					+ method.getName() + ",\t" + "qps = " + qps);
+		if ((count % QPSEnum.API_METHOD.getMinValue()) != 0) {
+			throw new StartupException("接口count必须可以被 " + QPSEnum.API_METHOD.getMinValue() + "整除,method = "
+					+ method.getName() + ",\t" + "count = " + count);
 		}
 
-		methodQPSTable.put(object.getClass().getName(), method.getName(), qps);
+		methodQPSTable.put(object.getClass().getName(), method.getName(), count);
 
 		final ZQPSLimitation zqpsl = method.getAnnotation(ZQPSLimitation.class);
 		if (zqpsl != null) {
@@ -75,23 +75,23 @@ public class ZControllerMap {
 				throw new IllegalArgumentException(
 						"@" + ZQPSLimitation.class.getSimpleName() + ".type 不能为空,method = " + method.getName());
 			}
-			final int qpsL = zqpsl.count();
-			if (qpsL <= 0) {
+			final int countL = zqpsl.count();
+			if (countL <= 0) {
 				throw new IllegalArgumentException(
-						"@" + ZQPSLimitation.class.getSimpleName() + ".qps 必须大于0,method = " + method.getName());
+						"@" + ZQPSLimitation.class.getSimpleName() + ".count 必须大于0,method = " + method.getName());
 			}
 
-			if (qpsL < QPSEnum.SERVER.getMinValue()) {
-				throw new IllegalArgumentException("@" + ZQPSLimitation.class.getSimpleName() + ".qps 不能小于"
+			if (countL < QPSEnum.SERVER.getMinValue()) {
+				throw new IllegalArgumentException("@" + ZQPSLimitation.class.getSimpleName() + ".count 不能小于"
 						+ QPSEnum.SERVER.getMinValue() + ",method = " + method.getName());
 			}
 
-			if (qpsL > qps) {
+			if (countL > count) {
 				throw new IllegalArgumentException(
 						object.getClass().getCanonicalName() + "." + method.getName()
 						+ " 配置错误：" +
-						"@" + ZQPSLimitation.class.getSimpleName() + ".qps 不能大于 @"
-						+ ZRequestMapping.class.getSimpleName() + ".qps"
+						"@" + ZQPSLimitation.class.getSimpleName() + ".count 不能大于 @"
+						+ ZRequestMapping.class.getSimpleName() + ".count"
 						);
 			}
 
