@@ -73,6 +73,8 @@ import com.votool.common.CR;
  */
 public class Task {
 
+	private static final RequestValidatorConfigurationProperties REQUEST_VALIDATOR_CONFIGURATION_PROPERTIES = ZContext.getBean(RequestValidatorConfigurationProperties.class);
+
 	public static final String SP = "&";
 	public static final String EMPTY_STRING = "";
 
@@ -257,9 +259,7 @@ public class Task {
 		final String controllerName = zControllerObject.getClass().getName();
 		final Integer qps = ZControllerMap.getQPSByControllerNameAndMethodName(controllerName, method.getName());
 
-		final String userAgent = request.getHeader(HeaderEnum.USER_AGENT.getName());
-		final QPSHandlingEnum handlingEnum = ZContext
-				.getBean(RequestValidatorConfigurationProperties.class).getHandlingEnum(userAgent);
+		final QPSHandlingEnum handlingEnum = REQUEST_VALIDATOR_CONFIGURATION_PROPERTIES.getHandlingEnum(request.getUserAgent());
 		final boolean allow = QC.allow(QCTimeEnum.SECOND, "API-" + controllerName + "@" + method.getName(), qps,
 				handlingEnum);
 		if (!allow) {
