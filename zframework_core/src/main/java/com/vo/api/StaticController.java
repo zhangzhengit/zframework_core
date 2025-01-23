@@ -44,10 +44,11 @@ public class StaticController {
 
 	@ZRequestMapping(mapping = { "/favicon\\.ico",
 			"/.+\\.png$",
+			"/.+\\.ttf$","/.+\\.woff$",
 			"/.+\\.wav$",
 			"/.+\\.js$", "/.+\\.jpg$", "/.+\\.mp3$", "/.+\\.mp4$", "/.+\\.pdf$",
-			"/.+\\.gif$", "/.+\\.doc$" ,"/.+\\.css$","/.+\\.html$"},
-			isRegex = { true, true, true, true, true, true, true, true, true, true, true , true }, count = 10000 * 10)
+			"/.+\\.gif$", "/.+\\.doc$", "/.+\\.css$", "/.+\\.html$" }, isRegex = { true, true, true, true, true, true,
+					true, true,true, true, true, true, true, true }, count = 10000 * 10)
 
 	@ZQPSLimitation(count = 2000, type = ZQPSLimitationEnum.ZSESSIONID)
 	@ZETag
@@ -80,6 +81,8 @@ public class StaticController {
 				|| resourceName.endsWith(".css")
 				|| resourceName.endsWith(".jpg")
 				|| resourceName.endsWith(".png")
+				|| resourceName.endsWith(".ttf")
+				|| resourceName.endsWith(".woff")
 				) {
 			final byte[] ba = ResourcesLoader.loadStaticResourceAsByteArray(resourceName);
 			response.body(ba);
