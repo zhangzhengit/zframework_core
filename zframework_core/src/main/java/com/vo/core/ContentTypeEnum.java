@@ -28,7 +28,7 @@ public enum ContentTypeEnum {
 	APPLICATION_PDF("Content-Type: application/pdf;", "application/pdf"),
 
 	APPLICATION_XML("Content-Type: application/xml;charset=UTF-8", "application/xml"),
-	
+
 	TEXT_HTML("Content-Type: text/html;charset=UTF-8", "text/html"),
 
 	AUDIO_MP3("Content-Type: audio/mp3;", "audio/mp3"),
@@ -44,6 +44,10 @@ public enum ContentTypeEnum {
 	IMAGE_PNG("Content-Type: image/png;", "image/png"),
 
 	VIDEO_MP4("Content-Type: video/mp4;", "video/mp4"),
+
+	FONT_TTF("Content-Type:  font/ttf;", "font/ttf"),
+
+	FONT_WOFF("Content-Type:  font/ttf;", "font/woff"),
 
 	WORD("Content-Type: application/msword;", "application/msword"),
 	IMAGE_JPG("Content-Type: image/jpg;", "image/jpg"),
