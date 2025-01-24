@@ -1,8 +1,5 @@
 package com.vo.http;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-
 /**
  *
  * Cookie.SameSite
@@ -11,8 +8,6 @@ import lombok.Getter;
  * @date 2023年7月2日
  *
  */
-@Getter
-@AllArgsConstructor
 public enum SameSiteEnum {
 
 	STRICT("Strict","完全禁止第三方 Cookie，跨站点时，任何情况下都不会发送 Cookie"),
@@ -25,4 +20,26 @@ public enum SameSiteEnum {
 
 	private String value;
 	private String description;
+
+	private SameSiteEnum(String value, String description) {
+		this.value = value;
+		this.description = description;
+	}
+
+	public String getValue() {
+		return value;
+	}
+
+	public void setValue(String value) {
+		this.value = value;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
 }

@@ -4,13 +4,10 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.StringJoiner;
+
 import com.vo.core.HeaderEnum;
 import com.vo.core.ZRequest;
 import com.vo.core.ZSession;
-
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  * Cookie
@@ -19,8 +16,6 @@ import lombok.NoArgsConstructor;
  * @date 2023年7月2日
  *
  */
-@Data
-@NoArgsConstructor
 public class ZCookie {
 
 	private final List<Node> nodeList = new ArrayList<>(8);
@@ -148,13 +143,55 @@ public class ZCookie {
 		final ZCookie cookie = new ZCookie(HeaderEnum.Z_SESSION_ID.getName(), newSession.getId()).path("/").httpOnly(true);
 		return cookie;
 	}
+	
+	public String getName() {
+		return name;
+	}
 
-	@Data
-	@AllArgsConstructor
-	@NoArgsConstructor
-	public static class Node{
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public String getValue() {
+		return value;
+	}
+
+	public void setValue(String value) {
+		this.value = value;
+	}
+
+	public List<Node> getNodeList() {
+		return nodeList;
+	}
+
+
+
+	public static class Node {
 		private String name;
 		private Object value;
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		public Object getValue() {
+			return value;
+		}
+
+		public void setValue(Object value) {
+			this.value = value;
+		}
+
+		public Node(String name, Object value) {
+			super();
+			this.name = name;
+			this.value = value;
+		}
+
 	}
 
 

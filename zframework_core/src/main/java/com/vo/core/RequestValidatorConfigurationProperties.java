@@ -11,10 +11,6 @@ import com.vo.cache.STU;
 import com.vo.validator.ZNotEmtpy;
 import com.vo.validator.ZNotNull;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 /**
  * AbstractRequestValidator 的配置类
  *
@@ -22,9 +18,6 @@ import lombok.NoArgsConstructor;
  * @date 2023年12月1日
  *
  */
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
 @ZConfigurationProperties(prefix = "request")
 public class RequestValidatorConfigurationProperties {
 
@@ -116,4 +109,33 @@ public class RequestValidatorConfigurationProperties {
 		return DEFAULT_HANDLINGENUM;
 	}
 
+	public static String[] getUaL() {
+		return uaL;
+	}
+
+	public static void setUaL(String[] uaL) {
+		RequestValidatorConfigurationProperties.uaL = uaL;
+	}
+
+	public Set<String> getSmoothUserAgent() {
+		return smoothUserAgent;
+	}
+
+	public void setSmoothUserAgent(Set<String> smoothUserAgent) {
+		this.smoothUserAgent = smoothUserAgent;
+	}
+
+	public Boolean getPrintHttp() {
+		return printHttp;
+	}
+
+	public void setPrintHttp(Boolean printHttp) {
+		this.printHttp = printHttp;
+	}
+
+	public static QPSHandlingEnum getDefaultHandlingenum() {
+		return DEFAULT_HANDLINGENUM;
+	}
+
+	
 }

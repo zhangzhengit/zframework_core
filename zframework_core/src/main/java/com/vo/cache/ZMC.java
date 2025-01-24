@@ -7,8 +7,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 
-import lombok.Getter;
-
 /**
  * 一个内存缓存，带最大字节数限制
  * 有新值存入时如果已达到最大容量，
@@ -128,16 +126,22 @@ public class ZMC {
 		}
 	}
 
-	@Getter
 	private static class ZMCNode {
 
 		private final String key;
 		private final byte[] value;
 
-
 		public ZMCNode(final String key, final byte[] value) {
 			this.key = key;
 			this.value = value;
+		}
+
+		public String getKey() {
+			return key;
+		}
+
+		public byte[] getValue() {
+			return value;
 		}
 
 	}

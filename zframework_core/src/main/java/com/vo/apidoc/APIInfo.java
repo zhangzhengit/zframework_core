@@ -1,9 +1,5 @@
 package com.vo.apidoc;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 /**
  *
  *
@@ -11,9 +7,6 @@ import lombok.NoArgsConstructor;
  * @date 2024年12月17日 下午6:32:16
  *
  */
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
 public class APIInfo {
 
 	/**

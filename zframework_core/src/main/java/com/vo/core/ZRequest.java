@@ -29,10 +29,6 @@ import com.vo.exception.ParseHTTPRequestException;
 import com.vo.http.HttpStatusEnum;
 import com.vo.http.ZCookie;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 /**
  * 表示http 的请求信息
  *
@@ -40,8 +36,6 @@ import lombok.NoArgsConstructor;
  * @date 2023年6月12日
  *
  */
-
-@Data
 public class ZRequest {
 
 	public static final String HTTP_11 = "HTTP/1.1";
@@ -574,23 +568,156 @@ public class ZRequest {
 
 		request.setHeaderMap(hm);
 	}
+	
+	public String getOriginal() {
+		return original;
+	}
 
-	@Data
-	@AllArgsConstructor
-	@NoArgsConstructor
+	public void setOriginal(String original) {
+		this.original = original;
+	}
+
+	public String getQueryString() {
+		return queryString;
+	}
+
+	public void setQueryString(String queryString) {
+		this.queryString = queryString;
+	}
+
+	public TF getTf() {
+		return tf;
+	}
+
+	public void setTf(TF tf) {
+		this.tf = tf;
+	}
+
+	public MethodEnum getMethodEnum() {
+		return methodEnum;
+	}
+
+	public void setMethodEnum(MethodEnum methodEnum) {
+		this.methodEnum = methodEnum;
+	}
+
+	public String getFullpath() {
+		return fullpath;
+	}
+
+	public void setFullpath(String fullpath) {
+		this.fullpath = fullpath;
+	}
+
+	public String getPath() {
+		return path;
+	}
+
+	public void setPath(String path) {
+		this.path = path;
+	}
+
+	public Set<RequestParam> getParamSet() {
+		return paramSet;
+	}
+
+	public void setParamSet(Set<RequestParam> paramSet) {
+		this.paramSet = paramSet;
+	}
+
+	public String getVersion() {
+		return version;
+	}
+
+	public void setVersion(String version) {
+		this.version = version;
+	}
+
+	public Map<String, String> getHeaderMap() {
+		return headerMap;
+	}
+
+	public void setHeaderMap(Map<String, String> headerMap) {
+		this.headerMap = headerMap;
+	}
+
+	public byte[] getOriginalRequestBytes() {
+		return originalRequestBytes;
+	}
+
+	public void setOriginalRequestBytes(byte[] originalRequestBytes) {
+		this.originalRequestBytes = originalRequestBytes;
+	}
+
+	public static Integer getRequestheadersizelimit() {
+		return requestHeaderSizeLimit;
+	}
+
+	public String getClientIp() {
+		return clientIp;
+	}
+
+	public void setLineList(List<String> lineList) {
+		this.lineList = lineList;
+	}
+
+	public void setBody(byte[] body) {
+		this.body = body;
+	}
+
 	public static class RequestParam {
 
 		private String name;
 		private Object value;
+
+		public RequestParam(String name, Object value) {
+			super();
+			this.name = name;
+			this.value = value;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		public void setValue(Object value) {
+			this.value = value;
+		}
+
+		public Object getValue() {
+			return value;
+		}
+
+		public RequestParam() {
+		}
+		
 	}
 
-	@Data
-	@AllArgsConstructor
-	@NoArgsConstructor
 	public static class ZHeader {
 
 		private String name;
 		private String value;
+		public String getName() {
+			return name;
+		}
+		public void setName(String name) {
+			this.name = name;
+		}
+		public String getValue() {
+			return value;
+		}
+		public void setValue(String value) {
+			this.value = value;
+		}
+		public ZHeader(String name, String value) {
+			super();
+			this.name = name;
+			this.value = value;
+		}
 	}
 
 }

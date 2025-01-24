@@ -4,10 +4,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.List;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 /**
  * 拦截器参数
  *
@@ -15,19 +11,16 @@ import lombok.NoArgsConstructor;
  * @date 2023年7月11日
  *
  */
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
 public class InterceptorParameter {
 
-	private String methodName;
-	private Method method;
+	private final String methodName;
+	private final Method method;
 
-	private Boolean isVOID;
+	private final Boolean isVOID;
 
-	private List<Object> parameterList;
+	private final List<Object> parameterList;
 
-	private Object target;
+	private final Object target;
 
 	public Object invoke() {
 
@@ -46,4 +39,35 @@ public class InterceptorParameter {
 
 		return null;
 	}
+
+	public String getMethodName() {
+		return methodName;
+	}
+
+	public Method getMethod() {
+		return method;
+	}
+
+	public Boolean getIsVOID() {
+		return isVOID;
+	}
+
+	public List<Object> getParameterList() {
+		return parameterList;
+	}
+
+	public Object getTarget() {
+		return target;
+	}
+
+	public InterceptorParameter(String methodName, Method method, Boolean isVOID, List<Object> parameterList,
+			Object target) {
+		super();
+		this.methodName = methodName;
+		this.method = method;
+		this.isVOID = isVOID;
+		this.parameterList = parameterList;
+		this.target = target;
+	}
+	
 }

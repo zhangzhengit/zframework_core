@@ -19,10 +19,6 @@ import com.vo.validator.ZServerQPSValidator;
 import com.vo.validator.ZSessionIdQPSValidator;
 import com.vo.validator.ZStartWith;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 /**
  * server相关的配置
  *
@@ -30,9 +26,6 @@ import lombok.NoArgsConstructor;
  * @date 2023年6月19日
  *
  */
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
 @ZConfigurationProperties(prefix = "server")
 @ZOrder(value = Integer.MIN_VALUE)
 public class ServerConfigurationProperties {
@@ -371,5 +364,303 @@ public class ServerConfigurationProperties {
 	public String[] getCompressionType() {
 		return SCU.split(this.compressionTypes, ",");
 	}
+
+	public Integer getPort() {
+		return port;
+	}
+
+	public void setPort(Integer port) {
+		this.port = port;
+	}
+
+	public Boolean getResponseZSessionId() {
+		return responseZSessionId;
+	}
+
+	public void setResponseZSessionId(Boolean responseZSessionId) {
+		this.responseZSessionId = responseZSessionId;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public Integer getByteBufferSize() {
+		return byteBufferSize;
+	}
+
+	public void setByteBufferSize(Integer byteBufferSize) {
+		this.byteBufferSize = byteBufferSize;
+	}
+
+	public Integer getNioReadTimeout() {
+		return nioReadTimeout;
+	}
+
+	public void setNioReadTimeout(Integer nioReadTimeout) {
+		this.nioReadTimeout = nioReadTimeout;
+	}
+
+	public Integer getUploadFileSize() {
+		return uploadFileSize;
+	}
+
+	public void setUploadFileSize(Integer uploadFileSize) {
+		this.uploadFileSize = uploadFileSize;
+	}
+
+	public Integer getUploadFileToTempSize() {
+		return uploadFileToTempSize;
+	}
+
+	public void setUploadFileToTempSize(Integer uploadFileToTempSize) {
+		this.uploadFileToTempSize = uploadFileToTempSize;
+	}
+
+	public String getUploadTempDir() {
+		return uploadTempDir;
+	}
+
+	public void setUploadTempDir(String uploadTempDir) {
+		this.uploadTempDir = uploadTempDir;
+	}
+
+	public Integer getThreadCount() {
+		return threadCount;
+	}
+
+	public void setThreadCount(Integer threadCount) {
+		this.threadCount = threadCount;
+	}
+
+	public String getThreadName() {
+		return threadName;
+	}
+
+	public void setThreadName(String threadName) {
+		this.threadName = threadName;
+	}
+
+	public Boolean getStaticResourceCacheEnable() {
+		return staticResourceCacheEnable;
+	}
+
+	public void setStaticResourceCacheEnable(Boolean staticResourceCacheEnable) {
+		this.staticResourceCacheEnable = staticResourceCacheEnable;
+	}
+
+	public String getScanPackage() {
+		return scanPackage;
+	}
+
+	public void setScanPackage(String scanPackage) {
+		this.scanPackage = scanPackage;
+	}
+
+	public Boolean getQpsLimitEnabled() {
+		return qpsLimitEnabled;
+	}
+
+	public void setQpsLimitEnabled(Boolean qpsLimitEnabled) {
+		this.qpsLimitEnabled = qpsLimitEnabled;
+	}
+
+	public Integer getQps() {
+		return qps;
+	}
+
+	public void setQps(Integer qps) {
+		this.qps = qps;
+	}
+
+	public String getQpsExceedMessage() {
+		return qpsExceedMessage;
+	}
+
+	public void setQpsExceedMessage(String qpsExceedMessage) {
+		this.qpsExceedMessage = qpsExceedMessage;
+	}
+
+	public Integer getRequestHeaderSizeLimit() {
+		return requestHeaderSizeLimit;
+	}
+
+	public void setRequestHeaderSizeLimit(Integer requestHeaderSizeLimit) {
+		this.requestHeaderSizeLimit = requestHeaderSizeLimit;
+	}
+
+	public Integer getPendingTasks() {
+		return pendingTasks;
+	}
+
+	public void setPendingTasks(Integer pendingTasks) {
+		this.pendingTasks = pendingTasks;
+	}
+
+	public String getPendingTasksExceedMessage() {
+		return pendingTasksExceedMessage;
+	}
+
+	public void setPendingTasksExceedMessage(String pendingTasksExceedMessage) {
+		this.pendingTasksExceedMessage = pendingTasksExceedMessage;
+	}
+
+	public String getTaskResponsiveMode() {
+		return taskResponsiveMode;
+	}
+
+	public void setTaskResponsiveMode(String taskResponsiveMode) {
+		this.taskResponsiveMode = taskResponsiveMode;
+	}
+
+	public Integer getTaskTimeoutMilliseconds() {
+		return taskTimeoutMilliseconds;
+	}
+
+	public void setTaskTimeoutMilliseconds(Integer taskTimeoutMilliseconds) {
+		this.taskTimeoutMilliseconds = taskTimeoutMilliseconds;
+	}
+
+	public Boolean getEnableClientQps() {
+		return enableClientQps;
+	}
+
+	public void setEnableClientQps(Boolean enableClientQps) {
+		this.enableClientQps = enableClientQps;
+	}
+
+	public Integer getClientQps() {
+		return clientQps;
+	}
+
+	public void setClientQps(Integer clientQps) {
+		this.clientQps = clientQps;
+	}
+
+	public Integer getSessionIdQps() {
+		return sessionIdQps;
+	}
+
+	public void setSessionIdQps(Integer sessionIdQps) {
+		this.sessionIdQps = sessionIdQps;
+	}
+
+	public Boolean getStaticControllerEnable() {
+		return staticControllerEnable;
+	}
+
+	public void setStaticControllerEnable(Boolean staticControllerEnable) {
+		this.staticControllerEnable = staticControllerEnable;
+	}
+
+	public Set<String> getStaticControllerReferersAllowed() {
+		return staticControllerReferersAllowed;
+	}
+
+	public void setStaticControllerReferersAllowed(Set<String> staticControllerReferersAllowed) {
+		this.staticControllerReferersAllowed = staticControllerReferersAllowed;
+	}
+
+	public Integer getStaticControllerMemoryCacheCapacity() {
+		return staticControllerMemoryCacheCapacity;
+	}
+
+	public void setStaticControllerMemoryCacheCapacity(Integer staticControllerMemoryCacheCapacity) {
+		this.staticControllerMemoryCacheCapacity = staticControllerMemoryCacheCapacity;
+	}
+
+	public Integer getKeepAliveTimeout() {
+		return keepAliveTimeout;
+	}
+
+	public void setKeepAliveTimeout(Integer keepAliveTimeout) {
+		this.keepAliveTimeout = keepAliveTimeout;
+	}
+
+	public String getSessionStorageType() {
+		return sessionStorageType;
+	}
+
+	public void setSessionStorageType(String sessionStorageType) {
+		this.sessionStorageType = sessionStorageType;
+	}
+
+	public Long getSessionTimeout() {
+		return sessionTimeout;
+	}
+
+	public void setSessionTimeout(Long sessionTimeout) {
+		this.sessionTimeout = sessionTimeout;
+	}
+
+	public String getStaticPath() {
+		return staticPath;
+	}
+
+	public void setStaticPath(String staticPath) {
+		this.staticPath = staticPath;
+	}
+
+	public String getStaticPrefix() {
+		return staticPrefix;
+	}
+
+	public void setStaticPrefix(String staticPrefix) {
+		this.staticPrefix = staticPrefix;
+	}
+
+	public Boolean getCompressionEnable() {
+		return compressionEnable;
+	}
+
+	public void setCompressionEnable(Boolean compressionEnable) {
+		this.compressionEnable = compressionEnable;
+	}
+
+	public String getCompressionTypes() {
+		return compressionTypes;
+	}
+
+	public void setCompressionTypes(String compressionTypes) {
+		this.compressionTypes = compressionTypes;
+	}
+
+	public Integer getCompressionMinLength() {
+		return compressionMinLength;
+	}
+
+	public void setCompressionMinLength(Integer compressionMinLength) {
+		this.compressionMinLength = compressionMinLength;
+	}
+
+	public Map<String, String> getResponseHeaders() {
+		return responseHeaders;
+	}
+
+	public void setResponseHeaders(Map<String, String> responseHeaders) {
+		this.responseHeaders = responseHeaders;
+	}
+
+	public Boolean getPrintConfigurationProperties() {
+		return printConfigurationProperties;
+	}
+
+	public void setPrintConfigurationProperties(Boolean printConfigurationProperties) {
+		this.printConfigurationProperties = printConfigurationProperties;
+	}
+
+	public Boolean getPrintProxyClass() {
+		return printProxyClass;
+	}
+
+	public void setPrintProxyClass(Boolean printProxyClass) {
+		this.printProxyClass = printProxyClass;
+	}
+	
+	
 
 }

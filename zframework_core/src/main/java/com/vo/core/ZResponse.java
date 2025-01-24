@@ -28,8 +28,6 @@ import com.vo.http.HttpStatusEnum;
 import com.vo.http.ZCookie;
 import com.vo.http.ZETag;
 
-import lombok.Getter;
-
 /**
  *
  * 表示一个http 响应对象
@@ -108,16 +106,13 @@ public class ZResponse {
 	private final AtomicBoolean write = new AtomicBoolean(false);
 	private final AtomicBoolean setContentType  = new AtomicBoolean(false);
 
-	@Getter
 	private String contentType;
 
 	private final AtomicReference<Integer> httpStatus = new AtomicReference<>(HttpStatusEnum.HTTP_200.getCode());
 	private final AtomicReference<String> contentTypeAR = new AtomicReference<>(Task.DEFAULT_CONTENT_TYPE.getValue());
 
-	@Getter
 	private final SocketChannel socketChannel;
 
-	@Getter
 	private List<ZHeader> headerList;
 
 	private byte[] body;
@@ -381,6 +376,8 @@ public class ZResponse {
 				&& SERVER_CONFIGURATIONPROPERTIES.getCompressionEnable()
 				&& SERVER_CONFIGURATIONPROPERTIES.compressionContains(this.getContentType());
 	}
+	
+	
 
 	private void setContentEncoding(final ZRequest request, final boolean exceedsCompressionMinLength) {
 
@@ -578,4 +575,16 @@ public class ZResponse {
 		this.socketChannel = socketChannel;
 	}
 
+	public AtomicBoolean getSetContentType() {
+		return setContentType;
+	}
+
+	public String getContentType() {
+		return contentType;
+	}
+
+	public void setContentType(String contentType) {
+		this.contentType = contentType;
+	}
+	
 }

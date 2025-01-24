@@ -12,10 +12,6 @@ import java.util.Set;
 
 import com.vo.cache.CU;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 /**
  * 带最大容量并且自动淘汰旧值的Map实现，最大容量由 public ZMap(final int groups, final int numberOfGroup)  两个参数相乘而得出，
  * 如果put时个数已超过最大容量，则丢弃旧的然后放入本次put新增的。
@@ -303,13 +299,37 @@ public class ZMap<K, V> implements Map<K, V> {
 		return builder.toString();
 	}
 
-	@Data
-	@AllArgsConstructor
-	@NoArgsConstructor
-	public static class ZNode<K, V>{
+	public static class ZNode<K, V> {
 		private K k;
 		private V v;
-		// FIXME 2023年11月26日 下午10:42:29 zhanghen: TODO 加个Data 新增时间和超时时间秒数，每次调用本类方法则自动执行过期操作
+
+		// FIXME 2023年11月26日 下午10:42:29 zhanghen: TODO 加个Data
+		// 新增时间和超时时间秒数，每次调用本类方法则自动执行过期操作
+		public K getK() {
+			return k;
+		}
+
+		public void setK(K k) {
+			this.k = k;
+		}
+
+		public V getV() {
+			return v;
+		}
+
+		public void setV(V v) {
+			this.v = v;
+		}
+
+		public ZNode(K k, V v) {
+			super();
+			this.k = k;
+			this.v = v;
+		}
+
+		public ZNode() {
+		}
 	}
+	
 
 }

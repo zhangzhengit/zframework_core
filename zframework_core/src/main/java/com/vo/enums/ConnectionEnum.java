@@ -4,9 +4,6 @@ import java.util.concurrent.ConcurrentMap;
 
 import com.google.common.collect.Maps;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-
 /**
  * http-header Connection 选项
  *
@@ -14,8 +11,6 @@ import lombok.Getter;
  * @date 2023年7月4日
  *
  */
-@Getter
-@AllArgsConstructor
 public enum ConnectionEnum {
 
 	KEEP_ALIVE("keep-alive"),
@@ -37,6 +32,18 @@ public enum ConnectionEnum {
 
 	public static ConnectionEnum valueOfString(final String string) {
 		return mapV.get(string);
+	}
+
+	public String getValue() {
+		return value;
+	}
+
+	public void setValue(String value) {
+		this.value = value;
+	}
+
+	private ConnectionEnum(String value) {
+		this.value = value;
 	}
 
 }

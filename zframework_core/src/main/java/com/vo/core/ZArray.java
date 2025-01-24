@@ -3,9 +3,6 @@ package com.vo.core;
 import java.util.ArrayList;
 import java.util.List;
 
-import lombok.Getter;
-import lombok.Setter;
-
 /**
  * 动态数组
  *
@@ -18,12 +15,8 @@ public class ZArray {
 
 	private final List<Byte> ar;
 
-	@Getter
-	@Setter
 	private TF tf;
 
-	@Getter
-	@Setter
 	private boolean yichangle;
 
 	public ZArray() {
@@ -97,6 +90,26 @@ public class ZArray {
 
 	public void clear() {
 		this.ar.clear();
+	}
+
+	public TF getTf() {
+		return tf;
+	}
+
+	public void setTf(TF tf) {
+		this.tf = tf;
+	}
+
+	public boolean isYichangle() {
+		return yichangle;
+	}
+
+	public void setYichangle(boolean yichangle) {
+		this.yichangle = yichangle;
+	}
+
+	public List<Byte> getAr() {
+		return ar;
 	}
 
 }

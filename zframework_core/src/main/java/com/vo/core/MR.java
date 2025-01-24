@@ -3,9 +3,6 @@ package com.vo.core;
 import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.enums.MethodEnum;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-
 /**
  * 读取http请求时的请求行的 METHOD 结果
  *
@@ -16,8 +13,6 @@ import lombok.Data;
 // FIXME 2024年12月20日 下午3:46:02 zhangzhen : 注意：这个类是为了不想解决bug而做的妥协
 // 因为调试body太麻烦了，我也不确定是读header还是读body哪里没处理好，
 // 直接处理为：带有body的读取header直接使用1算了。反正带body的请求数占比不会太多，不太会拖累响应速度
-@Data
-@AllArgsConstructor
 public class MR {
 
 	/**
@@ -62,4 +57,36 @@ public class MR {
 		throw new UnsupportedOperationException("不支持的METHOD:" + this.methodName);
 	}
 
+	public MR(int readLength, String methodName, byte[] array) {
+		super();
+		this.readLength = readLength;
+		this.methodName = methodName;
+		this.array = array;
+	}
+
+	public int getReadLength() {
+		return readLength;
+	}
+
+	public void setReadLength(int readLength) {
+		this.readLength = readLength;
+	}
+
+	public String getMethodName() {
+		return methodName;
+	}
+
+	public void setMethodName(String methodName) {
+		this.methodName = methodName;
+	}
+
+	public byte[] getArray() {
+		return array;
+	}
+
+	public void setArray(byte[] array) {
+		this.array = array;
+	}
+
+	
 }

@@ -3,10 +3,6 @@ package com.vo.configuration;
 import com.vo.anno.ZConfigurationProperties;
 import com.vo.validator.ZNotEmtpy;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 /**
  * common 配置
  *
@@ -14,9 +10,6 @@ import lombok.NoArgsConstructor;
  * @date 2024年2月17日
  *
  */
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
 @ZConfigurationProperties(prefix = "common")
 public class CommonConfigurationProperties {
 
@@ -25,4 +18,14 @@ public class CommonConfigurationProperties {
 	 */
 	@ZNotEmtpy
 	private String starterName = "zframework.factories";
+
+	public String getStarterName() {
+		return starterName;
+	}
+
+	public void setStarterName(String starterName) {
+		this.starterName = starterName;
+	}
+	
+	
 }

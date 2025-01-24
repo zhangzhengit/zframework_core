@@ -1,8 +1,5 @@
 package com.vo.http;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-
 /**
  *
  *
@@ -10,8 +7,6 @@ import lombok.Getter;
  * @date 2023年7月1日
  *
  */
-@Getter
-@AllArgsConstructor
 public enum HttpStatusEnum {
 
 
@@ -39,5 +34,26 @@ public enum HttpStatusEnum {
 
 	private int code;
 	private String message;
+
+	private HttpStatusEnum(int code, String message) {
+		this.code = code;
+		this.message = message;
+	}
+
+	public int getCode() {
+		return code;
+	}
+
+	public void setCode(int code) {
+		this.code = code;
+	}
+
+	public String getMessage() {
+		return message;
+	}
+
+	public void setMessage(String message) {
+		this.message = message;
+	}
 
 }

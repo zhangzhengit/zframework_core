@@ -7,6 +7,7 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
@@ -41,10 +42,6 @@ import com.votool.common.CR;
 import com.votool.ze.ThreadModeEnum;
 import com.votool.ze.ZE;
 import com.votool.ze.ZES;
-
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  * NIO长连接server
@@ -197,7 +194,9 @@ public class NioLongConnectionServer {
 	}
 
 	private void action(final SelectionKey selectionKey, final SocketChannel socketChannel) {
-
+		System.out.println(LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t"
+				+ "NioLongConnectionServer.action()");
+		
 		ZArray array = null;
 		try {
 			array = HTTPProcessor.process(socketChannel, selectionKey);
@@ -619,13 +618,24 @@ public class NioLongConnectionServer {
 
 	}
 
-	@Data
-	@AllArgsConstructor
-	@NoArgsConstructor
 	public static class SS {
 
-		private SocketChannel socketChannel;
-		private SelectionKey selectionKey;
+		private final SocketChannel socketChannel;
+		private final SelectionKey selectionKey;
+
+		public SS(SocketChannel socketChannel, SelectionKey selectionKey) {
+			super();
+			this.socketChannel = socketChannel;
+			this.selectionKey = selectionKey;
+		}
+
+		public SocketChannel getSocketChannel() {
+			return socketChannel;
+		}
+
+		public SelectionKey getSelectionKey() {
+			return selectionKey;
+		}
 
 	}
 

@@ -4,9 +4,6 @@ import java.util.Map;
 
 import com.vo.template.ZModel;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-
 /**
  * @ZHtml 接口返回的视图名称和数据
  *
@@ -14,8 +11,6 @@ import lombok.Data;
  * @date 2023年11月15日
  *
  */
-@Data
-@AllArgsConstructor
 public class ZModelAndView {
 
 	/**
@@ -47,5 +42,40 @@ public class ZModelAndView {
 	 * 【非】返回html页面的方法的返回值
 	 */
 	private final Object object;
+
+	public boolean isHtml() {
+		return isHtml;
+	}
+
+	public String getHtmlName() {
+		return htmlName;
+	}
+
+	public String getHtmlContent() {
+		return htmlContent;
+	}
+
+	public Map<String, Object> getMap() {
+		return map;
+	}
+
+	public ZModel getModel() {
+		return model;
+	}
+
+	public Object getObject() {
+		return object;
+	}
+
+	public ZModelAndView(boolean isHtml, String htmlName, String htmlContent, Map<String, Object> map, ZModel model,
+			Object object) {
+		super();
+		this.isHtml = isHtml;
+		this.htmlName = htmlName;
+		this.htmlContent = htmlContent;
+		this.map = map;
+		this.model = model;
+		this.object = object;
+	}
 
 }

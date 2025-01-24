@@ -1,9 +1,5 @@
 package com.vo.core;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 /**
  * 表示formdata中的一个请求项
  *
@@ -11,9 +7,6 @@ import lombok.NoArgsConstructor;
  * @date 2024年12月8日 下午1:59:03
  *
  */
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
 public class FD2 {
 
 	/**
@@ -54,4 +47,53 @@ public class FD2 {
 	 */
 	private String value;
 
+	public String getContentDisposition() {
+		return contentDisposition;
+	}
+
+	public void setContentDisposition(String contentDisposition) {
+		this.contentDisposition = contentDisposition;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public String getFileName() {
+		return fileName;
+	}
+
+	public void setFileName(String fileName) {
+		this.fileName = fileName;
+	}
+
+	public String getContentType() {
+		return contentType;
+	}
+
+	public void setContentType(String contentType) {
+		this.contentType = contentType;
+	}
+
+	public byte[] getBody() {
+		return body;
+	}
+
+	public void setBody(byte[] body) {
+		this.body = body;
+	}
+
+	public String getValue() {
+		return value;
+	}
+
+	public void setValue(String value) {
+		this.value = value;
+	}
+
+	
 }

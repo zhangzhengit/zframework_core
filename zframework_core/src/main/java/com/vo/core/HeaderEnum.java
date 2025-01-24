@@ -1,8 +1,5 @@
 package com.vo.core;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-
 /**
  * header
  *
@@ -10,8 +7,6 @@ import lombok.Getter;
  * @date 2024年12月31日 下午6:52:27
  *
  */
-@Getter
-@AllArgsConstructor
 public enum HeaderEnum {
 
 	SET_COOKIE("Set-Cookie"),
@@ -61,5 +56,13 @@ public enum HeaderEnum {
 	;
 
 	private final String name;
+
+	private HeaderEnum(String name) {
+		this.name = name;
+	}
+
+	public String getName() {
+		return name;
+	}
 
 }

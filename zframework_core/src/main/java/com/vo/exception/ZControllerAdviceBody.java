@@ -2,10 +2,6 @@ package com.vo.exception;
 
 import java.lang.reflect.Method;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 /**
  * @ZControllerAdvice 定义的方法，组成一个对象
  *
@@ -13,9 +9,6 @@ import lombok.NoArgsConstructor;
  * @date 2023年11月4日
  *
  */
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
 public class ZControllerAdviceBody implements Comparable<ZControllerAdviceBody> {
 
 	private Object object;
@@ -37,4 +30,35 @@ public class ZControllerAdviceBody implements Comparable<ZControllerAdviceBody> 
 		return 0;
 	}
 
+	public Object getObject() {
+		return object;
+	}
+
+	public void setObject(Object object) {
+		this.object = object;
+	}
+
+	public Method getMethod() {
+		return method;
+	}
+
+	public void setMethod(Method method) {
+		this.method = method;
+	}
+
+	public Class<? extends Throwable> getThrowable() {
+		return throwable;
+	}
+
+	public void setThrowable(Class<? extends Throwable> throwable) {
+		this.throwable = throwable;
+	}
+
+	public ZControllerAdviceBody(Object object, Method method, Class<? extends Throwable> throwable) {
+		super();
+		this.object = object;
+		this.method = method;
+		this.throwable = throwable;
+	}
+	
 }

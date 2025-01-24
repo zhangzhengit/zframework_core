@@ -2,8 +2,6 @@ package com.vo.scanner;
 
 import java.util.EventObject;
 
-import lombok.Getter;
-
 /**
  *
  * 应用程序事件，所有需要被监听的事件类都要继承本类
@@ -19,7 +17,6 @@ public abstract class ZApplicationEvent extends EventObject {
 	/**
 	 * 创建事件的时间戳
 	 */
-	@Getter
 	private final long timestamp;
 
 	public ZApplicationEvent(final Object source) {
@@ -30,6 +27,10 @@ public abstract class ZApplicationEvent extends EventObject {
 	public ZApplicationEvent(final Object source, final long timestamp) {
 		super(source);
 		this.timestamp = timestamp;
+	}
+
+	public long getTimestamp() {
+		return timestamp;
 	}
 
 }

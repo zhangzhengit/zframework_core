@@ -6,10 +6,6 @@ import com.vo.validator.ZMin;
 import com.vo.validator.ZNotEmtpy;
 import com.vo.validator.ZNotNull;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 /**
  * @ZAsync 用到的线程池的相关配置
  *
@@ -17,9 +13,6 @@ import lombok.NoArgsConstructor;
  * @date 2023年7月8日
  *
  */
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
 @ZConfigurationProperties(prefix = "async")
 public class ZAsyncProperties {
 
@@ -50,4 +43,24 @@ public class ZAsyncProperties {
 	//	@ZValue(name = "async.threadNamePrefix", listenForChanges = true)
 	private String threadNamePrefix = "async-Thread-";
 
+	public Integer getThreadCount() {
+		return threadCount;
+	}
+
+	public void setThreadCount(Integer threadCount) {
+		this.threadCount = threadCount;
+	}
+
+	public String getThreadNamePrefix() {
+		return threadNamePrefix;
+	}
+
+	public void setThreadNamePrefix(String threadNamePrefix) {
+		this.threadNamePrefix = threadNamePrefix;
+	}
+
+	public static int getMin() {
+		return MIN;
+	}
+	
 }

@@ -6,10 +6,6 @@ import com.vo.anno.ZConfigurationProperties;
 import com.vo.validator.ZCustom;
 import com.vo.validator.ZNotNull;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 /**
  * 邮件通知配置项
  *
@@ -17,9 +13,6 @@ import lombok.NoArgsConstructor;
  * @date 2025年1月18日 下午6:31:49
  *
  */
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
 @ZConfigurationProperties(prefix = "mail.notification")
 public class ZMailNotificationConfigurationProperties {
 
@@ -69,5 +62,69 @@ public class ZMailNotificationConfigurationProperties {
 	 */
 	@ZCustom(cls = ZMailValidator.class, ignoreNull = true)
 	private Set<String> receiver;
+
+	public Boolean getEnable() {
+		return enable;
+	}
+
+	public void setEnable(Boolean enable) {
+		this.enable = enable;
+	}
+
+	public Boolean getShutdownEvent() {
+		return shutdownEvent;
+	}
+
+	public void setShutdownEvent(Boolean shutdownEvent) {
+		this.shutdownEvent = shutdownEvent;
+	}
+
+	public Set<String> getMonitoredEvents() {
+		return monitoredEvents;
+	}
+
+	public void setMonitoredEvents(Set<String> monitoredEvents) {
+		this.monitoredEvents = monitoredEvents;
+	}
+
+	public String getHost() {
+		return host;
+	}
+
+	public void setHost(String host) {
+		this.host = host;
+	}
+
+	public Integer getPort() {
+		return port;
+	}
+
+	public void setPort(Integer port) {
+		this.port = port;
+	}
+
+	public String getSender() {
+		return sender;
+	}
+
+	public void setSender(String sender) {
+		this.sender = sender;
+	}
+
+	public String getPassword() {
+		return password;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
+	}
+
+	public Set<String> getReceiver() {
+		return receiver;
+	}
+
+	public void setReceiver(Set<String> receiver) {
+		this.receiver = receiver;
+	}
 
 }

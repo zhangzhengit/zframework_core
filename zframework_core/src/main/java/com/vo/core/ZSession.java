@@ -7,9 +7,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.vo.configuration.ServerConfigurationProperties;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-
 /**
  *
  * session
@@ -18,7 +15,6 @@ import lombok.Data;
  * @date 2023年6月26日
  *
  */
-@Data
 public class ZSession {
 
 	private Map<String, Object> map;
@@ -101,4 +97,41 @@ public class ZSession {
 		}
 	}
 
+	public Map<String, Object> getMap() {
+		return map;
+	}
+
+	public void setMap(Map<String, Object> map) {
+		this.map = map;
+	}
+
+	public long getIntervalSeconds() {
+		return intervalSeconds;
+	}
+
+	public void setIntervalSeconds(long intervalSeconds) {
+		this.intervalSeconds = intervalSeconds;
+	}
+
+	public Date getCreateTime() {
+		return createTime;
+	}
+
+	public AtomicBoolean getInvalidate() {
+		return invalidate;
+	}
+
+	public void setLastAccessedTime(Date lastAccessedTime) {
+		this.lastAccessedTime = lastAccessedTime;
+	}
+
+	public ZSession(Map<String, Object> map, String id, Date createTime, Date lastAccessedTime, long intervalSeconds) {
+		super();
+		this.map = map;
+		this.id = id;
+		this.createTime = createTime;
+		this.lastAccessedTime = lastAccessedTime;
+		this.intervalSeconds = intervalSeconds;
+	}
+	
 }

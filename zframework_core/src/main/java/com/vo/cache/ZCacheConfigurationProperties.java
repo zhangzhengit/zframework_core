@@ -4,10 +4,6 @@ import com.vo.anno.ZConfigurationProperties;
 import com.vo.validator.ZNotEmtpy;
 import com.vo.validator.ZNotNull;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 /**
  * cache配置项
  *
@@ -15,9 +11,6 @@ import lombok.NoArgsConstructor;
  * @date 2023年11月5日
  *
  */
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
 @ZConfigurationProperties(prefix = "cache")
 public class ZCacheConfigurationProperties {
 
@@ -32,4 +25,22 @@ public class ZCacheConfigurationProperties {
 	 */
 	@ZNotNull
 	private Boolean enable = true;
+
+	public String getType() {
+		return type;
+	}
+
+	public void setType(String type) {
+		this.type = type;
+	}
+
+	public Boolean getEnable() {
+		return enable;
+	}
+
+	public void setEnable(Boolean enable) {
+		this.enable = enable;
+	}
+	
+	
 }

@@ -1,14 +1,5 @@
 package com.vo.http;
 
-import com.vo.anno.ZConfigurationProperties;
-import com.vo.anno.ZValue;
-import com.vo.validator.ZMax;
-import com.vo.validator.ZMin;
-
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 /**
  * @ZRequestMapping 的配置类
  *
@@ -16,9 +7,6 @@ import lombok.NoArgsConstructor;
  * @date 2023年11月3日
  *
  */
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
 //@ZConfigurationProperties(prefix = "request.mapping")
 // FIXME 2024年12月23日 上午1:15:43 zhangzhen : 这个功能废弃了，不用了，记得删除
 public class ZRequestMappingConfigurationProperties {

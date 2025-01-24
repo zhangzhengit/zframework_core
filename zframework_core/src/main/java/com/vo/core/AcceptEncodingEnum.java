@@ -1,8 +1,5 @@
 package com.vo.core;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-
 /**
  * header: Accept-Encoding
  *
@@ -10,8 +7,6 @@ import lombok.Getter;
  * @date 2025年1月2日 下午9:12:58
  *
  */
-@Getter
-@AllArgsConstructor
 public enum AcceptEncodingEnum {
 
 	GZIP("gzip"),
@@ -23,5 +18,13 @@ public enum AcceptEncodingEnum {
 	ZSTD("zstd"),;
 
 	private final String value;
+
+	private AcceptEncodingEnum(String value) {
+		this.value = value;
+	}
+
+	public String getValue() {
+		return value;
+	}
 
 }

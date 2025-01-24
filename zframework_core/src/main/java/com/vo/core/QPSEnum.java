@@ -5,9 +5,6 @@ import com.vo.validator.ZClientQPSValidator;
 import com.vo.validator.ZServerQPSValidator;
 import com.vo.validator.ZSessionIdQPSValidator;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-
 /**
  * QPS限制，注意配置 minValue不能大于1000，因为当前是 用 1000/minValue 计算QPS限制的，大于1000会导致除0异常，
  * 并且 QPSCounter.allow暂时就是这么处理的。
@@ -16,8 +13,6 @@ import lombok.Getter;
  * @date 2023年11月24日
  *
  */
-@Getter
-@AllArgsConstructor
 public enum QPSEnum {
 
 	/**
@@ -60,4 +55,35 @@ public enum QPSEnum {
 	private Integer minValue;
 	private Integer maxValue;
 	private Integer defaultValue;
+
+	private QPSEnum(Integer minValue, Integer maxValue, Integer defaultValue) {
+		this.minValue = minValue;
+		this.maxValue = maxValue;
+		this.defaultValue = defaultValue;
+	}
+
+	public Integer getMinValue() {
+		return minValue;
+	}
+
+	public void setMinValue(Integer minValue) {
+		this.minValue = minValue;
+	}
+
+	public Integer getMaxValue() {
+		return maxValue;
+	}
+
+	public void setMaxValue(Integer maxValue) {
+		this.maxValue = maxValue;
+	}
+
+	public Integer getDefaultValue() {
+		return defaultValue;
+	}
+
+	public void setDefaultValue(Integer defaultValue) {
+		this.defaultValue = defaultValue;
+	}
+	
 }

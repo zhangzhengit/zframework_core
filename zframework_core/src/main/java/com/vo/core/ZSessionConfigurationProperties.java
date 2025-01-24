@@ -4,10 +4,6 @@ import com.vo.anno.ZConfigurationProperties;
 import com.vo.validator.ZMax;
 import com.vo.validator.ZMin;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 /**
  * ZSession 存储配置
  *
@@ -15,9 +11,6 @@ import lombok.NoArgsConstructor;
  * @date 2023年11月27日
  *
  */
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
 @ZConfigurationProperties(prefix = "session")
 public class ZSessionConfigurationProperties {
 
@@ -34,5 +27,30 @@ public class ZSessionConfigurationProperties {
 	@ZMin(min = 10)
 	@ZMax(max = 1000)
 	private Integer numberOfGroup = 100;
+
+	public Integer getGroups() {
+		return groups;
+	}
+
+	public void setGroups(Integer groups) {
+		this.groups = groups;
+	}
+
+	public Integer getNumberOfGroup() {
+		return numberOfGroup;
+	}
+
+	public void setNumberOfGroup(Integer numberOfGroup) {
+		this.numberOfGroup = numberOfGroup;
+	}
+
+	public ZSessionConfigurationProperties(Integer groups, Integer numberOfGroup) {
+		super();
+		this.groups = groups;
+		this.numberOfGroup = numberOfGroup;
+	}
+	
+	public ZSessionConfigurationProperties() {
+	}
 
 }

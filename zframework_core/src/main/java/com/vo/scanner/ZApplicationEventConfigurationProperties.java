@@ -6,10 +6,6 @@ import com.vo.validator.ZMin;
 import com.vo.validator.ZNotEmtpy;
 import com.vo.validator.ZNotNull;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 /**
  * ZApplicationEventPublisher 的配置信息
  *
@@ -17,9 +13,6 @@ import lombok.NoArgsConstructor;
  * @date 2023年11月15日
  *
  */
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
 @ZConfigurationProperties(prefix = "application.event")
 public class ZApplicationEventConfigurationProperties {
 
@@ -33,4 +26,21 @@ public class ZApplicationEventConfigurationProperties {
 
 	@ZNotEmtpy
 	private String threadNamePrefix = "applicationEvent-Thread-";
+
+	public Integer getThreadCount() {
+		return threadCount;
+	}
+
+	public void setThreadCount(Integer threadCount) {
+		this.threadCount = threadCount;
+	}
+
+	public String getThreadNamePrefix() {
+		return threadNamePrefix;
+	}
+
+	public void setThreadNamePrefix(String threadNamePrefix) {
+		this.threadNamePrefix = threadNamePrefix;
+	}
+
 }

@@ -4,10 +4,6 @@ import com.vo.anno.ZConfigurationProperties;
 import com.vo.validator.ZMax;
 import com.vo.validator.ZMin;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 /**
  * 为 ZMix 缓存类的配置类
  *
@@ -15,9 +11,6 @@ import lombok.NoArgsConstructor;
  * @date 2023年11月8日
  *
  */
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
 @ZConfigurationProperties(prefix = "cache.type.mix")
 public class ZMixConfigurationProperties {
 
@@ -31,5 +24,15 @@ public class ZMixConfigurationProperties {
 	@ZMin(min = 1)
 	@ZMax(max = Byte.MAX_VALUE)
 	private Byte memoryExpire = 50;
+
+	public Byte getMemoryExpire() {
+		return memoryExpire;
+	}
+
+	public void setMemoryExpire(Byte memoryExpire) {
+		this.memoryExpire = memoryExpire;
+	}
+	
+	
 
 }

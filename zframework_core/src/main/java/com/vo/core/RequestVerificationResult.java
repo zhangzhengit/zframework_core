@@ -1,8 +1,5 @@
 package com.vo.core;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-
 /**
  *
  *
@@ -10,8 +7,6 @@ import lombok.Data;
  * @date 2024年2月16日
  *
  */
-@Data
-@AllArgsConstructor
 public class RequestVerificationResult {
 
 	/**
@@ -42,4 +37,28 @@ public class RequestVerificationResult {
 		this(passed, null);
 	}
 
+	public boolean isPassed() {
+		return passed;
+	}
+
+	public String getMessage() {
+		return message;
+	}
+
+	public String getClientIp() {
+		return clientIp;
+	}
+
+	public String getUserAgent() {
+		return userAgent;
+	}
+
+	public RequestVerificationResult(boolean passed, String message, String clientIp, String userAgent) {
+		super();
+		this.passed = passed;
+		this.message = message;
+		this.clientIp = clientIp;
+		this.userAgent = userAgent;
+	}
+	
 }

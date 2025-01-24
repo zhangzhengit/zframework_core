@@ -4,9 +4,6 @@ import java.util.concurrent.ConcurrentMap;
 
 import com.google.common.collect.Maps;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-
 /**
  *
  *
@@ -14,8 +11,6 @@ import lombok.Getter;
  * @date 2023年6月12日
  *
  */
-@Getter
-@AllArgsConstructor
 public enum MethodEnum {
 
 	GET("GET"),
@@ -52,6 +47,22 @@ public enum MethodEnum {
 
 	public static MethodEnum valueOfString(final String string) {
 		return mapV.get(string);
+	}
+
+	public String getMethod() {
+		return method;
+	}
+
+	public void setMethod(String method) {
+		this.method = method;
+	}
+
+	public static ConcurrentMap<String, MethodEnum> getMapv() {
+		return mapV;
+	}
+
+	private MethodEnum(String method) {
+		this.method = method;
 	}
 
 }

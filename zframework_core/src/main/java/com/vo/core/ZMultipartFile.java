@@ -7,9 +7,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-
 /**
  * 接收 multipart/form-data 上传的文件，专指文件。
  *
@@ -17,8 +14,6 @@ import lombok.Data;
  * @date 2023年10月26日
  *
  */
-@Data
-@AllArgsConstructor
 public class ZMultipartFile {
 
 	private final String name;
@@ -104,6 +99,30 @@ public class ZMultipartFile {
 	 */
 	public boolean isTempFile() {
 		return this.isTempFile;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public String getTempFilePath() {
+		return tempFilePath;
+	}
+
+	public String getOriginalFilenameString() {
+		return originalFilenameString;
+	}
+
+	public ZMultipartFile(String name, String tempFilePath, String originalFilenameString, byte[] content,
+			boolean isTempFile, String contentType, InputStream inputStream) {
+		super();
+		this.name = name;
+		this.tempFilePath = tempFilePath;
+		this.originalFilenameString = originalFilenameString;
+		this.content = content;
+		this.isTempFile = isTempFile;
+		this.contentType = contentType;
+		this.inputStream = inputStream;
 	}
 
 	/**

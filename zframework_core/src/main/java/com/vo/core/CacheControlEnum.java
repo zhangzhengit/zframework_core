@@ -1,8 +1,5 @@
 package com.vo.core;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-
 /**
  * Cache-Control 响应头
  *
@@ -10,8 +7,6 @@ import lombok.Getter;
  * @date 2024年12月7日 上午7:55:47
  *
  */
-@Getter
-@AllArgsConstructor
 public enum CacheControlEnum {
 
 	/**
@@ -63,5 +58,14 @@ public enum CacheControlEnum {
 
 	;
 
-	private String value;
+	private final String value;
+
+	private CacheControlEnum(String value) {
+		this.value = value;
+	}
+
+	public String getValue() {
+		return value;
+	}
+
 }
