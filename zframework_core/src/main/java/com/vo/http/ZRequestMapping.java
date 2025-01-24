@@ -64,6 +64,9 @@ public @interface ZRequestMapping {
 	 * @return
 	 *
 	 */
+
+	// FIXME 2025年1月25日 上午6:28:30 zhangzhen : 发现bug：count = 100，用
+	// header("User-Agent", "xfsdf") 来访问，会导致只有一次成功，其他全是失败，差找原因
 	int count() default DEFAULT_COUNT;
 
 	/**
