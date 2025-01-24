@@ -194,8 +194,6 @@ public class NioLongConnectionServer {
 	}
 
 	private void action(final SelectionKey selectionKey, final SocketChannel socketChannel) {
-		System.out.println(LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t"
-				+ "NioLongConnectionServer.action()");
 		
 		ZArray array = null;
 		try {
