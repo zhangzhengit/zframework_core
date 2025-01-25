@@ -454,6 +454,8 @@ public class NioLongConnectionServer {
 				setETag(socketChannel, request, response);
 			}
 
+			// FIXME 2025年1月26日 01:38:09 zhangzhen: 在此压缩已经太晚了，
+			// 因为body已设置了，可以先改json和html这两个写死的。再改为ZReponse.body(inputstream)那样直接压缩
 			setContentEncoding(request, response);
 
 			// FIXME 2025年1月3日 上午3:22:26 zhangzhen : Last-Modified
@@ -621,18 +623,17 @@ public class NioLongConnectionServer {
 		private final SocketChannel socketChannel;
 		private final SelectionKey selectionKey;
 
-		public SS(SocketChannel socketChannel, SelectionKey selectionKey) {
-			super();
+		public SS(final SocketChannel socketChannel, final SelectionKey selectionKey) {
 			this.socketChannel = socketChannel;
 			this.selectionKey = selectionKey;
 		}
 
 		public SocketChannel getSocketChannel() {
-			return socketChannel;
+			return this.socketChannel;
 		}
 
 		public SelectionKey getSelectionKey() {
-			return selectionKey;
+			return this.selectionKey;
 		}
 
 	}
