@@ -87,6 +87,12 @@ public class RequestValidatorConfigurationProperties {
 		}
 		
 		for (final String ua : uaL) {
+			// FIXME 2025年1月26日 02:16:37 zhangzhen: userAgent.length() < ua.length() 这行NPE，先判断ua是否null吧
+			// 以后再debug
+			if (ua == null) {
+				continue;
+			}
+			
 			if (userAgent.length() < ua.length()) {
 				continue;
 			}
@@ -117,7 +123,7 @@ public class RequestValidatorConfigurationProperties {
 	}
 
 	public Set<String> getSmoothUserAgent() {
-		return smoothUserAgent;
+		return this.smoothUserAgent;
 	}
 
 	public void setSmoothUserAgent(final Set<String> smoothUserAgent) {
@@ -125,7 +131,7 @@ public class RequestValidatorConfigurationProperties {
 	}
 
 	public Boolean getPrintHttp() {
-		return printHttp;
+		return this.printHttp;
 	}
 
 	public void setPrintHttp(final Boolean printHttp) {
