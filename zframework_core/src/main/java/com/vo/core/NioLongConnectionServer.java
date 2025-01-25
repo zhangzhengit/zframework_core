@@ -454,10 +454,6 @@ public class NioLongConnectionServer {
 				setETag(socketChannel, request, response);
 			}
 
-			// FIXME 2025年1月26日 01:38:09 zhangzhen: 在此压缩已经太晚了，
-			// 因为body已设置了，可以先改json和html这两个写死的。再改为ZReponse.body(inputstream)那样直接压缩
-			setContentEncoding(request, response);
-
 			// FIXME 2025年1月3日 上午3:22:26 zhangzhen : Last-Modified
 			// FIXME 2025年1月3日 上午3:28:22 zhangzhen : last-modified头貌似不好写
 			// 因为只有在业务代码中才容易判断资源的修改时间
@@ -488,47 +484,7 @@ public class NioLongConnectionServer {
 			return;
 		}
 
-
-
 		response.header("Last-Modified", ZDateUtil.gmt(new Date()));
-	}
-
-	/**
-	 * 根据配置项来选择是否
-	 * 启用压缩并且设置header，如：Content-Encoding: gzip
-	 *
-	 * @param request
-	 * @param response
-	 */
-	public static void setContentEncoding(final ZRequest request, final ZResponse response) {
-		if (!SERVER_CONFIGURATIONPROPERTIES.getCompressionEnable()
-				|| (response.getBodyLength() <= (SERVER_CONFIGURATIONPROPERTIES.getCompressionMinLength() * 1024))) {
-			return;
-		}
-
-		final String contentType = response.getContentType();
-
-		if (!SERVER_CONFIGURATIONPROPERTIES.compressionContains(contentType)) {
-			return;
-		}
-
-		byte[] compress = null;
-		if (request.isSupportZSTD()) {
-			response.header(HeaderEnum.CONTENT_ENCODING.getName(), AcceptEncodingEnum.ZSTD.getValue());
-			compress = ZSTD.compress(response.getBody());
-			// FIXME 2025年1月2日 下午9:37:52 zhangzhen : 支持了br后，要再加一个ifelse
-		} else if (request.isSupportGZIP()) {
-			response.header(HeaderEnum.CONTENT_ENCODING.getName(), AcceptEncodingEnum.GZIP.getValue());
-			compress = ZGzip.compress(response.getBody());
-		} else if (request.isSupportDEFLATE()) {
-			response.header(HeaderEnum.CONTENT_ENCODING.getName(), AcceptEncodingEnum.DEFLATE.getValue());
-			compress = Deflater.compress(response.getBody());
-		} else {
-			compress = response.getBody();
-		}
-
-		response.clearBody();
-		response.body(compress);
 	}
 
 	private static void addConnectionToKAMap(final SelectionKey key, final SocketChannel socketChannel,

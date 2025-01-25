@@ -428,13 +428,27 @@ public class ZResponse {
 				&& (body.length >= (SERVER_CONFIGURATIONPROPERTIES.getCompressionMinLength() * 1024))
 				&& SERVER_CONFIGURATIONPROPERTIES.compressionContains(this.getContentType())
 				) {
+			
+			byte[] compress = null;
+			final ZRequest request = ReqeustInfo.get();
+			if (request.isSupportZSTD()) {
+				this.header(HeaderEnum.CONTENT_ENCODING.getName(), AcceptEncodingEnum.ZSTD.getValue());
+				compress = ZSTD.compress(body);
+				// FIXME 2025年1月2日 下午9:37:52 zhangzhen : 支持了br后，要再加一个ifelse
+			} else if (request.isSupportGZIP()) {
+				this.header(HeaderEnum.CONTENT_ENCODING.getName(), AcceptEncodingEnum.GZIP.getValue());
+				compress = ZGzip.compress(body);
+			} else if (request.isSupportDEFLATE()) {
+				this.header(HeaderEnum.CONTENT_ENCODING.getName(), AcceptEncodingEnum.DEFLATE.getValue());
+				compress = Deflater.compress(body);
+			} else {
+				compress = body;
+			}
 
-			// FIXME 2025年1月26日 01:43:30 zhangzhen: 在这里进行压缩，加个else，代码相同save action给去掉了
-			
-			
+			this.body = compress;
+		} else {
+			this.body = body;
 		}
-		this.body = body;
-
 		
 		return this;
 	}
