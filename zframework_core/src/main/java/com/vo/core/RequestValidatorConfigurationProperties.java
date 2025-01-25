@@ -74,8 +74,8 @@ public class RequestValidatorConfigurationProperties {
 		if (STU.isNullOrEmptyOrBlank(userAgent)) {
 			return DEFAULT_HANDLINGENUM;
 		}
-
-
+ 
+		
 		if (uaL == null) {
 			synchronized (this) {
 				if (uaL == null) {
@@ -85,9 +85,8 @@ public class RequestValidatorConfigurationProperties {
 				}
 			}
 		}
-
-		for (int i = 0; i < uaL.length; i++) {
-			final String ua = uaL[i];
+		
+		for (final String ua : uaL) {
 			if (userAgent.length() < ua.length()) {
 				continue;
 			}
@@ -113,7 +112,7 @@ public class RequestValidatorConfigurationProperties {
 		return uaL;
 	}
 
-	public static void setUaL(String[] uaL) {
+	public static void setUaL(final String[] uaL) {
 		RequestValidatorConfigurationProperties.uaL = uaL;
 	}
 
@@ -121,7 +120,7 @@ public class RequestValidatorConfigurationProperties {
 		return smoothUserAgent;
 	}
 
-	public void setSmoothUserAgent(Set<String> smoothUserAgent) {
+	public void setSmoothUserAgent(final Set<String> smoothUserAgent) {
 		this.smoothUserAgent = smoothUserAgent;
 	}
 
@@ -129,7 +128,7 @@ public class RequestValidatorConfigurationProperties {
 		return printHttp;
 	}
 
-	public void setPrintHttp(Boolean printHttp) {
+	public void setPrintHttp(final Boolean printHttp) {
 		this.printHttp = printHttp;
 	}
 
