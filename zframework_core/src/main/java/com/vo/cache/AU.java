@@ -9,6 +9,41 @@ package com.vo.cache;
  */
 public class AU {
 
+	/**
+	 * 取一个数组的特征
+	 * 
+	 * @param ba
+	 * @return
+	 */
+	public static String tezheng(final byte[] ba) {
+		if (AU.isEmpty(ba)) {
+			return null;
+		}
+
+		long sum = 0L;
+		long difference = Long.MAX_VALUE;
+		long sumJi = 0L;
+		long sumOu = 0L;
+		long zeroC = 0L;
+		long oneC = 0L;
+		for (int i = 0; i < ba.length; i++) {
+			sum += ba[i];
+			difference -= ba[i];
+			if ((i % 2) == 1) {
+				sumJi += ba[i];
+			} else {
+				sumOu += ba[i];
+			}
+			if (ba[i] == 0) {
+				zeroC++;
+			} else if (ba[i] == 1) {
+				oneC++;
+			}
+		}
+
+		return "T-" + ba.length + '-' + sum + '-' + difference + '-' + sumJi + '-' + sumOu + '-' + zeroC + '-' + oneC;
+	}
+	
 	public static <T> boolean isNotEmpty(final T[] array) {
 		return (array != null) && (array.length > 0);
 	}
