@@ -86,6 +86,9 @@ public class ZResponse {
 
 	private static final ServerConfigurationProperties SERVER_CONFIGURATIONPROPERTIES = ZContext
 			.getBean(ServerConfigurationProperties.class);
+
+	private static final boolean compressionEnable = SERVER_CONFIGURATIONPROPERTIES.getCompressionEnable();
+	
 	private static final String DEFAULTCHARSET_DISPLAY_NAME = Charset.defaultCharset().displayName();
 
 	private static final String SERVER_NAME = SERVER_CONFIGURATIONPROPERTIES.getName();
@@ -415,14 +418,24 @@ public class ZResponse {
 		}
 		headerArray.add(NEW_LINE_BYTES);
 
-		final ByteBuffer bbH = ByteBuffer.wrap(headerArray.get());
-		return bbH;
+		return ByteBuffer.wrap(headerArray.get());
 	}
 
 	public synchronized ZResponse body(final byte[] body) {
 		this.checkBIC();
 
+		if (compressionEnable 
+				&& (body.length >= (SERVER_CONFIGURATIONPROPERTIES.getCompressionMinLength() * 1024))
+				&& SERVER_CONFIGURATIONPROPERTIES.compressionContains(this.getContentType())
+				) {
+
+			// FIXME 2025年1月26日 01:43:30 zhangzhen: 在这里进行压缩，加个else，代码相同save action给去掉了
+			
+			
+		}
 		this.body = body;
+
+		
 		return this;
 	}
 
@@ -439,6 +452,7 @@ public class ZResponse {
 	}
 
 	public synchronized ZResponse body(final String body) {
+		
 		// FIXME 2025年1月22日 下午4:11:41 zhangzhen : 如果body很大，比如一个大html文件
 		// getBytes会很耗时
 		return this.body(body.getBytes());
@@ -565,9 +579,7 @@ public class ZResponse {
 		}
 
 		final byte[] a = array.get();
-		final ByteBuffer buffer = ByteBuffer.wrap(a);
-
-		return buffer;
+		return ByteBuffer.wrap(a);
 
 	}
 
@@ -576,14 +588,14 @@ public class ZResponse {
 	}
 
 	public AtomicBoolean getSetContentType() {
-		return setContentType;
+		return this.setContentType;
 	}
 
 	public String getContentType() {
-		return contentType;
+		return this.contentType;
 	}
 
-	public void setContentType(String contentType) {
+	public void setContentType(final String contentType) {
 		this.contentType = contentType;
 	}
 	
