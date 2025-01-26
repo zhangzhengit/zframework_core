@@ -61,7 +61,6 @@ public class ZValidator {
 		}
 
 		final double doubleValue = ((Number) value).doubleValue();
-		// FIXME 2023年11月1日 下午7:10:13 zhanghen: XXX 待定 ((Number) v).doubleValue() 是否可行
 		if (doubleValue <= 0D) {
 			final String message = ZPositive.MESSAGE;
 			final String t = p.getName();
