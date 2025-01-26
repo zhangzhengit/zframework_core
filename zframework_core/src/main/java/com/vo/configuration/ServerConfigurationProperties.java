@@ -184,7 +184,6 @@ public class ServerConfigurationProperties {
 	@ZCustom(cls = TaskResponsiveModeValidator.class)
 	@ZNotEmtpy
 	private String taskResponsiveMode = TaskResponsiveModeEnum.QUEUE.name();
-	// FIXME 2024年2月10日 下午11:55:37 zhanghen: 新增的两个taskXX readmetxt添加上
 
 	/**
 	 * 从服务器接收到请求的时间点开始，到处理本次请求的时间点截止，超过此值就返回【服务器忙】的信息。单位：毫秒
