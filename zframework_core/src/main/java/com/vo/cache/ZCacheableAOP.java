@@ -87,17 +87,15 @@ public class ZCacheableAOP implements ZIAOP {
 
 				final String canonicalName = aopParameter.getTarget().getClass().getName();
 				final List<Object> pl = aopParameter.getParameterList();
-				final String cacheKey = PREFIX + "@" + canonicalName + "@" + group + "@" + parameter.getName() + "="
-						+ hash(pl.get(i));
-
-				return cacheKey;
+				return PREFIX + "@" + canonicalName + "@" + group + "@" + parameter.getName() + "="
+						+ gKey(pl.get(i));
 			}
 		}
 
 		throw new CacheKeyDeclarationException("key不存在,key = " + key + ",方法名称=" + aopParameter.getMethod().getName());
 	}
 
-	public static String hash(final Object object) {
-		return Hash.murmur3(String.valueOf(object));
+	public static String gKey(final Object object) {
+		return String.valueOf(object);
 	}
 }

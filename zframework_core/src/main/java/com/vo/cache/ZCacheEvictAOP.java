@@ -66,7 +66,7 @@ public class ZCacheEvictAOP implements ZIAOP {
 
 				final List<Object> pl = aopParameter.getParameterList();
 				final String cacheKey = ZCacheableAOP.PREFIX + "@" + canonicalName + "@" + group + "@"
-						+ parameter.getName() + "=" + ZCacheableAOP.hash(pl.get(i));
+						+ parameter.getName() + "=" + ZCacheableAOP.gKey(pl.get(i));
 
 				return cacheKey;
 			}
