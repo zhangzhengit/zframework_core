@@ -537,7 +537,7 @@ public class ZResponse {
 	}
 
 	private void write(final ByteBuffer bb) {
-
+		
 		try {
 			while ((bb.remaining() > 0) && this.socketChannel.isOpen()) {
 				this.socketChannel.write(bb);
@@ -549,6 +549,7 @@ public class ZResponse {
 
 	private void writeSocketChannel() {
 		final ByteBuffer buffer = this.fillByteBuffer();
+		buffer.flip();
 		this.write(buffer);
 	}
 
@@ -556,45 +557,44 @@ public class ZResponse {
 
 		this.checkContentType();
 
+		final String headerS = 
+				ZResponse.HTTP_1_1 + this.getHttpStatus()
+				+ Task.NEW_LINE
+				+ HeaderEnum.CONTENT_LENGTH.getName() + ":" + this.getBodyLength()
+				+ Task.NEW_LINE
+				+ this.contentTypeAR.get()
+				+ Task.NEW_LINE
+				+ this.headerVS()
+				+ Task.NEW_LINE
+				;
 
-		final int contentLenght = this.getBodyLength();
-		// FIXME 2024年12月22日 下午9:39:47 zhangzhen : 这个预估好一般有多少，或者自己写个扩容固定值的比如40
-		final ZArray array = new ZArray(contentLenght + 2048);
-
-		array.add((ZResponse.HTTP_1_1 + this.getHttpStatus()).getBytes());
-		array.add(NEW_LINE_BYTES);
-
-		// header-Content-Length
+		final byte[] hba = headerS.getBytes();
 		if (this.body != null) {
-			array.add((HeaderEnum.CONTENT_LENGTH.getName() + ":" + contentLenght).getBytes());
-		} else {
-			array.add((HeaderEnum.CONTENT_LENGTH.getName() + ":" + 0).getBytes());
+			final ByteBuffer b = ByteBuffer.allocate(hba.length + this.body.length + NEW_LINE_BYTES.length);
+			b.put(hba, 0, hba.length);
+			b.put(this.body, 0, this.body.length);
+			b.put(NEW_LINE_BYTES);
+			return b;
 		}
-		array.add(NEW_LINE_BYTES);
-
-		array.add((this.contentTypeAR.get()).getBytes());
-		array.add(NEW_LINE_BYTES);
-
-		if (this.headerList != null) {
-			for (final ZHeader zHeader : this.headerList) {
-				array.add((zHeader.getName() + ":" + zHeader.getValue()).getBytes());
-				array.add(NEW_LINE_BYTES);
-			}
-		}
-
-		array.add(NEW_LINE_BYTES);
-
-		// body
-		if (this.body != null) {
-			array.add(this.body);
-			array.add(NEW_LINE_BYTES);
-		} else {
-			//			array.add(JSON.toJSONString(CR.ok()).getBytes());
+		
+		final ByteBuffer b = ByteBuffer.allocate(hba.length + NEW_LINE_BYTES.length);
+		b.put(hba, 0, hba.length);
+		return b;
+	}
+	
+	private String headerVS() {
+		if (this.headerList == null) {
+			return "";
 		}
 
-		final byte[] a = array.get();
-		return ByteBuffer.wrap(a);
+		final StringBuilder builder = new StringBuilder();
+		for (int i = 0; i < this.headerList.size(); i++) {
+			final ZHeader h = this.headerList.get(i);
+			builder.append(h.getName()).append(':').append(h.getValue());
+			builder.append(Task.NEW_LINE);
+		}
 
+		return builder.toString();
 	}
 
 	public ZResponse(final SocketChannel socketChannel) {
