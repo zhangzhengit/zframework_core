@@ -1,6 +1,6 @@
 package com.vo.core;
 
-import com.vo.http.ZRequestMappingConfigurationProperties;
+import com.vo.http.ZRequestMapping;
 import com.vo.validator.ZClientQPSValidator;
 import com.vo.validator.ZServerQPSValidator;
 import com.vo.validator.ZSessionIdQPSValidator;
@@ -25,9 +25,9 @@ public enum QPSEnum {
 	/**
 	 * 对于一个接口方法的限制
 	 */
-	API_METHOD(ZRequestMappingConfigurationProperties.MIN_VALUE,
-			   ZRequestMappingConfigurationProperties.MAX_VALUE,
-		   ZRequestMappingConfigurationProperties.DEFAULT_VALUE),
+	API_METHOD(ZRequestMapping.MIN_COUNT,
+			ZRequestMapping.MAX_COUNT,
+			ZRequestMapping.DEFAULT_COUNT),
 
 
 	/**
@@ -56,33 +56,33 @@ public enum QPSEnum {
 	private Integer maxValue;
 	private Integer defaultValue;
 
-	private QPSEnum(Integer minValue, Integer maxValue, Integer defaultValue) {
+	QPSEnum(final Integer minValue, final Integer maxValue, final Integer defaultValue) {
 		this.minValue = minValue;
 		this.maxValue = maxValue;
 		this.defaultValue = defaultValue;
 	}
 
 	public Integer getMinValue() {
-		return minValue;
+		return this.minValue;
 	}
 
-	public void setMinValue(Integer minValue) {
+	public void setMinValue(final Integer minValue) {
 		this.minValue = minValue;
 	}
 
 	public Integer getMaxValue() {
-		return maxValue;
+		return this.maxValue;
 	}
 
-	public void setMaxValue(Integer maxValue) {
+	public void setMaxValue(final Integer maxValue) {
 		this.maxValue = maxValue;
 	}
 
 	public Integer getDefaultValue() {
-		return defaultValue;
+		return this.defaultValue;
 	}
 
-	public void setDefaultValue(Integer defaultValue) {
+	public void setDefaultValue(final Integer defaultValue) {
 		this.defaultValue = defaultValue;
 	}
 	

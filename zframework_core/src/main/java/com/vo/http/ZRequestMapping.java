@@ -21,11 +21,11 @@ import com.vo.enums.MethodEnum;
 @Target({ElementType.METHOD })
 public @interface ZRequestMapping {
 
-	public static final int MIN_COUNT = ZRequestMappingConfigurationProperties.MIN_VALUE;
+	public static final int MIN_COUNT = 1;
 
-	public static final int MAX_COUNT = ZRequestMappingConfigurationProperties.MAX_VALUE;
+	public static final int MAX_COUNT = 10000 * 100;
 
-	public static final int DEFAULT_COUNT = ZRequestMappingConfigurationProperties.DEFAULT_VALUE;
+	public static final int DEFAULT_COUNT = 10000 * 5;
 
 	/**
 	 * 请求路径，如：/index
