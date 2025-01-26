@@ -169,11 +169,6 @@ public class ServerConfigurationProperties {
 	 */
 	@ZMin(min = 52)
 	@ZMax(max = 10000 * 1)
-	// FIXME 2024年1月30日 下午7:28:32 zhanghen: 此值按现在的代码逻辑不好实现自动更新，
-	// 因为 queue 是程序启动时就初始化了的，改变此值时，若直接set一个新的容量的queue，则有可能queue中有带处理的
-	// 考虑是否这么做？还是不用自动更新
-	//	@ZValue(name = "server.pending.tasks", listenForChanges = true)
-	// XXX 考虑好默认为什么比较好
 	private Integer pendingTasks = 100;
 
 	/**
@@ -366,298 +361,298 @@ public class ServerConfigurationProperties {
 	}
 
 	public Integer getPort() {
-		return port;
+		return this.port;
 	}
 
-	public void setPort(Integer port) {
+	public void setPort(final Integer port) {
 		this.port = port;
 	}
 
 	public Boolean getResponseZSessionId() {
-		return responseZSessionId;
+		return this.responseZSessionId;
 	}
 
-	public void setResponseZSessionId(Boolean responseZSessionId) {
+	public void setResponseZSessionId(final Boolean responseZSessionId) {
 		this.responseZSessionId = responseZSessionId;
 	}
 
 	public String getName() {
-		return name;
+		return this.name;
 	}
 
-	public void setName(String name) {
+	public void setName(final String name) {
 		this.name = name;
 	}
 
 	public Integer getByteBufferSize() {
-		return byteBufferSize;
+		return this.byteBufferSize;
 	}
 
-	public void setByteBufferSize(Integer byteBufferSize) {
+	public void setByteBufferSize(final Integer byteBufferSize) {
 		this.byteBufferSize = byteBufferSize;
 	}
 
 	public Integer getNioReadTimeout() {
-		return nioReadTimeout;
+		return this.nioReadTimeout;
 	}
 
-	public void setNioReadTimeout(Integer nioReadTimeout) {
+	public void setNioReadTimeout(final Integer nioReadTimeout) {
 		this.nioReadTimeout = nioReadTimeout;
 	}
 
 	public Integer getUploadFileSize() {
-		return uploadFileSize;
+		return this.uploadFileSize;
 	}
 
-	public void setUploadFileSize(Integer uploadFileSize) {
+	public void setUploadFileSize(final Integer uploadFileSize) {
 		this.uploadFileSize = uploadFileSize;
 	}
 
 	public Integer getUploadFileToTempSize() {
-		return uploadFileToTempSize;
+		return this.uploadFileToTempSize;
 	}
 
-	public void setUploadFileToTempSize(Integer uploadFileToTempSize) {
+	public void setUploadFileToTempSize(final Integer uploadFileToTempSize) {
 		this.uploadFileToTempSize = uploadFileToTempSize;
 	}
 
 	public String getUploadTempDir() {
-		return uploadTempDir;
+		return this.uploadTempDir;
 	}
 
-	public void setUploadTempDir(String uploadTempDir) {
+	public void setUploadTempDir(final String uploadTempDir) {
 		this.uploadTempDir = uploadTempDir;
 	}
 
 	public Integer getThreadCount() {
-		return threadCount;
+		return this.threadCount;
 	}
 
-	public void setThreadCount(Integer threadCount) {
+	public void setThreadCount(final Integer threadCount) {
 		this.threadCount = threadCount;
 	}
 
 	public String getThreadName() {
-		return threadName;
+		return this.threadName;
 	}
 
-	public void setThreadName(String threadName) {
+	public void setThreadName(final String threadName) {
 		this.threadName = threadName;
 	}
 
 	public Boolean getStaticResourceCacheEnable() {
-		return staticResourceCacheEnable;
+		return this.staticResourceCacheEnable;
 	}
 
-	public void setStaticResourceCacheEnable(Boolean staticResourceCacheEnable) {
+	public void setStaticResourceCacheEnable(final Boolean staticResourceCacheEnable) {
 		this.staticResourceCacheEnable = staticResourceCacheEnable;
 	}
 
 	public String getScanPackage() {
-		return scanPackage;
+		return this.scanPackage;
 	}
 
-	public void setScanPackage(String scanPackage) {
+	public void setScanPackage(final String scanPackage) {
 		this.scanPackage = scanPackage;
 	}
 
 	public Boolean getQpsLimitEnabled() {
-		return qpsLimitEnabled;
+		return this.qpsLimitEnabled;
 	}
 
-	public void setQpsLimitEnabled(Boolean qpsLimitEnabled) {
+	public void setQpsLimitEnabled(final Boolean qpsLimitEnabled) {
 		this.qpsLimitEnabled = qpsLimitEnabled;
 	}
 
 	public Integer getQps() {
-		return qps;
+		return this.qps;
 	}
 
-	public void setQps(Integer qps) {
+	public void setQps(final Integer qps) {
 		this.qps = qps;
 	}
 
 	public String getQpsExceedMessage() {
-		return qpsExceedMessage;
+		return this.qpsExceedMessage;
 	}
 
-	public void setQpsExceedMessage(String qpsExceedMessage) {
+	public void setQpsExceedMessage(final String qpsExceedMessage) {
 		this.qpsExceedMessage = qpsExceedMessage;
 	}
 
 	public Integer getRequestHeaderSizeLimit() {
-		return requestHeaderSizeLimit;
+		return this.requestHeaderSizeLimit;
 	}
 
-	public void setRequestHeaderSizeLimit(Integer requestHeaderSizeLimit) {
+	public void setRequestHeaderSizeLimit(final Integer requestHeaderSizeLimit) {
 		this.requestHeaderSizeLimit = requestHeaderSizeLimit;
 	}
 
 	public Integer getPendingTasks() {
-		return pendingTasks;
+		return this.pendingTasks;
 	}
 
-	public void setPendingTasks(Integer pendingTasks) {
+	public void setPendingTasks(final Integer pendingTasks) {
 		this.pendingTasks = pendingTasks;
 	}
 
 	public String getPendingTasksExceedMessage() {
-		return pendingTasksExceedMessage;
+		return this.pendingTasksExceedMessage;
 	}
 
-	public void setPendingTasksExceedMessage(String pendingTasksExceedMessage) {
+	public void setPendingTasksExceedMessage(final String pendingTasksExceedMessage) {
 		this.pendingTasksExceedMessage = pendingTasksExceedMessage;
 	}
 
 	public String getTaskResponsiveMode() {
-		return taskResponsiveMode;
+		return this.taskResponsiveMode;
 	}
 
-	public void setTaskResponsiveMode(String taskResponsiveMode) {
+	public void setTaskResponsiveMode(final String taskResponsiveMode) {
 		this.taskResponsiveMode = taskResponsiveMode;
 	}
 
 	public Integer getTaskTimeoutMilliseconds() {
-		return taskTimeoutMilliseconds;
+		return this.taskTimeoutMilliseconds;
 	}
 
-	public void setTaskTimeoutMilliseconds(Integer taskTimeoutMilliseconds) {
+	public void setTaskTimeoutMilliseconds(final Integer taskTimeoutMilliseconds) {
 		this.taskTimeoutMilliseconds = taskTimeoutMilliseconds;
 	}
 
 	public Boolean getEnableClientQps() {
-		return enableClientQps;
+		return this.enableClientQps;
 	}
 
-	public void setEnableClientQps(Boolean enableClientQps) {
+	public void setEnableClientQps(final Boolean enableClientQps) {
 		this.enableClientQps = enableClientQps;
 	}
 
 	public Integer getClientQps() {
-		return clientQps;
+		return this.clientQps;
 	}
 
-	public void setClientQps(Integer clientQps) {
+	public void setClientQps(final Integer clientQps) {
 		this.clientQps = clientQps;
 	}
 
 	public Integer getSessionIdQps() {
-		return sessionIdQps;
+		return this.sessionIdQps;
 	}
 
-	public void setSessionIdQps(Integer sessionIdQps) {
+	public void setSessionIdQps(final Integer sessionIdQps) {
 		this.sessionIdQps = sessionIdQps;
 	}
 
 	public Boolean getStaticControllerEnable() {
-		return staticControllerEnable;
+		return this.staticControllerEnable;
 	}
 
-	public void setStaticControllerEnable(Boolean staticControllerEnable) {
+	public void setStaticControllerEnable(final Boolean staticControllerEnable) {
 		this.staticControllerEnable = staticControllerEnable;
 	}
 
 	public Set<String> getStaticControllerReferersAllowed() {
-		return staticControllerReferersAllowed;
+		return this.staticControllerReferersAllowed;
 	}
 
-	public void setStaticControllerReferersAllowed(Set<String> staticControllerReferersAllowed) {
+	public void setStaticControllerReferersAllowed(final Set<String> staticControllerReferersAllowed) {
 		this.staticControllerReferersAllowed = staticControllerReferersAllowed;
 	}
 
 	public Integer getStaticControllerMemoryCacheCapacity() {
-		return staticControllerMemoryCacheCapacity;
+		return this.staticControllerMemoryCacheCapacity;
 	}
 
-	public void setStaticControllerMemoryCacheCapacity(Integer staticControllerMemoryCacheCapacity) {
+	public void setStaticControllerMemoryCacheCapacity(final Integer staticControllerMemoryCacheCapacity) {
 		this.staticControllerMemoryCacheCapacity = staticControllerMemoryCacheCapacity;
 	}
 
 	public Integer getKeepAliveTimeout() {
-		return keepAliveTimeout;
+		return this.keepAliveTimeout;
 	}
 
-	public void setKeepAliveTimeout(Integer keepAliveTimeout) {
+	public void setKeepAliveTimeout(final Integer keepAliveTimeout) {
 		this.keepAliveTimeout = keepAliveTimeout;
 	}
 
 	public String getSessionStorageType() {
-		return sessionStorageType;
+		return this.sessionStorageType;
 	}
 
-	public void setSessionStorageType(String sessionStorageType) {
+	public void setSessionStorageType(final String sessionStorageType) {
 		this.sessionStorageType = sessionStorageType;
 	}
 
 	public Long getSessionTimeout() {
-		return sessionTimeout;
+		return this.sessionTimeout;
 	}
 
-	public void setSessionTimeout(Long sessionTimeout) {
+	public void setSessionTimeout(final Long sessionTimeout) {
 		this.sessionTimeout = sessionTimeout;
 	}
 
 	public String getStaticPath() {
-		return staticPath;
+		return this.staticPath;
 	}
 
-	public void setStaticPath(String staticPath) {
+	public void setStaticPath(final String staticPath) {
 		this.staticPath = staticPath;
 	}
 
 	public String getStaticPrefix() {
-		return staticPrefix;
+		return this.staticPrefix;
 	}
 
-	public void setStaticPrefix(String staticPrefix) {
+	public void setStaticPrefix(final String staticPrefix) {
 		this.staticPrefix = staticPrefix;
 	}
 
 	public Boolean getCompressionEnable() {
-		return compressionEnable;
+		return this.compressionEnable;
 	}
 
-	public void setCompressionEnable(Boolean compressionEnable) {
+	public void setCompressionEnable(final Boolean compressionEnable) {
 		this.compressionEnable = compressionEnable;
 	}
 
 	public String getCompressionTypes() {
-		return compressionTypes;
+		return this.compressionTypes;
 	}
 
-	public void setCompressionTypes(String compressionTypes) {
+	public void setCompressionTypes(final String compressionTypes) {
 		this.compressionTypes = compressionTypes;
 	}
 
 	public Integer getCompressionMinLength() {
-		return compressionMinLength;
+		return this.compressionMinLength;
 	}
 
-	public void setCompressionMinLength(Integer compressionMinLength) {
+	public void setCompressionMinLength(final Integer compressionMinLength) {
 		this.compressionMinLength = compressionMinLength;
 	}
 
 	public Map<String, String> getResponseHeaders() {
-		return responseHeaders;
+		return this.responseHeaders;
 	}
 
-	public void setResponseHeaders(Map<String, String> responseHeaders) {
+	public void setResponseHeaders(final Map<String, String> responseHeaders) {
 		this.responseHeaders = responseHeaders;
 	}
 
 	public Boolean getPrintConfigurationProperties() {
-		return printConfigurationProperties;
+		return this.printConfigurationProperties;
 	}
 
-	public void setPrintConfigurationProperties(Boolean printConfigurationProperties) {
+	public void setPrintConfigurationProperties(final Boolean printConfigurationProperties) {
 		this.printConfigurationProperties = printConfigurationProperties;
 	}
 
 	public Boolean getPrintProxyClass() {
-		return printProxyClass;
+		return this.printProxyClass;
 	}
 
-	public void setPrintProxyClass(Boolean printProxyClass) {
+	public void setPrintProxyClass(final Boolean printProxyClass) {
 		this.printProxyClass = printProxyClass;
 	}
 	
