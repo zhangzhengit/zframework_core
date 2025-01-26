@@ -69,7 +69,7 @@ public class QC {
 			// 传值 qptu = 1000 则,time = 10ms = 1/100秒；qpsNEW = 10。一秒1000 ，则平滑处理为1/100秒10个。正确
 			// 传值 qptu = 10000 则,time = 10ms = 1/100秒；qpsNEW = 100。一秒10000 ，则平滑处理为1/100秒100个。正确
 			// 传值 qptu = 100000 则,time = 10ms = 1/100秒；qpsNEW = 1000。一秒10000 ，则平滑处理为1/100秒1000个。正确
-			final long time = qptu <= QPS_THRESHOLD ? (ms / 1000 / qptu) : (ms / (1000 / QPS_THRESHOLD));
+			final long time = qptu <= QPS_THRESHOLD ? (ms / (1000 / qptu)) : (ms / (1000 / QPS_THRESHOLD));
 			final long qpsNEW = (qptu / QPS_THRESHOLD) <= 0 ? 1 : (qptu / QPS_THRESHOLD);
 
 			final boolean ok = a(keyPrefix, time, qpsNEW);
@@ -92,8 +92,7 @@ public class QC {
 			final long time = qptu <= QPM_THRESHOLD ? (ms / ((1000 * 60) / qptu)) : (ms / (((1000 * 60) / QPM_THRESHOLD)));
 			final long qpnNEW = (qptu / QPM_THRESHOLD) <= 0 ? 1 : (qptu / QPM_THRESHOLD);
 
-			final boolean ok = a(keyPrefix, time, qpnNEW);
-			return ok;
+			return a(keyPrefix, time, qpnNEW);
 		}
 
 		if (timeEnum == QCTimeEnum.QUARTER) {
@@ -103,8 +102,7 @@ public class QC {
 			final long time = qptu <= QPQ_THRESHOLD ? (ms / ((1000 * 60 * 15) / qptu)) : (ms / (((1000 * 60 * 15) / QPQ_THRESHOLD)));
 			final long qpnNEW = (qptu / QPQ_THRESHOLD) <= 0 ? 1 : (qptu / QPQ_THRESHOLD);
 
-			final boolean ok = a(keyPrefix, time, qpnNEW);
-			return ok;
+			return a(keyPrefix, time, qpnNEW);
 
 		}
 
@@ -114,8 +112,7 @@ public class QC {
 					: (ms / (((1000 * 60 * 60) / QPH_THRESHOLD)));
 			final long qpnNEW = (qptu / QPH_THRESHOLD) <= 0 ? 1 : (qptu / QPH_THRESHOLD);
 
-			final boolean ok = a(keyPrefix, time, qpnNEW);
-			return ok;
+			return a(keyPrefix, time, qpnNEW);
 		}
 
 		return false;
