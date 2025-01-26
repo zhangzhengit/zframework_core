@@ -10,7 +10,6 @@ import java.util.List;
  * @date 2023年7月3日
  *
  */
-// FIXME 2023年10月26日 下午5:00:58 zhanghen: 这个类里所有方法都太差，需要改进
 public class ZArray {
 
 	private final List<Byte> ar;
@@ -63,8 +62,7 @@ public class ZArray {
 	}
 
 	public Byte remove(final int index) {
-		final Byte remove = this.ar.remove(index);
-		return remove;
+		return this.ar.remove(index);
 	}
 
 	public void add(final byte[] ba) {
@@ -93,23 +91,23 @@ public class ZArray {
 	}
 
 	public TF getTf() {
-		return tf;
+		return this.tf;
 	}
 
-	public void setTf(TF tf) {
+	public void setTf(final TF tf) {
 		this.tf = tf;
 	}
 
 	public boolean isYichangle() {
-		return yichangle;
+		return this.yichangle;
 	}
 
-	public void setYichangle(boolean yichangle) {
+	public void setYichangle(final boolean yichangle) {
 		this.yichangle = yichangle;
 	}
 
 	public List<Byte> getAr() {
-		return ar;
+		return this.ar;
 	}
 
 }
