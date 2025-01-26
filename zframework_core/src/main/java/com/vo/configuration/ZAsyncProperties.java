@@ -34,28 +34,21 @@ public class ZAsyncProperties {
 	 */
 	@ZNotNull
 	@ZNotEmtpy
-	// FIXME 2023年11月3日 下午10:04:55 zhanghen: XXX
-	// @ZConfigurationProperties 的基础配置类到底要不要 使用
-	// @ZValue来实时更新？如本类，如果更新了线程数量，那么异步线程池如何处理？
-	// 是废弃原线程池然后新建一个线程池？还是对原线程池增减线程？
-	// @ZValue 要不要 新建一个方法属性，指定一个方法，来实现listenForChanges = true
-	// 的相关对应操作？
-	//	@ZValue(name = "async.threadNamePrefix", listenForChanges = true)
 	private String threadNamePrefix = "async-Thread-";
 
 	public Integer getThreadCount() {
-		return threadCount;
+		return this.threadCount;
 	}
 
-	public void setThreadCount(Integer threadCount) {
+	public void setThreadCount(final Integer threadCount) {
 		this.threadCount = threadCount;
 	}
 
 	public String getThreadNamePrefix() {
-		return threadNamePrefix;
+		return this.threadNamePrefix;
 	}
 
-	public void setThreadNamePrefix(String threadNamePrefix) {
+	public void setThreadNamePrefix(final String threadNamePrefix) {
 		this.threadNamePrefix = threadNamePrefix;
 	}
 
