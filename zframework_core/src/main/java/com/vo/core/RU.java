@@ -65,11 +65,11 @@ public class RU {
 	}
 
 	public static Field getDeclaredField(final Class<?> type, final String javaFieldName)
-			throws NoSuchFieldException, SecurityException {
+			throws SecurityException {
 
 		final String key = type.getName() + '-' + javaFieldName;
 
-		final Field computeIfAbsent = ZRC.computeIfAbsent(key, () -> {
+		return ZRC.computeIfAbsent(key, () -> {
 			try {
 				return type.getDeclaredField(javaFieldName);
 			} catch (NoSuchFieldException | SecurityException e) {
@@ -77,7 +77,6 @@ public class RU {
 			}
 			return null;
 		});
-		return computeIfAbsent;
 	}
 
 }
