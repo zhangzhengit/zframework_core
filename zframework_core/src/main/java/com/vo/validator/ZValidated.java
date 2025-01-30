@@ -38,7 +38,9 @@ import java.lang.annotation.Target;
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ ElementType.TYPE, ElementType.PARAMETER })
+// FIXME 2025年1月30日 21:41:10 zhangzhen: TYPE上还是有问题，在此object里的@ZAU字段会是null，记得debug看什么原因
+@Target({ ElementType.PARAMETER })
+//@Target({ ElementType.TYPE, ElementType.PARAMETER })
 public @interface ZValidated {
 
 }
