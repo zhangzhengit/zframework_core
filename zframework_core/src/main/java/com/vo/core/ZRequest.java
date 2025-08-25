@@ -297,6 +297,25 @@ public class ZRequest {
 		return s == null ? -1 : Integer.parseInt(s);
 	}
 
+	public ZCookie getCookie(String name) {
+		
+		final String cookisString = this.getHeaderMap().get(HeaderEnum.COOKIE.getName());
+		if (STU.isEmpty(cookisString)) {
+			return null;
+		}
+
+		final String[] a = SCU.split(cookisString, ";");
+		for (final String s : a) {
+			final String[] c1 = SCU.split(s, "=");
+			if (c1[0].trim().equals(name)) {
+				final ZCookie zCookie = new ZCookie(c1[0].trim(), c1[1].trim());
+				return zCookie;
+			}
+		}
+		
+		return null;
+	}
+	
 	public ZCookie[] getCookies() {
 
 		final String cookisString = this.getHeaderMap().get(HeaderEnum.COOKIE.getName());
