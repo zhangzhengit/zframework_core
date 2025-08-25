@@ -14,7 +14,9 @@ import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import com.vo.aop.ArgR;
 import com.vo.cache.STU;
 import com.vo.scanner.ZPropertiesListener;
 
@@ -196,9 +198,16 @@ public class ZProperties {
 	public static Properties getInstance() {
 		return properties;
 	}
+	
+	public static List<ArgR> arL = new ArrayList<>();
+	private static AtomicBoolean load = new AtomicBoolean(false);
 
-	static {
-
+	public synchronized static void load() {
+		
+		if (load.get()) {
+			return;
+		}
+		
 		String filePath = getUseDir() + File.separator + ZProperties.PROPERTIES_1;
 
 		Properties p1 = loadDirConfig(File.separator + ZProperties.PROPERTIES_1);
@@ -223,9 +232,14 @@ public class ZProperties {
 		}
 
 		ZPropertiesListener.listen(filePath);
+		
+		for(ArgR a : arL) {
+			p1.put(a.getKey(), a.getValue());
+		}
 
 		properties = p1;
-
+		
+		load.set(true);
 	}
 
 	private static Properties loadPResources(final String path) {
