@@ -31,8 +31,10 @@
 				com.vo.api、com.vo.repository等
 	 
 	# 启动方式：
-		java -jar -Dserver.port=7777 app.jar 
-		可使用 server.port 参数执行启动的http端口，此参数优先于配置文件的server.port
+		java -jar app.jar 
+		可使用 --key=value的形式来指定启动参数，
+		如：	server.port=99 来使用99端口号启动
+		注意：--key=value形式参数优先级高于zf.p配置文件高于代码中的默认值
 		
 	# 注解式声明Component、Controller
 	
