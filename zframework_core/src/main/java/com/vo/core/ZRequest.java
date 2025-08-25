@@ -7,6 +7,7 @@ import java.net.Socket;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -720,4 +721,14 @@ public class ZRequest {
 		}
 	}
 
+	@Override
+	public String toString() {
+		return "ZRequest [lineList=" + lineList + ", original=" + original + ", queryString=" + queryString + ", tf="
+				+ tf + ", methodEnum=" + methodEnum + ", fullpath=" + fullpath + ", path=" + path + ", paramSet="
+				+ paramSet + ", version=" + version + ", headerMap=" + headerMap + ", originalRequestBytes="
+				+ Arrays.toString(originalRequestBytes) + ", body=" + Arrays.toString(body) + ", clientIp=" + clientIp
+				+ "]";
+	}
+	
+	
 }
