@@ -1,6 +1,6 @@
 # 使用说明
-	# 配置文件: zframework.properties 支持零配置启动，配置类 @see ServerConfiguration 其中默认值。
-	 如需自定义配置项，在zframework.properties中覆盖即可，如：server.port=8888 即可覆盖掉默认值80
+	# 配置文件: application.properties 支持零配置启动，配置类 @see ServerConfiguration 其中默认值。
+	 如需自定义配置项，在application.properties中覆盖即可，如：server.port=8888 即可覆盖掉默认值80
 	 查找顺序从先到后如下：
 	 	1 jar文件同目录下
 	 	2 jar文件下config下
@@ -39,10 +39,10 @@
 	# 注解式声明Component、Controller
 	
 	@ZConfigurationProperties
-		用于声明一个配置类，类中字段自动匹配 zframework.properties中的字段
+		用于声明一个配置类，类中字段自动匹配 application.properties中的字段
 		优先按java驼峰式命名匹配，找不到则按[orderCount]转为[order.count]来匹配
 			
-			prefix 属性：表示匹配的zframework.properties 中的前缀
+			prefix 属性：表示匹配的application.properties 中的前缀
 			
 		支持的字段类型：@see ZConfigurationProperties 
 			List：

@@ -8,7 +8,7 @@ import java.lang.annotation.Target;
 
 /**
  *
- * 用在字段上，表示此字段值从配置文件[zframework.properties]中取值。
+ * 用在字段上，表示此字段值从配置文件[application.properties]中取值。
  * 如下，表示从配置文件中取 a.b 的值赋给String b字段。
  *
  *  @ZValue(name = "a.b")

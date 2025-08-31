@@ -31,12 +31,12 @@ public class ZProperties {
 
 	private static final Charset UTF8 = StandardCharsets.UTF_8;
 
-	public static final String PROPERTIES_1 = "config/zframework.properties";
+	public static final String PROPERTIES_1 = "config/application.properties";
 
-	public static final String PROPERTIES_2 = "zframework.properties";
+	public static final String PROPERTIES_2 = "application.properties";
 	public static final String PROPERTIES_NAME = PROPERTIES_2;
-	public static final String PROPERTIES_3 = "src/main/resources/zframework.properties";
-	public static final String PROPERTIES_4 = "src/main/resources/config/zframework.properties";
+	public static final String PROPERTIES_3 = "src/main/resources/application.properties";
+	public static final String PROPERTIES_4 = "src/main/resources/config/application.properties";
 
 	private static final String[] EMPTY_STRING_ARRAY = {};
 
