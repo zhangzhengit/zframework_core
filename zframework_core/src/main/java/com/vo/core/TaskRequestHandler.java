@@ -11,7 +11,7 @@ import com.vo.enums.ConnectionEnum;
 import com.vo.exception.StartupException;
 import com.vo.exception.ZControllerAdviceThrowable;
 import com.vo.http.HttpStatusEnum;
-import com.votool.common.CR;
+import com.vo.thread.CR;
 
 /**
  * 处理请求

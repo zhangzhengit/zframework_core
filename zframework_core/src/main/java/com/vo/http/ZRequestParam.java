@@ -6,8 +6,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import org.springframework.stereotype.Component;
-
 /**
  * 表示http请求的一个参数，用在参数字段上。如：
  *
@@ -18,7 +16,6 @@ import org.springframework.stereotype.Component;
  * @date 2023年6月12日
  *
  */
-@Component
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.PARAMETER })

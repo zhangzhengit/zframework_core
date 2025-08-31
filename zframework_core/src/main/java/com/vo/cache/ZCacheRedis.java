@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.vo.core.ZContext;
-import com.votool.common.ZPU;
+import com.vo.protobuf.ZPU;
 
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;

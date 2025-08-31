@@ -9,8 +9,8 @@ import com.vo.core.ZContext;
 import com.vo.core.ZLog2;
 import com.vo.core.ZRequest;
 import com.vo.http.ZCookie;
+import com.vo.thread.CR;
 import com.vo.validator.ZFException;
-import com.votool.common.CR;
 
 /**
  * @ZControllerAdvice 的默认处理方法，如果 @ZExceptionHandler 定义的

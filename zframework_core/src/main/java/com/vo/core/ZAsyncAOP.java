@@ -5,7 +5,7 @@ import com.vo.anno.ZAutowired;
 import com.vo.aop.AOPParameter;
 import com.vo.aop.ZAOP;
 import com.vo.aop.ZIAOP;
-import com.votool.ze.ZE;
+import com.vo.thread.ZE;
 
 /**
  * @ZAsync 的AOP类，实现异步处理

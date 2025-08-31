@@ -3,9 +3,9 @@ package com.vo.configuration;
 import com.vo.anno.ZAutowired;
 import com.vo.anno.ZBean;
 import com.vo.anno.ZConfiguration;
-import com.votool.ze.ThreadModeEnum;
-import com.votool.ze.ZE;
-import com.votool.ze.ZES;
+import com.vo.thread.ThreadModeEnum;
+import com.vo.thread.ZE;
+import com.vo.thread.ZES;
 
 /**
  *

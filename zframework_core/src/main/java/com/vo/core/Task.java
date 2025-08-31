@@ -56,13 +56,13 @@ import com.vo.scanner.ZHandlerInterceptorScanner;
 import com.vo.scanner.ZModelAndView;
 import com.vo.template.ZModel;
 import com.vo.template.ZTemplate;
+import com.vo.thread.CR;
 import com.vo.validator.ParsingRequestParamException;
 import com.vo.validator.ZFException;
 import com.vo.validator.ZMin;
 import com.vo.validator.ZPositive;
 import com.vo.validator.ZValidated;
 import com.vo.validator.ZValidator;
-import com.votool.common.CR;
 
 /**
  *

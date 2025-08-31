@@ -10,10 +10,10 @@ import com.vo.aop.ZAOP;
 import com.vo.aop.ZIAOP;
 import com.vo.exception.ZSynchronouslyAOPException;
 import com.vo.http.ZSynchronously;
-import com.votool.ze.AbstractZETask;
-import com.votool.ze.ZE;
-import com.votool.ze.ZES;
-import com.votool.ze.ZETaskResult;
+import com.vo.thread.AbstractZETask;
+import com.vo.thread.ZE;
+import com.vo.thread.ZES;
+import com.vo.thread.ZETaskResult;
 
 /**
  * @ZSynchronously 的AOP类

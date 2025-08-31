@@ -4,7 +4,7 @@ import java.nio.channels.SocketChannel;
 
 import com.vo.cache.J;
 import com.vo.http.HttpStatusEnum;
-import com.votool.common.CR;
+import com.vo.thread.CR;
 
 /**
  * 一些响应

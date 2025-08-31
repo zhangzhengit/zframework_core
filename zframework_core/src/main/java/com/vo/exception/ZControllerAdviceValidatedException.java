@@ -1,6 +1,6 @@
 package com.vo.exception;
 
-import com.votool.common.CR;
+import com.vo.thread.CR;
 
 /**
  * 内置的处理 ValidatedException 的异常处理器。此类可不定义，默认使用默认处理器

@@ -1,8 +1,5 @@
 package com.vo.bean;
 
-import org.springframework.beans.BeansException;
-import org.springframework.lang.Nullable;
-
 /**
  *  
  *
@@ -11,12 +8,12 @@ import org.springframework.lang.Nullable;
  * 
  */
 public interface ZBeanPostProcessor {
-	@Nullable
-	default Object postProcessBeforeInitialization(final Object bean, final String beanName) throws BeansException {
+//	@Nullable
+	default Object postProcessBeforeInitialization(final Object bean, final String beanName)  {
 		return bean;
 	}
-	@Nullable
-	default Object postProcessAfterInitialization(final Object bean, final String beanName) throws BeansException {
+//	@Nullable
+	default Object postProcessAfterInitialization(final Object bean, final String beanName)  {
 		return bean;
 	}
 }

@@ -368,7 +368,7 @@ public class ZAOPScaner {
 	 */
 	private static String replaceLast(final String string, final String replace, final String target) {
 
-		if (org.springframework.util.StringUtils.isEmpty(replace) || "".equals(replace.trim())) {
+		if (replace == null || replace.length() == 0 || "".equals(replace.trim())) {
 			return string;
 		}
 

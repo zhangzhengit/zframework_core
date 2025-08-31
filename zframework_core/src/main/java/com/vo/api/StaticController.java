@@ -23,7 +23,7 @@ import com.vo.http.ZETag;
 import com.vo.http.ZQPSLimitation;
 import com.vo.http.ZQPSLimitationEnum;
 import com.vo.http.ZRequestMapping;
-import com.votool.common.CR;
+import com.vo.thread.CR;
 
 /**
  *
