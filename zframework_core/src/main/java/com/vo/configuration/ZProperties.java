@@ -227,8 +227,10 @@ public class ZProperties {
 		}
 
 		if (p1 == null) {
-			System.out.println("ERROR: 启动失败," + ZProperties.PROPERTIES_1 + "配置文件不存在,请编写此配置文件");
-			System.exit(0);
+			// FIXME 2025年9月1日 上午1:09:02 zhangzhen: 暂时注释,无zf.p则默认用代码中写死的
+			p1 = new Properties();
+//			System.out.println("ERROR: 启动失败," + ZProperties.PROPERTIES_1 + "配置文件不存在,请编写此配置文件");
+//			System.exit(0);
 		}
 
 		ZPropertiesListener.listen(filePath);
