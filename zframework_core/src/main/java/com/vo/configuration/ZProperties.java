@@ -233,6 +233,10 @@ public class ZProperties {
 //			System.exit(0);
 		}
 
+		// FIXME 2025年9月1日 上午2:56:33 zhangzhen: 发现bug：
+		// 无app.p文件在linux启动，下面.lis报错：NoSuchFile 所以需要修改此处逻辑，考虑好：
+		// 1 无a.p 启动jar，则要同时监控config/a.p 和同目录的a.p 两个文件？还是无a.p启动则指定为config/a.p?
+		
 		ZPropertiesListener.listen(filePath);
 		
 		for(ArgR a : arL) {
