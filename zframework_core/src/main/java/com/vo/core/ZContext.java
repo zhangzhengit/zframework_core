@@ -15,6 +15,8 @@ import com.vo.exception.BeanAlreadyEexistsException;
  */
 public class ZContext {
 
+	// FIXME 2025年9月1日 上午3:22:21 zhangzhen: 记得去除guava依赖，
+	
 	private static final ConcurrentMap<String, Object> BEAN_MAP = Maps.newConcurrentMap();
 	private static final ConcurrentMap<String, ZClass> ZCLASS_MAP = Maps.newConcurrentMap();
 
