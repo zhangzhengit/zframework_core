@@ -43,13 +43,17 @@ public class ZMailNotificationConfigurationProperties {
 	/**
 	 * 发送邮件的邮箱服务器端口号
 	 */
-	@ZCustom(cls = ZPortValidator.class, ignoreNull = true)
+	// FIXME 2025年9月1日 上午1:05:59 zhangzhen: 本类三个字段检验暂时注释，因为想改为无zf.p可启动的，
+	// 以后改为某字段在某条件下才开启检验，如：本类enable=true才检验
+//	@ZCustom(cls = ZPortValidator.class, ignoreNull = true)
 	private Integer port;
 
 	/**
 	 * 发送邮件的邮箱地址
 	 */
-	@ZCustom(cls = ZMailValidator.class, ignoreNull = true)
+	// FIXME 2025年9月1日 上午1:05:59 zhangzhen: 本类三个字段检验暂时注释，因为想改为无zf.p可启动的，
+	// 以后改为某字段在某条件下才开启检验，如：本类enable=true才检验
+//	@ZCustom(cls = ZMailValidator.class, ignoreNull = true)
 	private String sender;
 
 	/**
@@ -60,7 +64,9 @@ public class ZMailNotificationConfigurationProperties {
 	/**
 	 * 接收邮件通知的邮箱，收件人
 	 */
-	@ZCustom(cls = ZMailValidator.class, ignoreNull = true)
+	// FIXME 2025年9月1日 上午1:05:59 zhangzhen: 本类三个字段检验暂时注释，因为想改为无zf.p可启动的，
+	// 以后改为某字段在某条件下才开启检验，如：本类enable=true才检验
+//	@ZCustom(cls = ZMailValidator.class, ignoreNull = true)
 	private Set<String> receiver;
 
 	public Boolean getEnable() {
