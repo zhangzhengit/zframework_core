@@ -1,7 +1,10 @@
 package com.vo.configuration;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -9,11 +12,13 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
+import java.util.StringJoiner;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.vo.aop.ArgR;
@@ -31,12 +36,14 @@ public class ZProperties {
 
 	private static final Charset UTF8 = StandardCharsets.UTF_8;
 
-	public static final String PROPERTIES_1 = "config/application.properties";
+	public static final String PROPERTIES_1 = "config" + File.separator + "application.properties";
 
 	public static final String PROPERTIES_2 = "application.properties";
 	public static final String PROPERTIES_NAME = PROPERTIES_2;
-	public static final String PROPERTIES_3 = "src/main/resources/application.properties";
-	public static final String PROPERTIES_4 = "src/main/resources/config/application.properties";
+	public static final String PROPERTIES_3 = "src" + File.separator + "main" + File.separator + "resources"
+			+ File.separator + "application.properties";
+	public static final String PROPERTIES_4 = "src" + File.separator + "main" + File.separator + "resources"
+			+ File.separator + "config" + File.separator + "application.properties";
 
 	private static final String[] EMPTY_STRING_ARRAY = {};
 
@@ -208,6 +215,30 @@ public class ZProperties {
 			return;
 		}
 		
+		// jar方式运行时，如果不存在config/a.p和当前目录下的a.p，则读取jar中的配置文件，写入到到config/a.p
+		// 如果这4种方式都不存在a.p，则什么也不做
+		if (isRunningFromJar()) {
+			final String userDir = getUseDir();
+
+			final File fileCAP = new File(userDir + File.separator + "config" + File.separator + PROPERTIES_NAME);
+			if (!fileCAP.exists()) {
+				final File fileAP = new File(userDir + File.separator + PROPERTIES_NAME);
+				if (!fileAP.exists()) {
+					final StringJoiner contentCAPP = loadAP("config" + File.separator + PROPERTIES_NAME);
+					if (contentCAPP != null) {
+						writeToAp(contentCAPP.toString());
+					} else {
+						final StringJoiner contentAP = loadAP(PROPERTIES_NAME);
+						if (contentAP != null) {
+							writeToAp(contentAP.toString());
+						} else {
+
+						}
+					}
+				}
+			}
+		}
+		
 		String filePath = getUseDir() + File.separator + ZProperties.PROPERTIES_1;
 
 		Properties p1 = loadDirConfig(File.separator + ZProperties.PROPERTIES_1);
@@ -239,13 +270,101 @@ public class ZProperties {
 		
 		ZPropertiesListener.listen(filePath);
 		
-		for(ArgR a : arL) {
+		for(final ArgR a : arL) {
 			p1.put(a.getKey(), a.getValue());
 		}
 
 		properties = p1;
 		
 		load.set(true);
+	}
+	
+	private static void writeToAp(final String content) {
+		
+		final String prefix = 
+				"# 注意：本文件是程序启动时自动生成的，内容是从工程中目录下"
+				+ "\r\n" + "# resources/config/" + PROPERTIES_NAME
+				+ "\r\n" + "# 或 resources/" + PROPERTIES_NAME + " 中拷贝过来的"
+				+ "\r\n" + "# 与工程中的配置完全一致，只为方便查看和修改配置信息"
+				+ "\r\n" + "# 本文件不存在时才自动生成，存在则优先用存在的作为配置"
+				+ "\r\n" + "# 本文件生成时间：" + LocalDateTime.now()
+				+ "\r\n" + "\r\n";
+		
+		final String useDir = getUseDir();
+		final File dir = new File(useDir + File.separator + "config");
+		if (!dir.exists()) {
+			dir.mkdirs();
+		}
+		final File file = new File(useDir + File.separator + "config" + File.separator + PROPERTIES_NAME);
+		if (!file.exists()) {
+			try {
+				file.createNewFile();
+			} catch (final IOException e) {
+				e.printStackTrace();
+			}
+		}
+		FileWriter out = null;
+		try {
+			out = new FileWriter(file);
+		} catch (final IOException e) {
+			e.printStackTrace();
+		}
+		final BufferedWriter writer = new BufferedWriter(out);
+		try {
+			writer.write(prefix);
+			writer.write(content);
+		} catch (final IOException e) {
+			e.printStackTrace();
+		} finally {
+
+			try {
+				writer.flush();
+				out.flush();
+				writer.close();
+				out.close();
+			} catch (final IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	private static StringJoiner loadAP(final String path) {
+		final InputStream inputStream = ZProperties.class.getClassLoader().getResourceAsStream(path);
+		if (inputStream == null) {
+			return null;
+		}
+
+		final StringJoiner joiner = new StringJoiner("\r\n");
+
+		final InputStreamReader in = new InputStreamReader(inputStream);
+		final BufferedReader reader = new BufferedReader(in);
+		while (true) {
+			try {
+				final String readLine = reader.readLine();
+				if (readLine != null) {
+					joiner.add(readLine);
+				} else {
+					break;
+				}
+			} catch (final IOException e) {
+				e.printStackTrace();
+			}
+		}
+
+		try {
+			reader.close();
+			in.close();
+			inputStream.close();
+		} catch (final IOException e) {
+			e.printStackTrace();
+		}
+
+		return joiner;
+	}
+
+	private static boolean isRunningFromJar() {
+		final String location = ZProperties.class.getProtectionDomain().getCodeSource().getLocation().toString();
+		return location.startsWith("jar:") && location.contains(".jar");
 	}
 
 	private static Properties loadPResources(final String path) {
