@@ -89,7 +89,7 @@ public class ZValueScanner {
 		setValue(field, value, bean);
 	}
 
-	public static void updateValue(final String name, final Object newValue) {
+	public static void updateValueAndValidate(final String name, final Object newValue) {
 
 		final Map<Field, Object> map = valueTable.row(name);
 		if (CU.isEmpty(map)) {

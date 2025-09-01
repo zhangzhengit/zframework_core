@@ -94,7 +94,7 @@ public class ZPropertiesListener {
 									final Object v = properties.get(k);
 
 									try {
-										ZValueScanner.updateValue(String.valueOf(k), v);
+										ZValueScanner.updateValueAndValidate(String.valueOf(k), v);
 									} catch (final Exception e) {
 										e.printStackTrace();
 										continue;
