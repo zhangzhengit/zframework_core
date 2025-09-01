@@ -2,13 +2,10 @@ package com.vo.core;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Supplier;
 
 import com.vo.cache.ZCapacityMap;
-
-import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.lang.UUID;
-import cn.hutool.core.util.StrUtil;
 
 /**
  * 缓存类
@@ -73,7 +70,7 @@ public class ZRC {
 	}
 
 	public static void clear(final List<String> keyList) {
-		if (CollUtil.isEmpty(keyList)) {
+		if (CU.isEmpty(keyList)) {
 			return;
 		}
 		for (final String k : keyList) {
@@ -82,7 +79,7 @@ public class ZRC {
 	}
 
 	public static void clear(final String key) {
-		if (StrUtil.isEmpty(key)) {
+		if (SCU.isEmpty(key)) {
 			return;
 		}
 

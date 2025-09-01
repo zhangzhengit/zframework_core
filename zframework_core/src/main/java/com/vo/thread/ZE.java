@@ -6,6 +6,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -13,10 +14,8 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
-import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.lang.UUID;
-import cn.hutool.core.util.StrUtil;
+import com.vo.core.CU;
+import com.vo.core.SCU;
 
 /**
  *
@@ -178,7 +177,7 @@ public class ZE {
 	 *
 	 */
 	public <V> List<V> submitImmediatelyAndGet(final List<AbstractZETask<V>> abstractZETaskList) {
-		if (CollUtil.isEmpty(abstractZETaskList)) {
+		if (CU.isEmpty(abstractZETaskList)) {
 			return Collections.emptyList();
 		}
 
@@ -255,7 +254,7 @@ public class ZE {
 	 */
 	public synchronized <V> List<ZETaskResult<V>> submitInQueue(final List<AbstractZETask<V>> abstractZETaskList) {
 
-		if (CollUtil.isEmpty(abstractZETaskList)) {
+		if (CU.isEmpty(abstractZETaskList)) {
 			return Collections.emptyList();
 		}
 
@@ -277,7 +276,7 @@ public class ZE {
 	 */
 	public <V> List<V> submitInQueueAndGet(final List<AbstractZETask<V>> abstractZETaskList) {
 
-		if (CollUtil.isEmpty(abstractZETaskList)) {
+		if (CU.isEmpty(abstractZETaskList)) {
 			return Collections.emptyList();
 		}
 
@@ -357,7 +356,7 @@ public class ZE {
 	 */
 	public synchronized <V> List<ZETaskResult<V>> submitInQueuePriority(final List<AbstractZETask<V>> abstractZETaskList) {
 
-		if (CollUtil.isEmpty(abstractZETaskList)) {
+		if (CU.isEmpty(abstractZETaskList)) {
 			return Collections.emptyList();
 		}
 
@@ -379,7 +378,7 @@ public class ZE {
 	 */
 	public <V> List<V> submitInQueuePriorityAndGet(final List<AbstractZETask<V>> abstractZETaskList) {
 
-		if (CollUtil.isEmpty(abstractZETaskList)) {
+		if (CU.isEmpty(abstractZETaskList)) {
 			return Collections.emptyList();
 		}
 
@@ -460,7 +459,7 @@ public class ZE {
 	 */
 	public synchronized <T> List<ZERunnableResult> executeImmediately(final List<ZERunnable<T>> zeRunnableList) {
 
-		if (CollUtil.isEmpty(zeRunnableList)) {
+		if (CU.isEmpty(zeRunnableList)) {
 			return Collections.emptyList();
 		}
 
@@ -492,7 +491,7 @@ public class ZE {
 
 	public synchronized <T> List<ZERunnableResult> executeInQueue(final List<ZERunnable<T>> zeRunnableList) {
 
-		if (CollUtil.isEmpty(zeRunnableList)) {
+		if (CU.isEmpty(zeRunnableList)) {
 			return Collections.emptyList();
 		}
 
@@ -523,7 +522,7 @@ public class ZE {
 
 	public synchronized <T> List<ZERunnableResult> executeInQueuePriority(final List<ZERunnable<T>> zeRunnableList) {
 
-		if (CollUtil.isEmpty(zeRunnableList)) {
+		if (CU.isEmpty(zeRunnableList)) {
 			return Collections.emptyList();
 		}
 
@@ -682,7 +681,7 @@ public class ZE {
 			throw new IllegalArgumentException("submitAllByNameInASpecificThread keyword 不能是 null ");
 		}
 
-		if (CollUtil.isEmpty(abstractZETaskList)) {
+		if (CU.isEmpty(abstractZETaskList)) {
 			return Collections.emptyList();
 		}
 
@@ -744,7 +743,7 @@ public class ZE {
 			throw new IllegalArgumentException("submitAllByNameInASpecificThreadPriority keyword 不能是 null ");
 		}
 
-		if (CollUtil.isEmpty(abstractZETaskList)) {
+		if (CU.isEmpty(abstractZETaskList)) {
 			return Collections.emptyList();
 		}
 
@@ -1137,9 +1136,9 @@ public class ZE {
 
 
 		this.threadSize = size;
-		this.groupName = StrUtil.isEmpty(groupName) ? DEFAULT_GROUP_NAME_PREFIX : groupName;
+		this.groupName = SCU.isEmpty(groupName) ? DEFAULT_GROUP_NAME_PREFIX : groupName;
 		this.g = new ThreadGroup(this.groupName);
-		this.threadNamePrefix = StrUtil.isEmpty(threadNamePrefix) ? ZEThread.PREFIX : threadNamePrefix;
+		this.threadNamePrefix = SCU.isEmpty(threadNamePrefix) ? ZEThread.PREFIX : threadNamePrefix;
 
 		switch (threadMode) {
 		case IMMEDIATELY:

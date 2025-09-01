@@ -10,6 +10,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.UUID;
 
 import com.google.common.collect.HashBasedTable;
 import com.vo.cache.STU;
@@ -22,7 +23,6 @@ import com.vo.http.HttpStatusEnum;
 
 import cn.hutool.core.io.FastByteArrayOutputStream;
 import cn.hutool.core.io.IoUtil;
-import cn.hutool.core.lang.UUID;
 
 /**
  * 从 硬盘或resources 目录加载文件，根据配置项来选择从哪里加载
