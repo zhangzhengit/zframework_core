@@ -64,7 +64,7 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.example</groupId>
+			<groupId>com.vo</groupId>
 			<artifactId>sb_zclass</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
