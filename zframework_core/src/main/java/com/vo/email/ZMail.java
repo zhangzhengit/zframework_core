@@ -39,29 +39,29 @@ public class ZMail {
 	static Session session;
 
 	@ZAsync
-	public boolean sendTextPlainAsync(final String subject, final String body, final String receiver) {
-		return this.send(subject, body, receiver, TEXT_PLAIN_CHARSET_UTF_8);
+	public void sendTextPlainAsync(final String subject, final String body, final String receiver) {
+		this.send(subject, body, receiver, TEXT_PLAIN_CHARSET_UTF_8);
 	}
 
-	public boolean sendTextPlain(final String subject, final String body, final String receiver) {
-		return this.send(subject, body, receiver, TEXT_PLAIN_CHARSET_UTF_8);
-	}
-
-	@ZAsync
-	public boolean sendTextHtmlAsync(final String subject, final String body, final String receiver) {
-		return this.send(subject, body, receiver, TEXT_HTML_CHARSET_UTF_8);
-	}
-
-	public boolean sendTextHtml(final String subject, final String body, final String receiver) {
-		return this.send(subject, body, receiver, TEXT_HTML_CHARSET_UTF_8);
+	public void sendTextPlain(final String subject, final String body, final String receiver) {
+		this.send(subject, body, receiver, TEXT_PLAIN_CHARSET_UTF_8);
 	}
 
 	@ZAsync
-	public boolean sendAsync(final String subject, final String body, final String receiver, final String contentType) {
-		return this.send(subject, body, receiver, TEXT_PLAIN_CHARSET_UTF_8);
+	public void sendTextHtmlAsync(final String subject, final String body, final String receiver) {
+		this.send(subject, body, receiver, TEXT_HTML_CHARSET_UTF_8);
 	}
 
-	public boolean send(final String subject, final String body, final String receiver, final String contentType) {
+	public void sendTextHtml(final String subject, final String body, final String receiver) {
+		this.send(subject, body, receiver, TEXT_HTML_CHARSET_UTF_8);
+	}
+
+	@ZAsync
+	public void sendAsync(final String subject, final String body, final String receiver, final String contentType) {
+		this.send(subject, body, receiver, TEXT_PLAIN_CHARSET_UTF_8);
+	}
+
+	public void send(final String subject, final String body, final String receiver, final String contentType) {
 		try {
 			final Message message = new MimeMessage(ZMail.session);
 			message.setFrom(new InternetAddress(mailNotificationConfigurationProperties.getSender()));
@@ -74,9 +74,7 @@ public class ZMail {
 
 		} catch (final MessagingException e) {
 			e.printStackTrace();
-			return false;
 		}
-		return true;
 	}
 
 	static {
