@@ -3,8 +3,8 @@ package com.vo.core;
 import java.nio.channels.SocketChannel;
 
 import com.vo.cache.J;
+import com.vo.common.CR;
 import com.vo.http.HttpStatusEnum;
-import com.vo.thread.CR;
 
 /**
  * 一些响应

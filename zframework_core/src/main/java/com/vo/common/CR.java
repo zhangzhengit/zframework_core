@@ -1,6 +1,8 @@
-package com.vo.thread;
+package com.vo.common;
 
 import java.io.Serializable;
+
+import com.vo.thread.ErrorEnum;
 
 
 /**

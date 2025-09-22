@@ -4,12 +4,12 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 import com.vo.anno.ZComponent;
+import com.vo.common.CR;
 import com.vo.core.ReqeustInfo;
 import com.vo.core.ZContext;
 import com.vo.core.ZLog2;
 import com.vo.core.ZRequest;
 import com.vo.http.ZCookie;
-import com.vo.thread.CR;
 import com.vo.validator.ZFException;
 
 /**

@@ -9,6 +9,7 @@ import com.vo.cache.CU;
 import com.vo.cache.J;
 import com.vo.cache.STU;
 import com.vo.cache.ZMC;
+import com.vo.common.CR;
 import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.core.CacheControlEnum;
 import com.vo.core.ContentTypeEnum;
@@ -23,7 +24,6 @@ import com.vo.http.ZETag;
 import com.vo.http.ZQPSLimitation;
 import com.vo.http.ZQPSLimitationEnum;
 import com.vo.http.ZRequestMapping;
-import com.vo.thread.CR;
 
 /**
  *
