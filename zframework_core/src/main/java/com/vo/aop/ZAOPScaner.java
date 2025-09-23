@@ -6,17 +6,18 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.vo.cache.CU;
 import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.core.RU;
@@ -46,9 +47,9 @@ public class ZAOPScaner {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
 	public static final String PROXY_ZCLASS_NAME_SUFFIX = "_ProxyZclass";
-	public static final ConcurrentMap<String, Map<String, ZClass>> zcMap = Maps.newConcurrentMap();
+	public static final ConcurrentMap<String, Map<String, ZClass>> zcMap = new ConcurrentHashMap<>();
 
-	public static ConcurrentMap<String, Method> cmap = Maps.newConcurrentMap();
+	public static ConcurrentMap<String, Method> cmap = new ConcurrentHashMap<String, Method>();
 
 	public static Map<String, ZClass> getZCMap() {
 		final Map<String, ZClass> m = zcMap.get(KEY);
@@ -57,9 +58,9 @@ public class ZAOPScaner {
 
 	public static final String KEY = "scan";
 
-	public	static Map<String, ZClass> scanAndGenerateProxyClass1(final String... packageName) {
+	public	static Map<String, ZClass> scanAndGenerateProxyClass1(final String... packageName) throws IllegalAccessException {
 
-		final Map<String, ZClass> map = Maps.newHashMap();
+		final Map<String, ZClass> map = new HashMap<>();
 		final Set<Class<?>> cs = scanPackage_COM(packageName);
 
 		final HashBasedTable<Class, Method, List<Class<?>>> table = extractedC(cs);
@@ -70,11 +71,13 @@ public class ZAOPScaner {
 			proxyZClass.setPackage1(new ZPackage(cls.getPackage().getName()));
 			proxyZClass.setName(cls.getSimpleName() + PROXY_ZCLASS_NAME_SUFFIX);
 			proxyZClass.setSuperClass(cls.getName());
-			proxyZClass.setAnnotationSet(Sets.newHashSet(ZAOPProxyClass.class.getName()));
+			final HashSet<String> sdet = new HashSet<>();
+			sdet.add(ZAOPProxyClass.class.getName());
+			proxyZClass.setAnnotationSet(sdet);
 
 			final Method[] mss = cls.getDeclaredMethods();
 
-			final HashSet<ZMethod> zms = Sets.newHashSet();
+			final HashSet<ZMethod> zms = new HashSet<>();
 			for (final Method m : mss) {
 				addZMethod(table, cls, proxyZClass, zms, m);
 			}
@@ -85,14 +88,20 @@ public class ZAOPScaner {
 			for (final Field f : fs) {
 				try {
 					f.setAccessible(true);
-					final ZField zf = new ZField();
-
-					zf.setType(f.getType().getName());
-					zf.setName(f.getName());
-
-					ZFH.set(cls.getName() + "@" + f.getType().getName(), f.get(cls.newInstance()));
-					zf.setValue(ZFH.class.getName() + ".get(\"" + cls.getName() + "@"
+//					final ZField zf = new ZField();
+//
+//					zf.setType(f.getType().getName());
+//					zf.setName(f.getName());
+//
+//					ZFH.set(cls.getName() + "@" + f.getType().getName(), f.get(cls.newInstance()));
+//					zf.setValue(ZFH.class.getName() + ".get(\"" + cls.getName() + "@"
+//							+ f.getType().getName() + "\")");
+					
+					
+					final ZField zf = new ZField(f.getType().getName(),f.getName(),ZFH.class.getName() + ".get(\"" + cls.getName() + "@"
 							+ f.getType().getName() + "\")");
+					
+					
 
 					final Annotation[] fas = f.getAnnotations();
 					if (fas != null) {
@@ -106,7 +115,7 @@ public class ZAOPScaner {
 						}
 					}
 					proxyZClass.addField(zf);
-				} catch (IllegalArgumentException | IllegalAccessException | InstantiationException e) {
+				} catch (final IllegalArgumentException e) {
 					e.printStackTrace();
 				}
 			}
@@ -175,7 +184,7 @@ public class ZAOPScaner {
 				final String zFieldType = ZIAOP.class.getName();
 				final ZField zField = new ZField(zFieldType, zFieldName,
 						"(" + zFieldType + ")" + ZSingleton.class.getName()
-						+ ".getSingletonByClassName(\"" + aopClass.getName() + "\")",Lists.newArrayList());
+						+ ".getSingletonByClassName(\"" + aopClass.getName() + "\")");
 
 				proxyZClass.addField(zField);
 
@@ -194,7 +203,7 @@ public class ZAOPScaner {
 		} else {
 			// 无自定义注解的情况：
 			// 1 看此方法参数是否有 @ZValidated 注解，有则给此方法body插入 校验代码
-			if (Lists.newArrayList(m.getParameterTypes()).stream().filter(pa -> pa.isAnnotationPresent(ZValidated.class)).findAny().isPresent()) {
+			if (Arrays.stream(m.getParameterTypes()).filter(pa -> pa.isAnnotationPresent(ZValidated.class)).findAny().isPresent()) {
 
 				final StringBuilder insert = new StringBuilder();
 				final Parameter[] ps = m.getParameters();
@@ -338,7 +347,9 @@ public class ZAOPScaner {
 					if (CU.isNotEmpty(aL)) {
 						final List<Class<?>> cl = table.get(c	, m);
 						if (CU.isEmpty(cl)) {
-							table.put(c, m, Lists.newArrayList(aL.get(0)));
+							final ArrayList<Class<?>> an = new ArrayList<>();
+							an.add(aL.get(0));
+							table.put(c, m, an);
 						}else {
 							cl.add(aL.get(0));
 							table.put(c, m, cl);

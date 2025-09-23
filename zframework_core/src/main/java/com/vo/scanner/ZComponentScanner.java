@@ -37,10 +37,14 @@ import com.vo.validator.ZValidator;
 public class ZComponentScanner {
 
 	public static void scanAndCreate(final Class<? extends Annotation> cls,final String... packageName) {
-		scanAndCreate0(cls, packageName);
+		try {
+			scanAndCreate0(cls, packageName);
+		} catch (final IllegalAccessException e) {
+			e.printStackTrace();
+		}
 	}
 
-	private static void scanAndCreate0(final Class<? extends Annotation> zc, final String... packageName) {
+	private static void scanAndCreate0(final Class<? extends Annotation> zc, final String... packageName) throws IllegalAccessException {
 		final Map<String, ZClass> map = ZAOPScaner.scanAndGenerateProxyClass1(packageName);
 
 		final Set<Class<?>> zcSet = ClassMap.scanPackageByAnnotation(zc, packageName);

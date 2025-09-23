@@ -1,10 +1,9 @@
 package com.vo.aop;
 
 import java.lang.reflect.Method;
+import java.util.Collection;
 import java.util.concurrent.atomic.AtomicLong;
 
-import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.ImmutableMap;
 import com.vo.cache.ZCacheConfiguration;
 import com.vo.cache.ZCacheConfigurationProperties;
 import com.vo.cache.ZCachePut;
@@ -32,7 +31,7 @@ public class ZCacheScanner {
 			return;
 		}
 
-		final ImmutableCollection<Object> bean = ZContext.all().values();
+		final Collection<Object> bean = ZContext.all().values();
 
 		final AtomicLong minExpire = new AtomicLong(Long.MAX_VALUE);
 		final ZMixConfigurationProperties configurationProperties = ZContext.getBean(ZMixConfigurationProperties.class);

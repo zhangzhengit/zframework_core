@@ -1,5 +1,7 @@
 package com.vo.core;
 
+import java.util.Collections;
+import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 
 import com.google.common.collect.ImmutableMap;
@@ -60,8 +62,8 @@ public class ZContext {
 		BEAN_MAP.put(beanName, bean);
 	}
 
-	public synchronized static ImmutableMap<String, Object> all() {
-		return ImmutableMap.copyOf(BEAN_MAP);
+	public synchronized static Map<String, Object> all() {
+		return Collections.unmodifiableMap(BEAN_MAP);
 	}
 
 	public synchronized static void addZClassBean(final String beanName, final ZClass zClass, final Object bean) {

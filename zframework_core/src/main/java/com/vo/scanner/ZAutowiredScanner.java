@@ -2,6 +2,7 @@ package com.vo.scanner;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -166,7 +167,7 @@ public class ZAutowiredScanner {
 
 
 	public static void after() {
-		final ImmutableCollection<Object> bs = ZContext.all().values();
+		final Collection<Object> bs = ZContext.all().values();
 		for (final Object bean : bs) {
 
 			final Field[] fs = bean.getClass().getDeclaredFields();

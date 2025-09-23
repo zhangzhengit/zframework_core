@@ -1,8 +1,7 @@
 package com.vo.cache;
 
+import java.util.HashSet;
 import java.util.Set;
-
-import com.google.common.collect.Sets;
 
 import cn.hutool.core.bean.BeanUtil;
 
@@ -102,7 +101,7 @@ public class ZCacheMixed implements ZCache<ZCacheR> {
 		// 此值极可能不准
 		final Set<String> k1 = this.memory.keySet();
 		final Set<String> k2 = this.redis.keySet();
-		final Set<String> v = Sets.newHashSet();
+		final Set<String> v = new HashSet<>();
 		v.addAll(k1);
 		v.addAll(k2);
 		return k1;

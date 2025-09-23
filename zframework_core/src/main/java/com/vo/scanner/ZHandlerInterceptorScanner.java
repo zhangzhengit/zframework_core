@@ -1,6 +1,7 @@
 package com.vo.scanner;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -33,7 +34,7 @@ public class ZHandlerInterceptorScanner {
 	 */
 	public static void scan() {
 
-		final ImmutableCollection<Object> values = ZContext.all().values();
+		final Collection<Object> values = ZContext.all().values();
 		final HashSet<Integer> ovSet = Sets.newHashSet();
 		for (final Object bean : values) {
 

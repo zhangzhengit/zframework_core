@@ -1,5 +1,6 @@
 package com.vo.core;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.stream.Collectors;
@@ -35,7 +36,7 @@ public final class TaskRequestHandler extends Thread {
 
 		this.setName(NAME);
 
-		final ImmutableCollection<Object> beanConnection = ZContext.all().values();
+		final Collection<Object> beanConnection = ZContext.all().values();
 
 		final List<RequestValidatorAdapter> childList = beanConnection.stream()
 				.filter(bean -> bean.getClass().getSuperclass().getCanonicalName()

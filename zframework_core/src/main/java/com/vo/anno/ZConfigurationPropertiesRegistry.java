@@ -1,8 +1,7 @@
 package com.vo.anno;
 
 import java.util.HashMap;
-
-import com.google.common.collect.Maps;
+import java.util.Map;
 
 /**
  * @ZConfigurationProperties 容器类
@@ -13,7 +12,7 @@ import com.google.common.collect.Maps;
  */
 public final class ZConfigurationPropertiesRegistry {
 	
-	private final HashMap<String, Object> zcpMap = Maps.newHashMap();
+	private final Map<String, Object> zcpMap = new HashMap<>();
 
 	/**
 	 * 返回所有的 @ZConfigurationProperties 类

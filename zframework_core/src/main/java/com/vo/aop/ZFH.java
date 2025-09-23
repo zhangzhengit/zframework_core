@@ -1,8 +1,7 @@
 package com.vo.aop;
 
+import java.util.HashMap;
 import java.util.Map;
-
-import com.google.common.collect.Maps;
 
 /**
  *
@@ -14,7 +13,7 @@ import com.google.common.collect.Maps;
  */
 public class ZFH {
 
-	private static final Map<String, Object> M = Maps.newHashMap();
+	private static final Map<String, Object> M = new HashMap<>();
 
 	public static void set(final String name, final Object object) {
 		M.put(name, object);

@@ -1,14 +1,14 @@
 package com.vo.anno;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
-import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.vo.core.ZContext;
 import com.vo.exception.StartupException;
 
@@ -28,12 +28,12 @@ public class ZCommandLineRunnerScanner {
 	 * @return
 	 *
 	 */
-	public static ImmutableList<Object> scan(final String... packageName) {
+	public static List<Object> scan(final String... packageName) {
 
 		final Set<Object> set = new LinkedHashSet<>();
 
-		final ImmutableMap<String, Object> all = ZContext.all();
-		final ImmutableCollection<Object> bs = all.values();
+		final Map<String, Object> all = ZContext.all();
+		final Collection<Object> bs = all.values();
 		for (final Object bean : bs) {
 			final Class<?>[] is = bean.getClass().getInterfaces();
 			for (final Class c : is) {
@@ -47,14 +47,14 @@ public class ZCommandLineRunnerScanner {
 			checkZOrder(set);
 		}
 
-		final List<Object> collect = Lists.newArrayList(set);
+		final List<Object> collect = new ArrayList<>(set);
 		collect.sort((o1, o2) -> {
 			final int value1 = o1.getClass().getAnnotation(ZOrder.class).value();
 			final int value2 = o2.getClass().getAnnotation(ZOrder.class).value();
 			return Integer.compare(value1, value2);
 		});
 
-		return ImmutableList.copyOf(collect);
+		return Collections.unmodifiableList(collect);
 	}
 
 	private static void checkZOrder(final Set<Object> set) {
@@ -73,7 +73,7 @@ public class ZCommandLineRunnerScanner {
 			}
 		}
 
-		final Set<Integer> valueSet = Sets.newHashSet();
+		final Set<Integer> valueSet = new HashSet<>();
 		for (final Object bean : set) {
 			final int value = bean.getClass().getAnnotation(ZOrder.class).value();
 			final boolean add = valueSet.add(value);
