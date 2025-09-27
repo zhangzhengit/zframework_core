@@ -4,7 +4,7 @@
 
 	<groupId>com.vo</groupId>
 	<artifactId>zframework_core</artifactId>
-	<version>1.0-SNAPSHOT</version>
+	<version>1.0.0-SNAPSHOT-jdk8</version>
 	<name>zframework_core</name>
 	<description>zframework_core</description>
 
