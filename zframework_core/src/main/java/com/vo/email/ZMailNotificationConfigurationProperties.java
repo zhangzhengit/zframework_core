@@ -3,7 +3,6 @@ package com.vo.email;
 import java.util.Set;
 
 import com.vo.anno.ZConfigurationProperties;
-import com.vo.validator.ZCustom;
 import com.vo.validator.ZNotNull;
 
 /**
@@ -21,13 +20,13 @@ public class ZMailNotificationConfigurationProperties {
 	 * 如果配置为[false]，则本类下面配置的事件(异常)发生时都[不]会发邮件通知收件人
 	 */
 	@ZNotNull
-	private Boolean enable = false;
+	private boolean enable = false;
 
 	/**
 	 * 是否关注[shutdown]事件
 	 */
 	@ZNotNull
-	private Boolean shutdownEvent = false;
+	private boolean shutdownEvent = false;
 
 	/**
 	 * 关注的事件(异常)，当程序触发这些事件(异常)时，会发邮件给 receiver
@@ -46,7 +45,7 @@ public class ZMailNotificationConfigurationProperties {
 	// FIXME 2025年9月1日 上午1:05:59 zhangzhen: 本类三个字段检验暂时注释，因为想改为无zf.p可启动的，
 	// 以后改为某字段在某条件下才开启检验，如：本类enable=true才检验
 //	@ZCustom(cls = ZPortValidator.class, ignoreNull = true)
-	private Integer port;
+	private int port;
 
 	/**
 	 * 发送邮件的邮箱地址
@@ -69,67 +68,67 @@ public class ZMailNotificationConfigurationProperties {
 //	@ZCustom(cls = ZMailValidator.class, ignoreNull = true)
 	private Set<String> receiver;
 
-	public Boolean getEnable() {
-		return enable;
+	public boolean getEnable() {
+		return this.enable;
 	}
 
-	public void setEnable(Boolean enable) {
+	public void setEnable(final boolean enable) {
 		this.enable = enable;
 	}
 
-	public Boolean getShutdownEvent() {
-		return shutdownEvent;
+	public boolean getShutdownEvent() {
+		return this.shutdownEvent;
 	}
 
-	public void setShutdownEvent(Boolean shutdownEvent) {
+	public void setShutdownEvent(final boolean shutdownEvent) {
 		this.shutdownEvent = shutdownEvent;
 	}
 
 	public Set<String> getMonitoredEvents() {
-		return monitoredEvents;
+		return this.monitoredEvents;
 	}
 
-	public void setMonitoredEvents(Set<String> monitoredEvents) {
+	public void setMonitoredEvents(final Set<String> monitoredEvents) {
 		this.monitoredEvents = monitoredEvents;
 	}
 
 	public String getHost() {
-		return host;
+		return this.host;
 	}
 
-	public void setHost(String host) {
+	public void setHost(final String host) {
 		this.host = host;
 	}
 
-	public Integer getPort() {
-		return port;
+	public int getPort() {
+		return this.port;
 	}
 
-	public void setPort(Integer port) {
+	public void setPort(final int port) {
 		this.port = port;
 	}
 
 	public String getSender() {
-		return sender;
+		return this.sender;
 	}
 
-	public void setSender(String sender) {
+	public void setSender(final String sender) {
 		this.sender = sender;
 	}
 
 	public String getPassword() {
-		return password;
+		return this.password;
 	}
 
-	public void setPassword(String password) {
+	public void setPassword(final String password) {
 		this.password = password;
 	}
 
 	public Set<String> getReceiver() {
-		return receiver;
+		return this.receiver;
 	}
 
-	public void setReceiver(Set<String> receiver) {
+	public void setReceiver(final Set<String> receiver) {
 		this.receiver = receiver;
 	}
 

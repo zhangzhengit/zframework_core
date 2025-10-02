@@ -23,16 +23,14 @@ public class ZMixConfigurationProperties {
 	 */
 	@ZMin(min = 1)
 	@ZMax(max = Byte.MAX_VALUE)
-	private Byte memoryExpire = 50;
+	private byte memoryExpire = 50;
 
-	public Byte getMemoryExpire() {
-		return memoryExpire;
+	public byte getMemoryExpire() {
+		return this.memoryExpire;
 	}
 
-	public void setMemoryExpire(Byte memoryExpire) {
+	public void setMemoryExpire(final byte memoryExpire) {
 		this.memoryExpire = memoryExpire;
 	}
-	
-	
 
 }

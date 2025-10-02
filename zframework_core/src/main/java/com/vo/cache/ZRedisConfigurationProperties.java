@@ -18,25 +18,24 @@ public class ZRedisConfigurationProperties {
 	private String host = "localhost";
 
 	@ZNotNull
-	private Integer port = 6379;
+	private int port = 6379;
 
 	@ZNotNull
-	private Integer timeout = 2000;
+	private int timeout = 2000;
 
 	@ZNotNull
-	private Integer maxTotal = 20;
+	private int maxTotal = 20;
 
 	@ZNotNull
-	private Integer maxIdle = 2;
+	private int maxIdle = 2;
 
 	/**
 	 * 密码，可以为空，不做限制，也无默认值
 	 */
 	private String password;
 
-	public ZRedisConfigurationProperties(String host, Integer port, Integer timeout, Integer maxTotal, Integer maxIdle,
-			String password) {
-		super();
+	public ZRedisConfigurationProperties(final String host, final int port, final int timeout, final int maxTotal,
+			final int maxIdle, final String password) {
 		this.host = host;
 		this.port = port;
 		this.timeout = timeout;
@@ -49,50 +48,50 @@ public class ZRedisConfigurationProperties {
 	}
 
 	public String getHost() {
-		return host;
+		return this.host;
 	}
 
-	public void setHost(String host) {
+	public void setHost(final String host) {
 		this.host = host;
 	}
 
 	public Integer getPort() {
-		return port;
+		return this.port;
 	}
 
-	public void setPort(Integer port) {
+	public void setPort(final Integer port) {
 		this.port = port;
 	}
 
 	public Integer getTimeout() {
-		return timeout;
+		return this.timeout;
 	}
 
-	public void setTimeout(Integer timeout) {
+	public void setTimeout(final Integer timeout) {
 		this.timeout = timeout;
 	}
 
 	public Integer getMaxTotal() {
-		return maxTotal;
+		return this.maxTotal;
 	}
 
-	public void setMaxTotal(Integer maxTotal) {
+	public void setMaxTotal(final Integer maxTotal) {
 		this.maxTotal = maxTotal;
 	}
 
 	public Integer getMaxIdle() {
-		return maxIdle;
+		return this.maxIdle;
 	}
 
-	public void setMaxIdle(Integer maxIdle) {
+	public void setMaxIdle(final Integer maxIdle) {
 		this.maxIdle = maxIdle;
 	}
 
 	public String getPassword() {
-		return password;
+		return this.password;
 	}
 
-	public void setPassword(String password) {
+	public void setPassword(final String password) {
 		this.password = password;
 	}
 }

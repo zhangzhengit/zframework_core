@@ -50,7 +50,7 @@ public class RequestValidatorConfigurationProperties {
 	 */
 	@ZNotNull
 	@ZValue(name = "request.print.http", listenForChanges = true)
-	private Boolean printHttp = false;
+	private boolean printHttp = false;
 
 	/**
 	 * 根据 User-Agent 判断本次请求是否平滑处理，用于这种场景：
@@ -79,8 +79,8 @@ public class RequestValidatorConfigurationProperties {
 		if (uaL == null) {
 			synchronized (this) {
 				if (uaL == null) {
-					uaL = new String[this.getSmoothUserAgent().size()];
-					uaL = this.getSmoothUserAgent().toArray(new String[0]);
+					uaL = new String[getSmoothUserAgent().size()];
+					uaL = getSmoothUserAgent().toArray(new String[0]);
 					Arrays.sort(uaL, Comparator.comparing(String::length));
 				}
 			}
@@ -89,11 +89,7 @@ public class RequestValidatorConfigurationProperties {
 		for (final String ua : uaL) {
 			// FIXME 2025年1月26日 02:16:37 zhangzhen: userAgent.length() < ua.length() 这行NPE，先判断ua是否null吧
 			// 以后再debug
-			if (ua == null) {
-				continue;
-			}
-			
-			if (userAgent.length() < ua.length()) {
+			if ((ua == null) || (userAgent.length() < ua.length())) {
 				continue;
 			}
 
@@ -130,17 +126,16 @@ public class RequestValidatorConfigurationProperties {
 		this.smoothUserAgent = smoothUserAgent;
 	}
 
-	public Boolean getPrintHttp() {
+	public boolean getPrintHttp() {
 		return this.printHttp;
 	}
 
-	public void setPrintHttp(final Boolean printHttp) {
+	public void setPrintHttp(final boolean printHttp) {
 		this.printHttp = printHttp;
 	}
 
 	public static QPSHandlingEnum getDefaultHandlingenum() {
 		return DEFAULT_HANDLINGENUM;
 	}
-
 	
 }

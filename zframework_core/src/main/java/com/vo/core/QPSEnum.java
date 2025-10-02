@@ -52,37 +52,37 @@ public enum QPSEnum {
 
 	;
 
-	private Integer minValue;
-	private Integer maxValue;
-	private Integer defaultValue;
+	private int minValue;
+	private int maxValue;
+	private int defaultValue;
 
-	QPSEnum(final Integer minValue, final Integer maxValue, final Integer defaultValue) {
+	QPSEnum(final int minValue, final int maxValue, final int defaultValue) {
 		this.minValue = minValue;
 		this.maxValue = maxValue;
 		this.defaultValue = defaultValue;
 	}
 
-	public Integer getMinValue() {
+	public int getMinValue() {
 		return this.minValue;
 	}
 
-	public void setMinValue(final Integer minValue) {
+	public void setMinValue(final int minValue) {
 		this.minValue = minValue;
 	}
-
-	public Integer getMaxValue() {
+ 
+	public int getMaxValue() {
 		return this.maxValue;
 	}
 
-	public void setMaxValue(final Integer maxValue) {
+	public void setMaxValue(final int maxValue) {
 		this.maxValue = maxValue;
 	}
 
-	public Integer getDefaultValue() {
+	public int getDefaultValue() {
 		return this.defaultValue;
 	}
 
-	public void setDefaultValue(final Integer defaultValue) {
+	public void setDefaultValue(final int defaultValue) {
 		this.defaultValue = defaultValue;
 	}
 	

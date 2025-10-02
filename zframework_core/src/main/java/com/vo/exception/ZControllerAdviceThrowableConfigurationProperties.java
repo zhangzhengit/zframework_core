@@ -14,13 +14,13 @@ import com.vo.validator.ZNotNull;
 public class ZControllerAdviceThrowableConfigurationProperties {
 
 	@ZNotNull
-	private Integer errorCode = 50000;
+	private int errorCode = 50000;
 
-	public Integer getErrorCode() {
-		return errorCode;
+	public int getErrorCode() {
+		return this.errorCode;
 	}
 
-	public void setErrorCode(Integer errorCode) {
+	public void setErrorCode(final Integer errorCode) {
 		this.errorCode = errorCode;
 	}
 

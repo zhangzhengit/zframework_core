@@ -24,21 +24,21 @@ public class ZCacheConfigurationProperties {
 	 * 配置是否启用 cache 缓存功能
 	 */
 	@ZNotNull
-	private Boolean enable = true;
+	private boolean enable = true;
 
 	public String getType() {
-		return type;
+		return this.type;
 	}
 
-	public void setType(String type) {
+	public void setType(final String type) {
 		this.type = type;
 	}
 
-	public Boolean getEnable() {
-		return enable;
+	public boolean getEnable() {
+		return this.enable;
 	}
 
-	public void setEnable(Boolean enable) {
+	public void setEnable(final boolean enable) {
 		this.enable = enable;
 	}
 	

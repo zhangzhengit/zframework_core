@@ -119,7 +119,16 @@ public class ZValidator {
 	}
 
 	public static boolean isZMinZMaxSupported(final Class<?> cls) {
-		return (cls == Byte.class) || (cls == Short.class) || (cls == Integer.class) || (cls == Long.class)
+		final String nnnn = cls.getName();
+		return "byte".equals(nnnn)
+			|| "short".equals(nnnn)
+			|| "int".equals(nnnn)
+			|| "long".equals(nnnn)
+			|| "float".equals(nnnn)
+			|| "double".equals(nnnn)
+			|| "byte".equals(nnnn)
+		
+		|| (cls == Byte.class) || (cls == Short.class) || (cls == Integer.class) || (cls == Long.class)
 				|| (cls == Float.class) || (cls == Double.class) || (cls == BigDecimal.class) || (cls == BigInteger.class)
 				|| (cls == AtomicLong.class) || (cls == AtomicInteger.class);
 	}

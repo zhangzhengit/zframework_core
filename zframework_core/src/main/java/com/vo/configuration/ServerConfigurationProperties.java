@@ -36,14 +36,14 @@ public class ServerConfigurationProperties {
 	@ZNotNull
 	@ZMin(min = PortChecker.PORT_MIN)
 	@ZMax(max = PortChecker.PORT_MAX)
-	private Integer port = 80;
+	private int port = 80;
 
 	/**
 	 * response 响应头中是否包含 Cookie (ZSESSIONID)
 	 */
 	@ZNotNull
 	@ZValue(name = "server.response.z.session.id", listenForChanges = true)
-	private Boolean responseZSessionId = true;
+	private boolean responseZSessionId = true;
 
 	/**
 	 * server的name，用于响应头中的Server字段
@@ -59,7 +59,7 @@ public class ServerConfigurationProperties {
 	@ZNotNull
 	@ZMin(min = 100)
 	@ZMax(max = 10240)
-	private Integer byteBufferSize = 1024 * 2;
+	private int byteBufferSize = 1024 * 2;
 
 	/**
 	 * nio 读取http请求的body时
@@ -69,7 +69,7 @@ public class ServerConfigurationProperties {
 	@ZMin(min = 1)
 	@ZMax(max = 1000 * 60)
 	@ZNotNull
-	private Integer nioReadTimeout = 100 * 5;
+	private int nioReadTimeout = 100 * 5;
 
 	/**
 	 * 限制上传文件的最大KB数
@@ -78,7 +78,7 @@ public class ServerConfigurationProperties {
 	@ZMin(min = 1)
 	@ZMax(max = 1024 * 10000)
 	@ZNotNull
-	private Integer uploadFileSize = 1024 * 50;
+	private int uploadFileSize = 1024 * 50;
 
 	/**
 	 * 上传文件时从[一次性读取内存]改为[边读边写入到临时文件]的阈值
@@ -90,7 +90,7 @@ public class ServerConfigurationProperties {
 	@ZMin(min = 100)
 	@ZMax(max = 1024 * 100)
 	@ZNotNull
-	private Integer uploadFileToTempSize = 1024;
+	private int uploadFileToTempSize = 1024;
 
 	/**
 	 * 上传文件时存放临时文件的目录，
@@ -105,7 +105,7 @@ public class ServerConfigurationProperties {
 	@ZNotNull
 	@ZMin(min = 1)
 	@ZMax(max = 2000)
-	private Integer threadCount = Runtime.getRuntime().availableProcessors() * 4;
+	private int threadCount = Runtime.getRuntime().availableProcessors() * 4;
 
 	/**
 	 * 处理http请求的线程的名称前缀，生成的线程以此为前缀分别命名为1、2、3以此类推
@@ -118,7 +118,7 @@ public class ServerConfigurationProperties {
 	 */
 	@ZNotNull
 	@ZValue(name = "server.static.resource.cache.enable", listenForChanges = true)
-	private Boolean staticResourceCacheEnable = true;
+	private boolean staticResourceCacheEnable = true;
 
 	/**
 	 * 扫描的包配置，如：com.vo
@@ -131,7 +131,7 @@ public class ServerConfigurationProperties {
 	 */
 	@ZNotNull
 	@ZValue(name = "server.qps.limit.enabled", listenForChanges = true)
-	private Boolean qpsLimitEnabled = true;
+	private boolean qpsLimitEnabled = true;
 
 	/**
 	 * 接受并且处理http请求的QPS最大值，超过此值会返回非200的status
@@ -146,7 +146,7 @@ public class ServerConfigurationProperties {
 	// 如果不限制的话，是否其他ip的请求优先处理？
 
 	// FIXME 2024年2月15日 下午6:14:59 zhanghen: 最先判断是否超过server.qps 似乎不合理，应该先判断ZSESSIONID或者client是否超对应的qps，然后判断是否超server.qps
-	private Integer qps = QPSEnum.SERVER.getDefaultValue();
+	private int qps = QPSEnum.SERVER.getDefaultValue();
 
 	/**
 	 * 访问超过 本类 [server.qps] 配置值限制时给客户端的提示语
@@ -162,14 +162,14 @@ public class ServerConfigurationProperties {
 	@ZNotNull
 	@ZMin(min = 1)
 	@ZMax(max = 1024 * 16)
-	private Integer requestHeaderSizeLimit = 500;
+	private int requestHeaderSizeLimit = 500;
 
 	/**
 	 * 当前待处理的请求数最大值限制，来新请求时如果当前待处理请求数已经达到此值，则拒绝本次请求并返回错误码
 	 */
 	@ZMin(min = 52)
 	@ZMax(max = 10000 * 1)
-	private Integer pendingTasks = 100;
+	private int pendingTasks = 100;
 
 	/**
 	 *	请求超过 [server.pending.tasks] 配置值时给客户端的提示信息
@@ -194,14 +194,14 @@ public class ServerConfigurationProperties {
 	@ZMin(min = 1)
 	@ZMax(max = 1000 * 100)
 	@ZValue(name = "server.task.timeout.milliseconds", listenForChanges = true)
-	private Integer taskTimeoutMilliseconds = 100;
+	private int taskTimeoutMilliseconds = 100;
 
 	/**
 	 * 是否启用对一个client的qps限制
 	 */
 	@ZNotNull
 	@ZValue(name = "server.enable.client.qps", listenForChanges = true)
-	private Boolean enableClientQps = true;
+	private boolean enableClientQps = true;
 
 	/**
 	 * 对一个client的qps限制
@@ -210,7 +210,7 @@ public class ServerConfigurationProperties {
 	@ZMax(max = ZClientQPSValidator.MAX_VALUE)
 	@ZValue(name = "server.client.qps", listenForChanges = true)
 	@ZCustom(cls = ZClientQPSValidator.class)
-	private Integer clientQps = QPSEnum.CLIENT.getDefaultValue();
+	private int clientQps = QPSEnum.CLIENT.getDefaultValue();
 
 	/**
 	 * 对一个ZSESSIONID的qps限制
@@ -219,7 +219,7 @@ public class ServerConfigurationProperties {
 	@ZMax(max = ZSessionIdQPSValidator.MAX_VALUE)
 	@ZValue(name = "server.session.id.qps", listenForChanges = true)
 	@ZCustom(cls = ZSessionIdQPSValidator.class)
-	private Integer sessionIdQps = QPSEnum.Z_SESSION_ID.getDefaultValue();
+	private int sessionIdQps = QPSEnum.Z_SESSION_ID.getDefaultValue();
 
 	/**
 	 * 是否启用内置的 StaticController,
@@ -227,7 +227,7 @@ public class ServerConfigurationProperties {
 	 * 静态资源
 	 */
 	@ZNotNull
-	private Boolean staticControllerEnable = true;
+	private boolean staticControllerEnable = true;
 
 	/**
 	 * StaticController 中允许的Referer，
@@ -248,7 +248,7 @@ public class ServerConfigurationProperties {
 	 */
 	@ZMin(min = 1024 * 1024 * 1)
 	@ZMax(max = Integer.MAX_VALUE)
-	private Integer staticControllerMemoryCacheCapacity = 1024 * 1024 * 100;
+	private int staticControllerMemoryCacheCapacity = 1024 * 1024 * 100;
 
 	/**
 	 * 长连接超时时间，一个长连接超过此时间则关闭，单位：秒
@@ -257,7 +257,7 @@ public class ServerConfigurationProperties {
 	@ZMin(min = 1)
 	@ZMax(max = 86400)
 	// FIXME 2023年7月4日 下午6:57:06 zhanghen: TODO 改为：从连接最后一次活动开始计时，超过此值再关闭
-	private Integer keepAliveTimeout = 60 * 10;
+	private int keepAliveTimeout = 60 * 10;
 
 	/**
 	 * session 存储类型
@@ -273,7 +273,7 @@ public class ServerConfigurationProperties {
 	@ZMin(min = 1)
 	@ZMax(max = Integer.MAX_VALUE)
 	@ZValue(name = "server.session.timeout", listenForChanges = true)
-	private Long sessionTimeout = 60 * 30L;
+	private long sessionTimeout = 60 * 30L;
 
 	/**
 	 * 配置硬盘上的资源目录，如：E:\\x
@@ -295,7 +295,7 @@ public class ServerConfigurationProperties {
 	 * 是否开启对响应body的压缩
 	 */
 	@ZNotNull
-	private Boolean compressionEnable = true;
+	private boolean compressionEnable = true;
 
 	/**
 	 * 开启压缩的content-type,如需配置多个，则用,隔开，如： text/html,text/css
@@ -324,7 +324,7 @@ public class ServerConfigurationProperties {
 	@ZNotNull
 	@ZMin(min = 1)
 	@ZMax(max = 1000)
-	private Integer compressionMinLength = 1;
+	private int compressionMinLength = 1;
 
 	/**
 	 * 支持的自定义响应头header，如：解决CORS问题，配置如下：
@@ -336,16 +336,16 @@ public class ServerConfigurationProperties {
 	 * 程序启动时是否打印 @ZConfigurationProperties 配置类信息
 	 */
 	@ZNotNull
-	private Boolean printConfigurationProperties = false;
+	private boolean printConfigurationProperties = false;
 
 	/**
 	 * 是否输出生成的代理类源码
 	 */
 	@ZNotNull
-	private Boolean printProxyClass = false;
+	private boolean printProxyClass = false;
 
 	public boolean compressionContains(final String contentType) {
-		final String[] a = this.getCompressionType();
+		final String[] a = getCompressionType();
 		for (final String string : a) {
 			if (string.equals(contentType)) {
 				return true;
@@ -359,19 +359,19 @@ public class ServerConfigurationProperties {
 		return SCU.split(this.compressionTypes, ",");
 	}
 
-	public Integer getPort() {
+	public int getPort() {
 		return this.port;
 	}
 
-	public void setPort(final Integer port) {
+	public void setPort(final int port) {
 		this.port = port;
 	}
 
-	public Boolean getResponseZSessionId() {
+	public boolean getResponseZSessionId() {
 		return this.responseZSessionId;
 	}
 
-	public void setResponseZSessionId(final Boolean responseZSessionId) {
+	public void setResponseZSessionId(final boolean responseZSessionId) {
 		this.responseZSessionId = responseZSessionId;
 	}
 
@@ -383,35 +383,35 @@ public class ServerConfigurationProperties {
 		this.name = name;
 	}
 
-	public Integer getByteBufferSize() {
+	public int getByteBufferSize() {
 		return this.byteBufferSize;
 	}
 
-	public void setByteBufferSize(final Integer byteBufferSize) {
+	public void setByteBufferSize(final int byteBufferSize) {
 		this.byteBufferSize = byteBufferSize;
 	}
 
-	public Integer getNioReadTimeout() {
+	public int getNioReadTimeout() {
 		return this.nioReadTimeout;
 	}
 
-	public void setNioReadTimeout(final Integer nioReadTimeout) {
+	public void setNioReadTimeout(final int nioReadTimeout) {
 		this.nioReadTimeout = nioReadTimeout;
 	}
 
-	public Integer getUploadFileSize() {
+	public int getUploadFileSize() {
 		return this.uploadFileSize;
 	}
 
-	public void setUploadFileSize(final Integer uploadFileSize) {
+	public void setUploadFileSize(final int uploadFileSize) {
 		this.uploadFileSize = uploadFileSize;
 	}
 
-	public Integer getUploadFileToTempSize() {
+	public int getUploadFileToTempSize() {
 		return this.uploadFileToTempSize;
 	}
 
-	public void setUploadFileToTempSize(final Integer uploadFileToTempSize) {
+	public void setUploadFileToTempSize(final int uploadFileToTempSize) {
 		this.uploadFileToTempSize = uploadFileToTempSize;
 	}
 
@@ -423,11 +423,11 @@ public class ServerConfigurationProperties {
 		this.uploadTempDir = uploadTempDir;
 	}
 
-	public Integer getThreadCount() {
+	public int getThreadCount() {
 		return this.threadCount;
 	}
 
-	public void setThreadCount(final Integer threadCount) {
+	public void setThreadCount(final int threadCount) {
 		this.threadCount = threadCount;
 	}
 
@@ -439,11 +439,11 @@ public class ServerConfigurationProperties {
 		this.threadName = threadName;
 	}
 
-	public Boolean getStaticResourceCacheEnable() {
+	public boolean getStaticResourceCacheEnable() {
 		return this.staticResourceCacheEnable;
 	}
 
-	public void setStaticResourceCacheEnable(final Boolean staticResourceCacheEnable) {
+	public void setStaticResourceCacheEnable(final boolean staticResourceCacheEnable) {
 		this.staticResourceCacheEnable = staticResourceCacheEnable;
 	}
 
@@ -455,19 +455,19 @@ public class ServerConfigurationProperties {
 		this.scanPackage = scanPackage;
 	}
 
-	public Boolean getQpsLimitEnabled() {
+	public boolean getQpsLimitEnabled() {
 		return this.qpsLimitEnabled;
 	}
 
-	public void setQpsLimitEnabled(final Boolean qpsLimitEnabled) {
+	public void setQpsLimitEnabled(final boolean qpsLimitEnabled) {
 		this.qpsLimitEnabled = qpsLimitEnabled;
 	}
 
-	public Integer getQps() {
+	public int getQps() {
 		return this.qps;
 	}
 
-	public void setQps(final Integer qps) {
+	public void setQps(final int qps) {
 		this.qps = qps;
 	}
 
@@ -479,19 +479,19 @@ public class ServerConfigurationProperties {
 		this.qpsExceedMessage = qpsExceedMessage;
 	}
 
-	public Integer getRequestHeaderSizeLimit() {
+	public int getRequestHeaderSizeLimit() {
 		return this.requestHeaderSizeLimit;
 	}
 
-	public void setRequestHeaderSizeLimit(final Integer requestHeaderSizeLimit) {
+	public void setRequestHeaderSizeLimit(final int requestHeaderSizeLimit) {
 		this.requestHeaderSizeLimit = requestHeaderSizeLimit;
 	}
 
-	public Integer getPendingTasks() {
+	public int getPendingTasks() {
 		return this.pendingTasks;
 	}
 
-	public void setPendingTasks(final Integer pendingTasks) {
+	public void setPendingTasks(final int pendingTasks) {
 		this.pendingTasks = pendingTasks;
 	}
 
@@ -511,43 +511,43 @@ public class ServerConfigurationProperties {
 		this.taskResponsiveMode = taskResponsiveMode;
 	}
 
-	public Integer getTaskTimeoutMilliseconds() {
+	public int getTaskTimeoutMilliseconds() {
 		return this.taskTimeoutMilliseconds;
 	}
 
-	public void setTaskTimeoutMilliseconds(final Integer taskTimeoutMilliseconds) {
+	public void setTaskTimeoutMilliseconds(final int taskTimeoutMilliseconds) {
 		this.taskTimeoutMilliseconds = taskTimeoutMilliseconds;
 	}
 
-	public Boolean getEnableClientQps() {
+	public boolean getEnableClientQps() {
 		return this.enableClientQps;
 	}
 
-	public void setEnableClientQps(final Boolean enableClientQps) {
+	public void setEnableClientQps(final boolean enableClientQps) {
 		this.enableClientQps = enableClientQps;
 	}
 
-	public Integer getClientQps() {
+	public int getClientQps() {
 		return this.clientQps;
 	}
 
-	public void setClientQps(final Integer clientQps) {
+	public void setClientQps(final int clientQps) {
 		this.clientQps = clientQps;
 	}
 
-	public Integer getSessionIdQps() {
+	public int getSessionIdQps() {
 		return this.sessionIdQps;
 	}
 
-	public void setSessionIdQps(final Integer sessionIdQps) {
+	public void setSessionIdQps(final int sessionIdQps) {
 		this.sessionIdQps = sessionIdQps;
 	}
 
-	public Boolean getStaticControllerEnable() {
+	public boolean getStaticControllerEnable() {
 		return this.staticControllerEnable;
 	}
 
-	public void setStaticControllerEnable(final Boolean staticControllerEnable) {
+	public void setStaticControllerEnable(final boolean staticControllerEnable) {
 		this.staticControllerEnable = staticControllerEnable;
 	}
 
@@ -559,19 +559,19 @@ public class ServerConfigurationProperties {
 		this.staticControllerReferersAllowed = staticControllerReferersAllowed;
 	}
 
-	public Integer getStaticControllerMemoryCacheCapacity() {
+	public int getStaticControllerMemoryCacheCapacity() {
 		return this.staticControllerMemoryCacheCapacity;
 	}
 
-	public void setStaticControllerMemoryCacheCapacity(final Integer staticControllerMemoryCacheCapacity) {
+	public void setStaticControllerMemoryCacheCapacity(final int staticControllerMemoryCacheCapacity) {
 		this.staticControllerMemoryCacheCapacity = staticControllerMemoryCacheCapacity;
 	}
 
-	public Integer getKeepAliveTimeout() {
+	public int getKeepAliveTimeout() {
 		return this.keepAliveTimeout;
 	}
 
-	public void setKeepAliveTimeout(final Integer keepAliveTimeout) {
+	public void setKeepAliveTimeout(final int keepAliveTimeout) {
 		this.keepAliveTimeout = keepAliveTimeout;
 	}
 
@@ -583,11 +583,11 @@ public class ServerConfigurationProperties {
 		this.sessionStorageType = sessionStorageType;
 	}
 
-	public Long getSessionTimeout() {
+	public long getSessionTimeout() {
 		return this.sessionTimeout;
 	}
 
-	public void setSessionTimeout(final Long sessionTimeout) {
+	public void setSessionTimeout(final long sessionTimeout) {
 		this.sessionTimeout = sessionTimeout;
 	}
 
@@ -607,11 +607,11 @@ public class ServerConfigurationProperties {
 		this.staticPrefix = staticPrefix;
 	}
 
-	public Boolean getCompressionEnable() {
+	public boolean getCompressionEnable() {
 		return this.compressionEnable;
 	}
 
-	public void setCompressionEnable(final Boolean compressionEnable) {
+	public void setCompressionEnable(final boolean compressionEnable) {
 		this.compressionEnable = compressionEnable;
 	}
 
@@ -623,11 +623,11 @@ public class ServerConfigurationProperties {
 		this.compressionTypes = compressionTypes;
 	}
 
-	public Integer getCompressionMinLength() {
+	public int getCompressionMinLength() {
 		return this.compressionMinLength;
 	}
 
-	public void setCompressionMinLength(final Integer compressionMinLength) {
+	public void setCompressionMinLength(final int compressionMinLength) {
 		this.compressionMinLength = compressionMinLength;
 	}
 
@@ -639,19 +639,19 @@ public class ServerConfigurationProperties {
 		this.responseHeaders = responseHeaders;
 	}
 
-	public Boolean getPrintConfigurationProperties() {
+	public boolean getPrintConfigurationProperties() {
 		return this.printConfigurationProperties;
 	}
 
-	public void setPrintConfigurationProperties(final Boolean printConfigurationProperties) {
+	public void setPrintConfigurationProperties(final boolean printConfigurationProperties) {
 		this.printConfigurationProperties = printConfigurationProperties;
 	}
 
-	public Boolean getPrintProxyClass() {
+	public boolean getPrintProxyClass() {
 		return this.printProxyClass;
 	}
 
-	public void setPrintProxyClass(final Boolean printProxyClass) {
+	public void setPrintProxyClass(final boolean printProxyClass) {
 		this.printProxyClass = printProxyClass;
 	}
 	

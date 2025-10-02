@@ -20,12 +20,11 @@ public class CommonConfigurationProperties {
 	private String starterName = "zframework.factories";
 
 	public String getStarterName() {
-		return starterName;
-	}
+		return this.starterName;
+	} 
 
-	public void setStarterName(String starterName) {
+	public void setStarterName(final String starterName) {
 		this.starterName = starterName;
 	}
-	
 	
 }

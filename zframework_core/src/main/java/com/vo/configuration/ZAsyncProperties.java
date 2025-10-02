@@ -27,7 +27,7 @@ public class ZAsyncProperties {
 	@ZNotNull
 	@ZMin(min = 2)
 	@ZMax(max = 100)
-	private Integer threadCount = Math.min(MIN, Runtime.getRuntime().availableProcessors());
+	private int threadCount = Math.min(MIN, Runtime.getRuntime().availableProcessors());
 
 	/**
 	 * 线程名称前缀
@@ -36,11 +36,11 @@ public class ZAsyncProperties {
 	@ZNotEmtpy
 	private String threadNamePrefix = "async-Thread-";
 
-	public Integer getThreadCount() {
+	public int getThreadCount() {
 		return this.threadCount;
 	}
 
-	public void setThreadCount(final Integer threadCount) {
+	public void setThreadCount(final int threadCount) {
 		this.threadCount = threadCount;
 	}
 

@@ -191,25 +191,25 @@ public class ZValueScanner {
 		if (type.getCanonicalName().equals(String.class.getCanonicalName())) {
 			final String v1 = getStringValue(fieldName);
 			setValue(field, object, v1);
-		} else if (type.getCanonicalName().equals(Byte.class.getCanonicalName())) {
+		} else if ("byte".equals(type.getCanonicalName()) || type.getCanonicalName().equals(Byte.class.getCanonicalName())) {
 			setValue(field, object, ZProperties.getByte(fieldName));
-		} else if (type.getCanonicalName().equals(Short.class.getCanonicalName())) {
+		} else if ("short".equals(type.getCanonicalName()) || type.getCanonicalName().equals(Short.class.getCanonicalName())) {
 			setValue(field, object, ZProperties.getShort(fieldName));
-		} else if (type.getCanonicalName().equals(Integer.class.getCanonicalName())) {
+		} else if ("int".equals(type.getCanonicalName()) ||  type.getCanonicalName().equals(Integer.class.getCanonicalName())) {
 			setValue(field, object, ZProperties.getInteger(fieldName));
-		} else if (type.getCanonicalName().equals(Long.class.getCanonicalName())) {
+		} else if ("long".equals(type.getCanonicalName()) || type.getCanonicalName().equals(Long.class.getCanonicalName())) {
 			setValue(field, object, ZProperties.getLong(fieldName));
 		} else if (type.getCanonicalName().equals(BigInteger.class.getCanonicalName())) {
 			setValue(field, object, ZProperties.getBigInteger(fieldName));
 		} else if (type.getCanonicalName().equals(BigDecimal.class.getCanonicalName())) {
 			setValue(field, object, ZProperties.getBigDecimal(fieldName));
-		} else if (type.getCanonicalName().equals(Boolean.class.getCanonicalName())) {
+		} else if ("boolean".equals(type.getCanonicalName()) || type.getCanonicalName().equals(Boolean.class.getCanonicalName())) {
 			setValue(field, object, ZProperties.getBoolean(fieldName));
-		} else if (type.getCanonicalName().equals(Double.class.getCanonicalName())) {
+		} else if ("double".equals(type.getCanonicalName()) || type.getCanonicalName().equals(Double.class.getCanonicalName())) {
 			setValue(field, object, ZProperties.getDouble(fieldName));
-		} else if (type.getCanonicalName().equals(Float.class.getCanonicalName())) {
+		} else if ("float".equals(type.getCanonicalName()) || type.getCanonicalName().equals(Float.class.getCanonicalName())) {
 			setValue(field, object, ZProperties.getFloat(fieldName));
-		} else if (type.getCanonicalName().equals(Character.class.getCanonicalName())) {
+		} else if ("char".equals(type.getCanonicalName()) || type.getCanonicalName().equals(Character.class.getCanonicalName())) {
 			setValue(field, object, ZProperties.getString(fieldName).charAt(0));
 		} else {
 			throw new IllegalArgumentException("@" + ZValue.class.getSimpleName() + " 字段 " + field.getName() + " 的类型 "

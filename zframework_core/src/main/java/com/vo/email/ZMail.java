@@ -40,25 +40,25 @@ public class ZMail {
 
 	@ZAsync
 	public void sendTextPlainAsync(final String subject, final String body, final String receiver) {
-		this.send(subject, body, receiver, TEXT_PLAIN_CHARSET_UTF_8);
+		send(subject, body, receiver, TEXT_PLAIN_CHARSET_UTF_8);
 	}
 
 	public void sendTextPlain(final String subject, final String body, final String receiver) {
-		this.send(subject, body, receiver, TEXT_PLAIN_CHARSET_UTF_8);
+		send(subject, body, receiver, TEXT_PLAIN_CHARSET_UTF_8);
 	}
 
 	@ZAsync
 	public void sendTextHtmlAsync(final String subject, final String body, final String receiver) {
-		this.send(subject, body, receiver, TEXT_HTML_CHARSET_UTF_8);
+		send(subject, body, receiver, TEXT_HTML_CHARSET_UTF_8);
 	}
 
 	public void sendTextHtml(final String subject, final String body, final String receiver) {
-		this.send(subject, body, receiver, TEXT_HTML_CHARSET_UTF_8);
+		send(subject, body, receiver, TEXT_HTML_CHARSET_UTF_8);
 	}
 
 	@ZAsync
 	public void sendAsync(final String subject, final String body, final String receiver, final String contentType) {
-		this.send(subject, body, receiver, TEXT_PLAIN_CHARSET_UTF_8);
+		send(subject, body, receiver, TEXT_PLAIN_CHARSET_UTF_8);
 	}
 
 	public void send(final String subject, final String body, final String receiver, final String contentType) {
@@ -88,9 +88,9 @@ public class ZMail {
 			properties.put("mail.smtp.host", mailNotificationConfigurationProperties.getHost());
 		}
 
-		if (mailNotificationConfigurationProperties.getPort() != null) {
+//		if (mailNotificationConfigurationProperties.getPort() != null) {
 			properties.put("mail.smtp.port", mailNotificationConfigurationProperties.getPort());
-		}
+//		}
 
 		// 获取 Session 对象
 		session = Session.getInstance(properties, new Authenticator() {

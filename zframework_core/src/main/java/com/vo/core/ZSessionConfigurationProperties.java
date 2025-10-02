@@ -19,33 +19,32 @@ public class ZSessionConfigurationProperties {
 	 */
 	@ZMin(min = 1000)
 	@ZMax(max = 10000 * 100)
-	private Integer groups = 1000;
+	private int groups = 1000;
 
 	/**
 	 * 存储到ZMap时的每个组的最大个数
 	 */
 	@ZMin(min = 10)
 	@ZMax(max = 1000)
-	private Integer numberOfGroup = 100;
+	private int numberOfGroup = 100;
 
-	public Integer getGroups() {
-		return groups;
+	public int getGroups() {
+		return this.groups;
 	}
 
-	public void setGroups(Integer groups) {
+	public void setGroups(final int groups) {
 		this.groups = groups;
 	}
 
-	public Integer getNumberOfGroup() {
-		return numberOfGroup;
+	public int getNumberOfGroup() {
+		return this.numberOfGroup;
 	}
 
-	public void setNumberOfGroup(Integer numberOfGroup) {
+	public void setNumberOfGroup(final int numberOfGroup) {
 		this.numberOfGroup = numberOfGroup;
 	}
 
-	public ZSessionConfigurationProperties(Integer groups, Integer numberOfGroup) {
-		super();
+	public ZSessionConfigurationProperties(final int groups, final int numberOfGroup) {
 		this.groups = groups;
 		this.numberOfGroup = numberOfGroup;
 	}

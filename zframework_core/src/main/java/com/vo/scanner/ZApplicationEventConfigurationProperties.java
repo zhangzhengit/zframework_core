@@ -16,30 +16,32 @@ import com.vo.validator.ZNotNull;
 @ZConfigurationProperties(prefix = "application.event")
 public class ZApplicationEventConfigurationProperties {
 
+	private static final int MIN = 10;
+
 	/**
 	 * 处理事件请求的最大线程数量
 	 */
 	@ZNotNull
 	@ZMin(min = 1)
 	@ZMax(max = 100)
-	private Integer threadCount = Math.min(10, Runtime.getRuntime().availableProcessors());
+	private int threadCount = Math.min(MIN, Runtime.getRuntime().availableProcessors());
 
 	@ZNotEmtpy
 	private String threadNamePrefix = "applicationEvent-Thread-";
 
-	public Integer getThreadCount() {
-		return threadCount;
+	public int getThreadCount() {
+		return this.threadCount;
 	}
 
-	public void setThreadCount(Integer threadCount) {
+	public void setThreadCount(final int threadCount) {
 		this.threadCount = threadCount;
 	}
 
 	public String getThreadNamePrefix() {
-		return threadNamePrefix;
+		return this.threadNamePrefix;
 	}
 
-	public void setThreadNamePrefix(String threadNamePrefix) {
+	public void setThreadNamePrefix(final String threadNamePrefix) {
 		this.threadNamePrefix = threadNamePrefix;
 	}
 

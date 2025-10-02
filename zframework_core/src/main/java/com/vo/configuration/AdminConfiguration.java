@@ -20,18 +20,18 @@ public class AdminConfiguration {
 	private String password = "admin";
 
 	public String getUserName() {
-		return userName;
+		return this.userName;
 	}
 
-	public void setUserName(String userName) {
+	public void setUserName(final String userName) {
 		this.userName = userName;
 	}
 
 	public String getPassword() {
-		return password;
-	}
+		return this.password;
+	} 
 
-	public void setPassword(String password) {
+	public void setPassword(final String password) {
 		this.password = password;
 	}
 

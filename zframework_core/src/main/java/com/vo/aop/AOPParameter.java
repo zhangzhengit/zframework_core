@@ -15,7 +15,7 @@ public class AOPParameter {
 	private String methodName;
 	private Method method;
 
-	private Boolean isVOID;
+	private boolean isVOID;
 
 	private List<Object> parameterList;
 
@@ -24,8 +24,7 @@ public class AOPParameter {
 	public Object invoke() {
 
 		try {
-
-			if (Boolean.TRUE.equals(this.getIsVOID())) {
+			if (getIsVOID()) {
 				this.method.invoke(this.target, this.parameterList.toArray());
 				return null;
 			}
@@ -40,49 +39,46 @@ public class AOPParameter {
 	}
 
 	public String getMethodName() {
-		return methodName;
+		return this.methodName;
 	}
 
 	public Method getMethod() {
-		return method;
+		return this.method;
 	}
 
-	public Boolean getIsVOID() {
-		return isVOID;
+	public boolean getIsVOID() {
+		return this.isVOID;
 	}
 
 	public List<Object> getParameterList() {
-		return parameterList;
+		return this.parameterList;
 	}
 
 	public Object getTarget() {
-		return target;
+		return this.target;
 	}
-	
-	
 
-	public void setMethodName(String methodName) {
+	public void setMethodName(final String methodName) {
 		this.methodName = methodName;
 	}
 
-	public void setMethod(Method method) {
+	public void setMethod(final Method method) {
 		this.method = method;
 	}
 
-	public void setIsVOID(Boolean isVOID) {
+	public void setIsVOID(final Boolean isVOID) {
 		this.isVOID = isVOID;
 	}
 
-	public void setParameterList(List<Object> parameterList) {
+	public void setParameterList(final List<Object> parameterList) {
 		this.parameterList = parameterList;
 	}
 
-	public void setTarget(Object target) {
+	public void setTarget(final Object target) {
 		this.target = target;
 	}
 
-	public AOPParameter(String methodName, Method method, Boolean isVOID, List<Object> parameterList, Object target) {
-		super();
+	public AOPParameter(final String methodName, final Method method, final boolean isVOID, final List<Object> parameterList, final Object target) {
 		this.methodName = methodName;
 		this.method = method;
 		this.isVOID = isVOID;
@@ -91,13 +87,11 @@ public class AOPParameter {
 	}
 
 	public AOPParameter() {
-		super();
 		this.methodName = "";
 		this.method = null;
-		this.isVOID = null;
+		this.isVOID = false;
 		this.parameterList = null;
 		this.target = null;
 	}
-	
 	
 }
