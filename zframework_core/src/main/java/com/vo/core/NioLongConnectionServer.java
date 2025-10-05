@@ -58,7 +58,7 @@ public class NioLongConnectionServer {
 
 	private static final ServerConfigurationProperties SERVER_CONFIGURATIONPROPERTIES= ZContext.getBean(ServerConfigurationProperties.class);
 
-	private static final boolean ENABLE_SERVER_QPS_LIMITED = Boolean.TRUE.equals(SERVER_CONFIGURATIONPROPERTIES.getQpsLimitEnabled());
+	private static final boolean ENABLE_SERVER_QPS_LIMITED = SERVER_CONFIGURATIONPROPERTIES.getQpsLimitEnabled();
 
 	private final AtomicBoolean serverStarted = new AtomicBoolean(false);
 
@@ -86,7 +86,7 @@ public class NioLongConnectionServer {
 
 	private final TaskRequestHandler requestHandler = new TaskRequestHandler();
 
-	public void startNIOServer(final Integer serverPort) {
+	public void startNIOServer(final int serverPort) {
 		final ThreadGroup group = new ThreadGroup("nio");
 		final Thread thread = new Thread(group, () -> NioLongConnectionServer.this.startNIOServer0(serverPort));
 		thread.setName("nio-Thread");
@@ -102,7 +102,7 @@ public class NioLongConnectionServer {
 		}
 	}
 
-	private void startNIOServer0(final Integer serverPort) {
+	private void startNIOServer0(final int serverPort) {
 		this.requestHandler.start();
 
 		ZContext.addBean(this.requestHandler.getClass(), this.requestHandler);
@@ -175,7 +175,7 @@ public class NioLongConnectionServer {
 
 						if (SKStatusEnum.READING == selectionKey.attachment()) {
 							NioLongConnectionServer.ZE.executeByNameInASpecificThread(keyword,
-									() -> this.action(selectionKey, socketChannel));
+									() -> action(selectionKey, socketChannel));
 
 						}
 
@@ -491,7 +491,7 @@ public class NioLongConnectionServer {
 	}
 
 	public static void setZSessionId(final ZRequest request, final ZResponse response) {
-		if (!Boolean.TRUE.equals(SERVER_CONFIGURATIONPROPERTIES.getResponseZSessionId()) || (request == null)) {
+		if (!SERVER_CONFIGURATIONPROPERTIES.getResponseZSessionId() || (request == null)) {
 			return;
 		}
 

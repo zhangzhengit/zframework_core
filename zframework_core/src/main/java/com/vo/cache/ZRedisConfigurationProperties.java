@@ -59,31 +59,31 @@ public class ZRedisConfigurationProperties {
 		return this.port;
 	}
 
-	public void setPort(final Integer port) {
+	public void setPort(final int port) {
 		this.port = port;
 	}
 
-	public Integer getTimeout() {
+	public int getTimeout() {
 		return this.timeout;
 	}
 
-	public void setTimeout(final Integer timeout) {
+	public void setTimeout(final int timeout) {
 		this.timeout = timeout;
 	}
 
-	public Integer getMaxTotal() {
+	public int getMaxTotal() {
 		return this.maxTotal;
 	}
 
-	public void setMaxTotal(final Integer maxTotal) {
+	public void setMaxTotal(final int maxTotal) {
 		this.maxTotal = maxTotal;
 	}
 
-	public Integer getMaxIdle() {
+	public int getMaxIdle() {
 		return this.maxIdle;
 	}
 
-	public void setMaxIdle(final Integer maxIdle) {
+	public void setMaxIdle(final int maxIdle) {
 		this.maxIdle = maxIdle;
 	}
 
