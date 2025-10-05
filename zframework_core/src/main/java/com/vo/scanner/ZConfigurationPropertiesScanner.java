@@ -500,21 +500,21 @@ public class ZConfigurationPropertiesScanner {
 
 		if (type.getCanonicalName().equals(String.class.getCanonicalName())) {
 			setValue(object, field, v1);
-		} else if (type.getCanonicalName().equals(Byte.class.getCanonicalName())) {
+		} else if ("byte".equals(type.getCanonicalName()) || type.getCanonicalName().equals(Byte.class.getCanonicalName())) {
 			setValue(object, field, ZProperties.getByte(keyAR.get()));
-		} else if (type.getCanonicalName().equals(Short.class.getCanonicalName())) {
+		} else if ("short".equals(type.getCanonicalName()) || type.getCanonicalName().equals(Short.class.getCanonicalName())) {
 			setValue(object, field, ZProperties.getShort(keyAR.get()));
-		} else if (type.getCanonicalName().equals(Integer.class.getCanonicalName())) {
+		} else if ("int".equals(type.getCanonicalName()) || type.getCanonicalName().equals(Integer.class.getCanonicalName())) {
 			setValue(object, field, ZProperties.getInteger(keyAR.get()));
-		} else if (type.getCanonicalName().equals(Long.class.getCanonicalName())) {
+		} else if ("long".equals(type.getCanonicalName()) || type.getCanonicalName().equals(Long.class.getCanonicalName())) {
 			setValue(object, field, ZProperties.getLong(keyAR.get()));
-		} else if (type.getCanonicalName().equals(Float.class.getCanonicalName())) {
+		} else if ("float".equals(type.getCanonicalName()) || type.getCanonicalName().equals(Float.class.getCanonicalName())) {
 			setValue(object, field, ZProperties.getFloat(keyAR.get()));
-		} else if (type.getCanonicalName().equals(Double.class.getCanonicalName())) {
+		} else if ("double".equals(type.getCanonicalName()) || type.getCanonicalName().equals(Double.class.getCanonicalName())) {
 			setValue(object, field, ZProperties.getDouble(keyAR.get()));
-		} else if (type.getCanonicalName().equals(Character.class.getCanonicalName())) {
+		} else if ("char".equals(type.getCanonicalName()) || type.getCanonicalName().equals(Character.class.getCanonicalName())) {
 			setValue(object, field, v1.charAt(0));
-		} else if (type.getCanonicalName().equals(Boolean.class.getCanonicalName())) {
+		} else if ("boolean".equals(type.getCanonicalName()) || type.getCanonicalName().equals(Boolean.class.getCanonicalName())) {
 			setValue(object, field, ZProperties.getBoolean(keyAR.get()));
 		} else if (type.getCanonicalName().equals(BigInteger.class.getCanonicalName())) {
 			setValue(object, field, ZProperties.getBigInteger(keyAR.get()));
@@ -547,7 +547,6 @@ public class ZConfigurationPropertiesScanner {
 		return joiner.toString();
 	}
 
-	@SuppressWarnings("boxing")
 	private static void setValue(final Object object, final Field field, final Object value) {
 		try {
 			field.setAccessible(true);
