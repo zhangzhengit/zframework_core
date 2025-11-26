@@ -98,7 +98,8 @@ public class DefaultHttpReader {
 	public ZArray readBody(final SelectionKey key, final SocketChannel socketChannel, final AR ar) {
 		final ZArray array = ar.getArray();
 
-		final int cLIndex = BodyReader.search(array.get(), HeaderEnum.CONTENT_LENGTH.getName(), 1, 0);
+		final byte[] ba = array.get(); 
+		final int cLIndex = BodyReader.search(ba, HeaderEnum.CONTENT_LENGTH.getName(), 1, 0);
 		if (cLIndex <= -1) {
 			return array;
 		}
@@ -106,9 +107,9 @@ public class DefaultHttpReader {
 		// 读header时读到的字节数比header截止符号(\r\n\r\n)的index还大，说明读到的不只有header还有下面的body部分
 		if (ar.getArray().length() > ar.getHeaderEndIndex()) {
 
-			final int cLIndexRN = BodyReader.search(array.get(), BodyReader.RN, 1, cLIndex);
+			final int cLIndexRN = BodyReader.search(ba, BodyReader.RN, 1, cLIndex);
 			if (cLIndexRN > cLIndex) {
-				final byte[] copyOfRange = Arrays.copyOfRange(array.get(), cLIndex, cLIndexRN);
+				final byte[] copyOfRange = Arrays.copyOfRange(ba, cLIndex, cLIndexRN);
 				final String contentTypeLine = new String(copyOfRange);
 				final int contentLength = Integer.parseInt(contentTypeLine.split(":")[1].trim());
 				if (contentLength <= 0) {
@@ -203,8 +204,7 @@ public class DefaultHttpReader {
 			final String method = x.substring(0, i);
 			final MethodEnum valueOfString = MethodEnum.valueOfString(method);
 			if (valueOfString != null) {
-				final MR mr = new MR(maxLength, method, array);
-				return mr;
+				return new MR(maxLength, method, array);
 			}
 		}
 
@@ -223,7 +223,7 @@ public class DefaultHttpReader {
 
 	public AR readHeader(final SelectionKey key, final SocketChannel socketChannel) {
 
-		final MR mr = this.readMethod(key, socketChannel);
+		final MR mr = readMethod(key, socketChannel);
 		if (mr == null) {
 			return null;
 		}
@@ -231,15 +231,13 @@ public class DefaultHttpReader {
 		// FIXME 2024年12月20日 下午4:17:48 zhangzhen : 2是妥协，不想debug
 		// post时的提取body存入临时文件并且把普通表单字段继续存入内存了
 		// 2 由method来确定，不带body使用配置项的值，带body一个一个byte读
-		final Integer byteBufferSize = mr.getByteBufferSize();
+		final int byteBufferSize = mr.getByteBufferSize();
 
 		final ByteBuffer byteBuffer = ByteBuffer.allocate(byteBufferSize);
 		final byte[] mra = mr.getArray();
 		final ZArray array = new ZArray(byteBufferSize);
-		for (final byte b : mra) {
-			array.add(b);
-		}
-
+		array.add(mra);
+ 
 		final int byteBufferSizeREAD = byteBufferSize - mr.getArray().length;
 
 		int headerEndIndex = -1;
@@ -269,15 +267,13 @@ public class DefaultHttpReader {
 					if ((tR < byteBufferSizeREAD)) {
 						throw new IllegalArgumentException("header截止错误");
 					}
-				} else {
-					// 如果读取返回 0，则检查超时
-					if ((((totalBytesRead == 0) || (tR == 0))
-							&& ((System.currentTimeMillis() - startTime) > SERVER_CONFIGURATIONPROPERTIES
-									.getNioReadTimeout()))) {
+				} else // 如果读取返回 0，则检查超时
+				if ((((totalBytesRead == 0) || (tR == 0))
+						&& ((System.currentTimeMillis() - startTime) > SERVER_CONFIGURATIONPROPERTIES
+								.getNioReadTimeout()))) {
 
-						LOG.error("readHeader超时[{}]", SERVER_CONFIGURATIONPROPERTIES.getNioReadTimeout());
-						return null;
-					}
+					LOG.error("readHeader超时[{}]", SERVER_CONFIGURATIONPROPERTIES.getNioReadTimeout());
+					return null;
 				}
 
 			} catch (final IOException e) {
@@ -293,14 +289,20 @@ public class DefaultHttpReader {
 	}
 
 	private static void add(final ByteBuffer byteBuffer, final ZArray array) {
-		byteBuffer.flip();
 		if (byteBuffer.remaining() <= 0) {
 			return;
 		}
 
-		final byte[] tempA = new byte[byteBuffer.remaining()];
-		byteBuffer.get(tempA);
-		array.add(tempA);
+		byteBuffer.flip();
+		// 2
+		
+		final byte[] array2 = byteBuffer.array();
+		array.add(array2);
+		
+		// 1
+//		final byte[] tempA = new byte[byteBuffer.remaining()];
+//		byteBuffer.get(tempA);
+//		array.add(tempA);
 		byteBuffer.clear();
 	}
 
@@ -609,9 +611,7 @@ public class DefaultHttpReader {
 
 	public static Map<String, String> parseCDLine(final String cdLine) {
 
-		// Content-Disposition: form-data; name="file"; filename="123.txt"
-		final Map<String, String> cdMap = BodyReader.handleBodyContentDisposition(cdLine);
-		return cdMap;
+		return BodyReader.handleBodyContentDisposition(cdLine);
 
 	}
 

@@ -20,7 +20,7 @@ public class MR {
 	 */
 	public static final int POST_BYTE_LENGTH = 1;
 
-	private final static Integer BYTE_BUFFER_SIZE = ZContext.getBean(ServerConfigurationProperties.class)
+	private final static int BYTE_BUFFER_SIZE = ZContext.getBean(ServerConfigurationProperties.class)
 			.getByteBufferSize();
 
 	private int readLength;
@@ -36,7 +36,7 @@ public class MR {
 	 *
 	 * @return
 	 */
-	public Integer getByteBufferSize() {
+	public int getByteBufferSize() {
 		if ((MethodEnum.GET.name().equalsIgnoreCase(this.methodName))
 				|| MethodEnum.TRACE.name().equalsIgnoreCase(this.methodName)
 				|| MethodEnum.HEAD.name().equalsIgnoreCase(this.methodName)
@@ -57,36 +57,34 @@ public class MR {
 		throw new UnsupportedOperationException("不支持的METHOD:" + this.methodName);
 	}
 
-	public MR(int readLength, String methodName, byte[] array) {
-		super();
+	public MR(final int readLength, final String methodName, final byte[] array) {
 		this.readLength = readLength;
 		this.methodName = methodName;
 		this.array = array;
 	}
 
 	public int getReadLength() {
-		return readLength;
+		return this.readLength;
 	}
 
-	public void setReadLength(int readLength) {
+	public void setReadLength(final int readLength) {
 		this.readLength = readLength;
 	}
 
 	public String getMethodName() {
-		return methodName;
+		return this.methodName;
 	}
 
-	public void setMethodName(String methodName) {
+	public void setMethodName(final String methodName) {
 		this.methodName = methodName;
 	}
 
 	public byte[] getArray() {
-		return array;
+		return this.array;
 	}
 
-	public void setArray(byte[] array) {
+	public void setArray(final byte[] array) {
 		this.array = array;
 	}
 
-	
 }

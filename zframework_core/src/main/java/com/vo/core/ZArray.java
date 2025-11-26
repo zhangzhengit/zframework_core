@@ -1,8 +1,5 @@
 package com.vo.core;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * 动态数组
  *
@@ -11,29 +8,42 @@ import java.util.List;
  *
  */
 public class ZArray {
+	
+	/**	
+	 * 初始化的容量
+	 */
+	public static final int INIT_C = 16;
 
-	private final List<Byte> ar;
+	/**
+	 * 存储
+	 */
+	private byte[] ar;
+	
+	/**
+	 * 	当前已存储的byte个数
+	 */
+	private int size;
 
 	private TF tf;
 
-	private boolean yichangle;
-
 	public ZArray() {
-		this.ar = new ArrayList<>();
+		// FIXME 2025年11月27日 01:45:25 zhangzhen :  暂时给个初始容量看
+		// 
+		this.ar = new byte[INIT_C] ;
 	}
 
 	public ZArray(final int initialCapacity) {
-		this.ar = new ArrayList<>(initialCapacity);
+		this.ar = new byte[initialCapacity] ;
 	}
 
 	public boolean isEmpty() {
-		return this.ar.isEmpty();
+		return this.size == 0;
 	}
 
 	public ZArray(final byte[] ba, final int from, final int to) {
-		this.ar = new ArrayList<>(ba.length);
+		this.ar = new byte[ba.length];
 		for (int i = from; i < to; i++) {
-			this.ar.add(ba[i]);
+			this.ar[i] = ba[i];
 		}
 	}
 
@@ -42,27 +52,32 @@ public class ZArray {
 	}
 
 	public void add(final byte[] ba, final int from, final int to) {
+		
+		if (to - from + this.size > this.ar.length) {
+			final byte[] n = new byte[to - from + this.size + 500];
+			System.arraycopy(this.ar, 0, n, 0, this.size);
+			this.ar = n;
+		}
+			
 		for (int i = from; i < to; i++) {
-			this.ar.add(ba[i]);
+			this.ar[this.size++] = ba[i];
 		}
-	}
-
-	public byte[] get(final int from, final int len) {
-		final byte[] ba = new byte[len];
-		int bi = 0;
-		for (int i = from; i < (from + len); i++) {
-			ba[bi] = this.ar.get(i);
-			bi++;
-		}
-		return ba;
 	}
 
 	public void add(final byte b) {
-		this.ar.add(b);
+		this.ar[this.size++] = b;
 	}
 
-	public Byte remove(final int index) {
-		return this.ar.remove(index);
+	public byte remove(final int index) {
+		final byte r = this.ar[index];
+		this.ar[index] = 0;
+		for (int i = index; i < this.size; i++) {
+			this.ar[i] = this.ar[i + 1];
+		}
+		this.ar[this.size - 1] = 0;
+		this.size--;
+
+		return r;
 	}
 
 	public void add(final byte[] ba) {
@@ -70,24 +85,17 @@ public class ZArray {
 	}
 
 	public int length() {
-		return this.ar.size();
+		return this.size;
 	}
 
 	public byte[] get() {
-		if (this.ar.isEmpty()) {
-			return new byte[] {};
+		if(this.size == this.ar.length) {
+			return this.ar;
 		}
-
-		final byte[] ba = new byte[this.ar.size()];
-		for (int i = 0; i < this.ar.size(); i++) {
-			ba[i] = this.ar.get(i);
-		}
-
-		return ba;
-	}
-
-	public void clear() {
-		this.ar.clear();
+		
+		final byte[] g = new byte[this.size];
+		System.arraycopy(this.ar, 0, g, 0, this.size);
+		return g;
 	}
 
 	public TF getTf() {
@@ -96,18 +104,6 @@ public class ZArray {
 
 	public void setTf(final TF tf) {
 		this.tf = tf;
-	}
-
-	public boolean isYichangle() {
-		return this.yichangle;
-	}
-
-	public void setYichangle(final boolean yichangle) {
-		this.yichangle = yichangle;
-	}
-
-	public List<Byte> getAr() {
-		return this.ar;
 	}
 
 }
