@@ -82,7 +82,7 @@ public class ZHandlerInterceptorScanner {
 	 */
 	public static List<ZHandlerInterceptor> match(final String requestURI) {
 		final String key = "match-" + requestURI;
-		return ZRC.computeIfAbsent(key, () ->  match0(requestURI));
+		return ZRC.singleton().computeIfAbsent(key, () ->  match0(requestURI));
 	}
 
 	private static List<ZHandlerInterceptor> match0(final String requestURI) {

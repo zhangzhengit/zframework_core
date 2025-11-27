@@ -13,7 +13,7 @@ public class STU {
 
 
 	public static String toLowerCase(final String string) {
-		return ZRC.computeIfAbsent(string, () -> string.toLowerCase());
+		return ZRC.singleton().computeIfAbsent(string, () -> string.toLowerCase());
 	}
 
 	public static boolean isNull(final String string) {

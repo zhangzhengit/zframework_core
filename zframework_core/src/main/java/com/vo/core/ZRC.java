@@ -18,14 +18,24 @@ public class ZRC {
 
 	private final static String PRIFEX = "cache:";
 	private final static String STORE_NULL_VALUE = "ZRC@STORE_NULL_VALUE-" + UUID.randomUUID();
-	private static final int CAPACITY = 10000 * 2;
+	private static final int DEFAULT_CAPACITY = 10000 * 2;
 
-	private static final Map<String, Object> CACHE = new ZCapacityMap<>(CAPACITY);
+	private final Map<String, Object> CACHE;
+
+	private static final ZRC S = new ZRC(DEFAULT_CAPACITY);
+
+	public static ZRC singleton() {
+		return S;
+	}
+
+	public ZRC(final int capacity) {
+		this.CACHE = new ZCapacityMap<>(capacity);
+	}
 
 	@SuppressWarnings("unchecked")
-	public static <T> T computeIfAbsent(final String key, final Supplier<T> supplier, final boolean storeNull) {
+	public <T> T computeIfAbsent(final String key, final Supplier<T> supplier, final boolean storeNull) {
 		final String k = buildKey(key);
-		final Object v = CACHE.get(k);
+		final Object v = this.CACHE.get(k);
 		if (v != null) {
 			if (STORE_NULL_VALUE.equals(v)) {
 				return null;
@@ -35,7 +45,7 @@ public class ZRC {
 
 		synchronized (k) {
 
-			final Object vF1 = CACHE.get(k);
+			final Object vF1 = this.CACHE.get(k);
 			if (vF1 != null) {
 				if (STORE_NULL_VALUE.equals(vF1)) {
 					return null;
@@ -45,31 +55,31 @@ public class ZRC {
 
 			final Object v2 = supplier.get();
 			final Object vStore = v2 != null ? v2 : (storeNull ? STORE_NULL_VALUE : null);
-			CACHE.put(k, vStore);
+			this.CACHE.put(k, vStore);
 
 			return (T) v2;
 		}
 	}
 
-	private static String buildKey(final String key) {
+	private String buildKey(final String key) {
 		return key;
-		//		return PRIFEX + key;
+		// return PRIFEX + key;
 	}
 
-	public static <T> T computeIfAbsent(final String key, final Supplier<T> supplier) {
+	public <T> T computeIfAbsent(final String key, final Supplier<T> supplier) {
 		return computeIfAbsent(key, supplier, false);
 	}
 
-	public static <T> T computeIfAbsent(final Object key, final Supplier<T> supplier) {
+	public <T> T computeIfAbsent(final Object key, final Supplier<T> supplier) {
 		return computeIfAbsent(key, supplier, false);
 	}
 
-	public static <T> T computeIfAbsent(final Object key, final Supplier<T> supplier, final boolean storeNull) {
+	public  <T> T computeIfAbsent(final Object key, final Supplier<T> supplier, final boolean storeNull) {
 		final String k = key.getClass().getName() + "@" + key.hashCode();
 		return computeIfAbsent(k, supplier, storeNull);
 	}
 
-	public static void clear(final List<String> keyList) {
+	public void clear(final List<String> keyList) {
 		if (CU.isEmpty(keyList)) {
 			return;
 		}
@@ -78,13 +88,13 @@ public class ZRC {
 		}
 	}
 
-	public static void clear(final String key) {
+	public void clear(final String key) {
 		if (SCU.isEmpty(key)) {
 			return;
 		}
 
 		final String keyT = buildKey(key);
-		CACHE.remove(keyT);
+		this.CACHE.remove(keyT);
 	}
 
 }

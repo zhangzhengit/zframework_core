@@ -101,7 +101,7 @@ public class BodyReader {
 		// final int hash = Arrays.hashCode(ba);
 		final String k = "ba" + "-" + ba.length + "-" + boundary.hashCode();
 
-		final List<FD2> computeIfAbsent = ZRC.computeIfAbsent(k, () -> readFormData0(ba, contentType, boundary));
+		final List<FD2> computeIfAbsent = ZRC.singleton().computeIfAbsent(k, () -> readFormData0(ba, contentType, boundary));
 		return computeIfAbsent;
 	}
 

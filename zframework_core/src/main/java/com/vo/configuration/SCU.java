@@ -19,7 +19,7 @@ public class SCU {
 	 * @return
 	 */
 	public static String[] split(final String string, final String regex) {
-		return ZRC.computeIfAbsent(string + '-' + regex, () -> string.split(regex));
+		return ZRC.singleton().computeIfAbsent(string + '-' + regex, () -> string.split(regex));
 	}
 
 }

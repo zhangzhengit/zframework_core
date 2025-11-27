@@ -22,14 +22,14 @@ public class RU {
 
 	public static <T> Class<?> getSuperclass( final Class<T> cls) {
 		final String key = cls.getName();
-		return ZRC.computeIfAbsent(key, () -> cls.getSuperclass());
+		return ZRC.singleton().computeIfAbsent(key, () -> cls.getSuperclass());
 	}
 
 	public static <T extends Annotation> T getAnnotation(final Parameter parameter, final Class<T> annoClass) {
 
 		// FIXME 2025年1月10日 上午8:49:09 zhangzhen : 记得key要尽量防止冲突，使用 parameter.getName() + '-' + annoClass.getName()冲突了
 		final String key = parameter.hashCode() + '-' + parameter.getName() + '-' + annoClass.getName();
-		return ZRC.computeIfAbsent(key, () ->parameter.getAnnotation(annoClass) );
+		return ZRC.singleton().computeIfAbsent(key, () ->parameter.getAnnotation(annoClass) );
 	}
 
 	public static Parameter[] getParameters(final Method method){
@@ -40,14 +40,14 @@ public class RU {
 		final String key = declaringClass.getName() + "-" + parameterCount + '-' + method.isAccessible() + '-'
 				+ method.getModifiers() + '-' + method.getName();
 
-		return ZRC.computeIfAbsent(key, () -> method.getParameters());
+		return ZRC.singleton().computeIfAbsent(key, () -> method.getParameters());
 	}
 
 
 	public static <T extends Annotation>  Field getDeclaredFieldByAnnotation(final Class<?> type,final Class<T> annoClass) {
 		final String key = type.getName() + '-' + "getDeclaredFieldByAnnotation";
 
-		return ZRC.computeIfAbsent(key, () -> {
+		return ZRC.singleton().computeIfAbsent(key, () -> {
 			final Field[] fs = getDeclaredFields(type);
 			for (final Field field : fs) {
 				if (field.isAnnotationPresent(annoClass)) {
@@ -61,7 +61,7 @@ public class RU {
 
 	public static Field[] getDeclaredFields(final Class<?> type) {
 		final String key = type.getName() + '-' + "getDeclaredFields";
-		return ZRC.computeIfAbsent(key, () -> type.getDeclaredFields());
+		return ZRC.singleton().computeIfAbsent(key, () -> type.getDeclaredFields());
 	}
 
 	public static Field getDeclaredField(final Class<?> type, final String javaFieldName)
@@ -69,7 +69,7 @@ public class RU {
 
 		final String key = type.getName() + '-' + javaFieldName;
 
-		return ZRC.computeIfAbsent(key, () -> {
+		return ZRC.singleton().computeIfAbsent(key, () -> {
 			try {
 				return type.getDeclaredField(javaFieldName);
 			} catch (NoSuchFieldException | SecurityException e) {

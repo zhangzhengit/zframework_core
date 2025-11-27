@@ -105,7 +105,7 @@ public class Task {
 
 		final String key = request.getRequestURI() + '@' + annoClass.getName()  + '-' + annoClass.hashCode();
 
-		return ZRC.computeIfAbsent(key, () -> getMethodAnnotation0(request, annoClass));
+		return ZRC.singleton().computeIfAbsent(key, () -> getMethodAnnotation0(request, annoClass));
 	}
 
 	public static <T extends Annotation> T getMethodAnnotation0(final ZRequest request, final Class<T> annoClass) {
@@ -153,7 +153,7 @@ public class Task {
 		if (method == null) {
 
 			// 用非请求的METHOD看是否有，有则响应405
-			final Method noRequestMethodMethod = ZRC.computeIfAbsent("MethodEnum.values-" + path, () -> {
+			final Method noRequestMethodMethod = ZRC.singleton().computeIfAbsent("MethodEnum.values-" + path, () -> {
 				final MethodEnum[] es = MethodEnum.values();
 				for (final MethodEnum methodEnum : es) {
 					if (methodEnum != request.getMethodEnum()) {
@@ -215,7 +215,7 @@ public class Task {
 		};
 
 		final String key = "getMatcheMethod-" + path;
-		return ZRC.computeIfAbsent(key, supplier, true);
+		return ZRC.singleton().computeIfAbsent(key, supplier, true);
 	}
 
 	public static String gExceptionMessage(final Throwable e) {

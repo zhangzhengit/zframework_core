@@ -517,7 +517,7 @@ public class NioLongConnectionServer {
 		final String key = request.getRequestURI() + '@' + ZCacheControl.class.getName() + '-'
 				+ ZCacheControl.class.hashCode();
 
-		final ZCacheControl cacheControl = ZRC.computeIfAbsent("cc" + '-' + key,
+		final ZCacheControl cacheControl = ZRC.singleton().computeIfAbsent("cc" + '-' + key,
 				() -> Task.getMethodAnnotation0(request, ZCacheControl.class));
 
 		if (cacheControl == null) {
