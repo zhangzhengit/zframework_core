@@ -74,9 +74,7 @@ public class QC {
 
 			final boolean ok = a(keyPrefix, time, qpsNEW);
 			return ok;
-		}
-
-		if (timeEnum == QCTimeEnum.MINUTE) {
+		} else if (timeEnum == QCTimeEnum.MINUTE) {
 
 			// 按现在逻辑 QPM_THRESHOLD = 600
 			// 传值 qptu = 60 则,time = 一秒；qpnNew = 1。一分钟内60 ，则平滑处理为1秒1个。正确
@@ -93,9 +91,7 @@ public class QC {
 			final long qpnNEW = (qptu / QPM_THRESHOLD) <= 0 ? 1 : (qptu / QPM_THRESHOLD);
 
 			return a(keyPrefix, time, qpnNEW);
-		}
-
-		if (timeEnum == QCTimeEnum.QUARTER) {
+		} else if (timeEnum == QCTimeEnum.QUARTER) {
 
 			// FIXME 2025年1月21日 下午10:34:06 zhangzhen : 这个好好算
 
@@ -104,9 +100,7 @@ public class QC {
 
 			return a(keyPrefix, time, qpnNEW);
 
-		}
-
-		if (timeEnum == QCTimeEnum.QUARTER) {
+		} else if (timeEnum == QCTimeEnum.HOUR) {
 			// FIXME 2025年1月21日 下午10:37:46 zhangzhen : 这个也好好算
 			final long time = qptu <= QPH_THRESHOLD ? (ms / ((1000 * 60 * 60) / qptu))
 					: (ms / (((1000 * 60 * 60) / QPH_THRESHOLD)));
