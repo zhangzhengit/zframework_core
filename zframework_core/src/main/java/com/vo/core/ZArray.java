@@ -64,10 +64,6 @@ public class ZArray {
 		}
 	}
 
-	public void add(final byte b) {
-		this.ar[this.size++] = b;
-	}
-
 	public byte remove(final int index) {
 		final byte r = this.ar[index];
 		this.ar[index] = 0;
