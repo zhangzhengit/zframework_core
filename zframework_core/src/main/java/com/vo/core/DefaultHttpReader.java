@@ -98,8 +98,7 @@ public class DefaultHttpReader {
 	public ZArray readBody(final SelectionKey key, final SocketChannel socketChannel, final AR ar) {
 		final ZArray array = ar.getArray();
 
-		final byte[] ba = array.get(); 
-		final int cLIndex = BodyReader.search(ba, HeaderEnum.CONTENT_LENGTH.getName(), 1, 0);
+		final int cLIndex = BodyReader.search(array.get(), HeaderEnum.CONTENT_LENGTH.getName(), 1, 0);
 		if (cLIndex <= -1) {
 			return array;
 		}
@@ -107,9 +106,9 @@ public class DefaultHttpReader {
 		// 读header时读到的字节数比header截止符号(\r\n\r\n)的index还大，说明读到的不只有header还有下面的body部分
 		if (ar.getArray().length() > ar.getHeaderEndIndex()) {
 
-			final int cLIndexRN = BodyReader.search(ba, BodyReader.RN, 1, cLIndex);
+			final int cLIndexRN = BodyReader.search(array.get(), BodyReader.RN, 1, cLIndex);
 			if (cLIndexRN > cLIndex) {
-				final byte[] copyOfRange = Arrays.copyOfRange(ba, cLIndex, cLIndexRN);
+				final byte[] copyOfRange = Arrays.copyOfRange(array.get(), cLIndex, cLIndexRN);
 				final String contentTypeLine = new String(copyOfRange);
 				final int contentLength = Integer.parseInt(contentTypeLine.split(":")[1].trim());
 				if (contentLength <= 0) {
@@ -237,7 +236,7 @@ public class DefaultHttpReader {
 		final byte[] mra = mr.getArray();
 		final ZArray array = new ZArray(byteBufferSize);
 		array.add(mra);
- 
+
 		final int byteBufferSizeREAD = byteBufferSize - mr.getArray().length;
 
 		int headerEndIndex = -1;
@@ -289,20 +288,14 @@ public class DefaultHttpReader {
 	}
 
 	private static void add(final ByteBuffer byteBuffer, final ZArray array) {
+		byteBuffer.flip();
 		if (byteBuffer.remaining() <= 0) {
 			return;
 		}
 
-		byteBuffer.flip();
-		// 2
-		
-		final byte[] array2 = byteBuffer.array();
-		array.add(array2);
-		
-		// 1
-//		final byte[] tempA = new byte[byteBuffer.remaining()];
-//		byteBuffer.get(tempA);
-//		array.add(tempA);
+		final byte[] tempA = new byte[byteBuffer.remaining()];
+		byteBuffer.get(tempA);
+		array.add(tempA);
 		byteBuffer.clear();
 	}
 
