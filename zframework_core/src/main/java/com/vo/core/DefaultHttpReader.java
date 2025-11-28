@@ -179,6 +179,10 @@ public class DefaultHttpReader {
 			return null;
 		}
 
+		// FIXME 2025年11月28日 15:51:33 zhangzhen :  发现问题
+		// 1 小问题，+10无意义，忘了当时怎么想的了，如果只是为了为了METHOD后面的空格给区分开，没必要+10
+		// 2 最好在读取完了METHOD后面的path后，就立即校验是否存在对应的接口名称
+		// 包括字符匹配和正则匹配的，尽量少做无用功
 		final int maxLength = OPTIONS_LENGTH + 10;
 
 		final ByteBuffer byteBuffer = ByteBuffer.allocate(maxLength);

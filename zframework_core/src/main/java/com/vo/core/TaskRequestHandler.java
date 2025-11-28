@@ -85,7 +85,7 @@ public final class TaskRequestHandler extends Thread {
 
 		try {
 
-			final ZRequest request = BodyReader.readHeader(taskRequest.getRequestData());
+			final ZRequest request = BodyReader.parseHeader(taskRequest.getRequestData());
 			if (request == null) {
 				NioLongConnectionServer.closeSocketChannelAndKeyCancel(taskRequest.getSelectionKey(), taskRequest.getSocketChannel());
 				return;

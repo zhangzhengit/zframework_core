@@ -33,7 +33,7 @@ public class BodyReader {
 	 * @param ba 完整的http请求报文
 	 * @return
 	 */
-	public static ZRequest readHeader(final byte[] ba) {
+	public static ZRequest parseHeader(final byte[] ba) {
 		final int headerEndIndex = search(ba, RNRN, 1, 0);
 
 		final byte[] headerBA = Arrays.copyOfRange(ba, 0, headerEndIndex);
