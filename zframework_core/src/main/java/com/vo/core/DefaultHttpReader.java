@@ -349,11 +349,7 @@ public class DefaultHttpReader {
 		// 上传一个 大小2,907,911 字节 占用2,908,160 字节的imgge时发现 .IllegalArgumentException:10154 > 81",
 		// 暂时改为1024 * 500 把，以后再仔细测试
 		
-		// FIXME 2025年11月28日 09:46:31 zhangzhen :  对于上面fixme，似乎没必要，因为代码很久前写的，忘了
-		// 为什么把每次读取的byte[] 放入ZArray了，现在看完全没必要，因为本方法是写入到临时文件的，删除了ZArray.add
-		// 后原来的1024 * 10 是没问题的。这个方法太复杂，以后再看再仔细测试
-		
-		final ByteBuffer bbBody = ByteBuffer.allocate(1024 * 10);
+		final ByteBuffer bbBody = ByteBuffer.allocate(1024 * 500);
 		// final ByteBuffer bbBody = ByteBuffer.allocate(uploadFileToTempSize * 1024);
 
 		// 开始读取body部分
@@ -371,8 +367,6 @@ public class DefaultHttpReader {
 		final boolean fileEnd = false;
 		long startTime = System.currentTimeMillis();
 		try {
-			
-			// 总共已读取的字节数
 			int totalBytesRead = 0;
 			int rnrnIndex = -1;
 			boolean findCT = false;
@@ -464,8 +458,23 @@ public class DefaultHttpReader {
 							byte[] baContent = null;
 							if (findBiStartReadCount == findBodyStartReadCount) {
 								baContent = Arrays.copyOfRange(temp, bodyStartIndex, biIndex);
+								final byte[] fdBA1 = Arrays.copyOfRange(temp, 0, bodyStartIndex);
+								final int ctIndexX = BodyReader.search(fdBA1, HeaderEnum.CONTENT_TYPE.getName(), 1, 0);
+								if (ctIndexX <= -1) {
+									array.add(fdBA1);
+								}
+								final byte[] fdBA2 = Arrays.copyOfRange(temp, biIndex, read);
+								final int ctIndexX2 = BodyReader.search(fdBA2, HeaderEnum.CONTENT_TYPE.getName(), 1, 0);
+								if (ctIndexX2 <= -1) {
+									array.add(fdBA2);
+								}
 							} else {
 								baContent = Arrays.copyOfRange(temp, 0, biIndex);
+								final byte[] fdBA2 = Arrays.copyOfRange(temp, biIndex, read);
+								final int ctIndexX2 = BodyReader.search(fdBA2, HeaderEnum.CONTENT_TYPE.getName(), 1, 0);
+								if (ctIndexX2 <= -1) {
+									array.add(fdBA2);
+								}
 							}
 
 							final String xx = new String(baContent);
@@ -479,6 +488,11 @@ public class DefaultHttpReader {
 							byte[] copyOfRange = null;
 							if (!writeB1) {
 								copyOfRange = Arrays.copyOfRange(temp, bodyStartIndex, read);
+								final byte[] fdBA1 = Arrays.copyOfRange(temp, 0, bodyStartIndex);
+								final int ctIndexX = BodyReader.search(fdBA1, HeaderEnum.CONTENT_TYPE.getName(), 1, 0);
+								if (ctIndexX <= -1) {
+									array.add(fdBA1);
+								}
 							} else {
 								copyOfRange = Arrays.copyOfRange(temp, 0, read);
 							}
@@ -492,6 +506,8 @@ public class DefaultHttpReader {
 								writeB1 = true;
 							}
 						}
+					} else {
+						array.add(temp);
 					}
 					bbBody.clear();
 
