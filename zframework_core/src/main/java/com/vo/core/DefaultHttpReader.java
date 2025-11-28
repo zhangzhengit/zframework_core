@@ -303,6 +303,14 @@ public class DefaultHttpReader {
 		return BodyReader.search(headerBA, BodyReader.RNRN, 1, 0);
 	}
 
+	/**
+	 * @param key
+	 * @param socketChannel
+	 * @param array
+	 * @param newNeedReadBodyLength
+	 * @param writeArrayLength
+	 * @return
+	 */
 	@SuppressWarnings("resource")
 	private static TF readBodyToTempFile(final SelectionKey key, final SocketChannel socketChannel, final ZArray array,
 			final int newNeedReadBodyLength, final int writeArrayLength) {
@@ -329,7 +337,12 @@ public class DefaultHttpReader {
 		// FIXME 2025年11月28日 09:28:25 zhangzhen :  严重bug：1024 * 10
 		// 上传一个 大小2,907,911 字节 占用2,908,160 字节的imgge时发现 .IllegalArgumentException:10154 > 81",
 		// 暂时改为1024 * 500 把，以后再仔细测试
-		final ByteBuffer bbBody = ByteBuffer.allocate(1024 * 500);
+		
+		// FIXME 2025年11月28日 09:46:31 zhangzhen :  对于上面fixme，似乎没必要，因为代码很久前写的，忘了
+		// 为什么把每次读取的byte[] 放入ZArray了，现在看完全没必要，因为本方法是写入到临时文件的，删除了ZArray.add
+		// 后原来的1024 * 10 是没问题的。这个方法太复杂，以后再看再仔细测试
+		
+		final ByteBuffer bbBody = ByteBuffer.allocate(1024 * 10);
 		// final ByteBuffer bbBody = ByteBuffer.allocate(uploadFileToTempSize * 1024);
 
 		// 开始读取body部分
@@ -440,24 +453,8 @@ public class DefaultHttpReader {
 							byte[] baContent = null;
 							if (findBiStartReadCount == findBodyStartReadCount) {
 								baContent = Arrays.copyOfRange(temp, bodyStartIndex, biIndex);
-								final byte[] fdBA1 = Arrays.copyOfRange(temp, 0, bodyStartIndex);
-								final int ctIndexX = BodyReader.search(fdBA1, HeaderEnum.CONTENT_TYPE.getName(), 1, 0);
-								if (ctIndexX <= -1) {
-									array.add(fdBA1);
-								}
-								final byte[] fdBA2 = Arrays.copyOfRange(temp, biIndex, read);
-								final int ctIndexX2 = BodyReader.search(fdBA2, HeaderEnum.CONTENT_TYPE.getName(), 1, 0);
-								if (ctIndexX2 <= -1) {
-									array.add(fdBA2);
-								}
 							} else {
 								baContent = Arrays.copyOfRange(temp, 0, biIndex);
-								// FIXME 2025年11月28日 09:18:22 zhangzhen :  IMG_20140330_130014.jpg bug 了 IllegalArgumentException: 10154 > 81
-								final byte[] fdBA2 = Arrays.copyOfRange(temp, biIndex, read);
-								final int ctIndexX2 = BodyReader.search(fdBA2, HeaderEnum.CONTENT_TYPE.getName(), 1, 0);
-								if (ctIndexX2 <= -1) {
-									array.add(fdBA2);
-								}
 							}
 
 							final String xx = new String(baContent);
@@ -471,11 +468,6 @@ public class DefaultHttpReader {
 							byte[] copyOfRange = null;
 							if (!writeB1) {
 								copyOfRange = Arrays.copyOfRange(temp, bodyStartIndex, read);
-								final byte[] fdBA1 = Arrays.copyOfRange(temp, 0, bodyStartIndex);
-								final int ctIndexX = BodyReader.search(fdBA1, HeaderEnum.CONTENT_TYPE.getName(), 1, 0);
-								if (ctIndexX <= -1) {
-									array.add(fdBA1);
-								}
 							} else {
 								copyOfRange = Arrays.copyOfRange(temp, 0, read);
 							}
@@ -489,8 +481,6 @@ public class DefaultHttpReader {
 								writeB1 = true;
 							}
 						}
-					} else {
-						array.add(temp);
 					}
 					bbBody.clear();
 
@@ -512,20 +502,28 @@ public class DefaultHttpReader {
 			NioLongConnectionServer.closeSocketChannelAndKeyCancel(key, socketChannel);
 			return null;
 		} finally {
-			try {
-				// buffer.size =1 就没问题，待会再看什么原因
-				if (tf != null) {
-					tf.getBufferedOutputStream().flush();
-					tf.getBufferedOutputStream().close();
-					tf.getOutputStream().flush();
-					tf.getOutputStream().close();
-				}
-			} catch (final IOException e) {
-				e.printStackTrace();
-			}
+			closeTFStream(tf);
 		}
 
 		return tf;
+	}
+
+
+	private static void closeTFStream(final TF tf) {
+		if (tf == null) {
+			return;
+		}
+
+		try {
+			// buffer.size =1 就没问题，待会再看什么原因
+			tf.getBufferedOutputStream().flush();
+			tf.getOutputStream().flush();
+			tf.getBufferedOutputStream().close();
+			tf.getOutputStream().close();
+		} catch (final IOException e) {
+			e.printStackTrace();
+		}
+		
 	}
 
 	private static void readBodyToMemory(final SelectionKey key, final SocketChannel socketChannel, final ZArray array,
