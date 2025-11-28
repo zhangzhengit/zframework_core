@@ -318,7 +318,6 @@ public class DefaultHttpReader {
 			}
 		}
 
-		final Integer uploadFileToTempSize = SERVER_CONFIGURATIONPROPERTIES.getUploadFileToTempSize();
 
 		// FIXME 2024年12月20日 下午7:15:50 zhangzhen : 这个方法极有可能有问题，就是这个方法每次解析CD CT RNRNR
 		// BOUNDARY 等等内容
@@ -327,16 +326,19 @@ public class DefaultHttpReader {
 		// 那么这个boundary就会解析不到。只是现在ByteBuffer的capacity设置得很大，还没发现这个bug。
 		// 看不要 N次读取之间两个相邻的ByteBuffer合并在一起来解析？
 
-		// 开始读取body部分
-		final ByteBuffer bbBody = ByteBuffer.allocate(1024 * 10);
+		// FIXME 2025年11月28日 09:28:25 zhangzhen :  严重bug：1024 * 10
+		// 上传一个 大小2,907,911 字节 占用2,908,160 字节的imgge时发现 .IllegalArgumentException:10154 > 81",
+		// 暂时改为1024 * 500 把，以后再仔细测试
+		final ByteBuffer bbBody = ByteBuffer.allocate(1024 * 500);
 		// final ByteBuffer bbBody = ByteBuffer.allocate(uploadFileToTempSize * 1024);
 
+		// 开始读取body部分
 		Collections.reverse(removeFromHeaderList);
 		for (final byte b : removeFromHeaderList) {
 			bbBody.put(b);
 		}
 
-		final Integer nioReadTimeout = SERVER_CONFIGURATIONPROPERTIES.getNioReadTimeout();
+		final int nioReadTimeout = SERVER_CONFIGURATIONPROPERTIES.getNioReadTimeout();
 
 		final String randomFileName = "file_" + Math.abs(RANDOM.nextLong()) + "_" + newNeedReadBodyLength;
 
@@ -345,6 +347,8 @@ public class DefaultHttpReader {
 		final boolean fileEnd = false;
 		long startTime = System.currentTimeMillis();
 		try {
+			
+			// 总共已读取的字节数
 			int totalBytesRead = 0;
 			int rnrnIndex = -1;
 			boolean findCT = false;
@@ -448,6 +452,7 @@ public class DefaultHttpReader {
 								}
 							} else {
 								baContent = Arrays.copyOfRange(temp, 0, biIndex);
+								// FIXME 2025年11月28日 09:18:22 zhangzhen :  IMG_20140330_130014.jpg bug 了 IllegalArgumentException: 10154 > 81
 								final byte[] fdBA2 = Arrays.copyOfRange(temp, biIndex, read);
 								final int ctIndexX2 = BodyReader.search(fdBA2, HeaderEnum.CONTENT_TYPE.getName(), 1, 0);
 								if (ctIndexX2 <= -1) {
