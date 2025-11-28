@@ -110,9 +110,9 @@ public class DefaultHttpReader {
 			if (cLIndexRN > cLIndex) {
 				final byte[] copyOfRange = Arrays.copyOfRange(array.get(), cLIndex, cLIndexRN);
 				final String contentTypeLine = new String(copyOfRange);
-				final int contentLength = Integer.parseInt(contentTypeLine.split(":")[1].trim());
+				final int contentLength = checkContentLength(contentTypeLine);
 				if (contentLength <= 0) {
-					return array;
+					return array; 
 				}
 
 				final Integer uploadFileSize = SERVER_CONFIGURATIONPROPERTIES.getUploadFileSize();
@@ -157,6 +157,17 @@ public class DefaultHttpReader {
 		return array;
 	}
 
+
+	// FIXME 2025年11月28日 13:47:33 zhangzhen :  这个header要判断是否数值类型，
+	// 其他的也要加入各种校验
+	private static int checkContentLength(final String contentTypeLine) {
+		final long cl = Long.parseLong(contentTypeLine.split(":")[1].trim());
+		if (cl > Integer.MAX_VALUE) {
+			throw new IllegalArgumentException("Content-Length 大于 " + Integer.MAX_VALUE);
+		}
+		
+		return (int) cl;
+	}
 
 	private MR readMethod(final SelectionKey key, final SocketChannel socketChannel) {
 
