@@ -19,8 +19,8 @@ public class BodyTooLargeException extends ZFException{
 		super(PREFIX + message);
 	}
 
-	public BodyTooLargeException(final String message, final Integer httpStatus) {
+	public BodyTooLargeException(final String message, final int httpStatus) {
 		super(PREFIX + message, httpStatus);
 	}
-
+ 
 }

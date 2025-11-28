@@ -35,24 +35,24 @@ public enum HttpStatusEnum {
 	private int code;
 	private String message;
 
-	private HttpStatusEnum(int code, String message) {
+	HttpStatusEnum(final int code, final String message) {
 		this.code = code;
 		this.message = message;
 	}
 
 	public int getCode() {
-		return code;
+		return this.code;
 	}
-
-	public void setCode(int code) {
+ 
+	public void setCode(final int code) {
 		this.code = code;
 	}
 
 	public String getMessage() {
-		return message;
+		return this.message;
 	}
 
-	public void setMessage(String message) {
+	public void setMessage(final String message) {
 		this.message = message;
 	}
 

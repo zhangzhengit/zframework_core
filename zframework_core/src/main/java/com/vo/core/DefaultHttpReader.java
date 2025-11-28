@@ -115,7 +115,7 @@ public class DefaultHttpReader {
 					return array; 
 				}
 
-				final Integer uploadFileSize = SERVER_CONFIGURATIONPROPERTIES.getUploadFileSize();
+				final int uploadFileSize = SERVER_CONFIGURATIONPROPERTIES.getUploadFileSize();
 				if (contentLength >= (uploadFileSize * _1024)) {
 					// FIXME 2025年1月20日 下午9:12:49 zhangzhen : 又遇到问题：
 					// 比如 /upload 限制zsessiond.qps=1，则到此throw了就走不到限制qps的逻辑了，
@@ -140,7 +140,7 @@ public class DefaultHttpReader {
 					return array;
 				}
 
-				final Integer uploadFileToTempSize = SERVER_CONFIGURATIONPROPERTIES.getUploadFileToTempSize();
+				final int uploadFileToTempSize = SERVER_CONFIGURATIONPROPERTIES.getUploadFileToTempSize();
 				if (newNeedReadBodyLength > (uploadFileToTempSize * _1024)) {
 					// 文件写入临时文件之前，把读header时多读出的超出header的部分删掉
 					final int writeArrayLength = array.length() - ar.getHeaderEndIndex() - BodyReader.RN_BYTES_LENGTH
@@ -169,7 +169,7 @@ public class DefaultHttpReader {
 		return (int) cl;
 	}
 
-	private MR readMethod(final SelectionKey key, final SocketChannel socketChannel) {
+	private static MR readMethod(final SelectionKey key, final SocketChannel socketChannel) {
 
 		// FIXME 2024年12月20日 下午4:17:48 zhangzhen : 这个方法是妥协，不想debug
 		// post时的提取body存入临时文件并且把普通表单字段继续存入内存了
@@ -331,7 +331,7 @@ public class DefaultHttpReader {
 		if (writeArrayLength > 0) {
 			int rc = writeArrayLength;
 			while (rc > 0) {
-				final Byte remove = array.remove(array.length() - 1);
+				final byte remove = array.remove(array.length() - 1);
 				removeFromHeaderList.add(remove);
 				rc--;
 			}
