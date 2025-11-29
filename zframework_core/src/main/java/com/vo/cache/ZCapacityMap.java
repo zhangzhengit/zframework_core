@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -22,7 +23,11 @@ public class ZCapacityMap<K,V> implements ConcurrentMap<K, V>{
 	private final Cache<K, V> c;
 
 	public ZCapacityMap(final int capacity) {
-		this.c = CacheBuilder.newBuilder().maximumSize(capacity).build();
+		this.c = CacheBuilder.newBuilder()
+				.maximumSize(capacity)
+				.expireAfterWrite(10, TimeUnit.MINUTES)
+				.build();
+		
 		this.capacity = capacity;
 	}
 
