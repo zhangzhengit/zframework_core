@@ -88,9 +88,9 @@ public class ZMail {
 			properties.put("mail.smtp.host", mailNotificationConfigurationProperties.getHost());
 		}
 
-//		if (mailNotificationConfigurationProperties.getPort() != null) {
+		if (mailNotificationConfigurationProperties.getPort() != null) {
 			properties.put("mail.smtp.port", mailNotificationConfigurationProperties.getPort());
-//		}
+		}
 
 		// 获取 Session 对象
 		session = Session.getInstance(properties, new Authenticator() {
