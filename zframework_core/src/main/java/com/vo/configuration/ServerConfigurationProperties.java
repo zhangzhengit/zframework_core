@@ -343,7 +343,12 @@ public class ServerConfigurationProperties {
 	 */
 	@ZNotNull
 	private boolean printProxyClass = false;
-
+	
+	/**
+	 *	启动时是否打印banner 
+	 */
+	private boolean showBanner = false;
+	
 	public boolean compressionContains(final String contentType) {
 		final String[] a = getCompressionType();
 		for (final String string : a) {
@@ -653,6 +658,14 @@ public class ServerConfigurationProperties {
 
 	public void setPrintProxyClass(final boolean printProxyClass) {
 		this.printProxyClass = printProxyClass;
+	}
+
+	public boolean isShowBanner() {
+		return this.showBanner;
+	}
+
+	public void setShowBanner(final boolean showBanner) {
+		this.showBanner = showBanner;
 	}
 	
 	
