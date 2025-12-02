@@ -138,25 +138,25 @@ public class ZValueScanner {
 	private static void setValue(final Object value, final Field field, final Object object, final Class<?> type) {
 		if (type.getCanonicalName().equals(String.class.getCanonicalName())) {
 			setValue(field, object, String.valueOf(value));
-		} else if (type.getCanonicalName().equals(Byte.class.getCanonicalName())) {
+		} else if ("byte".equals(type.getCanonicalName()) || type.getCanonicalName().equals(Byte.class.getCanonicalName())) {
 			setValue(field, object, Byte.valueOf(String.valueOf(value)));
-		} else if (type.getCanonicalName().equals(Short.class.getCanonicalName())) {
+		} else if ("short".equals(type.getCanonicalName()) || type.getCanonicalName().equals(Short.class.getCanonicalName())) {
 			setValue(field, object, Short.valueOf(String.valueOf(value)));
-		} else if (type.getCanonicalName().equals(Integer.class.getCanonicalName())) {
+		} else if ("int".equals(type.getCanonicalName()) || type.getCanonicalName().equals(Integer.class.getCanonicalName())) {
 			setValue(field, object, Integer.valueOf(String.valueOf(value)));
-		} else if (type.getCanonicalName().equals(Long.class.getCanonicalName())) {
+		} else if ("long".equals(type.getCanonicalName()) || type.getCanonicalName().equals(Long.class.getCanonicalName())) {
 			setValue(field, object, Long.valueOf(String.valueOf(value)));
 		} else if (type.getCanonicalName().equals(BigInteger.class.getCanonicalName())) {
 			setValue(field, object, new BigInteger(String.valueOf(value)));
 		} else if (type.getCanonicalName().equals(BigDecimal.class.getCanonicalName())) {
 			setValue(field, object, new BigDecimal(String.valueOf(value)));
-		} else if (type.getCanonicalName().equals(Boolean.class.getCanonicalName())) {
+		} else if ("boolean".equals(type.getCanonicalName()) || type.getCanonicalName().equals(Boolean.class.getCanonicalName())) {
 			setValue(field, object, Boolean.valueOf(String.valueOf(value)));
-		} else if (type.getCanonicalName().equals(Double.class.getCanonicalName())) {
+		} else if ("double".equals(type.getCanonicalName()) || type.getCanonicalName().equals(Double.class.getCanonicalName())) {
 			setValue(field, object, Double.valueOf(String.valueOf(value)));
-		} else if (type.getCanonicalName().equals(Float.class.getCanonicalName())) {
+		} else if ("float".equals(type.getCanonicalName()) || type.getCanonicalName().equals(Float.class.getCanonicalName())) {
 			setValue(field, object, Float.valueOf(String.valueOf(value)));
-		} else if (type.getCanonicalName().equals(Character.class.getCanonicalName())) {
+		} else if ("char".equals(type.getCanonicalName()) || type.getCanonicalName().equals(Character.class.getCanonicalName())) {
 			setValue(field, object, Character.valueOf(String.valueOf(value).charAt(0)));
 		} else {
 			throw new IllegalArgumentException("@" + ZValue.class.getSimpleName() + " 字段 " + field.getName() + " 的类型 "
