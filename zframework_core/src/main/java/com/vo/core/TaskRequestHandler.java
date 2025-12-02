@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.ImmutableCollection;
 import com.vo.cache.J;
 import com.vo.common.CR;
 import com.vo.configuration.ServerConfigurationProperties;
@@ -23,18 +22,23 @@ import com.vo.http.HttpStatusEnum;
  */
 public final class TaskRequestHandler extends Thread {
 
+	private static final ZLog2 LOG = ZLog2.getInstance();
+	
 	public static final String NAME = "request-Dispatcher-Thread";
 	public static final String GROUP_NAME = "dispatcher-Group";
 
 	private final LinkedBlockingDeque<TaskRequest> queue = new LinkedBlockingDeque<>(
 			ZContext.getBean(ServerConfigurationProperties.class).getPendingTasks());
 
+	static final boolean showHttpHeader = ZContext.getBean(ServerConfigurationProperties.class).getShowHttpHeader();
+
 	private final AbstractRequestValidator requestValidator;
 
 	public TaskRequestHandler() {
+		
 		super(new ThreadGroup(GROUP_NAME), GROUP_NAME + "@" + NAME);
 
-		this.setName(NAME);
+		setName(NAME);
 
 		final Collection<Object> beanConnection = ZContext.all().values();
 
@@ -74,21 +78,25 @@ public final class TaskRequestHandler extends Thread {
 				e1.printStackTrace();
 			}
 
-			this.handle(taskRequest);
+			handle(taskRequest);
 		}
 	}
 
 	@SuppressWarnings("resource")
 	private void handle(final TaskRequest taskRequest) {
+		
 
 		Task.SCTL.set(taskRequest.getSocketChannel());
 
 		try {
 
 			final ZRequest request = BodyReader.parseHeader(taskRequest.getRequestData());
-			if (request == null) {
-				NioLongConnectionServer.closeSocketChannelAndKeyCancel(taskRequest.getSelectionKey(), taskRequest.getSocketChannel());
-				return;
+
+			if (showHttpHeader) {
+
+				final String clientIp = request.getClientIp();
+				final String h = new String(taskRequest.getRequestData());
+				LOG.debug("\r\n新请求:\r\nclientIp={}\r\n{}", clientIp,h);
 			}
 
 			request.setTf(taskRequest.getTf());

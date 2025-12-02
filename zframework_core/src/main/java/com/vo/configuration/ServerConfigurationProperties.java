@@ -348,6 +348,11 @@ public class ServerConfigurationProperties {
 	 *	启动时是否打印banner 
 	 */
 	private boolean showBanner = false;
+
+	/**
+	 * 是否打印请求的header
+	 */
+	private boolean showHttpHeader = false;
 	
 	public boolean compressionContains(final String contentType) {
 		final String[] a = getCompressionType();
@@ -362,6 +367,10 @@ public class ServerConfigurationProperties {
 
 	public String[] getCompressionType() {
 		return SCU.split(this.compressionTypes, ",");
+	}
+
+	public void setShowHttpHeader(final boolean showHttpHeader) {
+		this.showHttpHeader = showHttpHeader;
 	}
 
 	public int getPort() {
@@ -660,14 +669,41 @@ public class ServerConfigurationProperties {
 		this.printProxyClass = printProxyClass;
 	}
 
-	public boolean isShowBanner() {
+	public boolean getShowBanner() {
 		return this.showBanner;
 	}
 
 	public void setShowBanner(final boolean showBanner) {
 		this.showBanner = showBanner;
 	}
-	
-	
+
+	public boolean getShowHttpHeader() {
+		return this.showHttpHeader;
+	}
+
+	@Override
+	public String toString() {
+		return "ServerConfigurationProperties [port=" + this.port + ", responseZSessionId=" + this.responseZSessionId
+				+ ", name=" + this.name + ", byteBufferSize=" + this.byteBufferSize + ", nioReadTimeout="
+				+ this.nioReadTimeout + ", uploadFileSize=" + this.uploadFileSize + ", uploadFileToTempSize="
+				+ this.uploadFileToTempSize + ", uploadTempDir=" + this.uploadTempDir + ", threadCount="
+				+ this.threadCount + ", threadName=" + this.threadName + ", staticResourceCacheEnable="
+				+ this.staticResourceCacheEnable + ", scanPackage=" + this.scanPackage + ", qpsLimitEnabled="
+				+ this.qpsLimitEnabled + ", qps=" + this.qps + ", qpsExceedMessage=" + this.qpsExceedMessage
+				+ ", requestHeaderSizeLimit=" + this.requestHeaderSizeLimit + ", pendingTasks=" + this.pendingTasks
+				+ ", pendingTasksExceedMessage=" + this.pendingTasksExceedMessage + ", taskResponsiveMode="
+				+ this.taskResponsiveMode + ", taskTimeoutMilliseconds=" + this.taskTimeoutMilliseconds
+				+ ", enableClientQps=" + this.enableClientQps + ", clientQps=" + this.clientQps + ", sessionIdQps="
+				+ this.sessionIdQps + ", staticControllerEnable=" + this.staticControllerEnable
+				+ ", staticControllerReferersAllowed=" + this.staticControllerReferersAllowed
+				+ ", staticControllerMemoryCacheCapacity=" + this.staticControllerMemoryCacheCapacity
+				+ ", keepAliveTimeout=" + this.keepAliveTimeout + ", sessionStorageType=" + this.sessionStorageType
+				+ ", sessionTimeout=" + this.sessionTimeout + ", staticPath=" + this.staticPath + ", staticPrefix="
+				+ this.staticPrefix + ", compressionEnable=" + this.compressionEnable + ", compressionTypes="
+				+ this.compressionTypes + ", compressionMinLength=" + this.compressionMinLength + ", responseHeaders="
+				+ this.responseHeaders + ", printConfigurationProperties=" + this.printConfigurationProperties
+				+ ", printProxyClass=" + this.printProxyClass + ", showBanner=" + this.showBanner + ", showHttpHeader="
+				+ this.showHttpHeader + "]";
+	}
 
 }
