@@ -7,6 +7,7 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.nio.channels.spi.SelectorProvider;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
@@ -86,6 +87,10 @@ public class NioLongConnectionServer {
 
 	private final TaskRequestHandler requestHandler = new TaskRequestHandler();
 
+	private static int ZC_THRESHOLD = 500;
+	Selector selector = null;
+	int zc = 0;
+	
 	public void startNIOServer(final int serverPort) {
 		final ThreadGroup group = new ThreadGroup("nio");
 		final Thread thread = new Thread(group, () -> NioLongConnectionServer.this.startNIOServer0(serverPort));
@@ -110,7 +115,7 @@ public class NioLongConnectionServer {
 		keepAliveTimeoutJOB();
 
 		// 创建ServerSocketChannel
-		Selector selector = null;
+		
 		ServerSocketChannel serverSocketChannel;
 		try {
 			serverSocketChannel = ServerSocketChannel.open();
@@ -118,8 +123,8 @@ public class NioLongConnectionServer {
 			serverSocketChannel.bind(new InetSocketAddress(serverPort));
 
 			// 创建Selector
-			selector = Selector.open();
-			serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
+			this.selector = Selector.open();
+			serverSocketChannel.register(this.selector, SelectionKey.OP_ACCEPT);
 		} catch (final IOException e) {
 			e.printStackTrace();
 			LOG.error("启动失败,程序即将退出,serverPort={}", serverPort);
@@ -129,21 +134,27 @@ public class NioLongConnectionServer {
 		LOG.info("httpServer启动成功,等待连接,serverPort={}", serverPort);
 		this.serverStarted.set(true);
 
-		if (selector == null) {
+		if (this.selector == null) {
 			return;
 		}
 
 		while (true) {
 			try {
-				final int select = selector.select();
+				final int select = this.selector.select();
 				if (select == 0) {
+					this.zc++;
 					continue;
 				}
 			} catch (final IOException e) {
 				e.printStackTrace();
 			}
 
-			final Set<SelectionKey> selectedKeys = selector.selectedKeys();
+			if (this.zc >= ZC_THRESHOLD) {
+				rebuildSelector();
+				this.zc = 0;
+			}
+
+			final Set<SelectionKey> selectedKeys = this.selector.selectedKeys();
 			final Iterator<SelectionKey> iterator = selectedKeys.iterator();
 			while (iterator.hasNext()) {
 				final SelectionKey selectionKey = iterator.next();
@@ -151,7 +162,7 @@ public class NioLongConnectionServer {
 
 				try {
 					if (selectionKey.isValid() && selectionKey.isAcceptable()) {
-						handleAccept(selectionKey, selector);
+						handleAccept(selectionKey, this.selector);
 					} else if (selectionKey.isValid() && selectionKey.isReadable()) {
 
 						// FIXME 2025年1月15日 下午7:45:55 zhangzhen : 在尝试：只在NIO线程read
@@ -187,6 +198,35 @@ public class NioLongConnectionServer {
 				}
 			}
 		}
+	}
+
+	private void rebuildSelector() {
+		LOG.warn("selector重建,zc={}", this.zc);
+		final Selector oldSelector = this.selector;
+		Selector newSelector = null;
+		try {
+			newSelector = SelectorProvider.provider().openSelector();
+		} catch (final IOException e) {
+			e.printStackTrace();
+		}
+
+		for (final SelectionKey key : oldSelector.keys()) {
+			if (!key.isValid()) {
+				continue;
+			}
+			key.cancel();
+			try {
+				key.channel().register(newSelector, key.interestOps(), key.attachment());
+			} catch (final ClosedChannelException e) {
+				e.printStackTrace();
+			}
+		}
+		try {
+			oldSelector.close();
+		} catch (final IOException e) {
+			e.printStackTrace();
+		}
+		this.selector = newSelector;
 	}
 
 	private void action(final SelectionKey selectionKey, final SocketChannel socketChannel) {
