@@ -215,12 +215,12 @@ public class DefaultHttpReader {
 		final String x = new String(array, 0, tR);
 		final int i = x.indexOf(NioLongConnectionServer.SPACE);
 		if (i > -1) {
-			final String method = x.substring(0, i);
-			final MethodEnum valueOfString = MethodEnum.valueOfString(method);
-			if (valueOfString != null) {
-				return new MR(maxLength, method, array);
+			final String methodS = x.substring(0, i);
+			final boolean methodStringUpper = MethodEnum.isMethodStringUpper(methodS);
+			if (methodStringUpper) {
+				return new MR(maxLength, methodS, array);
 			}
-		}
+		} 
 
 		return null;
 	}
