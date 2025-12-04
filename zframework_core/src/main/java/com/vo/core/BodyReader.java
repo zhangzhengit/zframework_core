@@ -168,31 +168,28 @@ public class BodyReader {
 						fd2.setName(vMap.get(NAME));
 						fd2.setFileName(vMap.get(FILENAME));
 					}
-					if (ctIndex > -1) {
-						if (line.startsWith(HeaderEnum.CONTENT_TYPE.getName())) {
-							final String[] ctA = line.split(":");
-							final String ct = ctA[1].trim();
-							fd2.setContentType(ct);
-
-							final byte[] bodyFullBA = Arrays.copyOfRange(oneBA,
-									ctIndex + line.getBytes().length + RNRN.getBytes().length, oneBA.length);
-							fd2.setBody(bodyFullBA);
-							break;
-						}
-					} else {
+					if (ctIndex <= -1) {
 						final int bodyStartIndex = search(oneBA, RNRN, 1, i);
 						final byte[] bodyV = Arrays.copyOfRange(ba, bodyStartIndex + RNRN.getBytes().length, ba.length);
 						final String bV = new String(bodyV);
 						fd2.setValue(bV);
 						break;
 					}
+					if (line.startsWith(HeaderEnum.CONTENT_TYPE.getName())) {
+						final String[] ctA = line.split(":");
+						final String ct = ctA[1].trim();
+						fd2.setContentType(ct);
+
+						final byte[] bodyFullBA = Arrays.copyOfRange(oneBA,
+								ctIndex + line.getBytes().length + RNRN.getBytes().length, oneBA.length);
+						fd2.setBody(bodyFullBA);
+						break;
+					}
 				}
 
 				bl.clear();
-			} else {
-				if (ba[i] != '\n') {
-					bl.add(ba[i]);
-				}
+			} else if (ba[i] != '\n') {
+				bl.add(ba[i]);
 			}
 		}
 
@@ -255,11 +252,12 @@ public class BodyReader {
 				}
 			}
 
+			// FIXME 2025年12月4日 下午8:23:49 zhangzhen: 下面if先注释，因为发现了bug了，不知道当时为什么这么写了
 			// 当前字节的上面是\r
-			if (find && (i > 0) && (ba[i - 1] == '=')) {
-				find = false;
-				break;
-			}
+//			if (find && (i > 0) && (ba[i - 1] == '=')) {
+//				find = false;
+//				break;
+//			}
 			if (find) {
 				findN++;
 				if (findN >= iN) {
