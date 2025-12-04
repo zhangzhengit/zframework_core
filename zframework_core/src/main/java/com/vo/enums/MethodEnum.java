@@ -1,9 +1,5 @@
 package com.vo.enums;
 
-import java.util.concurrent.ConcurrentMap;
-
-import com.google.common.collect.Maps;
-
 /**
  *
  *
@@ -33,35 +29,73 @@ public enum MethodEnum {
 
 	;
 
-	private String method;
+	private final String method;
 
-
-	private final static ConcurrentMap<String, MethodEnum> mapV = Maps.newConcurrentMap();
-	static {
-		final MethodEnum[] v = values();
-		for (final MethodEnum e : v) {
-			mapV.put(e.getMethod(), e);
+	public static boolean isMethodStringUpper(final String string) {
+		if (string == null || string.isEmpty() || string.length() < 3) {
+			return false;
 		}
 
+		return string.length() >= 3 && string.length() <= 7
+				&& ("GET".equals(string) || "POST".equals(string) || "PUT".equals(string) || "DELETE".equals(string)
+						|| "HEAD".equals(string) || "CONNECT".equals(string) || "TRACE".equals(string)
+						|| "OPTIONS".equals(string) || "PATCH".equals(string));
 	}
+	
+	public static MethodEnum valueOfMethodStringUpper(final String string) {
+		if (string == null || string.isEmpty() || string.length() < 3) {
+			return null;
+		}
+		
+		final int length = string.length();
+		if (length == 3) {
+			if ("GET".equals(string)) {
+				return MethodEnum.GET;
+			}
+			if ("PUT".equals(string)) {
+				return MethodEnum.PUT;
+			}
+		}
+		
+		if (length == 4) {
+			if ("POST".equals(string)) {
+				return MethodEnum.POST;
+			}
+			if ("HEAD".equals(string)) {
+				return MethodEnum.HEAD;
+			}
+		}
+		
+		if (length == 5) {
+			if ("PATCH".equals(string)) {
+				return MethodEnum.PATCH;
+			}
+			if ("TRACE".equals(string)) {
+				return MethodEnum.TRACE;
+			}
+		}
+		
+		if (length == 6) {
+			if ("DELETE".equals(string)) {
+				return MethodEnum.DELETE;
+			}
+			if ("CONNECT".equals(string)) {
+				return MethodEnum.CONNECT;
+			}
+		}
+		
+		if ((length == 7) && "OPTIONS".equals(string)) {
+			return MethodEnum.OPTIONS;
+		}
 
-	public static MethodEnum valueOfString(final String string) {
-		return mapV.get(string);
+		return null;
 	}
-
+	
 	public String getMethod() {
-		return method;
+		return this.method;
 	}
 
-	public void setMethod(String method) {
-		this.method = method;
-	}
-
-	public static ConcurrentMap<String, MethodEnum> getMapv() {
-		return mapV;
-	}
-
-	private MethodEnum(String method) {
+	MethodEnum(final String method) {
 		this.method = method;
 	}
 
