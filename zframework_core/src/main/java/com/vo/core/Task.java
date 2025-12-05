@@ -384,7 +384,7 @@ public class Task {
 		// 3、2有ZR参数但未CT，则设为produces然后write。
 		//    2无ZR，则给一个默认的json 200 
 		// 	到此结束了，不管produces是啥都write
-		if (zrMethod.getMethod().getReturnType() == void.class) {
+		if (zrMethod.isVoid()) {
 			final boolean written = ZResponseStatus.isWritten();
 			if (written) {
 				// 已write了，业务代码自己处理过了，停止
@@ -419,7 +419,7 @@ public class Task {
 		final String[] ps = zrMethod.getProduces();
 		if (AU.isNotEmpty(ps)) {
 			if ((ps.length == 1)) {
-				return responseCT(r, ps[0]);
+				return responseCT(r, ps[0], zrMethod.getCtea()[0]);
 			}
 			final int x = 20;
 			// FIXME 2025年12月6日 00:39:34 zhangzhen : 多个ps的待会再做，先做下面简单的
@@ -532,12 +532,14 @@ public class Task {
 		}
 	}
 
-	private ZResponse responseCT(final Object r,final String contentType) {
-		return new ZResponse(this.socketChannel).contentType(contentType).body(r);
+	private ZResponse responseCT(final Object r, final String contentType, final ContentTypeEnum cte) {
+		final ZResponse rx = new ZResponse(this.socketChannel).contentType(contentType);
+		cte.body(r, rx);
+		return rx;
 	}
 	
 	private ZResponse responseTextPlain(final Object r) {
-		return new ZResponse(this.socketChannel).contentType(ContentTypeEnum.TEXT_PLAIN.getType()).body((String) r);
+		return new ZResponse(this.socketChannel).contentType(ContentTypeEnum.TEXT_PLAIN.getType()).body(r instanceof String ? (String) r : String.valueOf(r));
 	}
 
 	private ZResponse responseAppJSON(final Object r) {

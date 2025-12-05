@@ -2,7 +2,6 @@ package com.vo.http;
 
 import java.lang.reflect.Method;
 
-import com.vo.anno.ZRequestBody;
 import com.vo.anno.ZResponseBody;
 import com.vo.core.ContentTypeEnum;
 import com.vo.core.ZResponse;
@@ -68,7 +67,7 @@ public class ZRMethod {
 							+ " 参考支持列表 @see " + ContentTypeEnum.class.getCanonicalName() + " 或者使用接口参数 "
 							+ ZResponse.class.getCanonicalName() + " 自己手动设置Content-Type");
 				}
-				this.ctea[i] = cte;
+				getCtea()[i] = cte;
 			}
 		} else {
 			this.ctea = null;
@@ -85,7 +84,6 @@ public class ZRMethod {
 		return this.produces;
 	}
 
-
 	public CTEnum getCtEnum() {
 		return this.ctEnum;
 	}
@@ -99,7 +97,11 @@ public class ZRMethod {
 	}
 
 	public boolean hasResponseBody() {
-		return hasResponseBody;
+		return this.hasResponseBody;
+	} 
+
+	public ContentTypeEnum[] getCtea() {
+		return this.ctea;
 	}
 
 

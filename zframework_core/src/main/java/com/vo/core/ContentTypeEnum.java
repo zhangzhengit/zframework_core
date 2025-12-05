@@ -1,5 +1,7 @@
 package com.vo.core;
 
+import com.vo.cache.J;
+
 /**
  * Content-Type
  *
@@ -18,11 +20,22 @@ public enum ContentTypeEnum {
 
 	APPLICATION_OCTET_STREAM("Content-Type: application/octet-stream", "application/octet-stream"),
 
-	APPLICATION_JSON("Content-Type: application/json;charset=UTF-8", "application/json"),
+	APPLICATION_JSON("Content-Type: application/json;charset=UTF-8", "application/json"){
+		@Override
+		public void body(final Object r, final ZResponse rx) {
+			rx.body(J.toJSONString(r));
+		}
+	},
 
 	APPLICATION_PDF("Content-Type: application/pdf;", "application/pdf"),
 
-	APPLICATION_XML("Content-Type: application/xml;charset=UTF-8", "application/xml"),
+	APPLICATION_XML("Content-Type: application/xml;charset=UTF-8", "application/xml"){
+		@Override
+		public void body(final Object r, final ZResponse rx) {
+			// FIXME 2025年12月6日 03:32:20 zhangzhen :  处理为xml
+			super.body(r, rx);
+		}
+	},
 
 	TEXT_HTML("Content-Type: text/html;charset=UTF-8", "text/html"),
 
@@ -55,6 +68,16 @@ public enum ContentTypeEnum {
 
 	;
 
+	public void body(final Object r,final ZResponse rx) {
+		if (r instanceof byte[]) {
+			rx.body((byte[]) r);
+		} else if (r instanceof String) {
+			rx.body((String) r);
+		} else {
+			rx.body(r);
+		}
+	}
+	
 	public static ContentTypeEnum gType(final String fileNameSuffix) {
 		if (fileNameSuffix.endsWith("js")) {
 			return JS;
@@ -77,24 +100,24 @@ public enum ContentTypeEnum {
 	private String value;
 	private String type;
 
-	private ContentTypeEnum(String value, String type) {
+	ContentTypeEnum(final String value, final String type) {
 		this.value = value;
 		this.type = type;
 	}
 
 	public String getValue() {
-		return value;
+		return this.value;
 	}
 
-	public void setValue(String value) {
+	public void setValue(final String value) {
 		this.value = value;
 	}
 
 	public String getType() {
-		return type;
+		return this.type;
 	}
 
-	public void setType(String type) {
+	public void setType(final String type) {
 		this.type = type;
 	}
 
