@@ -22,7 +22,7 @@ import com.vo.exception.StartupException;
  *
  */
 public class ZControllerMap {
-	static final HashBasedTable<MethodEnum, String, Method> methodPathTable = HashBasedTable.create();
+	static final HashBasedTable<MethodEnum, String, ZRMethod> methodPathTable = HashBasedTable.create();
 	static final HashBasedTable<String, String, Integer> methodQPSTable = HashBasedTable.create();
 	static final HashBasedTable<String, String, ZQPSLimitation> methodZQPSLimitationTable = HashBasedTable.create();
 	static final HashBasedTable<Method, String, Boolean> methodIsregexTable = HashBasedTable.create();
@@ -35,17 +35,18 @@ public class ZControllerMap {
 	 * @param methodEnum 接口请求方法，如： MethodEnum.POST
 	 * @param mapping    匹配路径，如：/index
 	 * @param method     具体的接口方法
+	 * @param produces TODO
 	 * @param object     接口方法所在的对象
 	 * @param isRegex    mapping 是否正则表达式
 	 */
 	public synchronized static void put(final MethodEnum methodEnum, final String mapping, final Method method,
-			final Object object, final boolean isRegex) {
+			final String[] produces, final Object object, final boolean isRegex) {
 
 		final ZRequestMapping requestMapping = method.getAnnotation(ZRequestMapping.class);
 
 		checkAPI(methodEnum, mapping, method, object, requestMapping);
-
-		methodPathTable.put(methodEnum, mapping, method);
+		
+		methodPathTable.put(methodEnum, mapping, new ZRMethod(method, produces));
 
 		methodIsregexTable.put(method, mapping, isRegex);
 
@@ -111,10 +112,10 @@ public class ZControllerMap {
 		return object;
 	}
 
-	public static Method getMethodByMethodEnumAndPath(final MethodEnum methodEnum, final String path) {
+	public static ZRMethod getMethodByMethodEnumAndPath(final MethodEnum methodEnum, final String path) {
 
 
-		final Method method = methodPathTable.get(methodEnum, path);
+		final ZRMethod method = methodPathTable.get(methodEnum, path);
 
 		if (method != null) {
 			return method;
@@ -127,7 +128,7 @@ public class ZControllerMap {
 			return null;
 		}
 
-		final Method method2 = methodPathTable.get(methodEnum, pathM);
+		final ZRMethod method2 = methodPathTable.get(methodEnum, pathM);
 		return method2;
 	}
 
@@ -172,14 +173,14 @@ public class ZControllerMap {
 		return null;
 	}
 
-	public static Map<MethodEnum, Method> getByPath(final String path) {
-		final Map<MethodEnum, Method> column = methodPathTable.column(path);
+	public static Map<MethodEnum, ZRMethod> getByPath(final String path) {
+		final Map<MethodEnum, ZRMethod> column = methodPathTable.column(path);
 		return column;
 	}
 
-	public static Map<String, Method> getByMethodEnum(final MethodEnum methodEnum) {
+	public static Map<String, ZRMethod> getByMethodEnum(final MethodEnum methodEnum) {
 
-		final Map<String, Method> row = methodPathTable.row(methodEnum);
+		final Map<String, ZRMethod> row = methodPathTable.row(methodEnum);
 		return row;
 	}
 

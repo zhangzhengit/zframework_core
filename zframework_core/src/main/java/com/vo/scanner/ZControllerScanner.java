@@ -109,7 +109,10 @@ public class ZControllerScanner {
 					for (int i = 0; i < requestMappingArray.length; i++) {
 						final String mapping = requestMappingArray[i];
 						final MethodEnum methodEnum = requestMappingAnnotation.method();
-						ZControllerMap.put(methodEnum, prefix + mapping, method, controllerObject, isRegex[i]);
+						
+						final String[] produces = requestMappingAnnotation.produces();
+						
+						ZControllerMap.put(methodEnum, prefix + mapping, method, produces, controllerObject, isRegex[i]);
 					}
 
 					checkZMFIleSize(cls, method);

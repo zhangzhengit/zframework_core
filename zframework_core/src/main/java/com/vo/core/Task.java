@@ -50,6 +50,7 @@ import com.vo.http.ZCookie;
 import com.vo.http.ZHtml;
 import com.vo.http.ZPVTL;
 import com.vo.http.ZQPSLimitation;
+import com.vo.http.ZRMethod;
 import com.vo.http.ZRequestParam;
 import com.vo.scanner.ZHandlerInterceptor;
 import com.vo.scanner.ZHandlerInterceptorScanner;
@@ -114,24 +115,24 @@ public class Task {
 		}
 
 		final String path = request.getPath();
-		final Method method = ZControllerMap.getMethodByMethodEnumAndPath(request.getMethodEnum(), path);
-		if (method == null) {
+		final ZRMethod zrMethod = ZControllerMap.getMethodByMethodEnumAndPath(request.getMethodEnum(), path);
+		if (zrMethod == null) {
 
-			final Map<String, Method> rowMap = ZControllerMap.getByMethodEnum(request.getMethodEnum());
-			final Set<Entry<String, Method>> entrySet = rowMap.entrySet();
-			for (final Entry<String, Method> entry : entrySet) {
-				final Method methodTarget = entry.getValue();
+			final Map<String, ZRMethod> rowMap = ZControllerMap.getByMethodEnum(request.getMethodEnum());
+			final Set<Entry<String, ZRMethod>> entrySet = rowMap.entrySet();
+			for (final Entry<String, ZRMethod> entry : entrySet) {
+				final ZRMethod methodTarget = entry.getValue();
 				final String requestMapping = entry.getKey();
-				if (Boolean.TRUE.equals(ZControllerMap.getIsregexByMethodEnumAndPath(methodTarget, requestMapping))
+				if (Boolean.TRUE.equals(ZControllerMap.getIsregexByMethodEnumAndPath(methodTarget.getMethod(), requestMapping))
 						&& path.matches(requestMapping)) {
-					return methodTarget.getAnnotation(annoClass);
+					return methodTarget.getMethod().getAnnotation(annoClass);
 				}
 			}
 
 			return null;
 		}
 
-		return method.getAnnotation(annoClass);
+		return zrMethod.getMethod().getAnnotation(annoClass);
 	}
 
 	/**
@@ -146,17 +147,17 @@ public class Task {
 	public ZResponse invoke(final ZRequest request, final SocketChannel socketChannel) throws Exception {
 
 		final String path = request.getPath();
-		Method method = ZControllerMap.getMethodByMethodEnumAndPath(request.getMethodEnum(), path);
+		ZRMethod zrMethod = ZControllerMap.getMethodByMethodEnumAndPath(request.getMethodEnum(), path);
 
 		// 查找对应的控制器来处理
-		if (method == null) {
+		if (zrMethod == null) {
 
 			// 用非请求的METHOD看是否有，有则响应405
-			final Method noRequestMethodMethod = ZRC.singleton().computeIfAbsent("MethodEnum.values-" + path, () -> {
+			final ZRMethod noRequestMethodMethod = ZRC.singleton().computeIfAbsent("MethodEnum.values-" + path, () -> {
 				final MethodEnum[] es = MethodEnum.values();
 				for (final MethodEnum methodEnum : es) {
 					if (methodEnum != request.getMethodEnum()) {
-						final Method methodT = ZControllerMap.getMethodByMethodEnumAndPath(methodEnum, path);
+						final ZRMethod methodT = ZControllerMap.getMethodByMethodEnumAndPath(methodEnum, path);
 						if (methodT != null) {
 							return methodT;
 						}
@@ -170,23 +171,23 @@ public class Task {
 			}
 
 			// 用正则依然匹配不到，响应404
-			final Method matcheMethod = Task.getMatcheMethod(request, path);
-			if (matcheMethod == null) {
+			final ZRMethod matcheZRMethod = Task.getMatcheMethod(request, path);
+			if (matcheZRMethod == null) {
 				return ReU.response404(socketChannel, path);
 			}
 
-			method = matcheMethod;
+			zrMethod = matcheZRMethod;
 		}
 
 		try {
 
-			final Object[] parameterArray = this.generateParameters(method, request, path);
+			final Object[] parameterArray = this.generateParameters(zrMethod.getMethod(), request, path);
 			if (parameterArray == null) {
 				return null;
 			}
 
-			final Object zController = ZControllerMap.getObjectByMethod(method);
-			final ZResponse re = invokeAndResponse(method, parameterArray, zController, request);
+			final Object zController = ZControllerMap.getObjectByMethod(zrMethod.getMethod());
+			final ZResponse re = invokeAndResponse(zrMethod.getMethod(), parameterArray, zController, request);
 			return re;
 
 		} catch (final Exception e) {
@@ -196,15 +197,15 @@ public class Task {
 
 	}
 
-	private static Method getMatcheMethod(final ZRequest request,  final String path) throws Exception {
+	private static ZRMethod getMatcheMethod(final ZRequest request,  final String path) throws Exception {
 
-		final Supplier<Method> supplier = () -> {
-			final Map<String, Method> rowMap = ZControllerMap.getByMethodEnum(request.getMethodEnum());
-			final Set<Entry<String, Method>> entrySet = rowMap.entrySet();
-			for (final Entry<String, Method> entry : entrySet) {
-				final Method methodTarget = entry.getValue();
+		final Supplier<ZRMethod> supplier = () -> {
+			final Map<String, ZRMethod> rowMap = ZControllerMap.getByMethodEnum(request.getMethodEnum());
+			final Set<Entry<String, ZRMethod>> entrySet = rowMap.entrySet();
+			for (final Entry<String, ZRMethod> entry : entrySet) {
+				final ZRMethod methodTarget = entry.getValue();
 				final String requestMapping = entry.getKey();
-				if (Boolean.TRUE.equals(ZControllerMap.getIsregexByMethodEnumAndPath(methodTarget, requestMapping))
+				if (Boolean.TRUE.equals(ZControllerMap.getIsregexByMethodEnumAndPath(methodTarget.getMethod(), requestMapping))
 						&& path.matches(requestMapping)) {
 
 					return methodTarget;
@@ -377,11 +378,11 @@ public class Task {
 
 		// 响应 html
 		if (method.isAnnotationPresent(ZHtml.class)) {
-			return responseHtml(request, r);
+			return responseHtml(r);
 		}
 
 		// 默认响应json
-		return responseDefault_JSON(request, r);
+		return responseDefault_JSON(r);
 	}
 
 	/**
@@ -449,12 +450,16 @@ public class Task {
 		}
 	}
 
-	private ZResponse responseDefault_JSON(final ZRequest request, final Object r) {
+	private ZResponse responseDefault_JSON(final Object r) {
+		if (r instanceof String) {
+			return new ZResponse(this.socketChannel).contentType(ContentTypeEnum.TEXT_PLAIN.getType()).body((String) r);
+		}
+
 		final String json = J.toJSONString(r, Include.NON_NULL);
 		return new ZResponse(this.socketChannel).contentType(DEFAULT_CONTENT_TYPE.getType()).body(json);
 	}
 
-	private ZResponse responseHtml(final ZRequest request, final Object r) {
+	private ZResponse responseHtml(final Object r) {
 		try {
 
 			final String htmlContent = readHtmlContent(r);
