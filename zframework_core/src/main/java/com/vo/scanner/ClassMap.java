@@ -33,7 +33,8 @@ public class ClassMap {
 		final Set<Class<?>> annoSet = clsSet.parallelStream()
 					.filter(cls -> cls.isAnnotationPresent(annotationClass))
 					.collect(Collectors.toSet());
-		return annoSet;
+		final Set<Class<?>> unmodifiableSet = Collections.unmodifiableSet(annoSet);
+		return unmodifiableSet;
 	}
 
 	public synchronized static Set<Class<?>> scanPackage(final String... scanPackageName) {
@@ -42,14 +43,16 @@ public class ClassMap {
 			final Set<Class<?>> clsSet = s(p);
 			rs.addAll(clsSet);
 		}
-
-		return rs;
+		
+		final Set<Class<?>> unmodifiableSet = Collections.unmodifiableSet(rs);
+		return unmodifiableSet;
 	}
 
 	private static Set<Class<?>> s(final String p) {
 		final Set<Class<?>> v = map.get(p);
 		if (v != null) {
-			return v;
+			final Set<Class<?>> unmodifiableSet = Collections.unmodifiableSet(v);
+			return unmodifiableSet;
 		}
 
 		Set<Class<?>> clsSet = null;
