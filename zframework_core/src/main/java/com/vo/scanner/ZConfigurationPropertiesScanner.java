@@ -33,6 +33,7 @@ import com.vo.cache.AU;
 import com.vo.cache.CU;
 import com.vo.cache.STU;
 import com.vo.configuration.ZProperties;
+import com.vo.core.NioLongConnectionServer;
 import com.vo.core.ZContext;
 import com.vo.core.ZLog2;
 import com.vo.core.ZSingleton;
@@ -40,8 +41,6 @@ import com.vo.exception.StartupException;
 import com.vo.exception.TypeNotSupportedExcpetion;
 import com.vo.validator.ZConfigurationPropertiesException;
 import com.vo.validator.ZValidator;
-
-import cn.hutool.core.util.StrUtil;
 
 /**
  * 扫描 @ZConfigurationProperties 的类，从配置文件读取配置组长一个此类的对象
@@ -464,8 +463,8 @@ public class ZConfigurationPropertiesScanner {
 		while (keys.hasNext()) {
 			final String k = keys.next();
 
-			final String kName = StrUtil.removeAll(k, key + ".");
-
+			final String kName = k.replace(key + '.', NioLongConnectionServer.SPACE);
+			
 			final String value = ZProperties.getString(k);
 			map.put(kName, value);
 		}
@@ -475,7 +474,7 @@ public class ZConfigurationPropertiesScanner {
 		while (keys2.hasNext()) {
 			final String k = keys2.next();
 
-			final String kName = StrUtil.removeAll(k, convert + ".");
+			final String kName = k.replace(convert + '.', NioLongConnectionServer.SPACE);
 
 			final String value = ZProperties.getString(k);
 			map.put(kName, value);
