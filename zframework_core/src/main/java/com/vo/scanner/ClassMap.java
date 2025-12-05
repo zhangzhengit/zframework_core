@@ -1,5 +1,6 @@
 package com.vo.scanner;
 
+import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.Collections;
 import java.util.HashSet;
@@ -9,8 +10,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-
-import cn.hutool.core.util.ClassUtil;
+import com.vo.common.PackageScanner;
 
 /**
  * 暂存扫描出来的Class，防止每次都扫描
@@ -53,7 +53,12 @@ public class ClassMap {
 			return v;
 		}
 
-		final Set<Class<?>> clsSet = ClassUtil.scanPackage(p);
+		Set<Class<?>> clsSet = null;
+		try {
+			clsSet = PackageScanner.scanPackage(p);
+		} catch (ClassNotFoundException | IOException e) {
+			e.printStackTrace();
+		}
 		map.put(p, clsSet);
 		return clsSet;
 	}
