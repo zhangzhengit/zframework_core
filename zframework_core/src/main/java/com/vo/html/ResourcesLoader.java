@@ -21,9 +21,6 @@ import com.vo.core.ZSingleton;
 import com.vo.exception.ResourceNotExistException;
 import com.vo.http.HttpStatusEnum;
 
-import cn.hutool.core.io.FastByteArrayOutputStream;
-import cn.hutool.core.io.IoUtil;
-
 /**
  * 从 硬盘或resources 目录加载文件，根据配置项来选择从哪里加载
  *
@@ -145,10 +142,8 @@ public class ResourcesLoader {
 		} catch (final FileNotFoundException e1) {
 			throw new ResourceNotExistException("资源不存在,name = " + resourceName, HttpStatusEnum.HTTP_404.getCode());
 		}
-
-		final FastByteArrayOutputStream read = IoUtil.read(fileInputStream);
-		final byte[] byteArray = read.toByteArray();
-
+		
+		final byte[] byteArray = readByteArray0(fileInputStream);
 		try {
 			fileInputStream.close();
 		} catch (final IOException e) {
@@ -159,7 +154,7 @@ public class ResourcesLoader {
 	}
 
 	private static byte[] loadByteArray0(final String resourceName) {
-		if (Boolean.FALSE.equals(SERVER_CONFIGURATION.getStaticResourceCacheEnable())) {
+		if (!SERVER_CONFIGURATION.getStaticResourceCacheEnable()) {
 			return readByteArray0(checkInputStream(resourceName, resourceName));
 		}
 
@@ -185,7 +180,7 @@ public class ResourcesLoader {
 
 	private static String loadString(final String name, final String resourceName) {
 
-		if (Boolean.FALSE.equals(SERVER_CONFIGURATION.getStaticResourceCacheEnable())) {
+		if (!SERVER_CONFIGURATION.getStaticResourceCacheEnable()) {
 			return loadSring0(name, resourceName);
 		}
 

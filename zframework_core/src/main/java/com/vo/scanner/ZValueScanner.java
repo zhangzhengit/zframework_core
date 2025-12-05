@@ -27,9 +27,6 @@ import com.vo.core.ZContext;
 import com.vo.core.ZLog2;
 import com.vo.validator.ZValidator;
 
-// FIXME 2025年9月1日 下午3:50:13 zhangzhen: 记得把hutool的依赖去掉
-import cn.hutool.core.util.ReflectUtil;
-
 /**
  *
  * 扫描组件中 带有 @ZValue 的字段，根据name注入配置文件中对应的value
@@ -68,7 +65,7 @@ public class ZValueScanner {
 				continue;
 			}
 
-			final Field[] fields = ReflectUtil.getFields(bean.getClass());
+			final Field[] fields = bean.getClass().getFields();
 			for (final Field field : fields) {
 				inject(cls, field);
 			}

@@ -3,8 +3,6 @@ package com.vo.cache;
 import java.util.HashSet;
 import java.util.Set;
 
-import cn.hutool.core.bean.BeanUtil;
-
 /**
  * 组合内存和redis两种模式的缓存，优先从内存找，找不到再到redis找，在redis找到了则再add到内存中并返回，
  * 在redis也没找到则直接返回null
@@ -40,7 +38,7 @@ public class ZCacheMixed implements ZCache<ZCacheR> {
 		synchronized (key.intern()) {
 			this.redis.add(key, value, expire);
 
-			final ZCacheR vM = this.copyVM(value);
+			final ZCacheR vM = copyVM(value);
 			this.memory.add(key, vM, vM.getExpire());
 		}
 	}
@@ -58,7 +56,7 @@ public class ZCacheMixed implements ZCache<ZCacheR> {
 
 				final ZCacheR vR = this.redis.get(key);
 				if (vR != null) {
-					final ZCacheR vM = this.copyVM(vR);
+					final ZCacheR vM = copyVM(vR);
 					this.memory.add(key, vM, vM.getExpire());
 				}
 
@@ -68,7 +66,10 @@ public class ZCacheMixed implements ZCache<ZCacheR> {
 	}
 
 	private ZCacheR copyVM(final ZCacheR value) {
-		final ZCacheR vM = BeanUtil.copyProperties(value, ZCacheR.class);
+		
+		final ZCacheR vM = new ZCacheR();
+		vM.setKey(value.getKey());
+		vM.setValue(value.getValue());
 		vM.setCurrentTimeMillis(System.currentTimeMillis());
 		vM.setExpire(this.expire);
 		return vM;
@@ -101,8 +102,7 @@ public class ZCacheMixed implements ZCache<ZCacheR> {
 		// 此值极可能不准
 		final Set<String> k1 = this.memory.keySet();
 		final Set<String> k2 = this.redis.keySet();
-		final Set<String> v = new HashSet<>();
-		v.addAll(k1);
+		final Set<String> v = new HashSet<>(k1);
 		v.addAll(k2);
 		return k1;
 	}
