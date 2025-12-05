@@ -1,6 +1,5 @@
 package com.vo.cache;
 
-import com.alibaba.fastjson.JSON;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,8 +19,9 @@ public class J {
 		try {
 			return MAPPER.readValue(json, cls);
 		} catch (final JsonProcessingException e) {
-			return JSON.parseObject(json,cls);
+			e.printStackTrace();
 		}
+		return null;
 	}
 
 	public static String toJSONString(final Object object, final Include incluedeEnum) {
@@ -31,8 +31,10 @@ public class J {
 			}
 			return MAPPER.writeValueAsString(object);
 		} catch (final JsonProcessingException e) {
-			return JSON.toJSONString(object);
+			e.printStackTrace();
 		}
+		
+		return null;
 	}
 
 	public static String toJSONString(final Object object) {
