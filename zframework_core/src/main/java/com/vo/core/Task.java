@@ -15,6 +15,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -44,6 +45,7 @@ import com.vo.exception.FormPairParseException;
 import com.vo.exception.PathVariableException;
 import com.vo.html.ResourcesLoader;
 import com.vo.http.AccessDeniedCodeEnum;
+import com.vo.http.CTEnum;
 import com.vo.http.HttpStatusEnum;
 import com.vo.http.ZControllerMap;
 import com.vo.http.ZCookie;
@@ -180,7 +182,11 @@ public class Task {
 		}
 
 		try {
+			if (zrMethod.isVoid()) {
+				ZRSC.set(socketChannel);
+			}
 
+			// 找到目标方法了，开始生成参数了
 			final Object[] parameterArray = this.generateParameters(zrMethod.getMethod(), request, path);
 			if (parameterArray == null) {
 				return null;
@@ -318,7 +324,9 @@ public class Task {
 			}
 		}
 
-		setZRequestAndZResponse(parametersArray, request);
+		ZResponseStatus.initialization();
+		
+		setZRequestAndZResponse(parametersArray, request, zrMethod);
 
 		Object r = null;
 		// 在此zhi执行
@@ -370,21 +378,86 @@ public class Task {
 			}
 		}
 
-		// 接口方法无返回值，直接返回 response对象
+		// 最高优先级：业务代码处理 接口方法void
+		// 1、先看方法里的业务代码是否new ZResponse.write过了，有则停止，无则继续第二步
+		// 2、用接口的ZResponse参数来contentType然后write，有次参数并且设置了ct则直接write，无则第3步
+		// 3、2有ZR参数但未CT，则设为produces然后write。
+		//    2无ZR，则给一个默认的json 200 
+		// 	到此结束了，不管produces是啥都write
 		if (zrMethod.getMethod().getReturnType() == void.class) {
+			final boolean written = ZResponseStatus.isWritten();
+			if (written) {
+				// 已write了，业务代码自己处理过了，停止
+				return null;
+			}
+			
 			final ZResponse response = ZHttpContext.getZResponseAndRemove();
+			// 无ZR参数，直接给一个默认的json 200
+			if (response == null) {
+				return new ZResponse(this.socketChannel)
+						.contentType(ContentTypeEnum.APPLICATION_JSON.getType());
+			}
+			
+			// 有ZR参数未CT，根据produces然后看类的注解
+			final String contentType = response.getContentType();
+			if (contentType == null) {
+				final String p1 = findProduces(request, zrMethod.getProduces());
+				response.contentType(p1==null ? DEFAULT_CONTENT_TYPE.getType() : p1);
+				// FIXME 2025年12月6日 00:08:25 zhangzhen :  逻辑似乎不对
+				// 到此应该在代码里已经设置了body了（如果有body），那么在body后设置CT已经无意义了
+				// 应该在invoke前先匹配好先设置CT，在body时根据CT来选择不同的CT格式
+				// 或者直接简单点?框架只管CT，body格式让用户自己设置？
+//				response.bo
+			}
+			
+			// 到此，有ZR参数且CT了，直接返回
 			return response;
 		}
 
+		// 第二优先：produces 设定 
+		// 只设定了一个则就按这个，设置多个则选择匹配度最高的，都不匹配则按顺序返回第一个
+		final String[] ps = zrMethod.getProduces();
+		if (AU.isNotEmpty(ps)) {
+			if ((ps.length == 1)) {
+				return responseCT(r, ps[0]);
+			}
+			final int x = 20;
+			// FIXME 2025年12月6日 00:39:34 zhangzhen : 多个ps的待会再做，先做下面简单的
+
+		}
+		
+		// 第三优先：@ZRestCon还是@ZCon注解,ZC则默认为html名称，
+		// ZRC则区分returnType为String则CT为text/plain，其他一律json
+		final CTEnum ctEnum = zrMethod.getCtEnum();
 		// 响应 html
-		if (zrMethod.getMethod().isAnnotationPresent(ZHtml.class)) {
+		if ((ctEnum == CTEnum.NORMAL) ) {
 			return responseHtml(r);
 		}
-
+		
+		if ((ctEnum == CTEnum.REST) && zrMethod.isRTString()) {
+			return responseTextPlain(r);
+		}
+		
 		// 默认响应json
-		return responseDefault_JSON(r);
+		return responseAppJSON(r);
 	}
 
+	static String findProduces(final ZRequest request, final String[] ps) {
+		if (AU.isEmpty(ps)) {
+			return null;
+		}
+
+		if (ps.length == 1) {
+			// FIXME 2025年12月6日 00:03:18 zhangzhen :  要不要看Accept看是否响应406？
+			return ps[0];
+		}
+
+		// FIXME 2025年12月6日 00:03:03 zhangzhen :  以后在解析，先做一个的
+		final String accept = request.getHeader("Accept");
+
+		return null;
+	}
+	
 	/**
 	 * 优先从request中获取ZSESSIONID，如果服务器中不存在，则生成新的并Set-Cookie
 	 *
@@ -450,11 +523,20 @@ public class Task {
 		}
 	}
 
-	private ZResponse responseDefault_JSON(final Object r) {
+	private ZResponse responseCT(final Object r,final String contentType) {
 		if (r instanceof String) {
 			return new ZResponse(this.socketChannel).contentType(ContentTypeEnum.TEXT_PLAIN.getType()).body((String) r);
 		}
+		
+		final String json = J.toJSONString(r, Include.NON_NULL);
+		return new ZResponse(this.socketChannel).contentType(DEFAULT_CONTENT_TYPE.getType()).body(json);
+	}
+	
+	private ZResponse responseTextPlain(final Object r) {
+		return new ZResponse(this.socketChannel).contentType(ContentTypeEnum.TEXT_PLAIN.getType()).body((String) r);
+	}
 
+	private ZResponse responseAppJSON(final Object r) {
 		final String json = J.toJSONString(r, Include.NON_NULL);
 		return new ZResponse(this.socketChannel).contentType(DEFAULT_CONTENT_TYPE.getType()).body(json);
 	}
@@ -857,7 +939,7 @@ public class Task {
 		return this.generateParameters(method, parametersArray, request, path);
 	}
 
-	private void setZRequestAndZResponse(final Object[] parameterArray, final ZRequest request) {
+	private void setZRequestAndZResponse(final Object[] parameterArray, final ZRequest request, final ZRMethod zrmethod) {
 
 		if (parameterArray == null) {
 			return;

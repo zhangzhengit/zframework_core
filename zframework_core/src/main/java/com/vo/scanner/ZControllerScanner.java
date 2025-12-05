@@ -3,6 +3,7 @@ package com.vo.scanner;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -12,8 +13,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.vo.anno.ZRestController;
+import com.vo.anno.ZController;
 import com.vo.anno.ZCookieValue;
+import com.vo.anno.ZRestController;
 import com.vo.api.StaticController;
 import com.vo.cache.AU;
 import com.vo.cache.STU;
@@ -29,10 +31,13 @@ import com.vo.core.ZSingleton;
 import com.vo.enums.BeanModeEnum;
 import com.vo.enums.MethodEnum;
 import com.vo.exception.StartupException;
+import com.vo.http.CTEnum;
 import com.vo.http.ZControllerMap;
 import com.vo.http.ZCookie;
 import com.vo.http.ZHtml;
 import com.vo.http.ZRequestMapping;
+
+import jdk.nashorn.internal.runtime.regexp.joni.constants.CCSTATE;
 
 /**
  * 扫描 @ZController 的类，注册为一个控制类
@@ -64,14 +69,28 @@ public class ZControllerScanner {
 
 	public static Set<Class<?>> scanAndCreateObject(final String... packageName) {
 		//		ZControllerScanner.LOG.info("开始扫描带有[{}]的类", ZController.class.getCanonicalName());
-		final Set<Class<?>> zcSet = ClassMap.scanPackageByAnnotation(ZRestController.class, packageName);
+		final Set<Class<?>> zcSet1 = ClassMap.scanPackageByAnnotation(ZRestController.class, packageName);
+		final Set<Class<?>> cSet = ClassMap.scanPackageByAnnotation(ZController.class, packageName);
 		//		ZControllerScanner.LOG.info("带有[{}]的类个数={}", ZController.class.getCanonicalName(), zcSet.size());
 
+		for (final Class<?> cc : cSet) {
+			for (final Class<?> zcc : zcSet1) {
+				if (zcc.getCanonicalName().equals(cc.getCanonicalName())) {
+					throw new StartupException("不允许 @" + ZRestController.class.getCanonicalName() + " 和 @"
+							+ ZController.class.getCanonicalName() + " 同时使用,class = " + cc
+					);
+				}
+			}
+		}
+		
+		final Set<Class<?>> zcSet = new HashSet<>(zcSet1);
+		zcSet.addAll(cSet);
+		
 		final ServerConfigurationProperties serverConfiguration = ZSingleton.getSingletonByClass(ServerConfigurationProperties.class);
 
 		for (final Class<?> cls : zcSet) {
-			final Boolean staticControllerEnable = serverConfiguration.getStaticControllerEnable();
-			if (Boolean.FALSE.equals(staticControllerEnable)
+			final boolean staticControllerEnable = serverConfiguration.getStaticControllerEnable();
+			if (!staticControllerEnable
 					&& cls.getCanonicalName().equals(StaticController.class.getCanonicalName())) {
 
 				//				ZControllerScanner.LOG.info("[{}] 未启用，不创建[{}]对象", StaticController.class.getSimpleName(),
@@ -92,11 +111,14 @@ public class ZControllerScanner {
 				ZControllerScanner.checkZHtml(method);
 
 				checkNoVoidWithZResponse(method);
+//				checkVoidWithoutZResponse(method);
 
 				final Object controllerObject = ZControllerScanner.getSingleton(cls);
 
-				final ZRestController controller = cls.getAnnotation(ZRestController.class);
-				final String prefix = n(controller.prefix());
+				final ZRestController restController = cls.getAnnotation(ZRestController.class);
+				final ZController controller = cls.getAnnotation(ZController.class);
+				final String prefix = checkCPrefix(
+						restController != null ? restController.prefix() : controller.prefix());
 
 				// 校验 @ZRequestMapping
 				final ZRequestMapping requestMappingAnnotation = method.getAnnotation(ZRequestMapping.class);
@@ -112,7 +134,9 @@ public class ZControllerScanner {
 						
 						final String[] produces = requestMappingAnnotation.produces();
 						
-						ZControllerMap.put(methodEnum, prefix + mapping, method, produces, controllerObject, isRegex[i]);
+						ZControllerMap.put(methodEnum, prefix + mapping, method, 
+								restController!=null ? CTEnum.REST : CTEnum.NORMAL
+								, produces, controllerObject, isRegex[i]);
 					}
 
 					checkZMFIleSize(cls, method);
@@ -152,7 +176,7 @@ public class ZControllerScanner {
 	 * @return
 	 *
 	 */
-	private static String n(final String prefix) {
+	private static String checkCPrefix(final String prefix) {
 		if (STU.isEmpty(prefix)) {
 			return "";
 		}
@@ -172,6 +196,23 @@ public class ZControllerScanner {
 		return prefix;
 	}
 
+	private static void checkVoidWithoutZResponse(final Method method) {
+		if (Task.VOID.equals(method.getReturnType().getCanonicalName())) {
+			final Parameter[] ps = method.getParameters();
+			final List<Parameter> xxx = new ArrayList<>();
+			Collections.addAll(xxx, ps);
+			
+			final Optional<Parameter> ro = xxx.stream()
+					.filter(p -> p.getType().getCanonicalName().equals(ZResponse.class.getCanonicalName()))
+					.findAny();
+			if (!ro.isPresent()) {
+				throw new StartupException(
+						"接口方法 " + method.getName() + " 无返回值必须加入 " + ZResponse.class.getSimpleName() + " 参数，加入 "
+								+ ZResponse.class.getSimpleName() + " 参数，或者返回值改为非 void");
+			}
+		}
+	}
+	
 	private static void checkNoVoidWithZResponse(final Method method) {
 		if (!Task.VOID.equals(method.getReturnType().getCanonicalName())) {
 			final Parameter[] ps = method.getParameters();
@@ -356,17 +397,35 @@ public class ZControllerScanner {
 		return false;
 	}
 
-	public static Object getSingleton(final Class<?> zcClass) {
+	private static Object getSingleton(final Class<?> zcClass) {
 		final ZRestController zc = zcClass.getAnnotation(ZRestController.class);
-		final BeanModeEnum modeEnum = zc.modeEnum();
+		if (zc != null) {
 
-		switch (modeEnum) {
-		case SINGLETON:
-			final Object singletonByClass = ZSingleton.getSingletonByClass(zcClass);
-			return singletonByClass;
+			final BeanModeEnum modeEnum = zc.modeEnum();
 
-		default:
-			break;
+			switch (modeEnum) {
+			case SINGLETON:
+				final Object singletonByClass = ZSingleton.getSingletonByClass(zcClass);
+				return singletonByClass;
+
+			default:
+				break;
+			}
+		}
+		
+		final ZController c = zcClass.getAnnotation(ZController.class);
+		if (c != null) {
+			
+			final BeanModeEnum modeEnum = c.modeEnum();
+			
+			switch (modeEnum) {
+			case SINGLETON:
+				final Object singletonByClass = ZSingleton.getSingletonByClass(zcClass);
+				return singletonByClass;
+				
+			default:
+				break;
+			}
 		}
 
 		return null;

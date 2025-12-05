@@ -35,18 +35,19 @@ public class ZControllerMap {
 	 * @param methodEnum 接口请求方法，如： MethodEnum.POST
 	 * @param mapping    匹配路径，如：/index
 	 * @param method     具体的接口方法
+	 * @param cte TODO
 	 * @param produces TODO
 	 * @param object     接口方法所在的对象
 	 * @param isRegex    mapping 是否正则表达式
 	 */
 	public synchronized static void put(final MethodEnum methodEnum, final String mapping, final Method method,
-			final String[] produces, final Object object, final boolean isRegex) {
+			final CTEnum cte, final String[] produces, final Object object, final boolean isRegex) {
 
 		final ZRequestMapping requestMapping = method.getAnnotation(ZRequestMapping.class);
 
 		checkAPI(methodEnum, mapping, method, object, requestMapping);
 		
-		methodPathTable.put(methodEnum, mapping, new ZRMethod(method, produces));
+		methodPathTable.put(methodEnum, mapping, new ZRMethod(method, produces,cte));
 
 		methodIsregexTable.put(method, mapping, isRegex);
 

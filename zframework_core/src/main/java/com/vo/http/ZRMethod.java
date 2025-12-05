@@ -1,23 +1,73 @@
 package com.vo.http;
 
 import java.lang.reflect.Method;
-import java.security.interfaces.RSAMultiPrimePrivateCrtKey;
-import java.util.Arrays;
+
+import com.vo.core.ContentTypeEnum;
+import com.vo.core.ZResponse;
+import com.vo.exception.StartupException;
 
 /**
- * @ZRM 标记的Method对象
+ * @ZRequestMapping 标记的Method对象
  *
  * @author zhangzhen
  * @date 2025年12月5日 20:33:52
  */
 public class ZRMethod {
 
+	private static final String STRING_NAME = String.class.getName();
+	
+	/**
+	 * API方法的Method
+	 */
 	private final Method method;
+	
+	/**
+	 * @ZRequestMapping.produces属性
+	 */
 	private final String[] produces;
-
-	public ZRMethod(final Method method, final String[] produces) {
+	
+	/**
+	 * method 返回类型是否void
+	 */
+	private final boolean isVoid;
+	
+	/**
+	 * method 返回类型是否String
+	 */
+	private final boolean isRTString;
+	
+	/**
+	 * produces对应的Content-Type
+	 */
+	private final ContentTypeEnum[] ctea;
+	
+	/**
+	 * method所在类是用的 @ZRestController 还是 @ZController
+	 */
+	private final CTEnum ctEnum;
+	
+	public ZRMethod(final Method method, final String[] produces, final CTEnum ctEnum) {
 		this.method = method;
+		this.isVoid = method.getReturnType() == void.class;
+		this.isRTString = method.getReturnType().getName().equals(STRING_NAME);
 		this.produces = produces;
+		if (produces.length > 0) {
+			this.ctea = new ContentTypeEnum[produces.length];
+			for (int i = 0;i<produces.length;i++) {
+				final String p = produces[i];
+				final ContentTypeEnum cte = ContentTypeEnum.gType(p);
+				if (cte == null) {
+					throw new StartupException("接口method " + method.getName() + " 的 produces 属性值 " + p + " 不支持 "
+							+ " 参考支持列表 @see " + ContentTypeEnum.class.getCanonicalName() + " 或者使用接口参数 "
+							+ ZResponse.class.getCanonicalName() + " 自己手动设置Content-Type");
+				}
+				this.ctea[i] = cte;
+			}
+		} else {
+			this.ctea = null;
+		}
+		
+		this.ctEnum = ctEnum;
 	}
 
 	public Method getMethod() {
@@ -28,9 +78,18 @@ public class ZRMethod {
 		return this.produces;
 	}
 
-	@Override
-	public String toString() {
-		return "ZRMethod [method=" + this.method + ", produces=" + Arrays.toString(this.produces) + "]";
+
+	public CTEnum getCtEnum() {
+		return this.ctEnum;
 	}
+
+	public boolean isVoid() {
+		return this.isVoid; 
+	}
+
+	public boolean isRTString() {
+		return this.isRTString;
+	}
+
 
 }

@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import com.vo.anno.ZAutowired;
 import com.vo.anno.ZComponent;
 import com.vo.anno.ZConfiguration;
+import com.vo.anno.ZController;
 import com.vo.anno.ZRestController;
 import com.vo.anno.ZService;
 import com.vo.aop.ZAOP;
@@ -44,6 +45,7 @@ public class ZAutowiredScanner {
 			final String canonicalName = cls.getCanonicalName();
 			Object o2 = null;
 			if ((annoClass == ZRestController.class)
+					|| (annoClass == ZController.class)
 					|| (annoClass == ZComponent.class)
 					|| (annoClass == ZService.class)
 					|| (annoClass == ZConfiguration.class)

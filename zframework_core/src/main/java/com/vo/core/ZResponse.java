@@ -222,18 +222,18 @@ public class ZResponse {
 	 */
 	public synchronized void body(final InputStream inputStream) {
 
-		this.checkBIC();
+		checkBIC();
 
 		if (this.write.get()) {
 			return;
 		}
 
-		this.checkContentType();
+		checkContentType();
 
 		// header部分
 		final ZRequest request = ReqeustInfo.get();
 
-		this.beforeWrite();
+		beforeWrite();
 		this.header(HeaderEnum.TRANSFER_ENCODING.getName(), "chunked");
 
 		// body部分
@@ -257,9 +257,9 @@ public class ZResponse {
 						(readFirst && (read > (SERVER_CONFIGURATIONPROPERTIES.getCompressionMinLength() * 1024)));
 
 				if (readFirst) {
-					this.setETag(request, b);
-					this.setContentEncoding(request, exceedsCompressionMinLength);
-					this.write(this.headerArray());
+					setETag(request, b);
+					setContentEncoding(request, exceedsCompressionMinLength);
+					this.write(headerArray());
 				}
 
 				readFirst = false;
@@ -269,7 +269,7 @@ public class ZResponse {
 				}
 
 				bbB.flip();
-				this.compressBody(request, bbB, read, exceedsCompressionMinLength);
+				compressBody(request, bbB, read, exceedsCompressionMinLength);
 				bbB.clear();
 
 				this.write(ByteBuffer.wrap(NEW_LINE_BYTES));
@@ -314,8 +314,8 @@ public class ZResponse {
 			// 执行目标方法前，先看请求头的ETag
 			final String ifNoneMatch = request.getHeader(HeaderEnum.IF_NONE_MATCH.getName());
 			if ((ifNoneMatch != null) && Objects.equals(newETagValue, ifNoneMatch)) {
-				this.httpStatus(HttpStatusEnum.HTTP_304.getCode());
-				this.clearBody();
+				httpStatus(HttpStatusEnum.HTTP_304.getCode());
+				clearBody();
 				this.header(HeaderEnum.ETAG.getName(), ifNoneMatch);
 			} else {
 				this.header(HeaderEnum.ETAG.getName(), newETagValue);
@@ -325,7 +325,7 @@ public class ZResponse {
 
 	private void compressBody(final ZRequest request, final ByteBuffer bbB, final int read, final boolean exceedsCompressionMinLength) {
 
-		if (!this.compress(exceedsCompressionMinLength)) {
+		if (!compress(exceedsCompressionMinLength)) {
 			final String chunkHeader = Integer.toHexString(read) + "\r\n";
 			final ByteBuffer chunkHeaderBuffer = ByteBuffer.wrap(chunkHeader.getBytes());
 			this.write(chunkHeaderBuffer);
@@ -377,14 +377,14 @@ public class ZResponse {
 	private boolean compress(final boolean exceedsCompressionMinLength) {
 		return exceedsCompressionMinLength
 				&& SERVER_CONFIGURATIONPROPERTIES.getCompressionEnable()
-				&& SERVER_CONFIGURATIONPROPERTIES.compressionContains(this.getContentType());
+				&& SERVER_CONFIGURATIONPROPERTIES.compressionContains(getContentType());
 	}
 	
 	
 
 	private void setContentEncoding(final ZRequest request, final boolean exceedsCompressionMinLength) {
 
-		if (!this.compress(exceedsCompressionMinLength)) {
+		if (!compress(exceedsCompressionMinLength)) {
 			return;
 		}
 
@@ -406,7 +406,7 @@ public class ZResponse {
 
 	private ByteBuffer headerArray() {
 		final ZArray headerArray = new ZArray();
-		headerArray.add((ZResponse.HTTP_1_1 + this.getHttpStatus()).getBytes());
+		headerArray.add((ZResponse.HTTP_1_1 + getHttpStatus()).getBytes());
 		headerArray.add(NEW_LINE_BYTES);
 		headerArray.add((this.contentTypeAR.get()).getBytes());
 		headerArray.add(NEW_LINE_BYTES);
@@ -422,11 +422,11 @@ public class ZResponse {
 	}
 
 	public synchronized ZResponse body(final byte[] body) {
-		this.checkBIC();
+		checkBIC();
 
 		if (compressionEnable 
 				&& (body.length >= (SERVER_CONFIGURATIONPROPERTIES.getCompressionMinLength() * 1024))
-				&& SERVER_CONFIGURATIONPROPERTIES.compressionContains(this.getContentType())
+				&& SERVER_CONFIGURATIONPROPERTIES.compressionContains(getContentType())
 				) {
 			
 			byte[] compress = null;
@@ -479,17 +479,19 @@ public class ZResponse {
 	/**
 	 * 根据header和body 来响应结果，只响应一次
 	 */
-	synchronized void write() {
-
+	public synchronized void write() {
 		if (this.write.get()) {
 			return;
 		}
 
-		this.beforeWrite();
+		beforeWrite();
 
-		this.writeSocketChannel();
+		writeSocketChannel();
 
 		this.write.set(true);
+		
+		ZResponseStatus.written();
+		
 	}
 
 	/**
@@ -503,15 +505,15 @@ public class ZResponse {
 			this.header(HeaderEnum.CONNECTION.getName(), ConnectionEnum.KEEP_ALIVE.getValue());
 		}
 
-		this.setCustomHeader();
-		this.setServer(SERVER_NAME);
-		this.setDate(new Date());
+		setCustomHeader();
+		setServer(SERVER_NAME);
+		setDate(new Date());
 
 		NioLongConnectionServer.setZSessionId(request, this);
 
-		if (this.getHttpStatus() == HttpStatusEnum.HTTP_200.getCode()) {
+		if (getHttpStatus() == HttpStatusEnum.HTTP_200.getCode()) {
 			NioLongConnectionServer.setCacheControl(request, this);
-		}
+		} 
 
 	}
 
@@ -548,23 +550,23 @@ public class ZResponse {
 	}
 
 	private void writeSocketChannel() {
-		final ByteBuffer buffer = this.fillByteBuffer();
+		final ByteBuffer buffer = fillByteBuffer();
 		buffer.flip();
 		this.write(buffer);
 	}
 
 	private ByteBuffer fillByteBuffer()  {
 
-		this.checkContentType();
+		checkContentType();
 
 		final String headerS = 
-				ZResponse.HTTP_1_1 + this.getHttpStatus()
+				ZResponse.HTTP_1_1 + getHttpStatus()
 				+ Task.NEW_LINE
-				+ HeaderEnum.CONTENT_LENGTH.getName() + ":" + this.getBodyLength()
+				+ HeaderEnum.CONTENT_LENGTH.getName() + ":" + getBodyLength()
 				+ Task.NEW_LINE
 				+ this.contentTypeAR.get()
 				+ Task.NEW_LINE
-				+ this.headerVS()
+				+ headerVS()
 				+ Task.NEW_LINE
 				;
 
@@ -597,6 +599,15 @@ public class ZResponse {
 		return builder.toString();
 	}
 
+	/**
+	 * 	使用当前上下文中的socketChannel对象来构造一个响应对象
+	 *  注意：只有在void的接口方法中并且必须在当前线程中才可以获取到当前socketChannel
+	 */
+	// FIXME 2025年12月5日 23:50:25 zhangzhen :  注意：自己new的ZR需要完全自己设置所有的header
+	public ZResponse() {
+		this.socketChannel = ZRSC.get();
+	}
+	
 	public ZResponse(final SocketChannel socketChannel) {
 		this.socketChannel = socketChannel;
 	}
