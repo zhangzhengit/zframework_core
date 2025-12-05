@@ -2,6 +2,8 @@ package com.vo.http;
 
 import java.lang.reflect.Method;
 
+import com.vo.anno.ZRequestBody;
+import com.vo.anno.ZResponseBody;
 import com.vo.core.ContentTypeEnum;
 import com.vo.core.ZResponse;
 import com.vo.exception.StartupException;
@@ -35,6 +37,10 @@ public class ZRMethod {
 	 * method 返回类型是否String
 	 */
 	private final boolean isRTString;
+	/**
+	 * method是否存在 @ZResponseBody注解
+	 */
+	private final boolean hasResponseBody;
 	
 	/**
 	 * produces对应的Content-Type
@@ -50,6 +56,7 @@ public class ZRMethod {
 		this.method = method;
 		this.isVoid = method.getReturnType() == void.class;
 		this.isRTString = method.getReturnType().getName().equals(STRING_NAME);
+		this.hasResponseBody = method.isAnnotationPresent(ZResponseBody.class);
 		this.produces = produces;
 		if (produces.length > 0) {
 			this.ctea = new ContentTypeEnum[produces.length];
@@ -89,6 +96,10 @@ public class ZRMethod {
 
 	public boolean isRTString() {
 		return this.isRTString;
+	}
+
+	public boolean hasResponseBody() {
+		return hasResponseBody;
 	}
 
 

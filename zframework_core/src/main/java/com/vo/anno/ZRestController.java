@@ -10,15 +10,38 @@ import com.vo.enums.BeanModeEnum;
 
 /**
  *
- * 用在type上，表示此类是一个用于处理http请求的类
- * 里面所有的接口返回类型：
- * 1、String 	
- * 			默认返回纯文本，如：ABC
- * 2、数组/集合/对象/基本类型等等
- *			默认返回json
- * 3、void
- * 			无默认返回类型，由接口参数中的@see ZResponse 对象
- * 			来设置
+ * 用在class上，表示此类是一个用于处理http请求的类
+ * 作用相当于 @ZController + @ZResponseBody
+ * 即：定义了一组响应text/plain (对于String) 或者 application/json (非String) 的接口
+ * 
+ * 里面所有的接口返回Content-Type类型按优先级从高到低如下：
+ * 
+ * 1、接口里的代码设置： new ZResponse.contentType(xx)
+ * 		这是最高优先级
+ * 
+ * 2、接口ZResponse参数设置：
+ * 	
+ *  @ZRequestMapping(mapping = { "/api" })
+ * 	public void api(ZResponse r){
+ * 		r.contentType(xx);
+ *  }
+ *  这是第二优先的
+ * 
+ * 3、@ZRequestMapping.produces 指定的
+ * 	这是第三优先
+ * 
+ * 4、@ZResponseBody 是否存在，存在则判断方法返回类型：
+ * 	  String则响应text/plain，其他一律响应application/json
+ * 	------------------------------------------
+ *   这一步无意义，因为其功能已经包含在本注解中了，即使这一步
+ *   仍优先于本注解功能，但加不加4这个注解都一样还多写一行代码
+ * 
+ * 5、按本注解的作用来：
+ * 	 1、如果接口返回值为String，则默认为text/plain
+ * 	 2、如果接口返回值为非String，不管是集合/数组/基本类型/自定义对象等等，
+ * 		都默认为application/json	
+ * 
+ *  
  * @author zhangzhen
  * @date 2023年6月12日
  *

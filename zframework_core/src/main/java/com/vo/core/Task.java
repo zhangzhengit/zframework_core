@@ -15,7 +15,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -43,6 +42,7 @@ import com.vo.core.ZRequest.RequestParam;
 import com.vo.enums.MethodEnum;
 import com.vo.exception.FormPairParseException;
 import com.vo.exception.PathVariableException;
+import com.vo.exception.ResourceNotExistException;
 import com.vo.html.ResourcesLoader;
 import com.vo.http.AccessDeniedCodeEnum;
 import com.vo.http.CTEnum;
@@ -426,7 +426,16 @@ public class Task {
 
 		}
 		
-		// 第三优先：@ZRestCon还是@ZCon注解,ZC则默认为html名称，
+		// 第三优先：@ZResponseBody 注解，返回类型String则响应text/plain
+		// 否则一律application/json
+		if (zrMethod.hasResponseBody()) {
+			if (zrMethod.isRTString()) {
+				return responseTextPlain(r);
+			}
+			return responseAppJSON(r);
+		}
+		
+		// 第4优先：@ZRestCon还是@ZCon注解,ZC则默认为html名称，
 		// ZRC则区分returnType为String则CT为text/plain，其他一律json
 		final CTEnum ctEnum = zrMethod.getCtEnum();
 		// 响应 html
@@ -524,12 +533,7 @@ public class Task {
 	}
 
 	private ZResponse responseCT(final Object r,final String contentType) {
-		if (r instanceof String) {
-			return new ZResponse(this.socketChannel).contentType(ContentTypeEnum.TEXT_PLAIN.getType()).body((String) r);
-		}
-		
-		final String json = J.toJSONString(r, Include.NON_NULL);
-		return new ZResponse(this.socketChannel).contentType(DEFAULT_CONTENT_TYPE.getType()).body(json);
+		return new ZResponse(this.socketChannel).contentType(contentType).body(r);
 	}
 	
 	private ZResponse responseTextPlain(final Object r) {
@@ -554,6 +558,15 @@ public class Task {
 		} catch (final Exception e) {
 			e.printStackTrace();
 			final String em = Task.gExceptionMessage(e);
+			
+			if (e instanceof ResourceNotExistException) {
+				final ResourceNotExistException ex = (ResourceNotExistException) e;
+				return new ZResponse(this.socketChannel)
+						.httpStatus(ex.getHttpStatus())
+						.contentType(DEFAULT_CONTENT_TYPE.getType())
+						.body(J.toJSONString(CR.error(ex.getMessagezf()),Include.NON_NULL));
+			}
+			
 			return new ZResponse(this.socketChannel)
 					.httpStatus(HttpStatusEnum.HTTP_500.getCode())
 					.contentType(DEFAULT_CONTENT_TYPE.getType())

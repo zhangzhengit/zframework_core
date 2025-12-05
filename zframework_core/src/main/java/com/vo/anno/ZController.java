@@ -9,8 +9,35 @@ import java.lang.annotation.Target;
 import com.vo.enums.BeanModeEnum;
 
 /**
- * 用在type上，此类下的接口无特殊指定 produces的话并且返回类型为String，
- * 则默认为返回值为html页面名称
+ 
+ * 用在class上，表示此类是一个专门用于处理http请求并且需要html视图的类，
+ * 接口方法返回类型为String，则默认为返回的是html视图名称，自动寻找此
+ * 名称的html然后渲染最后响应一个text/html的html页面。
+ * 
+ * 里面所有的接口返回Content-Type类型按优先级从高到低如下：
+ * 
+ * 1、接口里的代码设置： new ZResponse.contentType(xx)
+ * 		这是最高优先级
+ * 
+ * 2、接口ZResponse参数设置：
+ * 	
+ *  @ZRequestMapping(mapping = { "/api" })
+ * 	public void api(ZResponse r){
+ * 		r.contentType(xx);
+ *  }
+ *  这是第二优先的
+ * 
+ * 3、@ZRequestMapping.produces 指定的
+ * 	这是第三优先
+ * 
+ * 4、@ZResponseBody 是否存在，存在则判断方法返回类型：
+ * 	  String则响应text/plain，其他一律响应application/json
+ * 
+ * 5、按本注解的作用来：
+ * 	 不管方法返回类型是什么，都把返回值看做视图名称，根据返回值寻找
+ * 	 试图名称，找到则继续渲染后返回视图，找不到则响应404
+ * 
+ * 
  * @ZRM.produces属性值优先于本注解和 @see @ZRestController 注解
  *
  * @author zhangzhen
