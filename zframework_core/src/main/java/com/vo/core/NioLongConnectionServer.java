@@ -88,6 +88,7 @@ public class NioLongConnectionServer {
 	private final TaskRequestHandler requestHandler = new TaskRequestHandler();
 
 	private static int ZC_THRESHOLD = 500;
+	ServerSocketChannel serverSocketChannel;
 	Selector selector = null;
 	int zc = 0;
 	
@@ -116,15 +117,15 @@ public class NioLongConnectionServer {
 
 		// 创建ServerSocketChannel
 		
-		ServerSocketChannel serverSocketChannel;
+		
 		try {
-			serverSocketChannel = ServerSocketChannel.open();
-			serverSocketChannel.configureBlocking(false);
-			serverSocketChannel.bind(new InetSocketAddress(serverPort));
+			this.serverSocketChannel = ServerSocketChannel.open();
+			this.serverSocketChannel.configureBlocking(false);
+			this.serverSocketChannel.bind(new InetSocketAddress(serverPort));
 
 			// 创建Selector
 			this.selector = Selector.open();
-			serverSocketChannel.register(this.selector, SelectionKey.OP_ACCEPT);
+			this.serverSocketChannel.register(this.selector, SelectionKey.OP_ACCEPT);
 		} catch (final IOException e) {
 			e.printStackTrace();
 			LOG.error("启动失败,程序即将退出,serverPort={}", serverPort);
@@ -214,11 +215,14 @@ public class NioLongConnectionServer {
 			if (!key.isValid()) {
 				continue;
 			}
+			final int interestOps = key.interestOps();
+			final Object attachment = key.attachment();
 			key.cancel();
 			try {
-				key.channel().register(newSelector, key.interestOps(), key.attachment());
+				key.channel().register(newSelector, interestOps, attachment);
 			} catch (final ClosedChannelException e) {
 				e.printStackTrace();
+				continue;
 			}
 		}
 		try {
@@ -227,6 +231,11 @@ public class NioLongConnectionServer {
 			e.printStackTrace();
 		}
 		this.selector = newSelector;
+		try {
+			this.serverSocketChannel.register(this.selector, SelectionKey.OP_ACCEPT);
+		} catch (final ClosedChannelException e) {
+			e.printStackTrace();
+		}
 	}
 
 	private void action(final SelectionKey selectionKey, final SocketChannel socketChannel) {
