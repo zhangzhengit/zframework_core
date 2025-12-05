@@ -8,9 +8,6 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.vo.cache.STU;
 import com.vo.configuration.SCU;
 import com.vo.core.QPSEnum;
@@ -29,8 +26,8 @@ public class ZControllerMap {
 	static final HashBasedTable<String, String, Integer> methodQPSTable = HashBasedTable.create();
 	static final HashBasedTable<String, String, ZQPSLimitation> methodZQPSLimitationTable = HashBasedTable.create();
 	static final HashBasedTable<Method, String, Boolean> methodIsregexTable = HashBasedTable.create();
-	static final HashMap<Method, Object> objectMap = Maps.newHashMap();
-	static final HashSet<String> mappingSet = Sets.newHashSet();
+	static final HashMap<Method, Object> objectMap = new HashMap<>();
+	static final HashSet<String> mappingSet = new HashSet<>();
 
 	/**
 	 * 注册一个接口
@@ -148,7 +145,7 @@ public class ZControllerMap {
 			int pipei = 0;
 			int empty = 0;
 
-			final ArrayList<Object> valueList = Lists.newArrayList();
+			final ArrayList<Object> valueList = new ArrayList<>();
 			for (int i = 0; i < s.length; i++) {
 				final String t = s[i];
 				if (STU.isEmpty(t)) {

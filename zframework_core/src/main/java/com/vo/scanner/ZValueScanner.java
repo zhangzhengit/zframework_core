@@ -5,17 +5,17 @@ import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.StringJoiner;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.vo.anno.ZComponent;
 import com.vo.anno.ZController;
 import com.vo.anno.ZService;
@@ -42,7 +42,7 @@ public class ZValueScanner {
 	/**
 	 * <@ZValue.listenForChanges = true的字段，此字段所在的对象>
 	 */
-	private final static ConcurrentMap<Field, Object> valueMap = Maps.newConcurrentMap();
+	private final static ConcurrentMap<Field, Object> valueMap = new ConcurrentHashMap<>();
 	private final static HashBasedTable<String, Field, Object> valueTable = HashBasedTable.create();
 
 	public static void inject(final String... packageName) {
@@ -50,7 +50,7 @@ public class ZValueScanner {
 		final Set<Class<?>> zc2Set = ClassMap.scanPackageByAnnotation(ZController.class, packageName);
 		final Set<Class<?>> zc3Set = ClassMap.scanPackageByAnnotation(ZService.class, packageName);
 
-		final List<Class<?>> clist = Lists.newArrayListWithCapacity(zcSet.size() + zc2Set.size());
+		final List<Class<?>> clist = new ArrayList<>(zcSet.size() + zc2Set.size());
 		clist.addAll(zcSet);
 		clist.addAll(zc2Set);
 		clist.addAll(zc3Set);

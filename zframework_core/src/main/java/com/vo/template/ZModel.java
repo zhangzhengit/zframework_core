@@ -1,9 +1,8 @@
 package com.vo.template;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
-
-import com.google.common.collect.Maps;
 
 /**
  * 用于传值到html模板标签中
@@ -16,7 +15,7 @@ public class ZModel {
 
 	private static final ThreadLocal<Map<String, Object>> tl = new ThreadLocal<>();
 
-	private final Map<String, Object> map = Maps.newHashMap();
+	private final Map<String, Object> map = new HashMap<>();
 
 	public void set(final String name, final Object value) {
 		this.map.put(name, value);

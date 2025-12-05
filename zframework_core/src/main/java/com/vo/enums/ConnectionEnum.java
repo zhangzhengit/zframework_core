@@ -1,8 +1,7 @@
 package com.vo.enums;
 
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-
-import com.google.common.collect.Maps;
 
 /**
  * http-header Connection 选项
@@ -21,7 +20,7 @@ public enum ConnectionEnum {
 
 	private String value;
 
-	private final static ConcurrentMap<String, ConnectionEnum> mapV = Maps.newConcurrentMap();
+	private final static ConcurrentMap<String, ConnectionEnum> mapV = new ConcurrentHashMap<>();
 	static {
 		final ConnectionEnum[] v = values();
 		for (final ConnectionEnum e : v) {
@@ -35,14 +34,14 @@ public enum ConnectionEnum {
 	}
 
 	public String getValue() {
-		return value;
+		return this.value;
 	}
 
-	public void setValue(String value) {
+	public void setValue(final String value) {
 		this.value = value;
 	}
 
-	private ConnectionEnum(String value) {
+	ConnectionEnum(final String value) {
 		this.value = value;
 	}
 

@@ -6,6 +6,7 @@ import java.lang.reflect.Parameter;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -13,7 +14,6 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import com.google.common.collect.Sets;
 import com.vo.anno.ZConfigurationProperties;
 import com.vo.anno.ZValue;
 import com.vo.cache.STU;
@@ -760,8 +760,14 @@ public class ZValidator {
 		return (annoClass == String.class) || (annoClass == List.class) || (annoClass == Set.class) || (annoClass == Map.class);
 	}
 
-	private final static HashSet<Class<? extends Annotation>> VA_SET = Sets.newHashSet(ZNotNull.class, ZNotEmtpy.class,
-			ZStartWith.class, ZEndsWith.class, ZLength.class, ZMin.class, ZMax.class, ZPositive.class);
+	private  static HashSet<Class<? extends Annotation>> VA_SET;
+
+	static {
+		final HashSet<Class<? extends Annotation>> s = new HashSet();
+		Collections.addAll(s, ZNotNull.class, ZNotEmtpy.class, ZStartWith.class, ZEndsWith.class, ZLength.class,
+				ZMin.class, ZMax.class, ZPositive.class);
+		VA_SET = s;
+	}
 
 	public static boolean isValidatorAnnotation(final Class<? extends Annotation> annoClass) {
 		return ZValidator.VA_SET.contains(annoClass);

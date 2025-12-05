@@ -2,13 +2,12 @@ package com.vo.scanner;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.Lists;
 import com.vo.anno.ZAutowired;
 import com.vo.anno.ZComponent;
 import com.vo.anno.ZConfiguration;
@@ -87,8 +86,7 @@ public class ZAutowiredScanner {
 		if (superClassObject.getClass().getCanonicalName().equals(Object.class.getCanonicalName())) {
 			return;
 		}
-
-		final List<Field> zafList = Lists.newArrayList(superClassObject.getClass().getDeclaredFields()).stream().filter(f -> f.isAnnotationPresent(ZAutowired.class)).collect(Collectors.toList());
+		final List<Field> zafList = Arrays.stream(superClassObject.getClass().getDeclaredFields()).filter(f -> f.isAnnotationPresent(ZAutowired.class)).collect(Collectors.toList());
 		for (final Field f : zafList) {
 
 			//			ZAutowiredScanner.LOG.info("找到[{}]对象的[{}]字段={}", object.getClass().getCanonicalName(),

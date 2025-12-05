@@ -2,10 +2,9 @@ package com.vo.core;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import com.vo.exception.BeanAlreadyEexistsException;
 
 /**
@@ -19,10 +18,10 @@ public class ZContext {
 
 	// FIXME 2025年9月1日 上午3:22:21 zhangzhen: 记得去除guava依赖，
 	
-	private static final ConcurrentMap<String, Object> BEAN_MAP = Maps.newConcurrentMap();
-	private static final ConcurrentMap<String, ZClass> ZCLASS_MAP = Maps.newConcurrentMap();
+	private static final ConcurrentMap<String, Object> BEAN_MAP = new ConcurrentHashMap<>();
+	private static final ConcurrentMap<String, ZClass> ZCLASS_MAP = new ConcurrentHashMap<>();
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("unchecked")	
 	public synchronized static <T> T getBean(final Class<T> beanClass) {
 		return (T) getBean(gUK(beanClass));
 	}

@@ -5,11 +5,10 @@ import java.lang.annotation.Annotation;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.vo.common.PackageScanner;
 
 /**
@@ -21,7 +20,7 @@ import com.vo.common.PackageScanner;
  */
 public class ClassMap {
 
-	private final static ConcurrentMap<String, Set<Class<?>>> map = Maps.newConcurrentMap();
+	private final static ConcurrentMap<String, Set<Class<?>>> map = new ConcurrentHashMap<>();
 
 	public static Set<Class<?>> scanPackageByAnnotation(final Class<? extends Annotation> annotationClass,
 			final String... scanPackageName) {
@@ -38,7 +37,7 @@ public class ClassMap {
 	}
 
 	public synchronized static Set<Class<?>> scanPackage(final String... scanPackageName) {
-		final HashSet<Class<?>> rs = Sets.newHashSet();
+		final HashSet<Class<?>> rs = new HashSet<>();
 		for (final String p : scanPackageName) {
 			final Set<Class<?>> clsSet = s(p);
 			rs.addAll(clsSet);

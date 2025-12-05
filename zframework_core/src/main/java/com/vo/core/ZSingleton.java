@@ -1,8 +1,7 @@
 package com.vo.core;
 
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-
-import com.google.common.collect.Maps;
 
 /**
  *
@@ -14,7 +13,7 @@ import com.google.common.collect.Maps;
  */
 public class ZSingleton {
 
-	private static final ConcurrentMap<String, Object> SINGLETON_MAP = Maps.newConcurrentMap();
+	private static final ConcurrentMap<String, Object> SINGLETON_MAP = new ConcurrentHashMap<>();
 
 	public static Object getSingletonByClassName(final String clsName) {
 		final Object v = SINGLETON_MAP.get(clsName);

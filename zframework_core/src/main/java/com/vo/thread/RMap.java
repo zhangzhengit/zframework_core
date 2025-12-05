@@ -1,8 +1,7 @@
 package com.vo.thread;
 
 import java.util.Map;
-
-import com.google.common.collect.Maps;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  *	ze.submit(Task) 带有返回Result的方法；
@@ -15,7 +14,7 @@ import com.google.common.collect.Maps;
  */
 class RMap {
 
-	private static final Map<AbstractZETask, ZETaskResult> cc = Maps.newConcurrentMap();
+	private static final Map<AbstractZETask, ZETaskResult> cc = new ConcurrentHashMap<>();
 
 	public static <V> void put(final AbstractZETask<V> task, final ZETaskResult<V> result) {
 		cc.put(task, result);

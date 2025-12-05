@@ -11,12 +11,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
-import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
@@ -494,7 +494,7 @@ public class ZRequest {
 		if (wenI > -1) {
 			request.setQueryString(fullPath.substring(("?".length() + wenI) - 1));
 
-			final Set<RequestParam> paramSet = Sets.newHashSet();
+			final Set<RequestParam> paramSet = new HashSet<>();
 			final String param = fullPath.substring("?".length() + wenI);
 			final String simplePath = fullPath.substring(0,wenI);
 

@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
 import com.vo.aop.ZAOPScaner;
 import com.vo.cache.CU;
 
@@ -18,7 +17,7 @@ import com.vo.cache.CU;
  */
 public class ZObjectGeneratorStarter {
 
-	private static final List<ZObjectGenerator> glis = Lists.newArrayList();
+	private static final List<ZObjectGenerator> glis = new ArrayList<>();
 
 	public static Object generate(final Class<?> cls) {
 		final List<ZObjectGenerator> ol = getGenerator();
@@ -40,9 +39,7 @@ public class ZObjectGeneratorStarter {
 				.filter(o -> !o.getClass().getCanonicalName().equals(ZDefaultObjectGenerator.class.getCanonicalName()))
 				.collect(Collectors.toList());
 		if (CU.isNotEmpty(zogList2)) {
-			for (final ZObjectGenerator zObjectGenerator : zogList2) {
-				glis.add(zObjectGenerator);
-			}
+			glis.addAll(zogList2);
 		} else {
 			final ZDefaultObjectGenerator dd = ZSingleton.getSingletonByClass(ZDefaultObjectGenerator.class);
 			glis.add(dd);
@@ -51,7 +48,7 @@ public class ZObjectGeneratorStarter {
 
 	public static List<ZObjectGenerator> scan(final String... packageName) {
 
-		final ArrayList<ZObjectGenerator> zogList = Lists.newArrayList();
+		final ArrayList<ZObjectGenerator> zogList = new ArrayList<>();
 		final Set<Class<?>> zsSet = ZAOPScaner.scanPackage_COM(packageName);
 		for (final Class<?> c : zsSet) {
 			final Class<?>[] is = c.getInterfaces();

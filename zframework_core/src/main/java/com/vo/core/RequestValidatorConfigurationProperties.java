@@ -4,7 +4,6 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Set;
 
-import com.google.common.collect.Sets;
 import com.vo.anno.ZConfigurationProperties;
 import com.vo.anno.ZValue;
 import com.vo.cache.STU;
@@ -41,7 +40,7 @@ public class RequestValidatorConfigurationProperties {
 	 *
 	 */
 	@ZNotEmtpy
-	private Set<String> smoothUserAgent = Sets.newHashSet("Safari", "Chrome", "Firefox",
+	private Set<String> smoothUserAgent = ZSet.newHashSet("Safari", "Chrome", "Firefox",
 			"Edge", "Edg", "Opera",
 			"OPR");
 

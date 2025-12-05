@@ -3,15 +3,15 @@ package com.vo.scanner;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.vo.anno.ZController;
 import com.vo.anno.ZCookieValue;
 import com.vo.api.StaticController;
@@ -56,8 +56,11 @@ public class ZControllerScanner {
 	 */
 	private static final int ZMF_SIZE = 1;
 
-	@SuppressWarnings("unchecked")
-	private static final HashSet<Class<? extends Annotation>> HTTP_METHOD_SET = Sets.newHashSet(ZRequestMapping.class);
+	private static final HashSet<Class<? extends Annotation>> HTTP_METHOD_SET = new HashSet<>();
+	
+	static {
+		HTTP_METHOD_SET.add(ZRequestMapping.class);
+	}
 
 	public static Set<Class<?>> scanAndCreateObject(final String... packageName) {
 		//		ZControllerScanner.LOG.info("开始扫描带有[{}]的类", ZController.class.getCanonicalName());
@@ -169,7 +172,10 @@ public class ZControllerScanner {
 	private static void checkNoVoidWithZResponse(final Method method) {
 		if (!Task.VOID.equals(method.getReturnType().getCanonicalName())) {
 			final Parameter[] ps = method.getParameters();
-			final Optional<Parameter> ro = Lists.newArrayList(ps).stream()
+			final List<Parameter> xxx = new ArrayList<>();
+			Collections.addAll(xxx, ps);
+			
+			final Optional<Parameter> ro = xxx.stream()
 					.filter(p -> p.getType().getCanonicalName().equals(ZResponse.class.getCanonicalName()))
 					.findAny();
 			if (ro.isPresent()) {
@@ -224,7 +230,7 @@ public class ZControllerScanner {
 			}
 
 			final String[] sa = p1.split("/");
-			final List<String> zpvNameList = Lists.newArrayList();
+			final List<String> zpvNameList = new ArrayList<>();
 			for (final String s : sa) {
 				if (s.length() <= 1) {
 					continue;
@@ -239,8 +245,11 @@ public class ZControllerScanner {
 					}
 				}
 			}
-
-			final List<Parameter> zpvPList = Lists.newArrayList(ps).stream()
+			
+			final List<Parameter> xxx = new ArrayList<>();
+			Collections.addAll(xxx, ps);
+			
+			final List<Parameter> zpvPList = xxx.stream()
 					.filter(p -> p.isAnnotationPresent(ZPathVariable.class)).collect(Collectors.toList());
 
 			if (zpvPList.size() != zpvNameList.size()) {
@@ -279,7 +288,7 @@ public class ZControllerScanner {
 					+ isRegex.length + " mapping个数 = " + requestMappingArray.length);
 		}
 
-		final Set<String> temp = Sets.newHashSet();
+		final Set<String> temp = new HashSet<>();
 
 		for (final String requestMapping : requestMappingArray) {
 

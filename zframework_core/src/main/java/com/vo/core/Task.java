@@ -18,6 +18,7 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -28,8 +29,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import com.vo.anno.ZCookieValue;
 import com.vo.anno.ZRequestBody;
 import com.vo.anno.ZRequestHeader;
@@ -187,7 +186,7 @@ public class Task {
 			}
 
 			final Object zController = ZControllerMap.getObjectByMethod(method);
-			final ZResponse re = this.invokeAndResponse(method, parameterArray, zController, request);
+			final ZResponse re = invokeAndResponse(method, parameterArray, zController, request);
 			return re;
 
 		} catch (final Exception e) {
@@ -318,7 +317,7 @@ public class Task {
 			}
 		}
 
-		this.setZRequestAndZResponse(parametersArray, request);
+		setZRequestAndZResponse(parametersArray, request);
 
 		Object r = null;
 		// 在此zhi执行
@@ -327,9 +326,11 @@ public class Task {
 			r = invoke0(method, parametersArray, zControllerObject);
 		} else {
 			final ZResponse response = new ZResponse(this.socketChannel);
+			final ArrayList<Object> pa = new ArrayList<>();
+			Collections.addAll(pa, parametersArray);
 			final InterceptorParameter interceptorParameter = new InterceptorParameter(method.getName(), method,
 					method.getReturnType().getName().equals(Void.class.getName()),
-					Lists.newArrayList(parametersArray), zControllerObject);
+					pa, zControllerObject);
 			// 1 按从小到大执行pre
 			boolean stop = false;
 			for (final ZHandlerInterceptor zhi : zhiList) {
@@ -376,11 +377,11 @@ public class Task {
 
 		// 响应 html
 		if (method.isAnnotationPresent(ZHtml.class)) {
-			return this.responseHtml(request, r);
+			return responseHtml(request, r);
 		}
 
 		// 默认响应json
-		return this.responseDefault_JSON(request, r);
+		return responseDefault_JSON(request, r);
 	}
 
 	/**
@@ -648,10 +649,13 @@ public class Task {
 	/**
 	 * @ZPathVariable 支持的类型
 	 */
-	public final static ImmutableSet<String> ZPV_TYPE = ImmutableSet.copyOf(Lists.newArrayList(
-			Byte.class.getName(), Short.class.getName(), Integer.class.getName(),
-			Long.class.getName(), Float.class.getName(), Double.class.getName(),
-			Boolean.class.getName(), Character.class.getName(), String.class.getName()));
+	public final static Set<String> ZPV_TYPE = new HashSet<>();
+
+	static {
+		Collections.addAll(ZPV_TYPE, Byte.class.getName(), Short.class.getName(), Integer.class.getName(),
+				Long.class.getName(), Float.class.getName(), Double.class.getName(), Boolean.class.getName(),
+				Character.class.getName(), String.class.getName());
+	}
 
 	private static void setZPathVariableValue(final Object[] parametersArray, final int pI, final Class<?> type, final Object value) {
 		if (type.getName().equals(Byte.class.getName())) {
@@ -753,8 +757,8 @@ public class Task {
 		if (!p.isAnnotationPresent(ZValidated.class)) {
 			return;
 		}
-
-		final ArrayList<Class<?>> pl = Lists.newArrayList(object.getClass());
+		final ArrayList<Class<?>> pl = new ArrayList<>();
+		pl.add(object.getClass());
 		while (true) {
 			final Class<?> superclass = pl.get(pl.size() - 1).getSuperclass();
 			if (superclass == Object.class) {

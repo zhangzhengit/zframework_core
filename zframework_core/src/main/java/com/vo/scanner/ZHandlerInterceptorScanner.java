@@ -1,5 +1,6 @@
 package com.vo.scanner;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
@@ -8,9 +9,6 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.vo.anno.ZOrder;
 import com.vo.cache.CU;
 import com.vo.core.ZContext;
@@ -26,7 +24,7 @@ import com.vo.exception.StartupException;
  */
 public class ZHandlerInterceptorScanner {
 
-	private static final List<ZHandlerInterceptor> BEAN_LIST = Lists.newArrayList();
+	private static final List<ZHandlerInterceptor> BEAN_LIST = new ArrayList<>();
 
 	/**
 	 * 扫描 ZHandlerInterceptor 的实现类
@@ -35,7 +33,7 @@ public class ZHandlerInterceptorScanner {
 	public static void scan() {
 
 		final Collection<Object> values = ZContext.all().values();
-		final HashSet<Integer> ovSet = Sets.newHashSet();
+		final HashSet<Integer> ovSet = new HashSet<>();
 		for (final Object bean : values) {
 
 			final Optional<Class<?>> findAny = Arrays.stream(bean.getClass().getInterfaces())
@@ -86,7 +84,7 @@ public class ZHandlerInterceptorScanner {
 	}
 
 	private static List<ZHandlerInterceptor> match0(final String requestURI) {
-		final List<ZHandlerInterceptor> zhiRList = Lists.newArrayList();
+		final List<ZHandlerInterceptor> zhiRList = new ArrayList<>();
 
 		final List<ZHandlerInterceptor> list = get();
 		if (CU.isNotEmpty(list)) {

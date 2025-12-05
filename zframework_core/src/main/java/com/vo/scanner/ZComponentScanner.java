@@ -5,14 +5,13 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.vo.anno.ZAutowired;
 import com.vo.aop.ZAOPProxyClass;
 import com.vo.aop.ZAOPScaner;
@@ -67,10 +66,8 @@ public class ZComponentScanner {
 			} else {
 
 				// 1、@ZComponent 类中方法的参数是否带有 @ZValidated 注解，有则插入校验代码，无则super.xx(xx);
-				final Optional<Method> anyMethodIsAnnotationPresentZValidated = Lists.newArrayList(cls.getDeclaredMethods())
-						.stream()
-						.filter(m -> Lists.newArrayList(m.getParameterTypes()).stream()
-								.filter(pa -> pa.isAnnotationPresent(ZValidated.class)).findAny().isPresent())
+				final Optional<Method> anyMethodIsAnnotationPresentZValidated = Arrays.stream(cls.getDeclaredMethods()).filter(m -> Arrays.stream(m.getParameterTypes()).filter(pa -> pa
+										.isAnnotationPresent(ZValidated.class)).findAny().isPresent())
 						.findAny();
 
 				if (anyMethodIsAnnotationPresentZValidated.isPresent()) {
@@ -115,16 +112,19 @@ public class ZComponentScanner {
 		proxyZClass.setPackage1(new ZPackage(cls.getPackage().getName()));
 		proxyZClass.setName(cls.getSimpleName() + ZAOPScaner.PROXY_ZCLASS_NAME_SUFFIX);
 		proxyZClass.setSuperClass(cls.getCanonicalName());
-		proxyZClass.setAnnotationSet(Sets.newHashSet(ZAOPProxyClass.class.getCanonicalName()));
+		final Set<String> as = new HashSet<>();
+		as.add(ZAOPProxyClass.class.getCanonicalName());
+		proxyZClass.setAnnotationSet(as);
 
 		final Method[] mss = cls.getDeclaredMethods();
 
-		final HashSet<ZMethod> zms = Sets.newHashSet();
+		final HashSet<ZMethod> zms = new HashSet<>();
 		for (final Method m : mss) {
 			final ArrayList<ZMethodArg> argList = ZMethod.getArgListFromMethod(m);
 			final String a = argList.stream().map(ZMethodArg::getName).collect(Collectors.joining(","));
 			final Class<?> returnType = m.getReturnType();
-			if (Lists.newArrayList(m.getParameterTypes()).stream().filter(pa -> pa.isAnnotationPresent(ZValidated.class)).findAny().isPresent()) {
+			
+			if (Arrays.stream(m.getParameterTypes()).filter(pa -> pa.isAnnotationPresent(ZValidated.class)).findAny().isPresent()) {
 
 				final StringBuilder insert = new StringBuilder();
 				final Parameter[] ps = m.getParameters();

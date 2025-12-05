@@ -3,13 +3,14 @@ package com.vo.exception;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
 import com.vo.cache.AU;
 import com.vo.cache.CU;
 import com.vo.core.Task;
@@ -26,7 +27,7 @@ import com.vo.scanner.ClassMap;
  */
 public class ZControllerAdviceScanner {
 
-	public static final List<ZControllerAdviceBody> LIST = Lists.newArrayList();
+	public static final List<ZControllerAdviceBody> LIST = new ArrayList<>();
 
 	public static void scan(final String... packageName) {
 
@@ -34,7 +35,7 @@ public class ZControllerAdviceScanner {
 		final List<Class<?>> zcaList = csset.stream().filter(c -> c.isAnnotationPresent(ZControllerAdvice.class))
 				.collect(Collectors.toList());
 		for (final Class<?> cls : zcaList) {
-			final List<Method> zehList = Lists.newArrayList(cls.getDeclaredMethods()).stream()
+			final List<Method> zehList = Arrays.stream(cls.getDeclaredMethods())
 					.filter(m -> m.isAnnotationPresent(ZExceptionHandler.class)).collect(Collectors.toList());
 			if (CU.isEmpty(zehList)) {
 				continue;

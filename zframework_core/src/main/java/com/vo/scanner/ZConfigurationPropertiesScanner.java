@@ -7,9 +7,11 @@ import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -20,9 +22,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.vo.anno.ZAutowired;
 import com.vo.anno.ZConfigurationProperties;
 import com.vo.anno.ZConfigurationPropertiesRegistry;
@@ -67,8 +66,8 @@ public class ZConfigurationPropertiesScanner {
 			return;
 		}
 
-		final ArrayList<Class<?>> cl = Lists.newArrayList(csSet);
-		final Set<Integer> valueSet = Sets.newHashSet();
+		final ArrayList<Class<?>> cl = new ArrayList<>(csSet);
+		final Set<Integer> valueSet = new HashSet<>();
 		for (final Class<?> cls : cl) {
 			final ZOrder annotation = cls.getAnnotation(ZOrder.class);
 			if ((annotation != null) && !valueSet.add(annotation.value())) {
@@ -100,12 +99,12 @@ public class ZConfigurationPropertiesScanner {
 
 		for (final Class<?> cls : csSet) {
 			// 如果Class有 @ZAutowired 字段，则先生成对应的的对象，然后注入进来
-			Lists.newArrayList(cls.getDeclaredFields()).stream()
+			Arrays.stream(cls.getDeclaredFields())
 			.filter(f -> f.isAnnotationPresent(ZAutowired.class))
 			.forEach(f -> ZAutowiredScanner.inject(cls, f));
 
 			// 如果Class有 @ZValue 字段 ，则先给此字段注入值
-			Lists.newArrayList(cls.getDeclaredFields()).stream()
+			Arrays.stream(cls.getDeclaredFields())
 			.filter(f -> f.isAnnotationPresent(ZValue.class))
 			.forEach(f -> ZValueScanner.inject(cls, f));
 		}
@@ -154,7 +153,7 @@ public class ZConfigurationPropertiesScanner {
 					throw new ZConfigurationPropertiesException(message);
 				}
 
-				final boolean isJavaType = LIST_T_FIELD_TYPE.contains(ts[0].getCanonicalName());
+				final boolean isJavaType = listType.contains(ts[0].getCanonicalName());
 				final boolean isUserType = !isJavaType
 						&& !ts[0].getCanonicalName().startsWith("java");
 				if (!isUserType) {
@@ -166,10 +165,10 @@ public class ZConfigurationPropertiesScanner {
 				}
 
 				for (final Field f : ts[0].getDeclaredFields()) {
-					if (!LIST_T_FIELD_TYPE.contains(f.getType().getCanonicalName())) {
+					if (!listType.contains(f.getType().getCanonicalName())) {
 						throw new StartupException(
 								ts[0].getClass().getSimpleName() + "] 中的字段[" + f.getType().getCanonicalName() + " "
-										+ f.getName() + "]类型不支持,支持字段类型为" + LIST_T_FIELD_TYPE);
+										+ f.getName() + "]类型不支持,支持字段类型为" + listType);
 					}
 				}
 
@@ -185,30 +184,24 @@ public class ZConfigurationPropertiesScanner {
 	}
 
 	/**
-	 * 	List的泛型参数对象里支持的字段类型
+	 * List的泛型参数对象里支持的字段类型
 	 */
-	public static final
-	ImmutableList<String> LIST_T_FIELD_TYPE = ImmutableList.copyOf(
-			Lists.newArrayList(
-					Byte.class.getCanonicalName(),
-					Short.class.getCanonicalName(),
-					Integer.class.getCanonicalName(),
-					Long.class.getCanonicalName(),
-					Float.class.getCanonicalName(),
-					Double.class.getCanonicalName(),
-					Character.class.getCanonicalName(),
-					Boolean.class.getCanonicalName(),
-					String.class.getCanonicalName()
-					)
+	public static List<String> listType;
 
-			);
-
+	static {
+		final ArrayList<String> l = new ArrayList<>();
+		Collections.addAll(l, Byte.class.getCanonicalName(), Short.class.getCanonicalName(),
+				Integer.class.getCanonicalName(), Long.class.getCanonicalName(), Float.class.getCanonicalName(),
+				Double.class.getCanonicalName(), Character.class.getCanonicalName(), Boolean.class.getCanonicalName(),
+				String.class.getCanonicalName());
+		listType = l;
+	}
 
 
 	private static void setSet(final Object object, final Field field, final String key) {
 
 		// 从1-N个[i]
-		final Set<Object> set = Sets.newLinkedHashSet();
+		final Set<Object> set = new LinkedHashSet<>();
 
 		final Class<?>[] ts = ZCU.getGenericType(field);
 		if (AU.isEmpty(ts)) {
@@ -292,7 +285,7 @@ public class ZConfigurationPropertiesScanner {
 	private static void setList(final Object object, final Field field, final String key) throws Exception {
 
 		// 从1-N个[i]
-		final List<Object> list = Lists.newArrayList();
+		final List<Object> list = new ArrayList<>();
 
 		for (int i = 1; i <= (PROPERTY_INDEX + 1); i++) {
 
@@ -578,7 +571,7 @@ public class ZConfigurationPropertiesScanner {
 
 	public static Set<Class<?>> scanPackage(final String... packageName) {
 		LOG.info("开始扫描类,scanPackage={}", Arrays.toString(packageName));
-		final HashSet<Class<?>> rs = Sets.newHashSet();
+		final HashSet<Class<?>> rs = new HashSet<>();
 		for (final String p : packageName) {
 			final Set<Class<?>> clsSet = ClassMap.scanPackage(p);
 			rs.addAll(clsSet);
@@ -609,9 +602,16 @@ public class ZConfigurationPropertiesScanner {
 		return builder.toString();
 	}
 
-	static HashSet<Character> daxie = Sets.newHashSet('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
-			'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z');
+	static Set<Character> daxie = null;
 
+	static {
+		final HashSet<Character> hashSet = new HashSet<>();
+
+		Collections.addAll(hashSet, 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q',
+				'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z');
+
+		daxie = hashSet;
+	}
 
 
 }
