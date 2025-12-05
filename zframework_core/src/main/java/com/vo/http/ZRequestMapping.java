@@ -72,4 +72,11 @@ public @interface ZRequestMapping {
 	 * @return
 	 */
 	String description() default "";
+	
+	/**
+	 * 指定此接口返回的Content-Type，如指定多个则优先返回匹配度最高的，如都不匹配则按配置顺序返回第一个
+	 * 
+	 * @return
+	 */
+	String[] produces() default {};
 }
