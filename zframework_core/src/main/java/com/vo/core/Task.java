@@ -187,7 +187,7 @@ public class Task {
 			}
 
 			final Object zController = ZControllerMap.getObjectByMethod(zrMethod.getMethod());
-			final ZResponse re = invokeAndResponse(zrMethod.getMethod(), parameterArray, zController, request);
+			final ZResponse re = invokeAndResponse(zrMethod, parameterArray, zController, request);
 			return re;
 
 		} catch (final Exception e) {
@@ -253,14 +253,14 @@ public class Task {
 	}
 
 	@SuppressWarnings("boxing")
-	private ZResponse invokeAndResponse(final Method method, final Object[] parametersArray, final Object zControllerObject, final ZRequest request)
+	private ZResponse invokeAndResponse(final ZRMethod zrMethod, final Object[] parametersArray, final Object zControllerObject, final ZRequest request)
 			throws IllegalAccessException, InvocationTargetException, IOException {
 
 		final String controllerName = zControllerObject.getClass().getName();
-		final Integer qps = ZControllerMap.getQPSByControllerNameAndMethodName(controllerName, method.getName());
+		final Integer qps = ZControllerMap.getQPSByControllerNameAndMethodName(controllerName, zrMethod.getMethod().getName());
 
 		final QPSHandlingEnum handlingEnum = REQUEST_VALIDATOR_CONFIGURATION_PROPERTIES.getHandlingEnum(request.getUserAgent());
-		final boolean allow = QC.allow(QCTimeEnum.SECOND, "API-" + controllerName + "@" + method.getName(), qps,
+		final boolean allow = QC.allow(QCTimeEnum.SECOND, "API-" + controllerName + "@" + zrMethod.getMethod().getName(), qps,
 				handlingEnum);
 		if (!allow) {
 
@@ -284,7 +284,7 @@ public class Task {
 
 		// 是否超过 ZQPSLimitation.qps
 		final ZQPSLimitation zqpsLimitation = ZControllerMap.getZQPSLimitationByControllerNameAndMethodName(controllerName,
-				method.getName());
+				zrMethod.getMethod().getName());
 		if (zqpsLimitation != null) {
 
 
@@ -294,7 +294,7 @@ public class Task {
 			case ZSESSIONID:
 				final ZSession session = Task.getOrGSession(request);
 				final String keyword = controllerName
-						+ "@" + method.getName()
+						+ "@" + zrMethod.getMethod().getName()
 						+ "@ZQPSLimitation" + '_'
 						+ session.getId();
 
@@ -324,13 +324,13 @@ public class Task {
 		// 在此zhi执行
 		final List<ZHandlerInterceptor> zhiList = ZHandlerInterceptorScanner.match(request.getRequestURI());
 		if (CU.isEmpty(zhiList)) {
-			r = invoke0(method, parametersArray, zControllerObject);
+			r = invoke0(zrMethod.getMethod(), parametersArray, zControllerObject);
 		} else {
 			final ZResponse response = new ZResponse(this.socketChannel);
 			final ArrayList<Object> pa = new ArrayList<>();
 			Collections.addAll(pa, parametersArray);
-			final InterceptorParameter interceptorParameter = new InterceptorParameter(method.getName(), method,
-					method.getReturnType().getName().equals(Void.class.getName()),
+			final InterceptorParameter interceptorParameter = new InterceptorParameter(zrMethod.getMethod().getName(), zrMethod.getMethod(),
+					zrMethod.getMethod().getReturnType().getName().equals(Void.class.getName()),
 					pa, zControllerObject);
 			// 1 按从小到大执行pre
 			boolean stop = false;
@@ -349,8 +349,8 @@ public class Task {
 
 			if (!stop) {
 
-				r = invoke0(method, parametersArray, zControllerObject);
-				final ZModelAndView modelAndView = method.isAnnotationPresent(ZHtml.class)
+				r = invoke0(zrMethod.getMethod(), parametersArray, zControllerObject);
+				final ZModelAndView modelAndView = zrMethod.getMethod().isAnnotationPresent(ZHtml.class)
 						? new ZModelAndView(true, String.valueOf(r), readHtmlContent(r), ZModel.get(),
 								(ZModel) Arrays.stream(parametersArray).filter(arg -> arg.getClass().equals(ZModel.class))
 								.findAny().orElse(null),
@@ -371,13 +371,13 @@ public class Task {
 		}
 
 		// 接口方法无返回值，直接返回 response对象
-		if (method.getReturnType() == void.class) {
+		if (zrMethod.getMethod().getReturnType() == void.class) {
 			final ZResponse response = ZHttpContext.getZResponseAndRemove();
 			return response;
 		}
 
 		// 响应 html
-		if (method.isAnnotationPresent(ZHtml.class)) {
+		if (zrMethod.getMethod().isAnnotationPresent(ZHtml.class)) {
 			return responseHtml(r);
 		}
 
