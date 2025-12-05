@@ -8,7 +8,7 @@ import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
-import com.vo.anno.ZController;
+import com.vo.anno.ZRestController;
 import com.vo.cache.CU;
 import com.vo.core.ZLog2;
 import com.vo.core.ZRequest;
@@ -32,7 +32,7 @@ public class DocScanner {
 	public static void scan(final String... packageName)  {
 
 		final Set<Class<?>> zcSet = ZConfigurationPropertiesScanner.scanPackage(packageName).stream()
-				.filter(cls -> cls.isAnnotationPresent(ZController.class))
+				.filter(cls -> cls.isAnnotationPresent(ZRestController.class))
 				.collect(Collectors.toSet());
 
 		if (CU.isEmpty(zcSet)) {

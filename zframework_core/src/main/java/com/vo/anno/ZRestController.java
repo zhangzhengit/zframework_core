@@ -10,8 +10,15 @@ import com.vo.enums.BeanModeEnum;
 
 /**
  *
- * 用在type上，表示此类是一个ZController，用于处理http请求
- *
+ * 用在type上，表示此类是一个用于处理http请求的类
+ * 里面所有的接口返回类型：
+ * 1、String 	
+ * 			默认返回纯文本，如：ABC
+ * 2、数组/集合/对象/基本类型等等
+ *			默认返回json
+ * 3、void
+ * 			无默认返回类型，由接口参数中的@see ZResponse 对象
+ * 			来设置
  * @author zhangzhen
  * @date 2023年6月12日
  *
@@ -19,7 +26,7 @@ import com.vo.enums.BeanModeEnum;
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.TYPE })
-public @interface ZController {
+public @interface ZRestController {
 
 	/**
 	 * 接口的路径前缀，如：/test，

@@ -12,7 +12,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.vo.anno.ZController;
+import com.vo.anno.ZRestController;
 import com.vo.anno.ZCookieValue;
 import com.vo.api.StaticController;
 import com.vo.cache.AU;
@@ -64,7 +64,7 @@ public class ZControllerScanner {
 
 	public static Set<Class<?>> scanAndCreateObject(final String... packageName) {
 		//		ZControllerScanner.LOG.info("开始扫描带有[{}]的类", ZController.class.getCanonicalName());
-		final Set<Class<?>> zcSet = ClassMap.scanPackageByAnnotation(ZController.class, packageName);
+		final Set<Class<?>> zcSet = ClassMap.scanPackageByAnnotation(ZRestController.class, packageName);
 		//		ZControllerScanner.LOG.info("带有[{}]的类个数={}", ZController.class.getCanonicalName(), zcSet.size());
 
 		final ServerConfigurationProperties serverConfiguration = ZSingleton.getSingletonByClass(ServerConfigurationProperties.class);
@@ -95,7 +95,7 @@ public class ZControllerScanner {
 
 				final Object controllerObject = ZControllerScanner.getSingleton(cls);
 
-				final ZController controller = cls.getAnnotation(ZController.class);
+				final ZRestController controller = cls.getAnnotation(ZRestController.class);
 				final String prefix = n(controller.prefix());
 
 				// 校验 @ZRequestMapping
@@ -155,15 +155,15 @@ public class ZControllerScanner {
 		}
 
 		if (!prefix.equals(prefix.trim())) {
-			throw new StartupException("@" + ZController.class.getSimpleName() + ".prefix" + " 不能是blank");
+			throw new StartupException("@" + ZRestController.class.getSimpleName() + ".prefix" + " 不能是blank");
 		}
 
 		if (prefix.charAt(0) != '/') {
-			throw new StartupException("@" + ZController.class.getSimpleName() + ".prefix" + " 必须以/开头");
+			throw new StartupException("@" + ZRestController.class.getSimpleName() + ".prefix" + " 必须以/开头");
 		}
 
 		if (prefix.charAt(prefix.length() - 1) == '/') {
-			throw new StartupException("@" + ZController.class.getSimpleName() + ".prefix" + " 不能以/结尾");
+			throw new StartupException("@" + ZRestController.class.getSimpleName() + ".prefix" + " 不能以/结尾");
 		}
 
 		return prefix;
@@ -354,7 +354,7 @@ public class ZControllerScanner {
 	}
 
 	public static Object getSingleton(final Class<?> zcClass) {
-		final ZController zc = zcClass.getAnnotation(ZController.class);
+		final ZRestController zc = zcClass.getAnnotation(ZRestController.class);
 		final BeanModeEnum modeEnum = zc.modeEnum();
 
 		switch (modeEnum) {

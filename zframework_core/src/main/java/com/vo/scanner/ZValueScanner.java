@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import com.google.common.collect.HashBasedTable;
 import com.vo.anno.ZComponent;
-import com.vo.anno.ZController;
+import com.vo.anno.ZRestController;
 import com.vo.anno.ZService;
 import com.vo.anno.ZValue;
 import com.vo.cache.CU;
@@ -47,7 +47,7 @@ public class ZValueScanner {
 
 	public static void inject(final String... packageName) {
 		final Set<Class<?>> zcSet = ClassMap.scanPackageByAnnotation(ZComponent.class, packageName);
-		final Set<Class<?>> zc2Set = ClassMap.scanPackageByAnnotation(ZController.class, packageName);
+		final Set<Class<?>> zc2Set = ClassMap.scanPackageByAnnotation(ZRestController.class, packageName);
 		final Set<Class<?>> zc3Set = ClassMap.scanPackageByAnnotation(ZService.class, packageName);
 
 		final List<Class<?>> clist = new ArrayList<>(zcSet.size() + zc2Set.size());
