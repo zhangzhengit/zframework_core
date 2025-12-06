@@ -4,6 +4,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -46,16 +47,14 @@ public class ZConfigurationScanner {
 			final Object newInstance = ZSingleton.getSingletonByClass(cls);
 			ZContext.addBean(cls, newInstance);
 
-			final List<Field> xxx = new ArrayList<>();
-			Collections.addAll(xxx, cls.getDeclaredFields());
 
 			// 如果Class有 @ZAutowired 字段，则先生成对应的的对象，然后注入进来
-			xxx.stream()
+			Arrays.stream(cls.getDeclaredFields())
 			.filter(f -> f.isAnnotationPresent(ZAutowired.class))
 			.forEach(f -> ZAutowiredScanner.inject(cls, f));
 
 			// 如果Class有 @ZValue 字段 ，则先给此字段注入值
-			xxx.stream()
+			Arrays.stream(cls.getDeclaredFields())
 			.filter(f -> f.isAnnotationPresent(ZValue.class))
 			.forEach(f -> ZValueScanner.inject(cls, f));
 
@@ -113,15 +112,15 @@ public class ZConfigurationScanner {
 		}
 
 		for (final Class<?> cls : clsSet) {
-			final List<Field> xxx = new ArrayList<>();
-			Collections.addAll(xxx, cls.getDeclaredFields());
 
+			Arrays.stream(cls.getDeclaredFields())
 			// 如果Class有 @ZAutowired 字段，则先生成对应的的对象，然后注入进来
-			xxx.stream().filter(f -> f.isAnnotationPresent(ZAutowired.class))
+			.filter(f -> f.isAnnotationPresent(ZAutowired.class))
 					.forEach(f -> ZAutowiredScanner.inject(cls, f));
 
+			Arrays.stream(cls.getDeclaredFields())
 			// 如果Class有 @ZValue 字段 ，则先给此字段注入值
-			xxx.stream().filter(f -> f.isAnnotationPresent(ZValue.class)).forEach(f -> ZValueScanner.inject(cls, f));
+			.filter(f -> f.isAnnotationPresent(ZValue.class)).forEach(f -> ZValueScanner.inject(cls, f));
 		}
 
 	}

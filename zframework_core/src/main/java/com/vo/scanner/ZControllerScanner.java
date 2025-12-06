@@ -132,11 +132,9 @@ public class ZControllerScanner {
 						final String mapping = requestMappingArray[i];
 						final MethodEnum methodEnum = requestMappingAnnotation.method();
 						
-						final String[] produces = requestMappingAnnotation.produces();
-						
 						ZControllerMap.put(methodEnum, prefix + mapping, method, 
 								restController!=null ? CTEnum.REST : CTEnum.NORMAL
-								, produces, controllerObject, isRegex[i]);
+								, controllerObject, isRegex[i]);
 					}
 
 					checkZMFIleSize(cls, method);
@@ -198,11 +196,8 @@ public class ZControllerScanner {
 
 	private static void checkVoidWithoutZResponse(final Method method) {
 		if (Task.VOID.equals(method.getReturnType().getCanonicalName())) {
-			final Parameter[] ps = method.getParameters();
-			final List<Parameter> xxx = new ArrayList<>();
-			Collections.addAll(xxx, ps);
-			
-			final Optional<Parameter> ro = xxx.stream()
+			final Optional<Parameter> ro = 
+					Arrays.stream(method.getParameters())
 					.filter(p -> p.getType().getCanonicalName().equals(ZResponse.class.getCanonicalName()))
 					.findAny();
 			if (!ro.isPresent()) {
@@ -216,10 +211,9 @@ public class ZControllerScanner {
 	private static void checkNoVoidWithZResponse(final Method method) {
 		if (!Task.VOID.equals(method.getReturnType().getCanonicalName())) {
 			final Parameter[] ps = method.getParameters();
-			final List<Parameter> xxx = new ArrayList<>();
-			Collections.addAll(xxx, ps);
 			
-			final Optional<Parameter> ro = xxx.stream()
+			final Optional<Parameter> ro =
+					Arrays.stream(ps)
 					.filter(p -> p.getType().getCanonicalName().equals(ZResponse.class.getCanonicalName()))
 					.findAny();
 			if (ro.isPresent()) {
@@ -290,10 +284,8 @@ public class ZControllerScanner {
 				}
 			}
 			
-			final List<Parameter> xxx = new ArrayList<>();
-			Collections.addAll(xxx, ps);
-			
-			final List<Parameter> zpvPList = xxx.stream()
+			final List<Parameter> zpvPList = 
+					Arrays.stream(ps)
 					.filter(p -> p.isAnnotationPresent(ZPathVariable.class)).collect(Collectors.toList());
 
 			if (zpvPList.size() != zpvNameList.size()) {

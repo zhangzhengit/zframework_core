@@ -23,6 +23,11 @@ public class ZRMethod {
 	private final Method method;
 	
 	/**
+	 * 
+	 * @ZRequestMapping.consumes属性
+	 */
+	private final String[] consumes;
+	/**
 	 * @ZRequestMapping.produces属性
 	 */
 	private final String[] produces;
@@ -51,16 +56,20 @@ public class ZRMethod {
 	 */
 	private final CTEnum ctEnum;
 	
-	public ZRMethod(final Method method, final String[] produces, final CTEnum ctEnum) {
+	public ZRMethod(final Method method, final CTEnum ctEnum) {
 		this.method = method;
+		
+		// FIXME 2025年12月6日 14:38:05 zhangzhen :  接下来实现这个功能
+		this.consumes = method.getAnnotation(ZRequestMapping.class).consumes();
+		this.produces = method.getAnnotation(ZRequestMapping.class).produces();
+		
 		this.isVoid = method.getReturnType() == void.class;
 		this.isRTString = method.getReturnType().getName().equals(STRING_NAME);
 		this.hasResponseBody = method.isAnnotationPresent(ZResponseBody.class);
-		this.produces = produces;
-		if (produces.length > 0) {
-			this.ctea = new ContentTypeEnum[produces.length];
-			for (int i = 0;i<produces.length;i++) {
-				final String p = produces[i];
+		if (this.produces.length > 0) {
+			this.ctea = new ContentTypeEnum[this.produces.length];
+			for (int i = 0; i < this.produces.length; i++) {
+				final String p = this.produces[i];
 				final ContentTypeEnum cte = ContentTypeEnum.gType(p);
 				if (cte == null) {
 					throw new StartupException("接口method " + method.getName() + " 的 produces 属性值 " + p + " 不支持 "
@@ -102,6 +111,10 @@ public class ZRMethod {
 
 	public ContentTypeEnum[] getCtea() {
 		return this.ctea;
+	}
+
+	public String[] getConsumes() {
+		return this.consumes;
 	}
 
 
