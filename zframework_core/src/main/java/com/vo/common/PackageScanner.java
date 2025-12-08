@@ -128,7 +128,7 @@ public class PackageScanner {
 			if (entryName.startsWith(packagePath) && entryName.endsWith(".class") && !jarEntry.isDirectory()) {
 				// 把 JAR 路径转为类名（如：com/vo/User.class → com.vo.User）
 				final String className = entryName.replace('/', '.').substring(0, entryName.length() - 6);
-				final Class<?> clazz = Class.forName(className);
+				final Class<?> clazz = Class.forName(className,false,Thread.currentThread().getContextClassLoader());
 				classSet.add(clazz);
 			}
 		}

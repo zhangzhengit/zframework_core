@@ -4,7 +4,7 @@ import java.io.InputStream;
 import java.util.Optional;
 import java.util.Set;
 
-import com.vo.anno.ZRestController;
+import com.vo.anno.ZController;
 import com.vo.cache.CU;
 import com.vo.cache.J;
 import com.vo.cache.STU;
@@ -33,7 +33,7 @@ import com.vo.http.ZRequestMapping;
  * @date 2023年6月28日
  *
  */
-@ZRestController
+@ZController
 public class StaticController {
 
 	private static final ServerConfigurationProperties SERVER_CONFIGURATION = ZContext.getBean(ServerConfigurationProperties.class);

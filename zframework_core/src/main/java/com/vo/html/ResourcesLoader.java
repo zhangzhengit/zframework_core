@@ -257,6 +257,7 @@ public class ResourcesLoader {
 	private static InputStream checkInputStream(final String name, final String resourceName) {
 		final InputStream inputStream = ResourcesLoader.class.getResourceAsStream(name);
 		if (inputStream == null) {
+			// FIXME 2025年12月8日 17:51:22 zhangzhen : 这里提示详细一点，具体时候那个资源
 			throw new ResourceNotExistException("资源不存在:" + resourceName, HttpStatusEnum.HTTP_404.getCode());
 		}
 
