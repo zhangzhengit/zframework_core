@@ -93,13 +93,8 @@ public class ZResponse {
 
 	private static final String SERVER_NAME = SERVER_CONFIGURATIONPROPERTIES.getName();
 
-//	private static final int DEFAULT_BUFFER_SIZE = 256 * 1;
-//	private static final int DEFAULT_BUFFER_SIZE = 1024 * 1024 * 1;
 	private static final int DEFAULT_BUFFER_SIZE = SERVER_CONFIGURATIONPROPERTIES.getStaticResponseBufferSize();
 	
-	// FIXME 2025年12月12日 23:20:52 zhangzhen :  要不要改为配置项、方便在低配置机器上运行
-//	private static final int DEFAULT_BUFFER_SIZE = 1024 * 1024 * 1;
-//
 	private static final byte[] NEW_LINE_BYTES = Task.NEW_LINE.getBytes();
 
 	private static final String CHARSET = "charset";
