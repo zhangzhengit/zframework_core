@@ -93,8 +93,13 @@ public class ZResponse {
 
 	private static final String SERVER_NAME = SERVER_CONFIGURATIONPROPERTIES.getName();
 
-	private static final int DEFAULT_BUFFER_SIZE = 1024 * 1024 * 1;
-
+//	private static final int DEFAULT_BUFFER_SIZE = 256 * 1;
+//	private static final int DEFAULT_BUFFER_SIZE = 1024 * 1024 * 1;
+	private static final int DEFAULT_BUFFER_SIZE = SERVER_CONFIGURATIONPROPERTIES.getStaticResponseBufferSize();
+	
+	// FIXME 2025年12月12日 23:20:52 zhangzhen :  要不要改为配置项、方便在低配置机器上运行
+//	private static final int DEFAULT_BUFFER_SIZE = 1024 * 1024 * 1;
+//
 	private static final byte[] NEW_LINE_BYTES = Task.NEW_LINE.getBytes();
 
 	private static final String CHARSET = "charset";
@@ -230,16 +235,15 @@ public class ZResponse {
 
 		checkContentType();
 
-		// header部分
 		final ZRequest request = ReqeustInfo.get();
 
+		// 已经确定的header部分
 		beforeWrite();
 		this.header(HeaderEnum.TRANSFER_ENCODING.getName(), "chunked");
 
 		// body部分
 		final byte[] b = new byte[DEFAULT_BUFFER_SIZE];
 
-		final ByteBuffer bbB = ByteBuffer.allocate(DEFAULT_BUFFER_SIZE);
 		final BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
 
 
@@ -257,6 +261,8 @@ public class ZResponse {
 						(readFirst && (read > (SERVER_CONFIGURATIONPROPERTIES.getCompressionMinLength() * 1024)));
 
 				if (readFirst) {
+					// FIXME 2025年12月13日 00:14:31 zhangzhen :  这里逻辑不对，304了，就不应该继续读写body了
+					// 要不先读一次，和if-none-match比较，否再读写body，是则直接304？
 					setETag(request, b);
 					setContentEncoding(request, exceedsCompressionMinLength);
 					this.write(headerArray());
@@ -264,13 +270,8 @@ public class ZResponse {
 
 				readFirst = false;
 
-				for (int i = 0; i < read; i++) {
-					bbB.put(b[i]);
-				}
-
-				bbB.flip();
-				compressBody(request, bbB, read, exceedsCompressionMinLength);
-				bbB.clear();
+				final ByteBuffer bbB = ByteBuffer.wrap(b, 0, read);
+				compressBodyAndWrite(request, bbB, read, exceedsCompressionMinLength);
 
 				this.write(ByteBuffer.wrap(NEW_LINE_BYTES));
 
@@ -323,7 +324,7 @@ public class ZResponse {
 		}
 	}
 
-	private void compressBody(final ZRequest request, final ByteBuffer bbB, final int read, final boolean exceedsCompressionMinLength) {
+	private void compressBodyAndWrite(final ZRequest request, final ByteBuffer bbB, final int read, final boolean exceedsCompressionMinLength) {
 
 		if (!compress(exceedsCompressionMinLength)) {
 			final String chunkHeader = Integer.toHexString(read) + "\r\n";

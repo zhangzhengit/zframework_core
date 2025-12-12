@@ -249,6 +249,14 @@ public class ServerConfigurationProperties {
 	@ZMin(min = 1024 * 1024 * 1)
 	@ZMax(max = Integer.MAX_VALUE)
 	private int staticControllerMemoryCacheCapacity = 1024 * 1024 * 100;
+	
+	/**
+	 * StaticController 响应时每次读取的BufferSize，单位：字节
+	 */
+	@ZNotNull
+	@ZMin(min = 1)
+	@ZMax(max = 1024 * 1024 * 100)
+	private int staticResponseBufferSize = 1024 * 1024;
 
 	/**
 	 * 长连接超时时间，一个长连接超过此时间则关闭，单位：秒
@@ -677,33 +685,40 @@ public class ServerConfigurationProperties {
 		this.showBanner = showBanner;
 	}
 
+	public int getStaticResponseBufferSize() {
+		return this.staticResponseBufferSize;
+	}
+
+	public void setStaticResponseBufferSize(final int staticResponseBufferSize) {
+		this.staticResponseBufferSize = staticResponseBufferSize;
+	}
+	
 	public boolean getShowHttpHeader() {
 		return this.showHttpHeader;
 	}
 
 	@Override
 	public String toString() {
-		return "ServerConfigurationProperties [port=" + this.port + ", responseZSessionId=" + this.responseZSessionId
-				+ ", name=" + this.name + ", byteBufferSize=" + this.byteBufferSize + ", nioReadTimeout="
-				+ this.nioReadTimeout + ", uploadFileSize=" + this.uploadFileSize + ", uploadFileToTempSize="
-				+ this.uploadFileToTempSize + ", uploadTempDir=" + this.uploadTempDir + ", threadCount="
-				+ this.threadCount + ", threadName=" + this.threadName + ", staticResourceCacheEnable="
-				+ this.staticResourceCacheEnable + ", scanPackage=" + this.scanPackage + ", qpsLimitEnabled="
-				+ this.qpsLimitEnabled + ", qps=" + this.qps + ", qpsExceedMessage=" + this.qpsExceedMessage
+		return "ServerConfigurationProperties [port=" + this.port + ", responseZSessionId=" + this.responseZSessionId + ", name="
+				+ this.name + ", byteBufferSize=" + this.byteBufferSize + ", nioReadTimeout=" + this.nioReadTimeout
+				+ ", uploadFileSize=" + this.uploadFileSize + ", uploadFileToTempSize=" + this.uploadFileToTempSize
+				+ ", uploadTempDir=" + this.uploadTempDir + ", threadCount=" + this.threadCount + ", threadName=" + this.threadName
+				+ ", staticResourceCacheEnable=" + this.staticResourceCacheEnable + ", scanPackage=" + this.scanPackage
+				+ ", qpsLimitEnabled=" + this.qpsLimitEnabled + ", qps=" + this.qps + ", qpsExceedMessage=" + this.qpsExceedMessage
 				+ ", requestHeaderSizeLimit=" + this.requestHeaderSizeLimit + ", pendingTasks=" + this.pendingTasks
 				+ ", pendingTasksExceedMessage=" + this.pendingTasksExceedMessage + ", taskResponsiveMode="
-				+ this.taskResponsiveMode + ", taskTimeoutMilliseconds=" + this.taskTimeoutMilliseconds
-				+ ", enableClientQps=" + this.enableClientQps + ", clientQps=" + this.clientQps + ", sessionIdQps="
-				+ this.sessionIdQps + ", staticControllerEnable=" + this.staticControllerEnable
-				+ ", staticControllerReferersAllowed=" + this.staticControllerReferersAllowed
-				+ ", staticControllerMemoryCacheCapacity=" + this.staticControllerMemoryCacheCapacity
+				+ this.taskResponsiveMode + ", taskTimeoutMilliseconds=" + this.taskTimeoutMilliseconds + ", enableClientQps="
+				+ this.enableClientQps + ", clientQps=" + this.clientQps + ", sessionIdQps=" + this.sessionIdQps
+				+ ", staticControllerEnable=" + this.staticControllerEnable + ", staticControllerReferersAllowed="
+				+ this.staticControllerReferersAllowed + ", staticControllerMemoryCacheCapacity="
+				+ this.staticControllerMemoryCacheCapacity + ", staticResponseBufferSize=" + getStaticResponseBufferSize()
 				+ ", keepAliveTimeout=" + this.keepAliveTimeout + ", sessionStorageType=" + this.sessionStorageType
-				+ ", sessionTimeout=" + this.sessionTimeout + ", staticPath=" + this.staticPath + ", staticPrefix="
-				+ this.staticPrefix + ", compressionEnable=" + this.compressionEnable + ", compressionTypes="
-				+ this.compressionTypes + ", compressionMinLength=" + this.compressionMinLength + ", responseHeaders="
-				+ this.responseHeaders + ", printConfigurationProperties=" + this.printConfigurationProperties
-				+ ", printProxyClass=" + this.printProxyClass + ", showBanner=" + this.showBanner + ", showHttpHeader="
-				+ this.showHttpHeader + "]";
+				+ ", sessionTimeout=" + this.sessionTimeout + ", staticPath=" + this.staticPath + ", staticPrefix=" + this.staticPrefix
+				+ ", compressionEnable=" + this.compressionEnable + ", compressionTypes=" + this.compressionTypes
+				+ ", compressionMinLength=" + this.compressionMinLength + ", responseHeaders=" + this.responseHeaders
+				+ ", printConfigurationProperties=" + this.printConfigurationProperties + ", printProxyClass="
+				+ this.printProxyClass + ", showBanner=" + this.showBanner + ", showHttpHeader=" + this.showHttpHeader + "]";
 	}
+
 
 }

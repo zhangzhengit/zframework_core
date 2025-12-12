@@ -74,20 +74,20 @@ public class StaticController {
 
 		response.contentType(cte.getType());
 
-		if (resourceName.endsWith(".js")
-				|| resourceName.endsWith(".html")
-				|| resourceName.endsWith(".css")
-				|| resourceName.endsWith(".jpg")
-				|| resourceName.endsWith(".png")
-				|| resourceName.endsWith(".ttf")
-				|| resourceName.endsWith(".woff")
-				) {
-			final byte[] ba = ResourcesLoader.loadStaticResourceAsByteArray(resourceName);
-			response.body(ba);
-		} else {
+//		if (resourceName.endsWith(".js")
+//				|| resourceName.endsWith(".html")
+//				|| resourceName.endsWith(".css")
+//				|| resourceName.endsWith(".jpg")
+//				|| resourceName.endsWith(".png")
+//				|| resourceName.endsWith(".ttf")
+//				|| resourceName.endsWith(".woff")
+//				) {
+//			final byte[] ba = ResourcesLoader.loadStaticResourceAsByteArray(resourceName);
+//			response.body(ba);
+//		} else {
 			final InputStream inputStream = ResourcesLoader.loadStaticResourceAsInputStream(resourceName);
 			response.body(inputStream);
-		}
+//		}
 
 	}
 
