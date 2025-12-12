@@ -44,7 +44,7 @@ public class ZRequest {
 	public static final String BOUNDARY = "boundary=";
 	public static final ServerConfigurationProperties SERVERCONFIGURATIONPROPERTIES = ZContext
 			.getBean(ServerConfigurationProperties.class);
-	public static final Integer requestHeaderSizeLimit = SERVERCONFIGURATIONPROPERTIES.getRequestHeaderSizeLimit();
+	public static final int requestHeaderSizeLimit = SERVERCONFIGURATIONPROPERTIES.getRequestHeaderSizeLimit();
 	public static final String MULTIPART_FORM_DATA = "multipart/form-data";
 	private static final AtomicLong GZSESSIONID = new AtomicLong(1L);
 
