@@ -634,10 +634,6 @@ public class ZRequest {
 		this.originalRequestBytes = originalRequestBytes;
 	}
 
-	public static int getRequestheadersizelimit() {
-		return requestHeaderSizeLimit;
-	}
-
 	public String getClientIp() {
 		return this.clientIp;
 	}
