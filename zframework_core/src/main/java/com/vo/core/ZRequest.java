@@ -88,7 +88,7 @@ public class ZRequest {
 	/**
 	 * 请求头,如： Accept-Encoding: gzip, deflate
 	 */
-	Map<String, String> headerMap;
+	private Map<String, String> headerMap;
 
 	/**
 	 * http完整的请求信息
@@ -584,7 +584,7 @@ public class ZRequest {
 			}
 		}
 
-		request.setHeaderMap(hm);
+		request.headerMap = hm;
 	}
 	
 	public String getOriginal() {
@@ -653,10 +653,6 @@ public class ZRequest {
 
 	public Map<String, String> getHeaderMap() {
 		return this.headerMap;
-	}
-
-	public void setHeaderMap(final Map<String, String> headerMap) {
-		this.headerMap = headerMap;
 	}
 
 	public byte[] getOriginalRequestBytes() {
