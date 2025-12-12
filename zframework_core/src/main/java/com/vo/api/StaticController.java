@@ -41,12 +41,13 @@ public class StaticController {
 	private final ZMC zmc = new ZMC(SERVER_CONFIGURATION.getStaticControllerMemoryCacheCapacity());
 
 	@ZRequestMapping(mapping = { "/favicon\\.ico",
+			"/.+\\.txt$",
 			"/.+\\.png$",
 			"/.+\\.ttf$","/.+\\.woff$",
 			"/.+\\.wav$",
 			"/.+\\.js$", "/.+\\.jpg$", "/.+\\.mp3$", "/.+\\.mp4$", "/.+\\.pdf$",
 			"/.+\\.gif$", "/.+\\.doc$", "/.+\\.css$", "/.+\\.html$" }, isRegex = { true, true, true, true, true, true,
-					true, true,true, true, true, true, true, true }, count = 10000 * 10)
+					true, true,true,true, true, true, true, true, true }, count = 10000 * 10)
 
 	@ZQPSLimitation(count = 2000, type = ZQPSLimitationEnum.ZSESSIONID)
 	@ZETag
@@ -62,13 +63,17 @@ public class StaticController {
 
 		final int i = resourceName.indexOf(".");
 		if (i <= -1) {
-			response.httpStatus(HttpStatusEnum.HTTP_500.getCode()).body(CR.error("不支持无后缀的文件"));
+			response.httpStatus(HttpStatusEnum.HTTP_500.getCode())
+					.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
+					.body(J.toJSONString(CR.error("不支持无后缀的文件")));
 			return;
 		}
 
 		final ContentTypeEnum cte = ContentTypeEnum.gType(resourceName.substring(i + 1));
 		if (cte == null) {
-			response.httpStatus(HttpStatusEnum.HTTP_500.getCode()).body(CR.error("不支持的文件类型"));
+			response.httpStatus(HttpStatusEnum.HTTP_500.getCode())
+					.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
+					.body(J.toJSONString(CR.error("不支持的文件类型")));
 			return;
 		}
 
