@@ -112,9 +112,6 @@ public class QC {
 				final long time = qptu <= QPS_THRESHOLD ? (ms / (1000 / qptu)) : (ms / (1000 / QPS_THRESHOLD));
 				final long qpsNEW = (qptu / QPS_THRESHOLD) <= 0 ? 1 : (qptu / QPS_THRESHOLD);
 				final boolean ok = aSECOND(keyPrefix, time, qpsNEW);
-				if(keyPrefix.contains("i32")) {
-					System.out.println(time + "\t" + qpsNEW + "\t" + ok);
-				}
 				return ok;
 			}
 			case MINUTE: {
