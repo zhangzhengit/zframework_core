@@ -36,13 +36,14 @@ public class ZTemplate {
 	/**
 	 * 从一个带有freemarker标签的html文档的字符串形式，
 	 * 处理其中的freemarker标签，而生成一个完整的可以被浏览器直接解析的html文档。
-	 *
+	 * @param htmlName TODO
 	 * @param htmlContent
+	 *
 	 * @return
 	 *
 	 */
-	public static String freemarker(final String htmlContent) {
-		return freemarker0(htmlContent);
+	public static String freemarker(final String htmlName, final String htmlContent) {
+		return freemarker0(htmlName, htmlContent);
 	}
 
 	static {
@@ -53,14 +54,16 @@ public class ZTemplate {
 
 	}
 
-	private static String freemarker0(final String templateString) {
+	private static String freemarker0(final String htmlName, final String templateString) {
 		final Map<String, Object> dataModel = ZModel.get();
 
 		final String key =
 				dataModel != null ?
 						("f0-" + dataModel.hashCode()
 						+ '-' + dataModel.size()
-						+ '-' + templateString) :
+						+ '-' + htmlName.length()
+						+ '-' + htmlName
+								) :
 							templateString;
 
 		return F.computeIfAbsent("f1" + '-' + key, () ->{

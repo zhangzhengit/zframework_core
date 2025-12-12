@@ -193,7 +193,7 @@ public class Task {
 			}
 
 			final Object zController = ZControllerMap.getObjectByMethod(zrMethod.getMethod());
-			final ZResponse re = invokeAndResponse(zrMethod, parameterArray, zController, request);
+			final ZResponse re = this.invokeAndResponse(zrMethod, parameterArray, zController, request);
 			return re;
 
 		} catch (final Exception e) {
@@ -220,7 +220,7 @@ public class Task {
 			return null;
 		};
 
-		final String key = "getMatcheMethod-" + path;
+		final String key = "gmm-" + path;
 		return ZRC.singleton().computeIfAbsent(key, supplier, true);
 	}
 
@@ -269,7 +269,7 @@ public class Task {
 		
 		final QPSHandlingEnum handlingEnum = REQUEST_VALIDATOR_CONFIGURATION_PROPERTIES.getHandlingEnum(request.getUserAgent());
 		final boolean allow = QC.allow(qcTimeEnum,
-				"a-" + controllerName + '@' + zrMethod.getMethod().getName(), qps,
+				"a-" + controllerName.hashCode() + '@' + zrMethod.getMethod().getName().hashCode(), qps,
 				handlingEnum);
 		if (!allow) {
 
@@ -329,7 +329,7 @@ public class Task {
 
 		ZResponseStatus.initialization();
 		
-		setZRequestAndZResponse(parametersArray, request, zrMethod);
+		this.setZRequestAndZResponse(parametersArray, request, zrMethod);
 
 		Object r = null;
 		// 在此zhi执行
@@ -385,7 +385,7 @@ public class Task {
 		// 1、先看方法里的业务代码是否new ZResponse.write过了，有则停止，无则继续第二步
 		// 2、用接口的ZResponse参数来contentType然后write，有次参数并且设置了ct则直接write，无则第3步
 		// 3、2有ZR参数但未CT，则设为produces然后write。
-		//    2无ZR，则给一个默认的json 200 
+		//    2无ZR，则给一个默认的json 200
 		// 	到此结束了，不管produces是啥都write
 		if (zrMethod.isVoid()) {
 			final boolean written = ZResponseStatus.isWritten();
@@ -417,12 +417,12 @@ public class Task {
 			return response;
 		}
 
-		// 第二优先：produces 设定 
+		// 第二优先：produces 设定
 		// 只设定了一个则就按这个，设置多个则选择匹配度最高的，都不匹配则按顺序返回第一个
 		final String[] ps = zrMethod.getProduces();
 		if (AU.isNotEmpty(ps)) {
 			if ((ps.length == 1)) {
-				return responseCT(r, ps[0], zrMethod.getCtea()[0]);
+				return this.responseCT(r, ps[0], zrMethod.getCtea()[0]);
 			}
 			final int x = 20;
 			// FIXME 2025年12月6日 00:39:34 zhangzhen : 多个ps的待会再做，先做下面简单的
@@ -433,9 +433,9 @@ public class Task {
 		// 否则一律application/json
 		if (zrMethod.hasResponseBody()) {
 			if (zrMethod.isRTString()) {
-				return responseTextPlain(r);
+				return this.responseTextPlain(r);
 			}
-			return responseAppJSON(r);
+			return this.responseAppJSON(r);
 		}
 		
 		// 第4优先：@ZRestCon还是@ZCon注解,ZC则默认为html名称，
@@ -443,15 +443,15 @@ public class Task {
 		final CTEnum ctEnum = zrMethod.getCtEnum();
 		// 响应 html
 		if ((ctEnum == CTEnum.NORMAL) ) {
-			return responseHtml(r);
+			return this.responseHtml(r);
 		}
 		
 		if ((ctEnum == CTEnum.REST) && zrMethod.isRTString()) {
-			return responseTextPlain(r);
+			return this.responseTextPlain(r);
 		}
 		
 		// 默认响应json
-		return responseAppJSON(r);
+		return this.responseAppJSON(r);
 	}
 
 	static String findProduces(final ZRequest request, final String[] ps) {
@@ -555,7 +555,7 @@ public class Task {
 
 			final String htmlContent = readHtmlContent(r);
 
-			final String html = ZTemplate.freemarker(htmlContent);
+			final String html = ZTemplate.freemarker(r instanceof String ? (String)r : String.valueOf(r), htmlContent);
 			ZModel.clear();
 
 			return new ZResponse(this.socketChannel).contentType(ContentTypeEnum.TEXT_HTML.getType()).body(html);
