@@ -32,14 +32,14 @@ abstract class AbstractRequestValidator {
 		// 如果任务执行模式为[排队执行]，则使用队列模式来执行
 		if (TaskResponsiveModeEnum.QUEUE.name().equals(AbstractRequestValidator.TASK_RESPONSIVE_MODE)) {
 			// 直接放入线程队列等待处理
-			NioLongConnectionServer.ZE.executeInQueue(() -> this.handle0(request, taskRequest));
+			NioLongConnectionServer.ZE.executeInQueue(() -> handle0(request, taskRequest));
 			return;
 		}
 
 		if (TaskResponsiveModeEnum.IMMEDIATELY.name().equals(AbstractRequestValidator.TASK_RESPONSIVE_MODE)) {
 
 			final boolean executeImmediately = NioLongConnectionServer.ZE
-					.executeImmediately(() -> this.handle0(request, taskRequest));
+					.executeImmediately(() -> handle0(request, taskRequest));
 
 			// 当前有空闲线程，直接处理
 			if (executeImmediately) {
@@ -47,27 +47,25 @@ abstract class AbstractRequestValidator {
 			}
 
 			// 超时，直接返回[429任务超时]
-			if (this.timeout(taskRequest)) {
+			if (timeout(taskRequest)) {
 				final String message = "服务器忙：当前无空闲线程&任务等待超时："
 						+ ZContext.getBean(ServerConfigurationProperties.class).getTaskTimeoutMilliseconds();
 				NioLongConnectionServer.response429(taskRequest.getSelectionKey(), message);
-			} else {
-				// 没超时，则优先处理放入任务队列最前面，成功则此任务会等待下次调用本方法优先处理，失败则返回[429任务队列满]
-				if (!ZContext.getBean(TaskRequestHandler.class).addFirst(taskRequest)) {
-					final String message = "服务器忙：当前无空闲线程&任务队列满";
-					NioLongConnectionServer.response429(taskRequest.getSelectionKey(), message);
-				}
+			} else // 没超时，则优先处理放入任务队列最前面，成功则此任务会等待下次调用本方法优先处理，失败则返回[429任务队列满]
+			if (!ZContext.getBean(TaskRequestHandler.class).addFirst(taskRequest)) {
+				final String message = "服务器忙：当前无空闲线程&任务队列满";
+				NioLongConnectionServer.response429(taskRequest.getSelectionKey(), message);
 			}
 		}
 
 	}
 
 	private void handle0(final ZRequest request, final TaskRequest taskRequest) {
-		final RequestVerificationResult r = this.validated(request, taskRequest);
+		final RequestVerificationResult r = validated(request, taskRequest);
 		if (r.isPassed()) {
-			this.passed(request, taskRequest);
+			passed(request, taskRequest);
 		} else {
-			this.failed(request, taskRequest, r);
+			failed(request, taskRequest, r);
 		}
 	}
 
@@ -119,10 +117,10 @@ abstract class AbstractRequestValidator {
 		if (AbstractRequestValidator.responseZSessionId()) {
 			final ZSession session = request.getSession(false);
 			if (session != null) {
-				final String smoothUserAgentKeyword = HeaderEnum.Z_SESSION_ID.getName() + "@" + session.getId();
+				final String smoothUserAgentKeyword = "zsid@" + session.getId();
 				final QPSHandlingEnum handlingEnum = this.requestValidatorConfigurationProperties
 						.getHandlingEnum(userAgent);
-				final boolean allow = QC.allow(QCTimeEnum.SECOND, smoothUserAgentKeyword, this.getSessionIdQps(),
+				final boolean allow = QC.allow(QCTimeEnum.SECOND, smoothUserAgentKeyword, getSessionIdQps(),
 						handlingEnum);
 
 				if (allow) {
@@ -137,7 +135,7 @@ abstract class AbstractRequestValidator {
 		final String keyword = request.getClientIp() + "@" + userAgent;
 
 		final QPSHandlingEnum handlingEnum = this.requestValidatorConfigurationProperties.getHandlingEnum(userAgent);
-		final boolean allow = QC.allow(QCTimeEnum.SECOND,keyword, this.getClientQps(), handlingEnum);
+		final boolean allow = QC.allow(QCTimeEnum.SECOND,keyword, getClientQps(), handlingEnum);
 
 		if (allow) {
 			return ALLOW;

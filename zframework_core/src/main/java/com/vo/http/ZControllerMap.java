@@ -10,6 +10,7 @@ import java.util.Set;
 import com.google.common.collect.HashBasedTable;
 import com.vo.cache.STU;
 import com.vo.configuration.SCU;
+import com.vo.core.QCTimeEnum;
 import com.vo.core.QPSEnum;
 import com.vo.enums.MethodEnum;
 import com.vo.exception.StartupException;
@@ -24,6 +25,7 @@ import com.vo.exception.StartupException;
 public class ZControllerMap {
 	static final HashBasedTable<MethodEnum, String, ZRMethod> methodPathTable = HashBasedTable.create();
 	static final HashBasedTable<String, String, Integer> methodQPSTable = HashBasedTable.create();
+	static final HashBasedTable<String, String, QCTimeEnum> methodTimeTable = HashBasedTable.create();
 	static final HashBasedTable<String, String, ZQPSLimitation> methodZQPSLimitationTable = HashBasedTable.create();
 	static final HashBasedTable<Method, String, Boolean> methodIsregexTable = HashBasedTable.create();
 	static final HashMap<Method, Object> objectMap = new HashMap<>(16, 1F);
@@ -65,7 +67,9 @@ public class ZControllerMap {
 		}
 
 		methodQPSTable.put(object.getClass().getName(), method.getName(), count);
-
+		methodTimeTable.put(object.getClass().getName(), method.getName(), requestMapping.time());
+		
+		
 		final ZQPSLimitation zqpsl = method.getAnnotation(ZQPSLimitation.class);
 		if (zqpsl != null) {
 			final ZQPSLimitationEnum type = zqpsl.type();
@@ -97,11 +101,21 @@ public class ZControllerMap {
 		}
 	}
 
+	
+	public static final int getAPIMethodSize() {
+		return objectMap.size();
+	}
+	
 	public static ZQPSLimitation getZQPSLimitationByControllerNameAndMethodName(final String controllerName,final String methodName) {
 		final ZQPSLimitation zqpsLimitation = methodZQPSLimitationTable.get(controllerName, methodName);
 		return zqpsLimitation;
 	}
 
+	public static QCTimeEnum getQCTimeByControllerNameAndMethodName(final String controllerName,final String methodName) {
+		final QCTimeEnum qcTimeEnum = methodTimeTable.get(controllerName, methodName);
+		return qcTimeEnum;
+	}
+	
 	public static Integer getQPSByControllerNameAndMethodName(final String controllerName,final String methodName) {
 		final Integer qps = methodQPSTable.get(controllerName, methodName);
 		return qps;

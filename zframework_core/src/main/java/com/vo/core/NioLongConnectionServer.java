@@ -55,7 +55,7 @@ public class NioLongConnectionServer {
 
 	public static final int DEFAULT_HTTP_PORT = 80;
 
-	public static final String Z_SERVER_QPS = "ZServer_QPS";
+	public static final String Z_SERVER_QPS = "zsq";
 
 	private static final ServerConfigurationProperties SERVER_CONFIGURATIONPROPERTIES= ZContext.getBean(ServerConfigurationProperties.class);
 

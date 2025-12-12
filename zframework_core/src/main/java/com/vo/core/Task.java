@@ -261,12 +261,15 @@ public class Task {
 	@SuppressWarnings("boxing")
 	private ZResponse invokeAndResponse(final ZRMethod zrMethod, final Object[] parametersArray, final Object zControllerObject, final ZRequest request)
 			throws IllegalAccessException, InvocationTargetException, IOException {
-
+		
 		final String controllerName = zControllerObject.getClass().getName();
 		final Integer qps = ZControllerMap.getQPSByControllerNameAndMethodName(controllerName, zrMethod.getMethod().getName());
 
+		final QCTimeEnum qcTimeEnum = ZControllerMap.getQCTimeByControllerNameAndMethodName(controllerName, zrMethod.getMethod().getName());
+		
 		final QPSHandlingEnum handlingEnum = REQUEST_VALIDATOR_CONFIGURATION_PROPERTIES.getHandlingEnum(request.getUserAgent());
-		final boolean allow = QC.allow(QCTimeEnum.SECOND, "API-" + controllerName + "@" + zrMethod.getMethod().getName(), qps,
+		final boolean allow = QC.allow(qcTimeEnum,
+				"a-" + controllerName + '@' + zrMethod.getMethod().getName(), qps,
 				handlingEnum);
 		if (!allow) {
 
