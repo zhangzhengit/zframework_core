@@ -12,7 +12,7 @@ import java.util.Map;
  */
 public final class ZConfigurationPropertiesRegistry {
 	
-	private final Map<String, Object> zcpMap = new HashMap<>();
+	private final Map<String, Object> zcpMap = new HashMap<>(16, 1f);
 
 	/**
 	 * 返回所有的 @ZConfigurationProperties 类

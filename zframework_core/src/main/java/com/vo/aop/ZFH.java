@@ -13,7 +13,7 @@ import java.util.Map;
  */
 public class ZFH {
 
-	private static final Map<String, Object> M = new HashMap<>();
+	private static final Map<String, Object> M = new HashMap<>(16, 1F);
 
 	public static void set(final String name, final Object object) {
 		M.put(name, object);

@@ -451,7 +451,7 @@ public class ZConfigurationPropertiesScanner {
 	}
 
 	private static void setMap(final Object object, final Field field, final String key) {
-		final Map<String, Object> map = new HashMap<>(16, 1F);
+		final Map<String, Object> map = new HashMap<>(8, 1F);
 		final Iterator<String> keys = ZProperties.getKeys(key);
 		while (keys.hasNext()) {
 			final String k = keys.next();

@@ -15,7 +15,7 @@ public class ZModel {
 
 	private static final ThreadLocal<Map<String, Object>> tl = new ThreadLocal<>();
 
-	private final Map<String, Object> map = new HashMap<>();
+	private final Map<String, Object> map = new HashMap<>(4, 1F);
 
 	public void set(final String name, final Object value) {
 		this.map.put(name, value);

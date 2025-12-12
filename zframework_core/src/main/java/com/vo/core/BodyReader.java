@@ -203,7 +203,7 @@ public class BodyReader {
 	 * @return
 	 */
 	public static Map<String, String> handleBodyContentDisposition(final String line) {
-		final Map<String, String> vMap = new HashMap<>();
+		final Map<String, String> vMap = new HashMap<>(4, 1F);
 		final String[] a = line.split(";");
 		for (final String a1 : a) {
 			if (a1.contains("=")) {

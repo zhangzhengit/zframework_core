@@ -26,7 +26,7 @@ public class ZControllerMap {
 	static final HashBasedTable<String, String, Integer> methodQPSTable = HashBasedTable.create();
 	static final HashBasedTable<String, String, ZQPSLimitation> methodZQPSLimitationTable = HashBasedTable.create();
 	static final HashBasedTable<Method, String, Boolean> methodIsregexTable = HashBasedTable.create();
-	static final HashMap<Method, Object> objectMap = new HashMap<>();
+	static final HashMap<Method, Object> objectMap = new HashMap<>(16, 1F);
 	static final HashSet<String> mappingSet = new HashSet<>();
 
 	/**

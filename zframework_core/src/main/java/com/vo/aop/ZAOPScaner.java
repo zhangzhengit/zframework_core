@@ -49,7 +49,7 @@ public class ZAOPScaner {
 	public static final String PROXY_ZCLASS_NAME_SUFFIX = "_ProxyZclass";
 	public static final ConcurrentMap<String, Map<String, ZClass>> zcMap = new ConcurrentHashMap<>();
 
-	public static ConcurrentMap<String, Method> cmap = new ConcurrentHashMap<String, Method>();
+	public static ConcurrentMap<String, Method> cmap = new ConcurrentHashMap<>();
 
 	public static Map<String, ZClass> getZCMap() {
 		final Map<String, ZClass> m = zcMap.get(KEY);
@@ -60,7 +60,7 @@ public class ZAOPScaner {
 
 	public	static Map<String, ZClass> scanAndGenerateProxyClass1(final String... packageName) throws IllegalAccessException {
 
-		final Map<String, ZClass> map = new HashMap<>();
+		final Map<String, ZClass> map = new HashMap<>(16, 1F);
 		final Set<Class<?>> cs = scanPackage_COM(packageName);
 
 		final HashBasedTable<Class, Method, List<Class<?>>> table = extractedC(cs);
@@ -139,25 +139,23 @@ public class ZAOPScaner {
 
 		final StringBuilder nameBuilder = new StringBuilder();
 		final char[] ch = assss.toCharArray();
-		if (ch[assss.length() - 1] == ')') {
-			for (int i = ch.length - 2; i > 0;) {
-				if (ch[i] == ' ') {
-					i--;
-				} else {
-					int k = i;
-					while (k > 0) {
-						if ((ch[k] == ' ') || (ch[k] == '=')) {
-							i = -1;
-							break;
-						}
-						nameBuilder.insert(0, ch[k]);
-						k--;
+		if (ch[assss.length() - 1] != ')') {
+			throw new IllegalArgumentException("注解声明错误: Annotation = " + a);
+		}
+		for (int i = ch.length - 2; i > 0;) {
+			if (ch[i] == ' ') {
+				i--;
+			} else {
+				int k = i;
+				while (k > 0) {
+					if ((ch[k] == ' ') || (ch[k] == '=')) {
+						i = -1;
+						break;
 					}
+					nameBuilder.insert(0, ch[k]);
+					k--;
 				}
 			}
-
-		} else {
-			throw new IllegalArgumentException("注解声明错误: Annotation = " + a);
 		}
 		return nameBuilder.toString();
 	}
@@ -200,54 +198,52 @@ public class ZAOPScaner {
 				zms.add(copyZAOPMethod);
 			}
 
-		} else {
-			// 无自定义注解的情况：
-			// 1 看此方法参数是否有 @ZValidated 注解，有则给此方法body插入 校验代码
-			if (Arrays.stream(m.getParameterTypes()).filter(pa -> pa.isAnnotationPresent(ZValidated.class)).findAny().isPresent()) {
+		} else // 无自定义注解的情况：
+		// 1 看此方法参数是否有 @ZValidated 注解，有则给此方法body插入 校验代码
+		if (Arrays.stream(m.getParameterTypes()).filter(pa -> pa.isAnnotationPresent(ZValidated.class)).findAny().isPresent()) {
 
-				final StringBuilder insert = new StringBuilder();
-				final Parameter[] ps = m.getParameters();
-				for (final Parameter p : ps) {
-					final boolean annotationPresent = p.getType().isAnnotationPresent(ZValidated.class);
-					if (!annotationPresent) {
-						continue;
-					}
-
-					final String name = p.getName();
-					final String insertBody =
-							"if ("+ name +".getClass().isAnnotationPresent(" + ZValidated.class.getName() + ".class)) {"  + Task.NEW_LINE
-							+  "for (final " + Field.class.getName() + " field : " + name + ".getClass().getDeclaredFields()) {"  + Task.NEW_LINE
-							+  		 ZValidator.class.getName() + ".validatedAll("+name+", field);"  + Task.NEW_LINE
-							+   "}" + Task.NEW_LINE
-							+ "}";
-
-					insert.append(insertBody);
+			final StringBuilder insert = new StringBuilder();
+			final Parameter[] ps = m.getParameters();
+			for (final Parameter p : ps) {
+				final boolean annotationPresent = p.getType().isAnnotationPresent(ZValidated.class);
+				if (!annotationPresent) {
+					continue;
 				}
-				final String insertBody = insert.toString();
-				final String body =
-						VOID.equals(returnType.getName())
-						? "super." + m.getName() + "(" + a + ");"
-								: "return super." + m.getName() + "(" + a + ");";
 
-				final ZMethod zm = ZMethod.copyFromMethod(m);
-				zm.setgReturn(false);
-				zm.setBody(insertBody  + Task.NEW_LINE + body);
+				final String name = p.getName();
+				final String insertBody =
+						"if ("+ name +".getClass().isAnnotationPresent(" + ZValidated.class.getName() + ".class)) {"  + Task.NEW_LINE
+						+  "for (final " + Field.class.getName() + " field : " + name + ".getClass().getDeclaredFields()) {"  + Task.NEW_LINE
+						+  		 ZValidator.class.getName() + ".validatedAll("+name+", field);"  + Task.NEW_LINE
+						+   "}" + Task.NEW_LINE
+						+ "}";
 
-				zms.add(zm);
-
-			} else {
-
-				final String body =
-						VOID.equals(returnType.getName())
-						? "super." + m.getName() + "(" + a + ");"
-								: "return super." + m.getName() + "(" + a + ");";
-
-				final ZMethod zm = ZMethod.copyFromMethod(m);
-				zm.setgReturn(false);
-				zm.setBody(body);
-
-				zms.add(zm);
+				insert.append(insertBody);
 			}
+			final String insertBody = insert.toString();
+			final String body =
+					VOID.equals(returnType.getName())
+					? "super." + m.getName() + "(" + a + ");"
+							: "return super." + m.getName() + "(" + a + ");";
+
+			final ZMethod zm = ZMethod.copyFromMethod(m);
+			zm.setgReturn(false);
+			zm.setBody(insertBody  + Task.NEW_LINE + body);
+
+			zms.add(zm);
+
+		} else {
+
+			final String body =
+					VOID.equals(returnType.getName())
+					? "super." + m.getName() + "(" + a + ");"
+							: "return super." + m.getName() + "(" + a + ");";
+
+			final ZMethod zm = ZMethod.copyFromMethod(m);
+			zm.setgReturn(false);
+			zm.setBody(body);
+
+			zms.add(zm);
 		}
 	}
 
