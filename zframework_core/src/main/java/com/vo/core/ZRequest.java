@@ -555,7 +555,7 @@ public class ZRequest {
 
 	private static void paserHeader(final ZRequest request) {
 		final List<String> x = request.getLineList();
-		final HashMap<String, String> hm = new HashMap<>(16, 1F);
+		final Map<String, String> hm = new HashMap<>(x.size(), 1F);
 		for (int i = x.size() - 1; i > 0; i--) {
 			final String l = x.get(i);
 			if (Task.EMPTY_STRING.equals(l)) {
@@ -663,7 +663,7 @@ public class ZRequest {
 		this.originalRequestBytes = originalRequestBytes;
 	}
 
-	public static Integer getRequestheadersizelimit() {
+	public static int getRequestheadersizelimit() {
 		return requestHeaderSizeLimit;
 	}
 
