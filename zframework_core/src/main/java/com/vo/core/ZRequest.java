@@ -98,7 +98,7 @@ public class ZRequest {
 	/**
 	 * http中body部分
 	 */
-	private byte[] body; 
+	private byte[] body;
 
 	/**
 	 * 客户端IP
@@ -106,19 +106,19 @@ public class ZRequest {
 	private final String clientIp;
 
 	public boolean isSupportZSTD() {
-		return supportCompression(AcceptEncodingEnum.ZSTD);
+		return this.supportCompression(AcceptEncodingEnum.ZSTD);
 	}
 
 	public boolean isSupportDEFLATE() {
-		return supportCompression(AcceptEncodingEnum.DEFLATE);
+		return this.supportCompression(AcceptEncodingEnum.DEFLATE);
 	}
 
 	public boolean isSupportGZIP() {
-		return supportCompression(AcceptEncodingEnum.GZIP);
+		return this.supportCompression(AcceptEncodingEnum.GZIP);
 	}
 
 	private boolean supportCompression(final AcceptEncodingEnum aeEnum) {
-		final String a = getHeader(HeaderEnum.ACCEPT_ENCODING.getName());
+		final String a = this.getHeader(HeaderEnum.ACCEPT_ENCODING.getName());
 		if (STU.isEmpty(a)) {
 			return false;
 		}
@@ -134,11 +134,11 @@ public class ZRequest {
 	}
 
 	public String getHost() {
-		return getHeader(HeaderEnum.HOST.getName());
+		return this.getHeader(HeaderEnum.HOST.getName());
 	}
 
 	public String getMethod() {
-		return getMethodEnum().getMethod();
+		return this.getMethodEnum().getMethod();
 	}
 
 	public byte[] getBody() {
@@ -146,7 +146,7 @@ public class ZRequest {
 	}
 
 	public String getServerName() {
-		final String host = getHeaderMap().get(HeaderEnum.HOST.getName());
+		final String host = this.getHeaderMap().get(HeaderEnum.HOST.getName());
 
 		final int i = host.indexOf(":");
 		if (i > -1) {
@@ -158,7 +158,7 @@ public class ZRequest {
 
 	public int getServerPort() {
 
-		final String host = getHeaderMap().get(HeaderEnum.HOST.getName());
+		final String host = this.getHeaderMap().get(HeaderEnum.HOST.getName());
 
 		final int i = host.indexOf(":");
 		if (i > -1) {
@@ -170,12 +170,12 @@ public class ZRequest {
 	}
 
 	public String getRequestURL() {
-		final String serverName = getServerName();
-		return serverName + getPath();
+		final String serverName = this.getServerName();
+		return serverName + this.getPath();
 	}
 
 	public String getRequestURI() {
-		return getPath();
+		return this.getPath();
 	}
 
 	/**
@@ -184,7 +184,7 @@ public class ZRequest {
 	 * @return
 	 */
 	public String getContentType() {
-		return getHeader(HeaderEnum.CONTENT_TYPE.getName());
+		return this.getHeader(HeaderEnum.CONTENT_TYPE.getName());
 	}
 
 	/**
@@ -197,10 +197,10 @@ public class ZRequest {
 	 * @return
 	 */
 	public String getBoundary() {
-		if (!isContentTypeFormData()) {
+		if (!this.isContentTypeFormData()) {
 			return null;
 		}
-		final String ct = getHeaderMap().get(HeaderEnum.CONTENT_TYPE.getName());
+		final String ct = this.getHeaderMap().get(HeaderEnum.CONTENT_TYPE.getName());
 
 		final int i = ct.indexOf(BOUNDARY);
 		if (i > -1) {
@@ -216,7 +216,7 @@ public class ZRequest {
 	 * @return
 	 */
 	public boolean isContentTypeFormData() {
-		final String ct = getContentType();
+		final String ct = this.getContentType();
 		return ct == null ? false : ct.contains(MULTIPART_FORM_DATA);
 	}
 
@@ -252,7 +252,7 @@ public class ZRequest {
 	 * @return
 	 */
 	public synchronized ZSession getSession(final boolean create) {
-		final ZCookie[] cs = getCookies();
+		final ZCookie[] cs = this.getCookies();
 
 		if (AU.isNotEmpty(cs)) {
 			for (final ZCookie zc : cs) {
@@ -294,13 +294,13 @@ public class ZRequest {
 	}
 
 	public int getContentLength() {
-		final String s = getHeader(HeaderEnum.CONTENT_LENGTH.getName());
+		final String s = this.getHeader(HeaderEnum.CONTENT_LENGTH.getName());
 		return s == null ? -1 : Integer.parseInt(s);
 	}
 
 	public ZCookie getCookie(final String name) {
 		
-		final String cookisString = getHeaderMap().get(HeaderEnum.COOKIE.getName());
+		final String cookisString = this.getHeaderMap().get(HeaderEnum.COOKIE.getName());
 		if (STU.isEmpty(cookisString)) {
 			return null;
 		}
@@ -319,7 +319,7 @@ public class ZRequest {
 	
 	public ZCookie[] getCookies() {
 
-		final String cookisString = getHeaderMap().get(HeaderEnum.COOKIE.getName());
+		final String cookisString = this.getHeaderMap().get(HeaderEnum.COOKIE.getName());
 		if (STU.isEmpty(cookisString)) {
 			return null;
 		}
@@ -339,7 +339,7 @@ public class ZRequest {
 	}
 
 	public ZCookie getZSESSIONID() {
-		final ZCookie[] cookies = getCookies();
+		final ZCookie[] cookies = this.getCookies();
 		if (AU.isEmpty(cookies)) {
 			return null;
 		}
@@ -354,15 +354,15 @@ public class ZRequest {
 	}
 
 	public String getUserAgent() {
-		return getHeaderMap().get(HeaderEnum.USER_AGENT.getName());
+		return this.getHeaderMap().get(HeaderEnum.USER_AGENT.getName());
 	}
 
 	public String getHeader(final String name) {
-		return getHeaderMap().get(name);
+		return this.getHeaderMap().get(name);
 	}
 
 	public boolean isConnectionKeepAlive() {
-		final String connection = getHeader(HeaderEnum.CONNECTION.getName());
+		final String connection = this.getHeader(HeaderEnum.CONNECTION.getName());
 		final boolean keepAlive = STU.isNotEmpty(connection)
 				&& (connection.equalsIgnoreCase(ConnectionEnum.KEEP_ALIVE.getValue())
 						|| connection.toLowerCase().contains(ConnectionEnum.KEEP_ALIVE.getValue().toLowerCase()));
@@ -372,7 +372,7 @@ public class ZRequest {
 	public Object getParameter(final String name) {
 		// FIXME 2024年12月9日 下午6:30:42 zhangzhen : 这个方法是否要改
 		// 因为@ZRequestParam加入了默认值，用此方法取还是原值而非默认值
-		final Set<RequestParam> ps = getParamSet();
+		final Set<RequestParam> ps = this.getParamSet();
 		if (CU.isEmpty(ps)) {
 			return null;
 		}
@@ -399,7 +399,7 @@ public class ZRequest {
 
 		parseRequest(this);
 
-		this.clientIp = getClientIp0();
+		this.clientIp = this.getClientIp0();
 	}
 
 	private static ZRequest parseRequest(final ZRequest request) {
@@ -451,12 +451,12 @@ public class ZRequest {
 
 	private String getClientIp0() {
 
-		final String xRealIp = getHeader(HeaderEnum.X_REAL_IP.getName());
+		final String xRealIp = this.getHeader(HeaderEnum.X_REAL_IP.getName());
 		if (xRealIp != null) {
 			return xRealIp;
 		}
 
-		final String xForwardedFor = getHeader(HeaderEnum.X_Forwarded_For.getName());
+		final String xForwardedFor = this.getHeader(HeaderEnum.X_Forwarded_For.getName());
 		if (xForwardedFor != null) {
 			return xForwardedFor;
 		}
