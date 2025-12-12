@@ -82,6 +82,11 @@ public enum ContentTypeEnum {
 		if (fileNameSuffix.endsWith("js")) {
 			return JS;
 		}
+		
+		if (fileNameSuffix.endsWith("txt")) {
+			return TEXT_PLAIN;
+		}
+		
 		if (fileNameSuffix.endsWith("doc") || fileNameSuffix.endsWith("docx")) {
 			return ContentTypeEnum.WORD;
 		}
