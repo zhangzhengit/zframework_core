@@ -55,7 +55,7 @@ public class ZRedisConfigurationProperties {
 		this.host = host;
 	}
 
-	public Integer getPort() {
+	public int getPort() {
 		return this.port;
 	}
 

@@ -71,11 +71,11 @@ abstract class AbstractRequestValidator {
 
 	public boolean timeout(final TaskRequest taskRequest) {
 
-		final Integer taskTimeoutMilliseconds = ZContext.getBean(ServerConfigurationProperties.class)
+		final int taskTimeoutMilliseconds = ZContext.getBean(ServerConfigurationProperties.class)
 				.getTaskTimeoutMilliseconds();
 
 		final long now = System.currentTimeMillis();
-		if ((now - taskRequest.getRequestTime().getTime()) > taskTimeoutMilliseconds.intValue()) {
+		if ((now - taskRequest.getRequestTime().getTime()) > taskTimeoutMilliseconds) {
 			return true;
 		}
 

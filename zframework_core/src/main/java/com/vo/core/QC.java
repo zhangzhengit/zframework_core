@@ -1,7 +1,5 @@
 package com.vo.core;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import com.google.common.cache.Cache;
@@ -28,7 +26,6 @@ public class QC {
 	private static final int QPQ_THRESHOLD = QPM_THRESHOLD * 15;
 	private static final int QPH_THRESHOLD = QPM_THRESHOLD * 60;
 
-	private static final Map<String, Integer> C = new ConcurrentHashMap<>(16, 1F);
 	private static final Cache<String, Integer> C_SECOND =
 			CacheBuilder.newBuilder()
 			// FIXME 2025年12月12日 21:12:44 zhangzhen : 最大容量不好设置，不只是接口个数*QPS这么简单
@@ -220,9 +217,9 @@ public class QC {
 	}
 	private static boolean a(final String keyPrefix, final long time, final long qpsNEW) {
 		final String k = gK(time, keyPrefix);
-		final Integer count = C.get(k);
+		final Integer count = C_SECOND.getIfPresent(k);
 		if (count == null) {
-			C.put(k, ONE);
+			C_SECOND.put(k, ONE);
 		} else {
 			// @ZRM.qps = 100时, > 会导致实际放行数*2，因为改为了>=
 			if (count.intValue() >= qpsNEW) {
@@ -232,7 +229,7 @@ public class QC {
 				//				C.remove(k);
 				return false;
 			}
-			C.put(k, count + 1);
+			C_SECOND.put(k, count + 1);
 		}
 		return true;
 	}

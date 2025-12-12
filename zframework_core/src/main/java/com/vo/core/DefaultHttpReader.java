@@ -566,7 +566,7 @@ public class DefaultHttpReader {
 
 		final ByteBuffer bbBody = ByteBuffer.allocate(1024 * 10);
 
-		final Integer nioReadTimeout = SERVER_CONFIGURATIONPROPERTIES.getNioReadTimeout();
+		final int nioReadTimeout = SERVER_CONFIGURATIONPROPERTIES.getNioReadTimeout();
 		final long startTime = System.currentTimeMillis();
 		try {
 			int totalBytesRead = 0;
