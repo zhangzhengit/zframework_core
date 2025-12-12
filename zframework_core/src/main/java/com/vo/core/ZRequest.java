@@ -98,7 +98,7 @@ public class ZRequest {
 	/**
 	 * http中body部分
 	 */
-	private byte[] body;
+	private byte[] body; 
 
 	/**
 	 * 客户端IP
@@ -414,7 +414,7 @@ public class ZRequest {
 
 		// 0 为 请求行
 		final String line = request.getLineList().get(0);
-		request.setOriginal(line);
+		request.original = line;
 
 		// METHOD 第一个空格前面的是METHOD
 		final int methodIndex = line.indexOf(" ");
@@ -425,7 +425,7 @@ public class ZRequest {
 		final String methodS = line.substring(0, methodIndex);
 		final MethodEnum me = MethodEnum.valueOfMethodStringUpper(methodS);
 		// 可能是null，在这里不管，在外面处理，返回405
-		request.setMethodEnum(me);
+		request.methodEnum = me;
 
 		// path
 		parsePath(line, request, methodIndex);
@@ -492,14 +492,13 @@ public class ZRequest {
 
 		final int wenI = fullPath.indexOf("?");
 		if (wenI > -1) {
-			request.setQueryString(fullPath.substring(("?".length() + wenI) - 1));
-
+			request.queryString = fullPath.substring(("?".length() + wenI) - 1);
 			final Set<RequestParam> paramSet = new HashSet<>();
 			final String param = fullPath.substring("?".length() + wenI);
 			final String simplePath = fullPath.substring(0,wenI);
 
 			try {
-				request.setPath(java.net.URLDecoder.decode(simplePath, Task.DEFAULT_CHARSET_NAME));
+				request.path = java.net.URLDecoder.decode(simplePath, Task.DEFAULT_CHARSET_NAME);
 			} catch (final UnsupportedEncodingException e) {
 				e.printStackTrace();
 			}
@@ -524,16 +523,16 @@ public class ZRequest {
 				paramSet.add(requestParam);
 			}
 
-			request.setParamSet(paramSet);
+			request.paramSet = paramSet;
 
 		} else {
 			try {
-				request.setPath(java.net.URLDecoder.decode(fullPath, Task.DEFAULT_CHARSET_NAME));
+				request.path = (java.net.URLDecoder.decode(fullPath, Task.DEFAULT_CHARSET_NAME));
 			} catch (final UnsupportedEncodingException e) {
 				e.printStackTrace();
 			}
 		}
-		request.setFullpath(fullPath);
+		request.fullpath = fullPath;
 	}
 
 	private static void parseHost(final String line, final ZRequest request) {
@@ -550,7 +549,7 @@ public class ZRequest {
 			// FIXME 2024年12月19日 下午1:41:45 zhangzhen : ab 命令测试会走到异常，要不要抛异常以后再看
 			//				throw new IllegalArgumentException("请求行错误：HTTP版本错误,本服务器支持HTTP/1.1");
 		}
-		request.setVersion(version);
+		request.version = version;
 	}
 
 	private static void paserHeader(final ZRequest request) {
@@ -591,16 +590,8 @@ public class ZRequest {
 		return this.original;
 	}
 
-	public void setOriginal(final String original) {
-		this.original = original;
-	}
-
 	public String getQueryString() {
 		return this.queryString;
-	}
-
-	public void setQueryString(final String queryString) {
-		this.queryString = queryString;
 	}
 
 	public TF getTf() {
@@ -615,40 +606,20 @@ public class ZRequest {
 		return this.methodEnum;
 	}
 
-	public void setMethodEnum(final MethodEnum methodEnum) {
-		this.methodEnum = methodEnum;
-	}
-
 	public String getFullpath() {
 		return this.fullpath;
-	}
-
-	public void setFullpath(final String fullpath) {
-		this.fullpath = fullpath;
 	}
 
 	public String getPath() {
 		return this.path;
 	}
 
-	public void setPath(final String path) {
-		this.path = path;
-	}
-
 	public Set<RequestParam> getParamSet() {
 		return this.paramSet;
 	}
 
-	public void setParamSet(final Set<RequestParam> paramSet) {
-		this.paramSet = paramSet;
-	}
-
 	public String getVersion() {
 		return this.version;
-	}
-
-	public void setVersion(final String version) {
-		this.version = version;
 	}
 
 	public Map<String, String> getHeaderMap() {
@@ -669,10 +640,6 @@ public class ZRequest {
 
 	public String getClientIp() {
 		return this.clientIp;
-	}
-
-	public void setLineList(final List<String> lineList) {
-		this.lineList = lineList;
 	}
 
 	public void setBody(final byte[] body) {
