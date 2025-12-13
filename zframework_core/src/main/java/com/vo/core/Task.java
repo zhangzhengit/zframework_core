@@ -49,7 +49,6 @@ import com.vo.http.CTEnum;
 import com.vo.http.HttpStatusEnum;
 import com.vo.http.ZControllerMap;
 import com.vo.http.ZCookie;
-import com.vo.http.ZHtml;
 import com.vo.http.ZPVTL;
 import com.vo.http.ZQPSLimitation;
 import com.vo.http.ZRMethod;
@@ -361,7 +360,8 @@ public class Task {
 			if (!stop) {
 
 				r = invoke0(zrMethod.getMethod(), parametersArray, zControllerObject);
-				final ZModelAndView modelAndView = zrMethod.getMethod().isAnnotationPresent(ZHtml.class)
+				final ZModelAndView modelAndView =
+						zrMethod.getCtEnum() == CTEnum.NORMAL
 						? new ZModelAndView(true, String.valueOf(r), readHtmlContent(r), ZModel.get(),
 								(ZModel) Arrays.stream(parametersArray).filter(arg -> arg.getClass().equals(ZModel.class))
 								.findAny().orElse(null),

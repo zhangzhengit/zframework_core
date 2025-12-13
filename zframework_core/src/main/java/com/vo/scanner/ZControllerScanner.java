@@ -3,10 +3,8 @@ package com.vo.scanner;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -34,10 +32,7 @@ import com.vo.exception.StartupException;
 import com.vo.http.CTEnum;
 import com.vo.http.ZControllerMap;
 import com.vo.http.ZCookie;
-import com.vo.http.ZHtml;
 import com.vo.http.ZRequestMapping;
-
-import jdk.nashorn.internal.runtime.regexp.joni.constants.CCSTATE;
 
 /**
  * 扫描 @ZController 的类，注册为一个控制类
@@ -108,10 +103,8 @@ public class ZControllerScanner {
 
 			final Method[] ms = cls.getDeclaredMethods();
 			for (final Method method : ms) {
-				ZControllerScanner.checkZHtml(method);
 
 				checkNoVoidWithZResponse(method);
-//				checkVoidWithoutZResponse(method);
 
 				final Object controllerObject = ZControllerScanner.getSingleton(cls);
 
@@ -132,7 +125,7 @@ public class ZControllerScanner {
 						final String mapping = requestMappingArray[i];
 						final MethodEnum methodEnum = requestMappingAnnotation.method();
 						
-						ZControllerMap.put(methodEnum, prefix + mapping, method, 
+						ZControllerMap.put(methodEnum, prefix + mapping, method,
 								restController!=null ? CTEnum.REST : CTEnum.NORMAL
 								, controllerObject, isRegex[i]);
 					}
@@ -196,7 +189,7 @@ public class ZControllerScanner {
 
 	private static void checkVoidWithoutZResponse(final Method method) {
 		if (Task.VOID.equals(method.getReturnType().getCanonicalName())) {
-			final Optional<Parameter> ro = 
+			final Optional<Parameter> ro =
 					Arrays.stream(method.getParameters())
 					.filter(p -> p.getType().getCanonicalName().equals(ZResponse.class.getCanonicalName()))
 					.findAny();
@@ -284,7 +277,7 @@ public class ZControllerScanner {
 				}
 			}
 			
-			final List<Parameter> zpvPList = 
+			final List<Parameter> zpvPList =
 					Arrays.stream(ps)
 					.filter(p -> p.isAnnotationPresent(ZPathVariable.class)).collect(Collectors.toList());
 
@@ -366,17 +359,6 @@ public class ZControllerScanner {
 					+ method.getName() + " requestMapping = " + requestMapping);
 		}
 
-	}
-
-	private static void checkZHtml(final Method method) {
-		if (ZControllerScanner.isHttpMethod(method) && method.isAnnotationPresent(ZHtml.class)) {
-			final Class<?> rCls = method.getReturnType();
-			final boolean isS = rCls.getCanonicalName().equals(String.class.getCanonicalName());
-			if (!isS) {
-				throw new StartupException(
-						"@" + ZHtml.class.getCanonicalName() + "标记的http接口的返回值必须是String : methodName = " + method.getName());
-			}
-		}
 	}
 
 	private static boolean isHttpMethod(final Method method) {

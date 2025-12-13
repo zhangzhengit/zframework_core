@@ -154,21 +154,6 @@
 					
 				或者在目标方法内控制只执行一次
    		
-   	返回html：
-   		定义接口如下，即可返回 index.html静态页面.html存放在 ServerConfiguration.htmlPrefix 目录中.
-   		@ZHtml
-		@ZRequestMapping(mapping = { "/html" })
-		public String html() {
-			return "index.html";
-		}
-
-		@ZHtml 
-			表示此接口方法content-type为text/html，无此注解则默认application/json
-   		
-	使用html模板：
-		定义接口如下，接口方法加入ZModel参数，用于设值.
-			
-   		@ZHtml
 		@ZRequestMapping(mapping = { "/html" })
 		public String html(final ZModel model) {
 			model.set("name", "zhangsan");
