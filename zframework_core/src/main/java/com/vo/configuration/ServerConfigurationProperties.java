@@ -254,9 +254,9 @@ public class ServerConfigurationProperties {
 	 * StaticController 响应时每次读取的BufferSize，单位：字节
 	 */
 	@ZNotNull
-	@ZMin(min = 1)
-	@ZMax(max = 1024 * 1024 * 100)
-	private int staticResponseBufferSize = 1024 * 1024;
+	@ZMin(min = 1024)
+	@ZMax(max = 1024 * 1024 * 4)
+	private int staticResponseBufferSize = 1024 * 512;
 
 	/**
 	 * 长连接超时时间，一个长连接超过此时间则关闭，单位：秒
@@ -353,7 +353,7 @@ public class ServerConfigurationProperties {
 	private boolean printProxyClass = false;
 	
 	/**
-	 *	启动时是否打印banner 
+	 *	启动时是否打印banner
 	 */
 	private boolean showBanner = false;
 
@@ -363,7 +363,7 @@ public class ServerConfigurationProperties {
 	private boolean showHttpHeader = false;
 	
 	public boolean compressionContains(final String contentType) {
-		final String[] a = getCompressionType();
+		final String[] a = this.getCompressionType();
 		for (final String string : a) {
 			if (string.equals(contentType)) {
 				return true;
@@ -711,7 +711,7 @@ public class ServerConfigurationProperties {
 				+ this.enableClientQps + ", clientQps=" + this.clientQps + ", sessionIdQps=" + this.sessionIdQps
 				+ ", staticControllerEnable=" + this.staticControllerEnable + ", staticControllerReferersAllowed="
 				+ this.staticControllerReferersAllowed + ", staticControllerMemoryCacheCapacity="
-				+ this.staticControllerMemoryCacheCapacity + ", staticResponseBufferSize=" + getStaticResponseBufferSize()
+				+ this.staticControllerMemoryCacheCapacity + ", staticResponseBufferSize=" + this.getStaticResponseBufferSize()
 				+ ", keepAliveTimeout=" + this.keepAliveTimeout + ", sessionStorageType=" + this.sessionStorageType
 				+ ", sessionTimeout=" + this.sessionTimeout + ", staticPath=" + this.staticPath + ", staticPrefix=" + this.staticPrefix
 				+ ", compressionEnable=" + this.compressionEnable + ", compressionTypes=" + this.compressionTypes

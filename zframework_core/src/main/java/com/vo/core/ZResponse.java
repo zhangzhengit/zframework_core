@@ -83,6 +83,8 @@ public class ZResponse {
 
 
 	private static final byte[] ZERO_RNRN_BYTES = "0\r\n\r\n".getBytes();
+	
+	private static final int BIS_DEFAULT_BUFFER_SIZE = 1024 * 32;
 
 	private static final ServerConfigurationProperties SERVER_CONFIGURATIONPROPERTIES = ZContext
 			.getBean(ServerConfigurationProperties.class);
@@ -222,25 +224,24 @@ public class ZResponse {
 	 */
 	public synchronized void body(final InputStream inputStream) {
 
-		checkBIC();
+		this.checkBIC();
 
 		if (this.write.get()) {
 			return;
 		}
 
-		checkContentType();
+		this.checkContentType();
 
 		final ZRequest request = ReqeustInfo.get();
 
 		// 已经确定的header部分
-		beforeWrite();
+		this.beforeWrite();
 		this.header(HeaderEnum.TRANSFER_ENCODING.getName(), "chunked");
 
 		// body部分
 		final byte[] b = new byte[DEFAULT_BUFFER_SIZE];
 
-		final BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
-
+		final BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream, BIS_DEFAULT_BUFFER_SIZE);
 
 		boolean readFirst = true;
 		boolean exceedsCompressionMinLength = false;
@@ -250,7 +251,7 @@ public class ZResponse {
 				if (read == -1) {
 					break;
 				}
-
+				
 				exceedsCompressionMinLength =
 						exceedsCompressionMinLength ||
 						(readFirst && (read > (SERVER_CONFIGURATIONPROPERTIES.getCompressionMinLength() * 1024)));
@@ -258,15 +259,15 @@ public class ZResponse {
 				if (readFirst) {
 					// FIXME 2025年12月13日 00:14:31 zhangzhen :  这里逻辑不对，304了，就不应该继续读写body了
 					// 要不先读一次，和if-none-match比较，否再读写body，是则直接304？
-					setETag(request, b);
-					setContentEncoding(request, exceedsCompressionMinLength);
-					this.write(headerArray());
+					this.setETag(request, b);
+					this.setContentEncoding(request, exceedsCompressionMinLength);
+					this.write(this.headerArray());
 				}
 
 				readFirst = false;
 
 				final ByteBuffer bbB = ByteBuffer.wrap(b, 0, read);
-				compressBodyAndWrite(request, bbB, read, exceedsCompressionMinLength);
+				this.compressBodyAndWrite(request, bbB, read, exceedsCompressionMinLength);
 
 				this.write(ByteBuffer.wrap(NEW_LINE_BYTES));
 
@@ -310,8 +311,8 @@ public class ZResponse {
 			// 执行目标方法前，先看请求头的ETag
 			final String ifNoneMatch = request.getHeader(HeaderEnum.IF_NONE_MATCH.getName());
 			if ((ifNoneMatch != null) && Objects.equals(newETagValue, ifNoneMatch)) {
-				httpStatus(HttpStatusEnum.HTTP_304.getCode());
-				clearBody();
+				this.httpStatus(HttpStatusEnum.HTTP_304.getCode());
+				this.clearBody();
 				this.header(HeaderEnum.ETAG.getName(), ifNoneMatch);
 			} else {
 				this.header(HeaderEnum.ETAG.getName(), newETagValue);
@@ -321,7 +322,7 @@ public class ZResponse {
 
 	private void compressBodyAndWrite(final ZRequest request, final ByteBuffer bbB, final int read, final boolean exceedsCompressionMinLength) {
 
-		if (!compress(exceedsCompressionMinLength)) {
+		if (!this.compress(exceedsCompressionMinLength)) {
 			final String chunkHeader = Integer.toHexString(read) + "\r\n";
 			final ByteBuffer chunkHeaderBuffer = ByteBuffer.wrap(chunkHeader.getBytes());
 			this.write(chunkHeaderBuffer);
@@ -373,14 +374,14 @@ public class ZResponse {
 	private boolean compress(final boolean exceedsCompressionMinLength) {
 		return exceedsCompressionMinLength
 				&& SERVER_CONFIGURATIONPROPERTIES.getCompressionEnable()
-				&& SERVER_CONFIGURATIONPROPERTIES.compressionContains(getContentType());
+				&& SERVER_CONFIGURATIONPROPERTIES.compressionContains(this.getContentType());
 	}
 	
 	
 
 	private void setContentEncoding(final ZRequest request, final boolean exceedsCompressionMinLength) {
 
-		if (!compress(exceedsCompressionMinLength)) {
+		if (!this.compress(exceedsCompressionMinLength)) {
 			return;
 		}
 
@@ -402,7 +403,7 @@ public class ZResponse {
 
 	private ByteBuffer headerArray() {
 		final ZArray headerArray = new ZArray();
-		headerArray.add((ZResponse.HTTP_1_1 + getHttpStatus()).getBytes());
+		headerArray.add((ZResponse.HTTP_1_1 + this.getHttpStatus()).getBytes());
 		headerArray.add(NEW_LINE_BYTES);
 		headerArray.add((this.contentTypeAR.get()).getBytes());
 		headerArray.add(NEW_LINE_BYTES);
@@ -418,11 +419,11 @@ public class ZResponse {
 	}
 
 	public synchronized ZResponse body(final byte[] body) {
-		checkBIC();
+		this.checkBIC();
 
-		if (compressionEnable 
+		if (compressionEnable
 				&& (body.length >= (SERVER_CONFIGURATIONPROPERTIES.getCompressionMinLength() * 1024))
-				&& SERVER_CONFIGURATIONPROPERTIES.compressionContains(getContentType())
+				&& SERVER_CONFIGURATIONPROPERTIES.compressionContains(this.getContentType())
 				) {
 			
 			byte[] compress = null;
@@ -480,9 +481,9 @@ public class ZResponse {
 			return;
 		}
 
-		beforeWrite();
+		this.beforeWrite();
 
-		writeSocketChannel();
+		this.writeSocketChannel();
 
 		this.write.set(true);
 		
@@ -501,15 +502,15 @@ public class ZResponse {
 			this.header(HeaderEnum.CONNECTION.getName(), ConnectionEnum.KEEP_ALIVE.getValue());
 		}
 
-		setCustomHeader();
-		setServer(SERVER_NAME);
-		setDate(new Date());
+		this.setCustomHeader();
+		this.setServer(SERVER_NAME);
+		this.setDate(new Date());
 
 		NioLongConnectionServer.setZSessionId(request, this);
 
-		if (getHttpStatus() == HttpStatusEnum.HTTP_200.getCode()) {
+		if (this.getHttpStatus() == HttpStatusEnum.HTTP_200.getCode()) {
 			NioLongConnectionServer.setCacheControl(request, this);
-		} 
+		}
 
 	}
 
@@ -546,23 +547,23 @@ public class ZResponse {
 	}
 
 	private void writeSocketChannel() {
-		final ByteBuffer buffer = fillByteBuffer();
+		final ByteBuffer buffer = this.fillByteBuffer();
 		buffer.flip();
 		this.write(buffer);
 	}
 
 	private ByteBuffer fillByteBuffer()  {
 
-		checkContentType();
+		this.checkContentType();
 
-		final String headerS = 
-				ZResponse.HTTP_1_1 + getHttpStatus()
+		final String headerS =
+				ZResponse.HTTP_1_1 + this.getHttpStatus()
 				+ Task.NEW_LINE
-				+ HeaderEnum.CONTENT_LENGTH.getName() + ":" + getBodyLength()
+				+ HeaderEnum.CONTENT_LENGTH.getName() + ":" + this.getBodyLength()
 				+ Task.NEW_LINE
 				+ this.contentTypeAR.get()
 				+ Task.NEW_LINE
-				+ headerVS()
+				+ this.headerVS()
 				+ Task.NEW_LINE
 				;
 
