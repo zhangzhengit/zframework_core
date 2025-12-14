@@ -281,14 +281,14 @@ public class ZProperties {
 	
 	private static void writeToAp(final String content) {
 		
-		final String prefix = 
+		final String prefix =
 				"# 注意：本文件是程序启动时自动生成的，内容是从工程中目录下"
-				+ "\r\n" + "# resources/config/" + PROPERTIES_NAME
-				+ "\r\n" + "# 或 resources/" + PROPERTIES_NAME + " 中拷贝过来的"
-				+ "\r\n" + "# 与工程中的配置完全一致，只为方便查看和修改配置信息"
-				+ "\r\n" + "# 本文件不存在时才自动生成，存在则优先用存在的作为配置"
-				+ "\r\n" + "# 本文件生成时间：" + LocalDateTime.now()
-				+ "\r\n" + "\r\n";
+				+ STU.CRLF + "# resources/config/" + PROPERTIES_NAME
+				+ STU.CRLF + "# 或 resources/" + PROPERTIES_NAME + " 中拷贝过来的"
+				+ STU.CRLF + "# 与工程中的配置完全一致，只为方便查看和修改配置信息"
+				+ STU.CRLF + "# 本文件不存在时才自动生成，存在则优先用存在的作为配置"
+				+ STU.CRLF + "# 本文件生成时间：" + LocalDateTime.now()
+				+ STU.CRLF + STU.CRLF;
 		
 		final String useDir = getUseDir();
 		final File dir = new File(useDir + File.separator + "config");
@@ -334,18 +334,17 @@ public class ZProperties {
 			return null;
 		}
 
-		final StringJoiner joiner = new StringJoiner("\r\n");
+		final StringJoiner joiner = new StringJoiner(STU.CRLF);
 
 		final InputStreamReader in = new InputStreamReader(inputStream);
 		final BufferedReader reader = new BufferedReader(in);
 		while (true) {
 			try {
 				final String readLine = reader.readLine();
-				if (readLine != null) {
-					joiner.add(readLine);
-				} else {
+				if (readLine == null) {
 					break;
 				}
+				joiner.add(readLine);
 			} catch (final IOException e) {
 				e.printStackTrace();
 			}

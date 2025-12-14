@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.vo.cache.STU;
 import com.vo.configuration.SCU;
 
 /**
@@ -23,9 +24,7 @@ public class BodyReader {
 	public static final String BOUNDARY_SUFFIX = "--";
 	public static final String FILENAME = "filename";
 	public static final String NAME = "name";
-	public static final String RNRN = "\r\n\r\n";
-	public static final String RN = "\r\n";
-	public static final int RN_BYTES_LENGTH = RN.getBytes().length;
+	public static final int RN_BYTES_LENGTH = STU.CRLF.getBytes().length;
 
 	/**
 	 * 从http请求报文中解析出header，是只解析header，不解析header下面的部分
@@ -34,10 +33,10 @@ public class BodyReader {
 	 * @return
 	 */
 	public static ZRequest parseHeader(final byte[] ba) {
-		final int headerEndIndex = search(ba, RNRN, 1, 0);
+		final int headerEndIndex = search(ba, STU.CRLFCRLF, 1, 0);
 
 		final byte[] headerBA = Arrays.copyOfRange(ba, 0, headerEndIndex);
-		final String[] headerKVString = SCU.split(new String(headerBA), RN);
+		final String[] headerKVString = SCU.split(new String(headerBA), STU.CRLF);
 
 		final ZRequest request= new ZRequest(headerKVString);
 
@@ -68,10 +67,10 @@ public class BodyReader {
 		if (boundary != null) {
 			final int boundaryStartIndex = search(ba, boundary, 1, contentTypeIndex);
 			if ((boundaryStartIndex > -1)) {
-				final int boundaryEndIndex = search(ba, RN + BOUNDARY_PREFIX + boundary + BOUNDARY_SUFFIX, 1, boundaryStartIndex);
+				final int boundaryEndIndex = search(ba, STU.CRLF + BOUNDARY_PREFIX + boundary + BOUNDARY_SUFFIX, 1, boundaryStartIndex);
 				if (boundaryEndIndex > boundaryStartIndex) {
 					final byte[] fullBodyBA = Arrays.copyOfRange(ba,
-							boundaryStartIndex + boundary.getBytes().length + RN.getBytes().length,
+							boundaryStartIndex + boundary.getBytes().length + STU.CRLF.getBytes().length,
 							boundaryEndIndex);
 					return fullBodyBA;
 				}
@@ -80,7 +79,7 @@ public class BodyReader {
 
 		// 执行到此，headerEndIndex < ba.length 则说明header后面还有内容，此内容就是body
 		if (headerEndIndex < ba.length) {
-			final byte[] copyOfRange = Arrays.copyOfRange(ba, headerEndIndex + RNRN.getBytes().length, ba.length);
+			final byte[] copyOfRange = Arrays.copyOfRange(ba, headerEndIndex + STU.CRLFCRLF.getBytes().length, ba.length);
 			return copyOfRange;
 		}
 
@@ -119,7 +118,7 @@ public class BodyReader {
 		int bI = 1;
 		final List<Integer> biList = new ArrayList<>(4);
 		while (true) {
-			final int boundaryIndex = search(ba, RN + BOUNDARY_PREFIX + boundary, bI,
+			final int boundaryIndex = search(ba, STU.CRLF + BOUNDARY_PREFIX + boundary, bI,
 					contentTypeIndex + contentType.getBytes().length);
 			if (boundaryIndex <= -1) {
 				break;
@@ -133,7 +132,7 @@ public class BodyReader {
 		for (int from = 0; from < (biList.size() - 1); from++) {
 			final int to = from + 1;
 			final byte[] oneBA = Arrays.copyOfRange(ba,
-					biList.get(from) + (RN + BOUNDARY_PREFIX + boundary).getBytes().length + RN.getBytes().length,
+					biList.get(from) + (STU.CRLF + BOUNDARY_PREFIX + boundary).getBytes().length + STU.CRLF.getBytes().length,
 					biList.get(to));
 			final FD2 one = handleOneItem(oneBA);
 			fd2l.add(one);
@@ -169,19 +168,19 @@ public class BodyReader {
 						fd2.setFileName(vMap.get(FILENAME));
 					}
 					if (ctIndex <= -1) {
-						final int bodyStartIndex = search(oneBA, RNRN, 1, i);
-						final byte[] bodyV = Arrays.copyOfRange(ba, bodyStartIndex + RNRN.getBytes().length, ba.length);
+						final int bodyStartIndex = search(oneBA, STU.CRLFCRLF, 1, i);
+						final byte[] bodyV = Arrays.copyOfRange(ba, bodyStartIndex + STU.CRLFCRLF.getBytes().length, ba.length);
 						final String bV = new String(bodyV);
 						fd2.setValue(bV);
 						break;
 					}
 					if (line.startsWith(HeaderEnum.CONTENT_TYPE.getName())) {
-						final String[] ctA = line.split(":");
+						final String[] ctA = line.split(STU.COLON);
 						final String ct = ctA[1].trim();
 						fd2.setContentType(ct);
 
 						final byte[] bodyFullBA = Arrays.copyOfRange(oneBA,
-								ctIndex + line.getBytes().length + RNRN.getBytes().length, oneBA.length);
+								ctIndex + line.getBytes().length + STU.CRLFCRLF.getBytes().length, oneBA.length);
 						fd2.setBody(bodyFullBA);
 						break;
 					}
@@ -204,10 +203,10 @@ public class BodyReader {
 	 */
 	public static Map<String, String> handleBodyContentDisposition(final String line) {
 		final Map<String, String> vMap = new HashMap<>(4, 1F);
-		final String[] a = line.split(";");
+		final String[] a = line.split(STU.SEMICOLON);
 		for (final String a1 : a) {
-			if (a1.contains("=")) {
-				final String[] a2 = a1.split("=");
+			if (a1.contains(STU.EQUALS)) {
+				final String[] a2 = a1.split(STU.EQUALS);
 				vMap.put(a2[0].trim(), a2[1].trim().replace("\"", ""));
 			}
 		}

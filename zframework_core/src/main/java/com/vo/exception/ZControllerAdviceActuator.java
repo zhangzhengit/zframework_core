@@ -8,6 +8,7 @@ import java.util.UUID;
 import com.vo.M;
 import com.vo.anno.ZComponent;
 import com.vo.cache.CU;
+import com.vo.cache.STU;
 import com.vo.core.ReqeustInfo;
 import com.vo.core.Task;
 import com.vo.core.ZContext;
@@ -41,7 +42,7 @@ public class ZControllerAdviceActuator {
 		LOG.error("执行异常,message={}", message);
 
 		final ZMailNotificationConfigurationProperties mn = ZContext.getBean(ZMailNotificationConfigurationProperties.class);
-		if (Boolean.TRUE.equals(mn.getEnable()) && CU.isNotEmpty(mn.getReceiver())
+		if (mn.getEnable() && CU.isNotEmpty(mn.getReceiver())
 				&& CU.isNotEmpty(mn.getMonitoredEvents())) {
 
 			final ZMail mail = ZContext.getBean(ZMail.class);
@@ -64,14 +65,14 @@ public class ZControllerAdviceActuator {
 					// 因为配置的邮箱可能不是自己的邮箱服务器
 					// 还是只写入日志，然后把eId放在邮件里通知一下让查看日志就好了？
 					final String body =
-							"request信息已写入LOG,请查看\r\n"
-									+ "事件ID:"+eId+"\r\n"
-									+ "\r\n"
-									+ "request信息:\r\n"+request+"\r\n"
-									+ "\r\n"
-									+ "事件详情:\r\n"+message+"\r\n"
-									+ "\r\n"
-									+ "发送时间:"+LocalDateTime.now()+"\r\n"
+							"request信息已写入LOG,请查看" + STU.CRLF
+									+ "事件ID:" + eId + STU.CRLF
+									+ STU.CRLF
+									+ "request信息:" + STU.CRLF + request + STU.CRLF
+									+ STU.CRLF
+									+ "事件详情:" + STU.CRLF + message + STU.CRLF
+									+ STU.CRLF
+									+ "发送时间:" + LocalDateTime.now() + STU.CRLF
 									;
 
 					for (final String receiver : mn.getReceiver()) {

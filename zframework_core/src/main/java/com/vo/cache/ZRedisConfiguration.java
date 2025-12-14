@@ -76,7 +76,7 @@ public class ZRedisConfiguration {
 			}
 		} catch (final Exception e) {
 			final String m1 = "初始化Redis连接失败,请检查配置项信息=" + this.redisConfigurationProperties;
-			final String message = m1 + Task.NEW_LINE + Task.gExceptionMessage(e);
+			final String message = m1 + STU.CRLF + Task.gExceptionMessage(e);
 			LOG.error("连接Redis失败,message={}", message);
 
 			final StartupException startupException = new StartupException(message);

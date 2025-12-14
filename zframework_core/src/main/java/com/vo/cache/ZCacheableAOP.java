@@ -36,7 +36,7 @@ public class ZCacheableAOP implements ZIAOP {
 	@Override
 	public Object around(final AOPParameter aopParameter) {
 		// FIXME 2025年1月17日 下午11:48:24 zhangzhen : 这个偶尔NPE，查找原因
-		if (!Boolean.TRUE.equals(this.cacheConfigurationProperties.getEnable())) {
+		if (!this.cacheConfigurationProperties.getEnable()) {
 			return aopParameter.invoke();
 		}
 
@@ -83,7 +83,7 @@ public class ZCacheableAOP implements ZIAOP {
 
 				final String canonicalName = aopParameter.getTarget().getClass().getName();
 				final List<Object> pl = aopParameter.getParameterList();
-				return PREFIX + "@" + canonicalName + "@" + group + "@" + parameter.getName() + "="
+				return PREFIX + "@" + canonicalName + "@" + group + "@" + parameter.getName() + STU.EQUALS
 						+ gKey(pl.get(i));
 			}
 		}

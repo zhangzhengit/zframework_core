@@ -10,6 +10,18 @@ import com.vo.core.ZRC;
  *
  */
 public class STU {
+	
+	public static final String CR = "\r";
+	public static final String LF = "\n";
+	public static final String CRLF = "\r\n";
+	public static final String CRLFCRLF = "\r\n\r\n";
+	public static final String COLON = ":";
+	public static final char COLON_C = ':';
+	public static final String EMPTY = "";
+	public static final String EQUALS = "=";
+	public static final char EQUALS_C = '=';
+	public static final String SEMICOLON = ";";
+	public static final String SAPCE = " ";
 
 
 	public static String toLowerCase(final String string) {

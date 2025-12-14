@@ -4,6 +4,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 import com.vo.anno.ZComponent;
+import com.vo.cache.STU;
 import com.vo.common.CR;
 import com.vo.core.ReqeustInfo;
 import com.vo.core.ZContext;
@@ -84,10 +85,10 @@ public class ZControllerAdviceThrowable {
 		}
 
 		if (e.getCause() != null) {
-			return e.getCause().getClass().getCanonicalName() + ":" + e.getCause().getMessage();
+			return e.getCause().getClass().getCanonicalName() + STU.COLON + e.getCause().getMessage();
 		}
 
-		return e.getClass().getCanonicalName() + ":" + e.getMessage();
+		return e.getClass().getCanonicalName() + STU.COLON + e.getMessage();
 	}
 
 }

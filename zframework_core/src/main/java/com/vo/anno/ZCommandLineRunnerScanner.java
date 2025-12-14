@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.vo.cache.STU;
 import com.vo.core.ZContext;
 import com.vo.exception.StartupException;
 
@@ -81,7 +82,7 @@ public class ZCommandLineRunnerScanner {
 				throw new StartupException(ZCommandLineRunnerScanner.class.getSimpleName()
 						+ "子类 "
 						+ bean.getClass().getSimpleName()
-						+ " "
+						+ STU.SAPCE
 						+ "@"
 						+ ZOrder.class.getSimpleName()
 						+ ".value"

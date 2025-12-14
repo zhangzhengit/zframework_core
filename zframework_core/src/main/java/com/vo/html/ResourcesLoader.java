@@ -15,7 +15,6 @@ import java.util.UUID;
 import com.google.common.collect.HashBasedTable;
 import com.vo.cache.STU;
 import com.vo.configuration.ServerConfigurationProperties;
-import com.vo.core.Task;
 import com.vo.core.ZContext;
 import com.vo.core.ZSingleton;
 import com.vo.exception.ResourceNotExistException;
@@ -71,7 +70,7 @@ public class ResourcesLoader {
 					break;
 				}
 				builder.append(readLine);
-				builder.append(Task.NEW_LINE);
+				builder.append(STU.CRLF);
 			}
 
 			bufferedReader.close();
@@ -209,7 +208,7 @@ public class ResourcesLoader {
 					break;
 				}
 				builder.append(readLine);
-				builder.append(Task.NEW_LINE);
+				builder.append(STU.CRLF);
 			} catch (final IOException e) {
 				e.printStackTrace();
 			}

@@ -34,7 +34,7 @@ public class ZCacheEvictAOP implements ZIAOP {
 	@Override
 	public Object around(final AOPParameter aopParameter) {
 
-		if (!Boolean.TRUE.equals(this.cacheConfigurationProperties.getEnable())) {
+		if (!this.cacheConfigurationProperties.getEnable()) {
 			return aopParameter.invoke();
 		}
 
@@ -66,7 +66,7 @@ public class ZCacheEvictAOP implements ZIAOP {
 
 				final List<Object> pl = aopParameter.getParameterList();
 				final String cacheKey = ZCacheableAOP.PREFIX + "@" + canonicalName + "@" + group + "@"
-						+ parameter.getName() + "=" + ZCacheableAOP.gKey(pl.get(i));
+						+ parameter.getName() + STU.EQUALS + ZCacheableAOP.gKey(pl.get(i));
 
 				return cacheKey;
 			}

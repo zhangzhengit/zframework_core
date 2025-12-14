@@ -21,7 +21,7 @@ import java.lang.annotation.Target;
 @Target({ ElementType.METHOD })
 public @interface ZCacheEvict {
 
-	public static final String EMPTY = "";
+	public static final String EMPTY = STU.EMPTY;
 
 	/**
 	 * 指定方法的参数名称，或者参数对象的字段名。

@@ -16,7 +16,6 @@ import com.vo.anno.ZAutowired;
 import com.vo.aop.ZAOPProxyClass;
 import com.vo.aop.ZAOPScaner;
 import com.vo.cache.STU;
-import com.vo.core.Task;
 import com.vo.core.ZClass;
 import com.vo.core.ZContext;
 import com.vo.core.ZMethod;
@@ -136,10 +135,10 @@ public class ZComponentScanner {
 
 					final String name = p.getName();
 					final String insertBody =
-							"if ("+ name +".getClass().isAnnotationPresent(" + ZValidated.class.getCanonicalName() + ".class)) {"  + Task.NEW_LINE
-							+  "for (final " + Field.class.getCanonicalName() + " field : " + name + ".getClass().getDeclaredFields()) {"  + Task.NEW_LINE
-							+  		 ZValidator.class.getCanonicalName() + ".validatedAll("+name+", field);"  + Task.NEW_LINE
-							+   "}" + Task.NEW_LINE
+							"if ("+ name +".getClass().isAnnotationPresent(" + ZValidated.class.getCanonicalName() + ".class)) {"  + STU.CRLF
+							+  "for (final " + Field.class.getCanonicalName() + " field : " + name + ".getClass().getDeclaredFields()) {"  + STU.CRLF
+							+  		 ZValidator.class.getCanonicalName() + ".validatedAll("+name+", field);"  + STU.CRLF
+							+   "}" + STU.CRLF
 							+ "}";
 
 					insert.append(insertBody);
@@ -154,7 +153,7 @@ public class ZComponentScanner {
 
 				final ZMethod zm = ZMethod.copyFromMethod(m);
 				zm.setgReturn(false);
-				zm.setBody(insertBody  + Task.NEW_LINE + body);
+				zm.setBody(insertBody  + STU.CRLF + body);
 
 				zms.add(zm);
 

@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 import com.vo.anno.ZRestController;
 import com.vo.cache.CU;
+import com.vo.cache.STU;
 import com.vo.core.ZLog2;
 import com.vo.core.ZRequest;
 import com.vo.core.ZResponse;
@@ -68,7 +69,7 @@ public class DocScanner {
 					}
 					final String name = p.getName();
 					final String type = p.getType().getSimpleName();
-					joiner.add(type + " " +name);
+					joiner.add(type + STU.SAPCE +name);
 				}
 				//				System.out.println(description);
 				//				System.out.println(method + " " + mS);

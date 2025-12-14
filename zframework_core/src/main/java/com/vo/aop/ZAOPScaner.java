@@ -19,9 +19,9 @@ import java.util.stream.Collectors;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Lists;
 import com.vo.cache.CU;
+import com.vo.cache.STU;
 import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.core.RU;
-import com.vo.core.Task;
 import com.vo.core.ZClass;
 import com.vo.core.ZContext;
 import com.vo.core.ZField;
@@ -148,7 +148,7 @@ public class ZAOPScaner {
 			} else {
 				int k = i;
 				while (k > 0) {
-					if ((ch[k] == ' ') || (ch[k] == '=')) {
+					if ((ch[k] == ' ') || (ch[k] == STU.EQUALS_C)) {
 						i = -1;
 						break;
 					}
@@ -212,10 +212,10 @@ public class ZAOPScaner {
 
 				final String name = p.getName();
 				final String insertBody =
-						"if ("+ name +".getClass().isAnnotationPresent(" + ZValidated.class.getName() + ".class)) {"  + Task.NEW_LINE
-						+  "for (final " + Field.class.getName() + " field : " + name + ".getClass().getDeclaredFields()) {"  + Task.NEW_LINE
-						+  		 ZValidator.class.getName() + ".validatedAll("+name+", field);"  + Task.NEW_LINE
-						+   "}" + Task.NEW_LINE
+						"if ("+ name +".getClass().isAnnotationPresent(" + ZValidated.class.getName() + ".class)) {"  + STU.CRLF
+						+  "for (final " + Field.class.getName() + " field : " + name + ".getClass().getDeclaredFields()) {"  + STU.CRLF
+						+  		 ZValidator.class.getName() + ".validatedAll("+name+", field);"  + STU.CRLF
+						+   "}" + STU.CRLF
 						+ "}";
 
 				insert.append(insertBody);
@@ -228,7 +228,7 @@ public class ZAOPScaner {
 
 			final ZMethod zm = ZMethod.copyFromMethod(m);
 			zm.setgReturn(false);
-			zm.setBody(insertBody  + Task.NEW_LINE + body);
+			zm.setBody(insertBody  + STU.CRLF + body);
 
 			zms.add(zm);
 
@@ -276,7 +276,7 @@ public class ZAOPScaner {
 							+ "parameter.setParameterList("+Lists.class.getName()+".newArrayList("+a+"));" + "\n\t"
 							+ "\n\t"
 							+ aop + "\n\t"
-							+ "return (" + returnTypeT + ")v"+(aopClassList.size()-1)+";" + "\n\t";
+							+ "return (" + returnTypeT + ")v"+(aopClassList.size()-1)+STU.SEMICOLON + "\n\t";
 		return body;
 	}
 

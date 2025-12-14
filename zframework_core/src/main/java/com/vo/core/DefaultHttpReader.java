@@ -106,13 +106,13 @@ public class DefaultHttpReader {
 		// 读header时读到的字节数比header截止符号(\r\n\r\n)的index还大，说明读到的不只有header还有下面的body部分
 		if (ar.getArray().length() > ar.getHeaderEndIndex()) {
 
-			final int cLIndexRN = BodyReader.search(array.get(), BodyReader.RN, 1, cLIndex);
+			final int cLIndexRN = BodyReader.search(array.get(), STU.CRLF, 1, cLIndex);
 			if (cLIndexRN > cLIndex) {
 				final byte[] copyOfRange = Arrays.copyOfRange(array.get(), cLIndex, cLIndexRN);
 				final String contentTypeLine = new String(copyOfRange);
 				final int contentLength = checkContentLength(contentTypeLine);
 				if (contentLength <= 0) {
-					return array; 
+					return array;
 				}
 
 				final int uploadFileSize = SERVER_CONFIGURATIONPROPERTIES.getUploadFileSize();
@@ -161,7 +161,7 @@ public class DefaultHttpReader {
 	// FIXME 2025年11月28日 13:47:33 zhangzhen :  这个header要判断是否数值类型，
 	// 其他的也要加入各种校验
 	private static int checkContentLength(final String contentTypeLine) {
-		final long cl = Long.parseLong(contentTypeLine.split(":")[1].trim());
+		final long cl = Long.parseLong(contentTypeLine.split(STU.COLON)[1].trim());
 		if (cl > Integer.MAX_VALUE) {
 			throw new IllegalArgumentException("Content-Length 大于 " + Integer.MAX_VALUE);
 		}
@@ -213,7 +213,7 @@ public class DefaultHttpReader {
 
 		final byte[] array = byteBuffer.array();
 
-		final int ix = BodyReader.search(array, NioLongConnectionServer.SPACE, 1, 0);
+		final int ix = BodyReader.search(array, STU.SAPCE, 1, 0);
 		if (ix > -1) {
 			final String methodS = new String(array, 0, ix);
 			final boolean methodStringUpper = MethodEnum.isMethodStringUpper(methodS);
@@ -315,7 +315,7 @@ public class DefaultHttpReader {
 	}
 
 	private static int gethttpHeaderEndIndex(final byte[] headerBA) {
-		return BodyReader.search(headerBA, BodyReader.RNRN, 1, 0);
+		return BodyReader.search(headerBA, STU.CRLFCRLF, 1, 0);
 	}
 
 	/**
@@ -407,7 +407,7 @@ public class DefaultHttpReader {
 							final int cdNameIndex = BodyReader.search(temp, "filename", 1,
 									cdIndex + HeaderEnum.CONTENT_DISPOSITION.getName().getBytes().length);
 							if (cdNameIndex > cdIndex) {
-								final int cdRNIndex = BodyReader.search(temp, BodyReader.RN, 1,
+								final int cdRNIndex = BodyReader.search(temp, STU.CRLF, 1,
 										cdIndex + HeaderEnum.CONTENT_DISPOSITION.getName().getBytes().length);
 								if (cdRNIndex > cdIndex) {
 									final byte[] cdBa = Arrays.copyOfRange(temp, cdIndex, cdRNIndex);
@@ -425,7 +425,7 @@ public class DefaultHttpReader {
 						ctIndex = BodyReader.search(temp, HeaderEnum.CONTENT_TYPE.getName(), 1, 0);
 						if (ctIndex > -1) {
 							findCT = true;
-							final int search = BodyReader.search(temp, BodyReader.RN, 1,
+							final int search = BodyReader.search(temp, STU.CRLF, 1,
 									ctIndex + HeaderEnum.CONTENT_TYPE.getName().getBytes().length);
 							if (search > ctIndex) {
 								final byte[] ctBA = Arrays.copyOfRange(temp, ctIndex, search);
@@ -436,22 +436,22 @@ public class DefaultHttpReader {
 
 					if ((cdIndex > -1) && (findCT && (tf != null) && (tf.getContentType() == null))
 							&& (ctLine != null)) {
-						final String[] split = ctLine.split(":");
+						final String[] split = ctLine.split(STU.COLON);
 						final String contentType = split[1].trim();
 						tf.setContentType(contentType);
 					}
 
 					if (findCT && !findBodyStart) {
-						rnrnIndex = BodyReader.search(temp, BodyReader.RNRN, 1, ctIndex);
+						rnrnIndex = BodyReader.search(temp, STU.CRLFCRLF, 1, ctIndex);
 						if (rnrnIndex > -1) {
-							bodyStartIndex = rnrnIndex + BodyReader.RNRN.getBytes().length;
+							bodyStartIndex = rnrnIndex + STU.CRLFCRLF.getBytes().length;
 							findBodyStart = true;
 							findBodyStartReadCount = readCOUNT;
 						}
 					}
 
 					if (findBodyStart && (biIndex <= -1)) {
-						biIndex = BodyReader.search(temp, BodyReader.RN + "--" + fm.getBoundary(), 1, 3);
+						biIndex = BodyReader.search(temp, STU.CRLF + "--" + fm.getBoundary(), 1, 3);
 						if (biIndex > -1) {
 							findBiStartReadCount = readCOUNT;
 						}
@@ -648,7 +648,7 @@ public class DefaultHttpReader {
 			return new Fm(false, "");
 		}
 
-		final int boundaryEndIndex = BodyReader.search(array.get(), BodyReader.RN, 1,
+		final int boundaryEndIndex = BodyReader.search(array.get(), STU.CRLF, 1,
 				boundaryStartIndex + ZRequest.BOUNDARY.getBytes().length);
 		if (boundaryEndIndex > boundaryStartIndex) {
 

@@ -82,7 +82,7 @@ import com.vo.http.ZETag;
 public class ZResponse {
 
 
-	private static final byte[] ZERO_RNRN_BYTES = "0\r\n\r\n".getBytes();
+	private static final byte[] ZERO_RNRN_BYTES = ("0" + STU.CRLFCRLF).getBytes();
 	
 	private static final int BIS_DEFAULT_BUFFER_SIZE = 1024 * 32;
 
@@ -97,7 +97,7 @@ public class ZResponse {
 
 	private static final int DEFAULT_BUFFER_SIZE = SERVER_CONFIGURATIONPROPERTIES.getStaticResponseBufferSize();
 	
-	private static final byte[] NEW_LINE_BYTES = Task.NEW_LINE.getBytes();
+	private static final byte[] NEW_LINE_BYTES = STU.CRLF.getBytes();
 
 	private static final String CHARSET = "charset";
 
@@ -163,9 +163,9 @@ public class ZResponse {
 		if (!this.setContentType.get() && (contentType != null)) {
 			if (!contentType.toLowerCase().contains(CHARSET)) {
 				this.contentTypeAR.set(
-						HeaderEnum.CONTENT_TYPE.getName() + ":" + contentType + ";" + CHARSET + "=" + DEFAULTCHARSET_DISPLAY_NAME);
+						HeaderEnum.CONTENT_TYPE.getName() + STU.COLON + contentType + STU.SEMICOLON + CHARSET + STU.EQUALS + DEFAULTCHARSET_DISPLAY_NAME);
 			} else {
-				this.contentTypeAR.set(HeaderEnum.CONTENT_TYPE.getName() + ":" + contentType);
+				this.contentTypeAR.set(HeaderEnum.CONTENT_TYPE.getName() + STU.COLON + contentType);
 			}
 		}
 		this.setContentType.set(true);
@@ -184,7 +184,7 @@ public class ZResponse {
 	}
 
 	public ZResponse cookie(final String name,final String value) {
-		this.header(new ZHeader(ZResponse.SET_COOKIE, name + "=" + value));
+		this.header(new ZHeader(ZResponse.SET_COOKIE, name + STU.EQUALS + value));
 		return this;
 	}
 
@@ -323,7 +323,7 @@ public class ZResponse {
 	private void compressBodyAndWrite(final ZRequest request, final ByteBuffer bbB, final int read, final boolean exceedsCompressionMinLength) {
 
 		if (!this.compress(exceedsCompressionMinLength)) {
-			final String chunkHeader = Integer.toHexString(read) + "\r\n";
+			final String chunkHeader = Integer.toHexString(read) + STU.CRLF;
 			final ByteBuffer chunkHeaderBuffer = ByteBuffer.wrap(chunkHeader.getBytes());
 			this.write(chunkHeaderBuffer);
 			this.write(bbB);
@@ -336,7 +336,7 @@ public class ZResponse {
 			final byte[] bfZSTD = new byte[bbB.remaining()];
 			bbB.get(bfZSTD);
 			final byte[] compress = ZSTD.compress(bfZSTD);
-			final String chunkHeader = Integer.toHexString(compress.length) + "\r\n";
+			final String chunkHeader = Integer.toHexString(compress.length) + STU.CRLF;
 			final ByteBuffer chunkHeaderBuffer = ByteBuffer.wrap(chunkHeader.getBytes());
 			this.write(chunkHeaderBuffer);
 
@@ -348,7 +348,7 @@ public class ZResponse {
 			final byte[] bfGZIP = new byte[bbB.remaining()];
 			bbB.get(bfGZIP);
 			final byte[] compress = ZGzip.compress(bfGZIP);
-			final String chunkHeader = Integer.toHexString(compress.length) + "\r\n";
+			final String chunkHeader = Integer.toHexString(compress.length) + STU.CRLF;
 			final ByteBuffer chunkHeaderBuffer = ByteBuffer.wrap(chunkHeader.getBytes());
 			this.write(chunkHeaderBuffer);
 
@@ -357,13 +357,13 @@ public class ZResponse {
 			final byte[] bfDEFLATE = new byte[bbB.remaining()];
 			bbB.get(bfDEFLATE);
 			final byte[] compress = Deflater.compress(bfDEFLATE);
-			final String chunkHeader = Integer.toHexString(compress.length) + "\r\n";
+			final String chunkHeader = Integer.toHexString(compress.length) + STU.CRLF;
 			final ByteBuffer chunkHeaderBuffer = ByteBuffer.wrap(chunkHeader.getBytes());
 			this.write(chunkHeaderBuffer);
 
 			this.write(ByteBuffer.wrap(compress));
 		} else {
-			final String chunkHeader = Integer.toHexString(read) + "\r\n";
+			final String chunkHeader = Integer.toHexString(read) + STU.CRLF;
 			final ByteBuffer chunkHeaderBuffer = ByteBuffer.wrap(chunkHeader.getBytes());
 			this.write(chunkHeaderBuffer);
 			this.write(bbB);
@@ -409,7 +409,7 @@ public class ZResponse {
 		headerArray.add(NEW_LINE_BYTES);
 		if (this.headerList != null) {
 			for (final ZHeader zHeader : this.headerList) {
-				headerArray.add((zHeader.getName() + ":" + zHeader.getValue()).getBytes());
+				headerArray.add((zHeader.getName() + STU.COLON + zHeader.getValue()).getBytes());
 				headerArray.add(NEW_LINE_BYTES);
 			}
 		}
@@ -558,13 +558,13 @@ public class ZResponse {
 
 		final String headerS =
 				ZResponse.HTTP_1_1 + this.getHttpStatus()
-				+ Task.NEW_LINE
-				+ HeaderEnum.CONTENT_LENGTH.getName() + ":" + this.getBodyLength()
-				+ Task.NEW_LINE
+				+ STU.CRLF
+				+ HeaderEnum.CONTENT_LENGTH.getName() + STU.COLON + this.getBodyLength()
+				+ STU.CRLF
 				+ this.contentTypeAR.get()
-				+ Task.NEW_LINE
+				+ STU.CRLF
 				+ this.headerVS()
-				+ Task.NEW_LINE
+				+ STU.CRLF
 				;
 
 		final byte[] hba = headerS.getBytes();
@@ -589,8 +589,8 @@ public class ZResponse {
 		final StringBuilder builder = new StringBuilder();
 		for (int i = 0; i < this.headerList.size(); i++) {
 			final ZHeader h = this.headerList.get(i);
-			builder.append(h.getName()).append(':').append(h.getValue());
-			builder.append(Task.NEW_LINE);
+			builder.append(h.getName()).append(STU.COLON_C).append(h.getValue());
+			builder.append(STU.CRLF);
 		}
 
 		return builder.toString();

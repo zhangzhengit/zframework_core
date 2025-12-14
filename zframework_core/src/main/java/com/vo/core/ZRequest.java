@@ -148,7 +148,7 @@ public class ZRequest {
 	public String getServerName() {
 		final String host = this.getHeaderMap().get(HeaderEnum.HOST.getName());
 
-		final int i = host.indexOf(":");
+		final int i = host.indexOf(STU.COLON);
 		if (i > -1) {
 			return host.substring(0, i);
 		}
@@ -160,7 +160,7 @@ public class ZRequest {
 
 		final String host = this.getHeaderMap().get(HeaderEnum.HOST.getName());
 
-		final int i = host.indexOf(":");
+		final int i = host.indexOf(STU.COLON);
 		if (i > -1) {
 			final String port = host.substring(i + 1);
 			return Integer.parseInt(port);
@@ -305,9 +305,9 @@ public class ZRequest {
 			return null;
 		}
 
-		final String[] a = SCU.split(cookisString, ";");
+		final String[] a = SCU.split(cookisString, STU.SEMICOLON);
 		for (final String s : a) {
-			final String[] c1 = SCU.split(s, "=");
+			final String[] c1 = SCU.split(s, STU.EQUALS);
 			if (c1[0].trim().equals(name)) {
 				final ZCookie zCookie = new ZCookie(c1[0].trim(), c1[1].trim());
 				return zCookie;
@@ -324,11 +324,11 @@ public class ZRequest {
 			return null;
 		}
 
-		final String[] a = SCU.split(cookisString, ";");
+		final String[] a = SCU.split(cookisString, STU.SEMICOLON);
 		final ZCookie[] c = new ZCookie[a.length];
 		int cI = 0;
 		for (final String s : a) {
-			final String[] c1 = SCU.split(s, "=");
+			final String[] c1 = SCU.split(s, STU.EQUALS);
 			final ZCookie zCookie = new ZCookie(c1[0].trim(),c1[1].trim());
 
 			c[cI] = zCookie;
@@ -417,7 +417,7 @@ public class ZRequest {
 		request.original = line;
 
 		// METHOD 第一个空格前面的是METHOD
-		final int methodIndex = line.indexOf(" ");
+		final int methodIndex = line.indexOf(STU.SAPCE);
 		if (methodIndex <= -1) {
 			throw new IllegalArgumentException("请求行错误");
 		}
@@ -483,7 +483,7 @@ public class ZRequest {
 
 
 	private static void parsePath(final String s, final ZRequest request, final int methodIndex) {
-		final int pathI = s.indexOf(" ", methodIndex + 1);
+		final int pathI = s.indexOf(STU.SAPCE, methodIndex + 1);
 		if (pathI <= -1) {
 			throw new IllegalArgumentException("请求行错误：找不到path");
 		}
@@ -505,19 +505,19 @@ public class ZRequest {
 
 			final String[] paramArray = param.split(Task.SP);
 			for (final String p : paramArray) {
-				final String[] p0 = p.split("=");
+				final String[] p0 = p.split(STU.EQUALS);
 				final ZRequest.RequestParam requestParam = new ZRequest.RequestParam();
 				requestParam.setName(p0[0]);
 				if (p0.length >= 2) {
 					try {
-						final String v = STU.isEmpty(p0[1]) ? Task.EMPTY_STRING
+						final String v = STU.isEmpty(p0[1]) ? STU.EMPTY
 								: java.net.URLDecoder.decode(p0[1], Task.DEFAULT_CHARSET_NAME);
 						requestParam.setValue(v);
 					} catch (final UnsupportedEncodingException e) {
 						e.printStackTrace();
 					}
 				} else {
-					requestParam.setValue(Task.EMPTY_STRING);
+					requestParam.setValue(STU.EMPTY);
 				}
 
 				paramSet.add(requestParam);
@@ -557,11 +557,11 @@ public class ZRequest {
 		final Map<String, String> hm = new HashMap<>(x.size(), 1F);
 		for (int i = x.size() - 1; i > 0; i--) {
 			final String l = x.get(i);
-			if (Task.EMPTY_STRING.equals(l)) {
+			if (STU.EMPTY.equals(l)) {
 				continue;
 			}
 
-			final int k = l.indexOf(":");
+			final int k = l.indexOf(STU.COLON);
 			if (k > -1) {
 				final String key = l.substring(0, k).trim();
 				final String value = l.substring(k + 1).trim();

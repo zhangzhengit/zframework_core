@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.StringJoiner;
 
+import com.vo.cache.STU;
 import com.vo.core.HeaderEnum;
 import com.vo.core.ZRequest;
 import com.vo.core.ZSession;
@@ -116,16 +117,18 @@ public class ZCookie {
 		//		Set-Cookie: sessionId=abc123; Expires=Sat, 01 Jan 2022 00:00:00 GMT; Max-Age=3600;
 		//		Domain=example.com; Path=/; Secure; HttpOnly; SameSite=Strict
 
-		final StringJoiner joiner = new StringJoiner("");
+		final StringJoiner joiner = new StringJoiner(STU.EMPTY);
 		// 不取name
-		joiner.add(this.getValue()).add(";");
+		joiner.add(this.getValue()).add(STU.SEMICOLON);
 		for (int i = 0; i < this.nodeList.size(); i++) {
 			final Node node = this.nodeList.get(i);
 			joiner.add(node.getName());
 			if (node.getValue() == null) {
-				joiner.add(";");
+				joiner.add(STU.SEMICOLON);
 			} else {
-				joiner.add("=").add(String.valueOf(node.getValue())).add(";");
+				joiner.add(STU.EQUALS)
+					  .add(String.valueOf(node.getValue()))
+					  .add(STU.SEMICOLON);
 			}
 		}
 
@@ -145,23 +148,23 @@ public class ZCookie {
 	}
 	
 	public String getName() {
-		return name;
+		return this.name;
 	}
 
-	public void setName(String name) {
+	public void setName(final String name) {
 		this.name = name;
 	}
 
 	public String getValue() {
-		return value;
+		return this.value;
 	}
 
-	public void setValue(String value) {
+	public void setValue(final String value) {
 		this.value = value;
 	}
 
 	public List<Node> getNodeList() {
-		return nodeList;
+		return this.nodeList;
 	}
 
 
@@ -171,23 +174,22 @@ public class ZCookie {
 		private Object value;
 
 		public String getName() {
-			return name;
+			return this.name;
 		}
 
-		public void setName(String name) {
+		public void setName(final String name) {
 			this.name = name;
 		}
 
 		public Object getValue() {
-			return value;
+			return this.value;
 		}
 
-		public void setValue(Object value) {
+		public void setValue(final Object value) {
 			this.value = value;
 		}
 
-		public Node(String name, Object value) {
-			super();
+		public Node(final String name, final Object value) {
 			this.name = name;
 			this.value = value;
 		}

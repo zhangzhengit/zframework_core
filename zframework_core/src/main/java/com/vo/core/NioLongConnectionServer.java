@@ -51,8 +51,6 @@ public class NioLongConnectionServer {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
-	public static final String SPACE = " ";
-
 	public static final int DEFAULT_HTTP_PORT = 80;
 
 	public static final String Z_SERVER_QPS = "zsq";
@@ -151,7 +149,7 @@ public class NioLongConnectionServer {
 			}
 
 			if (this.zc >= ZC_THRESHOLD) {
-				rebuildSelector();
+				this.rebuildSelector();
 				this.zc = 0;
 			}
 
@@ -187,7 +185,7 @@ public class NioLongConnectionServer {
 
 						if (SKStatusEnum.READING == selectionKey.attachment()) {
 							NioLongConnectionServer.ZE.executeByNameInASpecificThread(keyword,
-									() -> action(selectionKey, socketChannel));
+									() -> this.action(selectionKey, socketChannel));
 
 						}
 
@@ -281,7 +279,7 @@ public class NioLongConnectionServer {
 					LOG.error("response-异常,message={}", message);
 
 					final String errorMessage = J.toJSONString(
-							CR.error(HttpStatusEnum.HTTP_500.getMessage() + SPACE + message), Include.NON_NULL);
+							CR.error(HttpStatusEnum.HTTP_500.getMessage() + STU.SAPCE + message), Include.NON_NULL);
 
 					NioLongConnectionServer.r500AndCloseSocketChannel(selectionKey, socketChannel, errorMessage);
 				}
@@ -582,7 +580,7 @@ public class NioLongConnectionServer {
 
 		final int maxAge = cacheControl.maxAge();
 		if (maxAge != ZCacheControl.IGNORE_MAX_AGE) {
-			joiner.add(CacheControlEnum.MAX_AGE.getValue().toLowerCase() + "=" + maxAge);
+			joiner.add(CacheControlEnum.MAX_AGE.getValue().toLowerCase() + STU.EQUALS + maxAge);
 		}
 
 		response.header(HeaderEnum.CACHE_CONTROL.getName(), joiner.toString());

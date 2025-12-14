@@ -32,7 +32,6 @@ import com.vo.cache.AU;
 import com.vo.cache.CU;
 import com.vo.cache.STU;
 import com.vo.configuration.ZProperties;
-import com.vo.core.NioLongConnectionServer;
 import com.vo.core.ZContext;
 import com.vo.core.ZLog2;
 import com.vo.core.ZSingleton;
@@ -456,7 +455,7 @@ public class ZConfigurationPropertiesScanner {
 		while (keys.hasNext()) {
 			final String k = keys.next();
 
-			final String kName = k.replace(key + '.', NioLongConnectionServer.SPACE);
+			final String kName = k.replace(key + '.', STU.SAPCE);
 			
 			final String value = ZProperties.getString(k);
 			map.put(kName, value);
@@ -467,7 +466,7 @@ public class ZConfigurationPropertiesScanner {
 		while (keys2.hasNext()) {
 			final String k = keys2.next();
 
-			final String kName = k.replace(convert + '.', NioLongConnectionServer.SPACE);
+			final String kName = k.replace(convert + '.', STU.SAPCE);
 
 			final String value = ZProperties.getString(k);
 			map.put(kName, value);

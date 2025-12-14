@@ -77,16 +77,12 @@ public class Task {
 	private static final RequestValidatorConfigurationProperties REQUEST_VALIDATOR_CONFIGURATION_PROPERTIES = ZContext.getBean(RequestValidatorConfigurationProperties.class);
 
 	public static final String SP = "&";
-	public static final String EMPTY_STRING = "";
-
 	public static final String DEFAULT_CHARSET_NAME = Charset.defaultCharset().displayName();
 	public static final String VOID = "void";
 	public static final String HTTP_200 = "HTTP/1.1 200";
 	public static final int HTTP_STATUS_500 = 500;
 	public static final String INTERNAL_SERVER_ERROR = "Internal Server Error";
 	public static final ContentTypeEnum DEFAULT_CONTENT_TYPE = ContentTypeEnum.APPLICATION_JSON;
-	public static final String NEW_LINE = "\r\n";
-
 	public static final ThreadLocal<SocketChannel> SCTL = new ThreadLocal<>();
 	private final SocketChannel socketChannel;
 
@@ -682,7 +678,7 @@ public class Task {
 						Task.setZPathVariableValue(parametersArray, pI, type, v);
 						zpvPI++;
 					} catch (final NumberFormatException e) {
-						throw new PathVariableException(p.getName() + "=" + v, HttpStatusEnum.HTTP_400.getCode());
+						throw new PathVariableException(p.getName() + STU.EQUALS + v, HttpStatusEnum.HTTP_400.getCode());
 					}
 
 					// FIXME 2023年11月8日 下午10:47:54 zhanghen: TODO 继续支持 校验注解
@@ -803,7 +799,7 @@ public class Task {
 				try {
 					piR = Task.setValue(parametersArray, pI, p, findAny.get().getValue());
 				} catch (final NumberFormatException e) {
-					throw new ParsingRequestParamException(p.getName() + "=" + findAny.get().getValue(),
+					throw new ParsingRequestParamException(p.getName() + STU.EQUALS + findAny.get().getValue(),
 							HttpStatusEnum.HTTP_400.getCode());
 				}
 			} else {
@@ -913,33 +909,33 @@ public class Task {
 		}
 	}
 
-	private static int setValue(final Object[] parametersArray, final int pI, final Parameter p, final Object value)
+	private static int setValue(final Object[] parametersArray, final int pI, final Parameter parameter, final Object value)
 			throws NumberFormatException {
 
-		final Class<?> pppppppppp = p.getType();
+		final Class<?> parameterType = parameter.getType();
 		final AtomicInteger nI = new AtomicInteger(pI);
-		if (pppppppppp == Byte.class) {
+		if (parameterType == Byte.class) {
 			parametersArray[nI.getAndIncrement()] = Byte.valueOf(
 					value instanceof String ? (String)value : String.valueOf(value));
-		} else if (pppppppppp == Short.class) {
+		} else if (parameterType == Short.class) {
 			parametersArray[nI.getAndIncrement()] = Short.valueOf(
 					value instanceof String ? (String)value : String.valueOf(value));
-		} else if (pppppppppp == Integer.class) {
+		} else if (parameterType == Integer.class) {
 			parametersArray[nI.getAndIncrement()] = Integer.valueOf(
 					value instanceof String ? (String)value : String.valueOf(value));
-		} else if (pppppppppp == Long.class) {
+		} else if (parameterType == Long.class) {
 			parametersArray[nI.getAndIncrement()] = Long.valueOf(
 					value instanceof String ? (String)value : String.valueOf(value));
-		} else if (pppppppppp == Float.class) {
+		} else if (parameterType == Float.class) {
 			parametersArray[nI.getAndIncrement()] = Float.valueOf(
 					value instanceof String ? (String)value : String.valueOf(value));
-		} else if (pppppppppp == Double.class) {
+		} else if (parameterType == Double.class) {
 			parametersArray[nI.getAndIncrement()] = Double.valueOf(
 					value instanceof String ? (String)value : String.valueOf(value));
-		} else if (pppppppppp == Character.class) {
+		} else if (parameterType == Character.class) {
 			parametersArray[nI.getAndIncrement()] = Character.valueOf((
 					value instanceof String ? (String)value : String.valueOf(value)).charAt(0));
-		} else if (pppppppppp == Boolean.class) {
+		} else if (parameterType == Boolean.class) {
 			parametersArray[nI.getAndIncrement()] = Boolean.valueOf(
 					value instanceof String ? (String)value : String.valueOf(value));
 		} else {
