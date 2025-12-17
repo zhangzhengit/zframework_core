@@ -14,6 +14,8 @@ import com.vo.anno.ZComponent;
  * @date 2023年11月4日
  *
  */
+// FIXME 2025年12月18日 06:20:13 zhangzhen :  本类和用到ZCaMap的类都要考虑下，
+// 超时时间怎么设置，因为ZCaMap不可能设置无限长，很可能比调用者的短，怎么办？
 @ZComponent
 public class ZCacheMemory implements ZCache<ZCacheR> {
 
