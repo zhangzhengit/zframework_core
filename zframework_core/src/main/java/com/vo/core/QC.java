@@ -18,8 +18,8 @@ public class QC {
 	 * 按秒，100，一百
 	 */
 	private static final int QPS_THRESHOLD = 100;
-	/** 
-	 * 就是600，六百，不是QPS_THRESHOLD * 60 
+	/**
+	 * 就是600，六百，不是QPS_THRESHOLD * 60
 	 */
 	private static final int QPM_THRESHOLD = 600;
 
