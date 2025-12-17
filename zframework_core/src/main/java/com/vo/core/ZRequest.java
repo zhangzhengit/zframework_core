@@ -9,7 +9,6 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -46,8 +45,7 @@ public class ZRequest {
 			.getBean(ServerConfigurationProperties.class);
 	public static final int requestHeaderSizeLimit = SERVERCONFIGURATIONPROPERTIES.getRequestHeaderSizeLimit();
 	public static final String MULTIPART_FORM_DATA = "multipart/form-data";
-	private static final AtomicLong GZSESSIONID = new AtomicLong(1L);
-
+	
 	// -------------------------------------------------------------------------------------------------
 	private List<String> lineList;
 
@@ -220,16 +218,6 @@ public class ZRequest {
 		return ct == null ? false : ct.contains(MULTIPART_FORM_DATA);
 	}
 
-	private static String gSessionID() {
-		final Hasher putString = Hashing.sha256()
-				.newHasher()
-				.putString(HeaderEnum.Z_SESSION_ID.getName() + System.currentTimeMillis() + ZRequest.GZSESSIONID.getAndDecrement(),
-						Charset.defaultCharset());
-
-		final HashCode hash = putString.hash();
-		return hash.toString();
-	}
-
 	/**
 	 * 返回指定名称的session，无则返回null
 	 *
@@ -285,8 +273,7 @@ public class ZRequest {
 	}
 
 	public static ZSession newSession() {
-		final String zSessionID = ZRequest.gSessionID();
-		final ZSession session = new ZSession(zSessionID, new Date());
+		final ZSession session = new ZSession();
 
 		ZSessionMap.put(session);
 

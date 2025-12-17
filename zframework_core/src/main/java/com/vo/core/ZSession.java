@@ -1,5 +1,9 @@
 package com.vo.core;
 
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.util.Base64;
+import java.util.Base64.Encoder;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -16,10 +20,17 @@ import com.vo.configuration.ServerConfigurationProperties;
  *
  */
 public class ZSession {
-	
-	static final
-	long sessionTimeout = ZContext.getBean(ServerConfigurationProperties.class).getSessionTimeout();
+	private static SecureRandom secureRandom;
+	static final long sessionTimeout = ZContext.getBean(ServerConfigurationProperties.class).getSessionTimeout();
 
+	static {
+		try {
+			secureRandom = SecureRandom.getInstanceStrong();
+		} catch (final NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	private Map<String, Object> map;
 
 	private final String id;
@@ -29,12 +40,20 @@ public class ZSession {
 
 	private final AtomicBoolean invalidate = new AtomicBoolean(false);
 
-	public ZSession(final String id, final Date createTime) {
-		this.id = id;
-		this.createTime = createTime;
+	public ZSession() {
+		this.id = gSessionID();
+		this.createTime = new Date();
 		this.setMaxInactiveInterval(sessionTimeout);
 	}
 
+	private static String gSessionID() {
+		final byte[] bs = new byte[32];
+		secureRandom.nextBytes(bs);
+		final Encoder e = Base64.getEncoder().withoutPadding();
+		final String id = e.encodeToString(bs);
+		return id;
+	}
+	
 	public long getCreationTime() {
 		this.checkInvalidate();
     	return this.createTime.getTime();
@@ -125,12 +144,4 @@ public class ZSession {
 		this.lastAccessedTime = lastAccessedTime;
 	}
 
-	public ZSession(final Map<String, Object> map, final String id, final Date createTime, final Date lastAccessedTime, final long intervalSeconds) {
-		this.map = map;
-		this.id = id;
-		this.createTime = createTime;
-		this.lastAccessedTime = lastAccessedTime;
-		this.intervalSeconds = intervalSeconds;
-	}
-	
 }
