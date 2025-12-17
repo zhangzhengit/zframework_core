@@ -16,6 +16,9 @@ import com.vo.configuration.ServerConfigurationProperties;
  *
  */
 public class ZSession {
+	
+	static final
+	long sessionTimeout = ZContext.getBean(ServerConfigurationProperties.class).getSessionTimeout();
 
 	private Map<String, Object> map;
 
@@ -29,9 +32,6 @@ public class ZSession {
 	public ZSession(final String id, final Date createTime) {
 		this.id = id;
 		this.createTime = createTime;
-
-		final ServerConfigurationProperties serverConfiguration = ZSingleton.getSingletonByClass(ServerConfigurationProperties.class);
-		final Long sessionTimeout = serverConfiguration.getSessionTimeout();
 		this.setMaxInactiveInterval(sessionTimeout);
 	}
 
@@ -98,35 +98,34 @@ public class ZSession {
 	}
 
 	public Map<String, Object> getMap() {
-		return map;
+		return this.map;
 	}
 
-	public void setMap(Map<String, Object> map) {
+	public void setMap(final Map<String, Object> map) {
 		this.map = map;
 	}
 
 	public long getIntervalSeconds() {
-		return intervalSeconds;
+		return this.intervalSeconds;
 	}
 
-	public void setIntervalSeconds(long intervalSeconds) {
+	public void setIntervalSeconds(final long intervalSeconds) {
 		this.intervalSeconds = intervalSeconds;
 	}
 
 	public Date getCreateTime() {
-		return createTime;
+		return this.createTime;
 	}
 
 	public AtomicBoolean getInvalidate() {
-		return invalidate;
+		return this.invalidate;
 	}
 
-	public void setLastAccessedTime(Date lastAccessedTime) {
+	public void setLastAccessedTime(final Date lastAccessedTime) {
 		this.lastAccessedTime = lastAccessedTime;
 	}
 
-	public ZSession(Map<String, Object> map, String id, Date createTime, Date lastAccessedTime, long intervalSeconds) {
-		super();
+	public ZSession(final Map<String, Object> map, final String id, final Date createTime, final Date lastAccessedTime, final long intervalSeconds) {
 		this.map = map;
 		this.id = id;
 		this.createTime = createTime;
