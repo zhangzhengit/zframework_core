@@ -10,7 +10,7 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
 /**
- * 带最大容量限制的 ConcurrentMap，超过最大容量则自动丢弃旧数据给本次新增的让位置
+ * guava cache
  *
  * @author zhangzhen
  * @date 2025年1月13日 上午7:07:44
@@ -18,17 +18,13 @@ import com.google.common.cache.CacheBuilder;
  */
 public class ZCapacityMap<K,V> implements ConcurrentMap<K, V>{
 
-	private final int capacity;
-
 	private final Cache<K, V> c;
 
 	public ZCapacityMap(final int capacity) {
 		this.c = CacheBuilder.newBuilder()
 				.maximumSize(capacity)
-				.expireAfterWrite(10, TimeUnit.MINUTES)
+				.expireAfterWrite(10, TimeUnit.SECONDS)
 				.build();
-		
-		this.capacity = capacity;
 	}
 
 	@Override
