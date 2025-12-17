@@ -1,10 +1,10 @@
 package com.vo.core;
 
-import java.util.Date;
-import java.util.Set;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.vo.configuration.ServerConfigurationProperties;
 
 /**
  *
@@ -16,47 +16,22 @@ import java.util.concurrent.TimeUnit;
  */
 public class ZSessionMap {
 
-	private static final ZLog2 LOG = ZLog2.getInstance();
-
-	private final static ScheduledExecutorService TIMEOUT_ZE = Executors.newScheduledThreadPool(1);
-
-	private final static ZMap<String, ZSession> SESSION_MAP = new ZMap(
-			ZContext.getBean(ZSessionConfigurationProperties.class).getGroups(),
-			ZContext.getBean(ZSessionConfigurationProperties.class).getNumberOfGroup());
-
-	public static void sessionTimeoutJOB() {
-		LOG.info("session超时任务启动,ZSessionConfigurationProperties={}", ZContext.getBean(ZSessionConfigurationProperties.class));
-		TIMEOUT_ZE.scheduleAtFixedRate(() -> job(), 1, 1, TimeUnit.SECONDS);
-	}
-
-	private static void job() {
-		if (SESSION_MAP.isEmpty()) {
-			return;
-		}
-
-		final long now = System.currentTimeMillis();
-		final Set<String> ks = SESSION_MAP.keySet();
-		for (final String key : ks) {
-			final ZSession session = SESSION_MAP.get(key);
-			final long maxInactiveInterval = session.getMaxInactiveInterval();
-			final Date createTime = session.getCreateTime();
-			if (now - createTime.getTime() >= maxInactiveInterval * 1000) {
-				session.invalidate();
-				SESSION_MAP.remove(key);
-			}
-		}
-	}
+	private static final Cache<String, ZSession> SCS =
+			CacheBuilder.newBuilder()
+			.maximumSize(10000 * 200)
+			.expireAfterAccess(ZContext.getBean(ServerConfigurationProperties.class).getSessionTimeout(), TimeUnit.SECONDS)
+			.build();
 
 	public static void remove(final String zSessionId) {
-		SESSION_MAP.remove(zSessionId);
+		SCS.invalidate(zSessionId);
 	}
 
 	public static ZSession get(final String zSessionId) {
-		return ZSessionMap.SESSION_MAP.get(zSessionId);
+		return SCS.getIfPresent(zSessionId);
 	}
 
 	public static void put(final ZSession zSession) {
-		ZSessionMap.SESSION_MAP.put(zSession.getId(), zSession);
+		SCS.put(zSession.getId(), zSession);
 	}
 
 }
