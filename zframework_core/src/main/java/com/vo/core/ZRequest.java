@@ -5,7 +5,6 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.channels.SocketChannel;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -14,15 +13,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicLong;
 
-import com.google.common.hash.HashCode;
-import com.google.common.hash.Hasher;
-import com.google.common.hash.Hashing;
 import com.vo.cache.AU;
 import com.vo.cache.CU;
 import com.vo.cache.STU;
-import com.vo.configuration.SCU;
 import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.enums.ConnectionEnum;
 import com.vo.enums.MethodEnum;
@@ -121,7 +115,7 @@ public class ZRequest {
 			return false;
 		}
 
-		final String[] array = SCU.split(a, ",");
+		final String[] array = a.split(",");
 		for (final String a2 : array) {
 			if (aeEnum.getValue().equalsIgnoreCase(a2.trim())) {
 				return true;
@@ -292,9 +286,9 @@ public class ZRequest {
 			return null;
 		}
 
-		final String[] a = SCU.split(cookisString, STU.SEMICOLON);
+		final String[] a = cookisString.split(STU.SEMICOLON);
 		for (final String s : a) {
-			final String[] c1 = SCU.split(s, STU.EQUALS);
+			final String[] c1 = s.split(STU.EQUALS);
 			if (c1[0].trim().equals(name)) {
 				final ZCookie zCookie = new ZCookie(c1[0].trim(), c1[1].trim());
 				return zCookie;
@@ -311,11 +305,11 @@ public class ZRequest {
 			return null;
 		}
 
-		final String[] a = SCU.split(cookisString, STU.SEMICOLON);
+		final String[] a = cookisString.split(STU.SEMICOLON);
 		final ZCookie[] c = new ZCookie[a.length];
 		int cI = 0;
 		for (final String s : a) {
-			final String[] c1 = SCU.split(s, STU.EQUALS);
+			final String[] c1 = s.split(STU.EQUALS);
 			final ZCookie zCookie = new ZCookie(c1[0].trim(),c1[1].trim());
 
 			c[cI] = zCookie;

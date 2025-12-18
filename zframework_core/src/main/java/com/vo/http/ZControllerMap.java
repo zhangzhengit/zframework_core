@@ -9,9 +9,9 @@ import java.util.Set;
 
 import com.google.common.collect.HashBasedTable;
 import com.vo.cache.STU;
-import com.vo.configuration.SCU;
 import com.vo.core.QCTimeEnum;
 import com.vo.core.QPSEnum;
+import com.vo.core.SCU;
 import com.vo.enums.MethodEnum;
 import com.vo.exception.StartupException;
 
@@ -148,10 +148,10 @@ public class ZControllerMap {
 
 	private static String getx(final String path, final Set<String> keySet) {
 
-		final String[] s = SCU.split(path.replaceAll("//+", "/"), "/");
+		final String[] s = path.replaceAll("//+", "/").split("/");
 
 		for (final String k : keySet) {
-			final String[] a = SCU.split(k, "/");
+			final String[] a = k.split("/");
 			if (a.length != s.length) {
 				continue;
 			}

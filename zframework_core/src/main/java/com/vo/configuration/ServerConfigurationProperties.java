@@ -374,7 +374,7 @@ public class ServerConfigurationProperties {
 	}
 
 	public String[] getCompressionType() {
-		return SCU.split(this.compressionTypes, ",");
+		return this.compressionTypes.split(",");
 	}
 
 	public void setShowHttpHeader(final boolean showHttpHeader) {

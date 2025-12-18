@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.vo.cache.STU;
-import com.vo.configuration.SCU;
 
 /**
  *
@@ -36,7 +35,7 @@ public class BodyReader {
 		final int headerEndIndex = search(ba, STU.CRLFCRLF, 1, 0);
 
 		final byte[] headerBA = Arrays.copyOfRange(ba, 0, headerEndIndex);
-		final String[] headerKVString = SCU.split(new String(headerBA), STU.CRLF);
+		final String[] headerKVString = new String(headerBA).split(STU.CRLF);
 
 		final ZRequest request= new ZRequest(headerKVString);
 
