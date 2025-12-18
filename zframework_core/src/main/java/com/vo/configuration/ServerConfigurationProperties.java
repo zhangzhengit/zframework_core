@@ -30,6 +30,8 @@ import com.vo.validator.ZStartWith;
 @ZOrder(value = Integer.MIN_VALUE)
 public class ServerConfigurationProperties {
 
+	static String[] compressionTypeBA = null;
+
 	/**
 	 * 启动的端口号
 	 */
@@ -374,7 +376,10 @@ public class ServerConfigurationProperties {
 	}
 
 	public String[] getCompressionType() {
-		return this.compressionTypes.split(",");
+		if (compressionTypeBA == null) {
+			compressionTypeBA = this.compressionTypes.split(",");
+		}
+		return compressionTypeBA;
 	}
 
 	public void setShowHttpHeader(final boolean showHttpHeader) {
