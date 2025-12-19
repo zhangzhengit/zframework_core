@@ -586,10 +586,6 @@ public class NioLongConnectionServer {
 		response.header(HeaderEnum.CACHE_CONTROL.getName(), joiner.toString());
 	}
 
-	public static void setDate(final ZResponse response) {
-		response.header(HeaderEnum.DATE.getName(), ZDateUtil.gmt(new Date()));
-	}
-
 	/**
 	 * 设置header：ETag
 	 *
