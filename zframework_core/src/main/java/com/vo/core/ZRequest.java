@@ -41,7 +41,7 @@ public class ZRequest {
 	public static final String MULTIPART_FORM_DATA = "multipart/form-data";
 	
 	// -------------------------------------------------------------------------------------------------
-	private List<String> lineList;
+	private final List<String> lineList;
 
 	/**
 	 *	请求行一行完整内容如：GET / HTTP/1.1
@@ -331,10 +331,11 @@ public class ZRequest {
 		return this.getHeaderMap().get(name);
 	}
 
-	public boolean isConnectionKeepAlive() {
+	public boolean isKeepAlive() {
 		final String connection = this.getHeader(HeaderEnum.CONNECTION.getName());
 		final boolean keepAlive = STU.isNotEmpty(connection)
-				&& (connection.equalsIgnoreCase(ConnectionEnum.KEEP_ALIVE.getValue())
+				&& connection.length() == ConnectionEnum.KEEP_ALIVE.getValue().length()
+				&& (connection.equals(ConnectionEnum.KEEP_ALIVE.getValue())
 						|| connection.toLowerCase().contains(ConnectionEnum.KEEP_ALIVE.getValue().toLowerCase()));
 		return keepAlive;
 	}
@@ -357,13 +358,10 @@ public class ZRequest {
 	}
 
 	public List<String> getLineList() {
-		if (this.lineList == null) {
-			this.lineList = new ArrayList<>();
-		}
 		return this.lineList;
 	}
 
-	public ZRequest(final String[] lineArray) {
+	ZRequest(final String[] lineArray) {
 		this.lineList = new ArrayList<>(lineArray.length);
 		Collections.addAll(this.lineList, lineArray);
 

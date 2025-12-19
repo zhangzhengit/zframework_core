@@ -290,7 +290,7 @@ public class ZResponse {
 			e.printStackTrace();
 		}
 
-		if (!ReqeustInfo.get().isConnectionKeepAlive()) {
+		if (!ReqeustInfo.get().isKeepAlive()) {
 			// FIXME 2025年1月20日 下午4:12:37 zhangzhen : 记得把key也传过来
 			NioLongConnectionServer.closeSocketChannelAndKeyCancel(null, this.socketChannel);
 		}
@@ -498,7 +498,7 @@ public class ZResponse {
 
 		final ZRequest request = ReqeustInfo.get();
 
-		if ((request != null) && request.isConnectionKeepAlive()) {
+		if ((request != null) && request.isKeepAlive()) {
 			this.header(HeaderEnum.CONNECTION.getName(), ConnectionEnum.KEEP_ALIVE.getValue());
 		}
 

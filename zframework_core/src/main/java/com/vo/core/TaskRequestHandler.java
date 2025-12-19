@@ -24,8 +24,15 @@ public final class TaskRequestHandler extends Thread {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
 	
-	public static final String NAME = "request-Dispatcher-Thread";
-	public static final String GROUP_NAME = "dispatcher-Group";
+	/**
+	 * request-Dispatcher-Thread
+	 */
+	public static final String NAME = "rDT";
+	
+	/**
+	 * dispatcher-Group
+	 */
+	public static final String GROUP_NAME = "dG";
 
 	private final LinkedBlockingDeque<TaskRequest> queue = new LinkedBlockingDeque<>(
 			ZContext.getBean(ServerConfigurationProperties.class).getPendingTasks());
@@ -38,7 +45,7 @@ public final class TaskRequestHandler extends Thread {
 		
 		super(new ThreadGroup(GROUP_NAME), GROUP_NAME + "@" + NAME);
 
-		setName(NAME);
+		this.setName(NAME);
 
 		final Collection<Object> beanConnection = ZContext.all().values();
 
@@ -78,7 +85,7 @@ public final class TaskRequestHandler extends Thread {
 				e1.printStackTrace();
 			}
 
-			handle(taskRequest);
+			this.handle(taskRequest);
 		}
 	}
 

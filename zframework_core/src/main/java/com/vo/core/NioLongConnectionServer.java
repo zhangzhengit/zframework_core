@@ -489,7 +489,7 @@ public class NioLongConnectionServer {
 				return;
 			}
 
-			final boolean keepAlive = request.isConnectionKeepAlive();
+			final boolean keepAlive = request.isKeepAlive();
 			addConnectionToKAMap(key, socketChannel, keepAlive);
 
 			final Integer httpStatus = response.getHttpStatus();
