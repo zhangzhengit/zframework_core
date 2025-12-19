@@ -17,7 +17,7 @@ import com.vo.validator.ZMin;
 public class ZCacheMemoryConfigurationProperties {
 
 	/**
-	 * 超时时间[秒]，超过此值自动删除
+	 * 最大超时时间[秒]，不是具体哪个缓存值得超时时间。超过此值自动删除
 	 */
 	@ZMin(min = 60 * 60)
 	@ZMax(max = 60 * 60 * 24 * 30)

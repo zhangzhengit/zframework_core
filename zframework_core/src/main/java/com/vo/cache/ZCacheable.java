@@ -55,8 +55,15 @@ public @interface ZCacheable {
 	String key();
 
 	/**
-	 * 过期时间秒数
-	 *
+	 * 过期时间秒数，从写入缓存开始到达此值则自动清除，
+	 * 此值几种情况：
+	 * 1、NEVER 表示永不过期，永远存在 （就现在的实现达不到 @see ZCacheMemoryConfigurationProperties）
+	 * 2、0 无意义
+	 * 3、小于 @see ZCacheMemoryConfigurationProperties.maxTimeout 值，正常情况
+	 * 4、大于3的值，也算3正常情况，虽然就目前的实现实际上是被清除了（时长超过了缓存类的最大允许时长了），
+	 * 		但对于调用者是无感知不知情的，所以可以认为是此K被删除了
+	 * 
+	 * 
 	 * @return
 	 *
 	 */
