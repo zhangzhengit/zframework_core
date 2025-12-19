@@ -31,6 +31,8 @@ import com.vo.http.ZCookie;
  * @date 2023年6月12日
  *
  */
+// FIXME 2025年12月20日 07:40:29 zhangzhen :  写功能：请求来了，如果带来了ZSESSIONID并且存在
+// 则活跃一下，让存活时间重新计算
 public class ZRequest {
 
 	public static final String HTTP_11 = "HTTP/1.1";
