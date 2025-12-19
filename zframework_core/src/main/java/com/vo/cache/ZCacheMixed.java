@@ -11,7 +11,7 @@ import java.util.Set;
  * @date 2023年11月8日
  *
  */
-class ZCacheMixed implements ZCache<ZCacheR> {
+public class ZCacheMixed implements ZCache<ZCacheR> {
 
 	private final ZCache<ZCacheR> memory;
 	private final ZCache<ZCacheR> redis;

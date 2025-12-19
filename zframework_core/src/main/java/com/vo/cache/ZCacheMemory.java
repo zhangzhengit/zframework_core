@@ -16,7 +16,7 @@ import com.vo.core.ZContext;
  *
  */
 @ZComponent
-class ZCacheMemory implements ZCache<ZCacheR> {
+public class ZCacheMemory implements ZCache<ZCacheR> {
 
 	private static final int EXPIRE_AFTER_WRITE_SECONDS = ZContext.getBean(ZCacheMemoryConfigurationProperties.class).getMaxTimeout();
 

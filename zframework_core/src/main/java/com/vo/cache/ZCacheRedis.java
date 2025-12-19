@@ -19,7 +19,7 @@ import redis.clients.jedis.ScanResult;
  * @date 2023年11月5日
  *
  */
-class ZCacheRedis implements ZCache<ZCacheR> {
+public class ZCacheRedis implements ZCache<ZCacheR> {
 
 	@Override
 	public void add(final String key, final ZCacheR value, final long expire) {
