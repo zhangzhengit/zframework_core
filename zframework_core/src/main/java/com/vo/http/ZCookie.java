@@ -167,8 +167,6 @@ public class ZCookie {
 		return this.nodeList;
 	}
 
-
-
 	public static class Node {
 		private String name;
 		private Object value;
@@ -196,6 +194,9 @@ public class ZCookie {
 
 	}
 
-
+	@Override
+	public String toString() {
+		return "ZCookie [name=" + this.name + ", value=" + this.value + ", nodeList=" + this.nodeList + "]";
+	}
 
 }
