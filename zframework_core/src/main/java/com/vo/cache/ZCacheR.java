@@ -23,39 +23,38 @@ public class ZCacheR {
 	private long currentTimeMillis;
 
 	public String getKey() {
-		return key;
+		return this.key;
 	}
 
-	public void setKey(String key) {
+	public void setKey(final String key) {
 		this.key = key;
 	}
 
 	public Object getValue() {
-		return value;
+		return this.value;
 	}
 
-	public void setValue(Object value) {
+	public void setValue(final Object value) {
 		this.value = value;
 	}
 
 	public long getExpire() {
-		return expire;
+		return this.expire;
 	}
 
-	public void setExpire(long expire) {
+	public void setExpire(final long expire) {
 		this.expire = expire;
 	}
 
 	public long getCurrentTimeMillis() {
-		return currentTimeMillis;
+		return this.currentTimeMillis;
 	}
 
-	public void setCurrentTimeMillis(long currentTimeMillis) {
+	public void setCurrentTimeMillis(final long currentTimeMillis) {
 		this.currentTimeMillis = currentTimeMillis;
 	}
 
-	public ZCacheR(String key, Object value, long expire, long currentTimeMillis) {
-		super();
+	public ZCacheR(final String key, final Object value, final long expire, final long currentTimeMillis) {
 		this.key = key;
 		this.value = value;
 		this.expire = expire;

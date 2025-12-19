@@ -55,7 +55,7 @@ public @interface ZCacheable {
 	String key();
 
 	/**
-	 * 过期时间毫秒数
+	 * 过期时间秒数
 	 *
 	 * @return
 	 *

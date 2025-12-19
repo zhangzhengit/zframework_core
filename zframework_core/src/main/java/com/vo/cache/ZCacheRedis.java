@@ -19,14 +19,14 @@ import redis.clients.jedis.ScanResult;
  * @date 2023年11月5日
  *
  */
-public class ZCacheRedis implements ZCache<ZCacheR> {
+class ZCacheRedis implements ZCache<ZCacheR> {
 
 	@Override
 	public void add(final String key, final ZCacheR value, final long expire) {
+		final byte[] ba = ZPU.serialize(value);
 		try (Jedis jedis = ZContext.getBean(JedisPool.class).getResource()) {
-			final byte[] ba = ZPU.serialize(value);
 			jedis.set(key.getBytes(), ba);
-			jedis.pexpire(key.getBytes(), expire);
+			jedis.expire(key.getBytes(), expire);
 		}
 
 	}

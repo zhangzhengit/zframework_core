@@ -11,7 +11,7 @@ import java.util.Set;
  * @date 2023年11月8日
  *
  */
-public class ZCacheMixed implements ZCache<ZCacheR> {
+class ZCacheMixed implements ZCache<ZCacheR> {
 
 	private final ZCache<ZCacheR> memory;
 	private final ZCache<ZCacheR> redis;
@@ -38,7 +38,7 @@ public class ZCacheMixed implements ZCache<ZCacheR> {
 		synchronized (key.intern()) {
 			this.redis.add(key, value, expire);
 
-			final ZCacheR vM = copyVM(value);
+			final ZCacheR vM = this.copyVM(value);
 			this.memory.add(key, vM, vM.getExpire());
 		}
 	}
@@ -56,7 +56,7 @@ public class ZCacheMixed implements ZCache<ZCacheR> {
 
 				final ZCacheR vR = this.redis.get(key);
 				if (vR != null) {
-					final ZCacheR vM = copyVM(vR);
+					final ZCacheR vM = this.copyVM(vR);
 					this.memory.add(key, vM, vM.getExpire());
 				}
 
