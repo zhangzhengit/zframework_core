@@ -213,10 +213,10 @@ public class NioLongConnectionServer {
 			if (!key.isValid()) {
 				continue;
 			}
-			final int interestOps = key.interestOps();
-			final Object attachment = key.attachment();
-			key.cancel();
 			try {
+				final int interestOps = key.interestOps();
+				final Object attachment = key.attachment();
+				key.cancel();
 				key.channel().register(newSelector, interestOps, attachment);
 			} catch (final ClosedChannelException e) {
 				e.printStackTrace();

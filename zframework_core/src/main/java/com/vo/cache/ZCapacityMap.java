@@ -20,10 +20,10 @@ public class ZCapacityMap<K,V> implements ConcurrentMap<K, V>{
 
 	private final Cache<K, V> c;
 
-	public ZCapacityMap(final int capacity) {
+	public ZCapacityMap(final int capacity, final int expireAfterWriteSECONDS) {
 		this.c = CacheBuilder.newBuilder()
 				.maximumSize(capacity)
-				.expireAfterWrite(10, TimeUnit.SECONDS)
+				.expireAfterWrite(expireAfterWriteSECONDS, TimeUnit.SECONDS)
 				.build();
 	}
 

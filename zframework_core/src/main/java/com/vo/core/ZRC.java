@@ -16,7 +16,8 @@ import com.vo.cache.ZCapacityMap;
  */
 public class ZRC {
 
-	private final static String PRIFEX = "cache:";
+	private static final int expireAfterWriteSECONDS = 10;
+	
 	private final static String STORE_NULL_VALUE = "ZRC@STORE_NULL_VALUE-" + UUID.randomUUID();
 	private static final int DEFAULT_CAPACITY = 10000 * 2;
 
@@ -29,12 +30,12 @@ public class ZRC {
 	}
 
 	public ZRC(final int capacity) {
-		this.CACHE = new ZCapacityMap<>(capacity);
+		this.CACHE = new ZCapacityMap<>(capacity, expireAfterWriteSECONDS);
 	}
 
 	@SuppressWarnings("unchecked")
 	public <T> T computeIfAbsent(final String key, final Supplier<T> supplier, final boolean storeNull) {
-		final String k = buildKey(key);
+		final String k = this.buildKey(key);
 		final Object v = this.CACHE.get(k);
 		if (v != null) {
 			if (STORE_NULL_VALUE.equals(v)) {
@@ -67,16 +68,16 @@ public class ZRC {
 	}
 
 	public <T> T computeIfAbsent(final String key, final Supplier<T> supplier) {
-		return computeIfAbsent(key, supplier, false);
+		return this.computeIfAbsent(key, supplier, false);
 	}
 
 	public <T> T computeIfAbsent(final Object key, final Supplier<T> supplier) {
-		return computeIfAbsent(key, supplier, false);
+		return this.computeIfAbsent(key, supplier, false);
 	}
 
 	public  <T> T computeIfAbsent(final Object key, final Supplier<T> supplier, final boolean storeNull) {
 		final String k = key.getClass().getName() + "@" + key.hashCode();
-		return computeIfAbsent(k, supplier, storeNull);
+		return this.computeIfAbsent(k, supplier, storeNull);
 	}
 
 	public void clear(final List<String> keyList) {
@@ -84,7 +85,7 @@ public class ZRC {
 			return;
 		}
 		for (final String k : keyList) {
-			clear(k);
+			this.clear(k);
 		}
 	}
 
@@ -93,7 +94,7 @@ public class ZRC {
 			return;
 		}
 
-		final String keyT = buildKey(key);
+		final String keyT = this.buildKey(key);
 		this.CACHE.remove(keyT);
 	}
 
