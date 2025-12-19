@@ -8,7 +8,8 @@ import com.vo.configuration.ServerConfigurationProperties;
 
 /**
  *
- * 存放ZSession信息
+ * 存放ZSession信息，由配置项[最长存活时间]和[最大允许数量]同时控制，
+ * 超过最大数量则淘汰最近最少访问的。超过[最长存活时间]则自动淘汰
  *
  * @author zhangzhen
  * @date 2023年7月2日
@@ -16,10 +17,13 @@ import com.vo.configuration.ServerConfigurationProperties;
  */
 public class ZSessionMap {
 
+	private static final long SESSION_MAX_TIMEOUT = ZContext.getBean(ServerConfigurationProperties.class).getSessionMaxTimeout();
+	private static final int MAXIMUM_SIZE = ZContext.getBean(ServerConfigurationProperties.class).getSessionMaxActive();
+	
 	private static final Cache<String, ZSession> SCS =
 			CacheBuilder.newBuilder()
-			.maximumSize(10000 * 200)
-			.expireAfterAccess(ZContext.getBean(ServerConfigurationProperties.class).getSessionTimeout(), TimeUnit.SECONDS)
+			.maximumSize(MAXIMUM_SIZE)
+			.expireAfterAccess(SESSION_MAX_TIMEOUT, TimeUnit.SECONDS)
 			.build();
 
 	public static void remove(final String zSessionId) {
@@ -32,6 +36,15 @@ public class ZSessionMap {
 
 	public static void put(final ZSession zSession) {
 		SCS.put(zSession.getId(), zSession);
+	}
+	
+	/**
+	 * 仅[活跃]一下session，无副作用，也不返回任何值
+	 * 
+	 * @param zSessionId
+	 */
+	public static void active(final String zSessionId) {
+		SCS.getIfPresent(zSessionId);
 	}
 
 }

@@ -277,13 +277,33 @@ public class ServerConfigurationProperties {
 	private String sessionStorageType = ZSessionStorageTypeEnum.MEMORY.name();
 
 	/**
-	 * session超时秒数，超时此值则销毁session
+	 * session超时秒数，超时此值则销毁session，
+	 * 注意：是指用户session的最大存活时间
+	 * 此值不能大于 sessionMaxTimeout
 	 */
 	@ZNotNull
 	@ZMin(min = 1)
-	@ZMax(max = Integer.MAX_VALUE)
+	@ZMax(max = 60 * 60 * 24 * 7)
 	@ZValue(name = "server.session.timeout", listenForChanges = true)
 	private long sessionTimeout = 60 * 30L;
+	
+	// FIXME 2025年12月20日 06:42:51 zhangzhen :  写一个校验器，检验  sessionTimeout 不能大于 sessionMaxTimeout
+	// 提示修改其一
+	
+	/**
+	 * session超时时间[秒]最大值限制，用于限制[server.session.timeout]的大小，
+	 * 同时设定存储器的超时时间，如果不限制可能导致一直占用内存最终OOM
+	 */
+	@ZMin(min = 60 * 60)
+	@ZMax(max = 60 * 60 * 24 * 10)
+	private long sessionMaxTimeout = 60 * 60 * 24 * 10;
+
+	/**
+	 * 允许同时存在的session的最大数量，超过此值会自动淘汰最近最少访问的
+	 */
+	@ZMin(min = 1)
+	@ZMax(max = Integer.MAX_VALUE)
+	private int sessionMaxActive = 10000 * 100;
 
 	/**
 	 * 配置硬盘上的资源目录，如：E:\\x
@@ -702,6 +722,22 @@ public class ServerConfigurationProperties {
 		return this.showHttpHeader;
 	}
 
+	public int getSessionMaxActive() {
+		return this.sessionMaxActive;
+	}
+
+	public void setSessionMaxActive(final int sessionMaxActive) {
+		this.sessionMaxActive = sessionMaxActive;
+	}
+
+	public long getSessionMaxTimeout() {
+		return this.sessionMaxTimeout;
+	}
+
+	public void setSessionMaxTimeout(final long sessionMaxTimeout) {
+		this.sessionMaxTimeout = sessionMaxTimeout;
+	}
+
 	@Override
 	public String toString() {
 		return "ServerConfigurationProperties [port=" + this.port + ", responseZSessionId=" + this.responseZSessionId + ", name="
@@ -716,10 +752,11 @@ public class ServerConfigurationProperties {
 				+ this.enableClientQps + ", clientQps=" + this.clientQps + ", sessionIdQps=" + this.sessionIdQps
 				+ ", staticControllerEnable=" + this.staticControllerEnable + ", staticControllerReferersAllowed="
 				+ this.staticControllerReferersAllowed + ", staticControllerMemoryCacheCapacity="
-				+ this.staticControllerMemoryCacheCapacity + ", staticResponseBufferSize=" + this.getStaticResponseBufferSize()
+				+ this.staticControllerMemoryCacheCapacity + ", staticResponseBufferSize=" + this.staticResponseBufferSize
 				+ ", keepAliveTimeout=" + this.keepAliveTimeout + ", sessionStorageType=" + this.sessionStorageType
-				+ ", sessionTimeout=" + this.sessionTimeout + ", staticPath=" + this.staticPath + ", staticPrefix=" + this.staticPrefix
-				+ ", compressionEnable=" + this.compressionEnable + ", compressionTypes=" + this.compressionTypes
+				+ ", sessionTimeout=" + this.sessionTimeout + ", sessionMaxTimeout=" + this.sessionMaxTimeout
+				+ ", sessionMaxActive=" + this.sessionMaxActive + ", staticPath=" + this.staticPath + ", staticPrefix="
+				+ this.staticPrefix + ", compressionEnable=" + this.compressionEnable + ", compressionTypes=" + this.compressionTypes
 				+ ", compressionMinLength=" + this.compressionMinLength + ", responseHeaders=" + this.responseHeaders
 				+ ", printConfigurationProperties=" + this.printConfigurationProperties + ", printProxyClass="
 				+ this.printProxyClass + ", showBanner=" + this.showBanner + ", showHttpHeader=" + this.showHttpHeader + "]";
