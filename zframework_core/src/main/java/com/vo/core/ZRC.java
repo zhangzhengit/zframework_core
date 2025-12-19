@@ -8,7 +8,8 @@ import java.util.function.Supplier;
 import com.vo.cache.ZCapacityMap;
 
 /**
- * 缓存类
+ * 一个通用的的缓存，只适合于[有就更好一点，没有也无所谓]的锦上添花场景。
+ * 不适用于要求必须存在的场景
  *
  * @author zhangzhen
  * @date 2024年6月29日 下午9:16:26
@@ -16,20 +17,30 @@ import com.vo.cache.ZCapacityMap;
  */
 public class ZRC {
 
+	/**
+	 * 从写入开算的超时秒数
+	 */
 	private static final int expireAfterWriteSECONDS = 10;
 	
-	private final static String STORE_NULL_VALUE = "ZRC@STORE_NULL_VALUE-" + UUID.randomUUID();
+	/**
+	 * 缓存最大容量，超过则自动淘汰最近最少访问的
+	 */
 	private static final int DEFAULT_CAPACITY = 10000 * 2;
+	
+	private final static String STORE_NULL_VALUE = "ZRC@STORE_NULL_VALUE-" + UUID.randomUUID();
 
 	private final Map<String, Object> CACHE;
 
-	private static final ZRC S = new ZRC(DEFAULT_CAPACITY);
+	private static final ZRC ZRC = new ZRC(DEFAULT_CAPACITY);
 
 	public static ZRC singleton() {
-		return S;
+		return ZRC;
 	}
 
 	public ZRC(final int capacity) {
+		if (capacity < 0) {
+			throw new IllegalArgumentException("capacity不能小于0");
+		}
 		this.CACHE = new ZCapacityMap<>(capacity, expireAfterWriteSECONDS);
 	}
 

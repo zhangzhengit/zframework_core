@@ -285,7 +285,7 @@ public class ServerConfigurationProperties {
 	@ZMin(min = 1)
 	@ZMax(max = 60 * 60 * 24 * 7)
 	@ZValue(name = "server.session.timeout", listenForChanges = true)
-	private long sessionTimeout = 60 * 30L;
+	private int sessionTimeout = 60 * 30;
 	
 	// FIXME 2025年12月20日 06:42:51 zhangzhen :  写一个校验器，检验  sessionTimeout 不能大于 sessionMaxTimeout
 	// 提示修改其一
@@ -296,7 +296,7 @@ public class ServerConfigurationProperties {
 	 */
 	@ZMin(min = 60 * 60)
 	@ZMax(max = 60 * 60 * 24 * 10)
-	private long sessionMaxTimeout = 60 * 60 * 24 * 10;
+	private int sessionMaxTimeout = 60 * 60 * 24 * 10;
 
 	/**
 	 * 允许同时存在的session的最大数量，超过此值会自动淘汰最近最少访问的
@@ -630,11 +630,11 @@ public class ServerConfigurationProperties {
 		this.sessionStorageType = sessionStorageType;
 	}
 
-	public long getSessionTimeout() {
+	public int getSessionTimeout() {
 		return this.sessionTimeout;
 	}
 
-	public void setSessionTimeout(final long sessionTimeout) {
+	public void setSessionTimeout(final int sessionTimeout) {
 		this.sessionTimeout = sessionTimeout;
 	}
 
@@ -734,7 +734,7 @@ public class ServerConfigurationProperties {
 		return this.sessionMaxTimeout;
 	}
 
-	public void setSessionMaxTimeout(final long sessionMaxTimeout) {
+	public void setSessionMaxTimeout(final int sessionMaxTimeout) {
 		this.sessionMaxTimeout = sessionMaxTimeout;
 	}
 
