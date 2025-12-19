@@ -96,6 +96,7 @@ public class ZRequest {
 	 * 客户端IP
 	 */
 	private final String clientIp;
+	
 
 	public boolean isSupportZSTD() {
 		return this.supportCompression(AcceptEncodingEnum.ZSTD);
@@ -137,17 +138,6 @@ public class ZRequest {
 		return this.body;
 	}
 
-	public String getServerName() {
-		final String host = this.getHeaderMap().get(HeaderEnum.HOST.getName());
-
-		final int i = host.indexOf(STU.COLON);
-		if (i > -1) {
-			return host.substring(0, i);
-		}
-
-		return host;
-	}
-
 	public int getServerPort() {
 
 		final String host = this.getHeaderMap().get(HeaderEnum.HOST.getName());
@@ -162,8 +152,7 @@ public class ZRequest {
 	}
 
 	public String getRequestURL() {
-		final String serverName = this.getServerName();
-		return serverName + this.getPath();
+		return this.getHost() + this.getPath();
 	}
 
 	public String getRequestURI() {
