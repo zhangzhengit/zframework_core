@@ -25,9 +25,15 @@ public class ZSession {
 
 	static {
 		try {
-			secureRandom = SecureRandom.getInstanceStrong();
+		    // linux用/dev/urandom）
+		    final String osNameL = System.getProperty("os.name").toLowerCase();
+			if (osNameL.contains("linux") || osNameL.contains("mac")) {
+				secureRandom = SecureRandom.getInstance("NativePRNGNonBlocking");
+			} else {
+				secureRandom = SecureRandom.getInstance("SHA1PRNG");
+		    }
 		} catch (final NoSuchAlgorithmException e) {
-			e.printStackTrace();
+		    secureRandom = new SecureRandom();
 		}
 	}
 	
