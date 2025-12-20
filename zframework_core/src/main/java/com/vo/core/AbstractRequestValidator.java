@@ -18,7 +18,7 @@ import com.vo.http.AccessDeniedCodeEnum;
  */
 abstract class AbstractRequestValidator {
 
-	private static final Boolean RESPONSE_Z_SESSION_ID = ZContext.getBean(ServerConfigurationProperties.class)
+	private static final boolean RESPONSE_Z_SESSION_ID = ZContext.getBean(ServerConfigurationProperties.class)
 			.getResponseZSessionId();
 
 	private final RequestValidatorConfigurationProperties requestValidatorConfigurationProperties = ZContext
@@ -32,14 +32,14 @@ abstract class AbstractRequestValidator {
 		// 如果任务执行模式为[排队执行]，则使用队列模式来执行
 		if (TaskResponsiveModeEnum.QUEUE.name().equals(AbstractRequestValidator.TASK_RESPONSIVE_MODE)) {
 			// 直接放入线程队列等待处理
-			NioLongConnectionServer.ZE.executeInQueue(() -> handle0(request, taskRequest));
+			NioLongConnectionServer.ZE.executeInQueue(() -> this.handle0(request, taskRequest));
 			return;
 		}
 
 		if (TaskResponsiveModeEnum.IMMEDIATELY.name().equals(AbstractRequestValidator.TASK_RESPONSIVE_MODE)) {
 
 			final boolean executeImmediately = NioLongConnectionServer.ZE
-					.executeImmediately(() -> handle0(request, taskRequest));
+					.executeImmediately(() -> this.handle0(request, taskRequest));
 
 			// 当前有空闲线程，直接处理
 			if (executeImmediately) {
@@ -47,7 +47,7 @@ abstract class AbstractRequestValidator {
 			}
 
 			// 超时，直接返回[429任务超时]
-			if (timeout(taskRequest)) {
+			if (this.timeout(taskRequest)) {
 				final String message = "服务器忙：当前无空闲线程&任务等待超时："
 						+ ZContext.getBean(ServerConfigurationProperties.class).getTaskTimeoutMilliseconds();
 				NioLongConnectionServer.response429(taskRequest.getSelectionKey(), message);
@@ -61,11 +61,11 @@ abstract class AbstractRequestValidator {
 	}
 
 	private void handle0(final ZRequest request, final TaskRequest taskRequest) {
-		final RequestVerificationResult r = validated(request, taskRequest);
+		final RequestVerificationResult r = this.validated(request, taskRequest);
 		if (r.isPassed()) {
-			passed(request, taskRequest);
+			this.passed(request, taskRequest);
 		} else {
-			failed(request, taskRequest, r);
+			this.failed(request, taskRequest, r);
 		}
 	}
 
@@ -105,8 +105,8 @@ abstract class AbstractRequestValidator {
 	 */
 	public RequestVerificationResult validated(final ZRequest request, final TaskRequest taskRequest) {
 
-		final Boolean enableClientQps = ZContext.getBean(ServerConfigurationProperties.class).getEnableClientQps();
-		if (!Boolean.TRUE.equals(enableClientQps)) {
+		final boolean enableClientQps = ZContext.getBean(ServerConfigurationProperties.class).getEnableClientQps();
+		if (!enableClientQps) {
 			return ALLOW;
 		}
 
@@ -114,13 +114,18 @@ abstract class AbstractRequestValidator {
 
 		// 启用了响应
 		// ZSESSIONID，则认为ZSESSIONID相同就是同一个客户端(前提是服务器中存在对应的session，因为session可能是伪造的等，服务器重启就重启就认为是无效session)
-		if (AbstractRequestValidator.responseZSessionId()) {
+		if (RESPONSE_Z_SESSION_ID) {
 			final ZSession session = request.getSession(false);
 			if (session != null) {
-				final String smoothUserAgentKeyword = "zsid@" + session.getId();
+				// getsessionId 放在active前面了，即使超时销毁了，在此用一次也无所谓
+				final String sessionId = session.getId();
+
+				ZSessionMap.active(sessionId);
+				
+				final String smoothUserAgentKeyword = "zsid@" + sessionId;
 				final QPSHandlingEnum handlingEnum = this.requestValidatorConfigurationProperties
 						.getHandlingEnum(userAgent);
-				final boolean allow = QC.allow(QCTimeEnum.SECOND, smoothUserAgentKeyword, getSessionIdQps(),
+				final boolean allow = QC.allow(QCTimeEnum.SECOND, smoothUserAgentKeyword, this.getSessionIdQps(),
 						handlingEnum);
 
 				if (allow) {
@@ -135,7 +140,7 @@ abstract class AbstractRequestValidator {
 		final String keyword = request.getClientIp() + "@" + userAgent;
 
 		final QPSHandlingEnum handlingEnum = this.requestValidatorConfigurationProperties.getHandlingEnum(userAgent);
-		final boolean allow = QC.allow(QCTimeEnum.SECOND,keyword, getClientQps(), handlingEnum);
+		final boolean allow = QC.allow(QCTimeEnum.SECOND,keyword, this.getClientQps(), handlingEnum);
 
 		if (allow) {
 			return ALLOW;
@@ -143,16 +148,6 @@ abstract class AbstractRequestValidator {
 
 		return new RequestVerificationResult(false, AccessDeniedCodeEnum.CLIENT.getInternalMessage(),
 				request.getClientIp(), request.getUserAgent());
-	}
-
-	/**
-	 * 返回是否对请求进行相应 ZRequest.Z_SESSION_ID
-	 *
-	 * @return
-	 *
-	 */
-	public static boolean responseZSessionId() {
-		return Boolean.TRUE.equals(RESPONSE_Z_SESSION_ID);
 	}
 
 	/**

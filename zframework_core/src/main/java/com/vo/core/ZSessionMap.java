@@ -2,6 +2,8 @@ package com.vo.core;
 
 import java.util.concurrent.TimeUnit;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.vo.configuration.ServerConfigurationProperties;
@@ -44,7 +46,18 @@ public class ZSessionMap {
 	 * @param zSessionId
 	 */
 	public static void active(final String zSessionId) {
-		SCS.getIfPresent(zSessionId);
+		@Nullable
+		final ZSession s = SCS.getIfPresent(zSessionId);
+		if (s != null) {
+			final long intervalSeconds = s.getIntervalSeconds();
+			final long lastAccessedTime = s.getLastAccessedTime();
+			final long c = System.currentTimeMillis();
+			if (c - lastAccessedTime >= intervalSeconds * 1000) {
+				s.invalidate();
+				remove(zSessionId);
+			}
+		}
+
 	}
 
 }
