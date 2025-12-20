@@ -19,13 +19,27 @@ import com.vo.core.ZSession;
  */
 public class ZCookie {
 
+	private static final String EXPIRES = "Expires";
+
+	private static final String MAX_AGE = "Max-Age";
+
+	private static final String DOMAIN = "Domain";
+
+	private static final String PATH = "Path";
+
+	private static final String SECURE2 = "Secure";
+
+	private static final String HTTP_ONLY = "HttpOnly";
+
+	private static final String SAME_SITE = "SameSite";
+
 	private final List<Node> nodeList = new ArrayList<>(8);
 
 	private String name;
 	private String value;
 
 	public ZCookie sameSiteEnum(final SameSiteEnum sameSiteEnum) {
-		this.nodeList.add(new Node("SameSite", sameSiteEnum.getValue()));
+		this.nodeList.add(new Node(SAME_SITE, sameSiteEnum.getValue()));
 		return this;
 	}
 
@@ -37,7 +51,7 @@ public class ZCookie {
 	 */
 	public ZCookie httpOnly(final Boolean httpOnly) {
 		if (Boolean.TRUE.equals(httpOnly)) {
-			this.nodeList.add(new Node("HttpOnly", null));
+			this.nodeList.add(new Node(HTTP_ONLY, null));
 		}
 		return this;
 	}
@@ -49,9 +63,9 @@ public class ZCookie {
 	 * @return
 	 *
 	 */
-	public ZCookie secure(final Boolean secure) {
-		if (Boolean.TRUE.equals(secure)) {
-			this.nodeList.add(new Node("Secure", null));
+	public ZCookie secure(final boolean secure) {
+		if (secure) {
+			this.nodeList.add(new Node(SECURE2, null));
 		}
 		return this;
 	}
@@ -66,7 +80,7 @@ public class ZCookie {
 	 * @return
 	 */
 	public ZCookie path(final String path) {
-		this.nodeList.add(new Node("Path", path));
+		this.nodeList.add(new Node(PATH, path));
 		return this;
 	}
 
@@ -79,7 +93,7 @@ public class ZCookie {
 	 *
 	 */
 	public ZCookie domain(final String domain) {
-		this.nodeList.add(new Node("Domain", domain));
+		this.nodeList.add(new Node(DOMAIN, domain));
 		return this;
 	}
 
@@ -93,7 +107,7 @@ public class ZCookie {
 	 * @return
 	 */
 	public ZCookie maxAge(final Long maxAge) {
-		this.nodeList.add(new Node("Max-Age", maxAge));
+		this.nodeList.add(new Node(MAX_AGE, maxAge));
 		return this;
 	}
 
@@ -104,7 +118,7 @@ public class ZCookie {
 	 * @return
 	 */
 	public ZCookie expires(final Date date) {
-		this.nodeList.add(new Node("Expires", date));
+		this.nodeList.add(new Node(EXPIRES, date));
 		return this;
 	}
 
