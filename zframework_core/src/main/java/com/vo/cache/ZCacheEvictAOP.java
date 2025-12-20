@@ -39,11 +39,12 @@ public class ZCacheEvictAOP implements ZIAOP {
 
 		final ZCacheEvict annotation = aopParameter.getMethod().getAnnotation(ZCacheEvict.class);
 		final String key = annotation.key();
+		// FIXME 2025年12月21日 05:18:54 zhangzhen :  这个gK应该有问题，和其他两个生成规则不同，所以导致匹配不到相同的k
 		final String cacheKey = gKey(aopParameter, key, annotation.group());
 
 		if (STU.isNullOrEmptyOrBlank(key)) {
 			this.cache.removePrefix(cacheKey);
-		}else {
+		} else {
 			this.cache.remove(cacheKey);
 		}
 
