@@ -240,11 +240,16 @@ public class Task {
 	private static String getZFMessage(final Throwable e) {
 		if (e instanceof ZFException) {
 			final ZFException ev = (ZFException) e;
-			final String message2 = ev.getMessagezf();
-			final int x = 1;
-			return message2;
+			return ev.getMessagezf();
 		}
-		return "";
+		
+		final Throwable cause = e.getCause();
+		if (cause instanceof ZFException) {
+			final ZFException ev1 = (ZFException) cause;
+			return ev1.getMessagezf();
+		}
+		
+		return e.getLocalizedMessage();
 	}
 
 	private void close() {
