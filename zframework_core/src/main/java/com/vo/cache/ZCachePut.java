@@ -8,7 +8,7 @@ import java.lang.annotation.Target;
 
 /**
  * 用在方法上，表示不管缓存是否命中都会执行此方法，并且把返回结果放入缓存中
- * 用于更新内容到缓存中
+ * 用于更新内容到缓存中，用于更新缓存中的内容
  *
  * @author zhangzhen
  * @date 2023年11月4日
@@ -34,13 +34,15 @@ public @interface ZCachePut {
 	String key();
 
 	/**
-	 * 过期时间毫秒数
+	 * 过期时间秒数
+	 * 注意：与 @ZCacheable.expire 区别如下：
+	 * 如果存在与本注解key相同的 @ZCacheable 则本注解标记的方法执行时会优先使用
+	 * @ZCacheable.expire 值，否则使用本注解指定的值
 	 *
 	 * @return
 	 *
 	 */
 	long expire() default ZCacheable.NEVER;
-
 
 	/**
 	 * 缓存key的分组，用于区分不同的一组key

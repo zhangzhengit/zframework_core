@@ -29,7 +29,7 @@ public class ZCachePutAOP implements ZIAOP {
 	@Override
 	public Object around(final AOPParameter aopParameter) {
 
-		if (!Boolean.TRUE.equals(this.cacheConfigurationProperties.getEnable())) {
+		if (!this.cacheConfigurationProperties.getEnable()) {
 			return aopParameter.invoke();
 		}
 
@@ -38,9 +38,14 @@ public class ZCachePutAOP implements ZIAOP {
 		final String cacheKey = ZCacheableAOP.gKey(aopParameter, key, annotation.group());
 
 		final Object v = aopParameter.invoke();
-		final ZCacheR r = new ZCacheR(cacheKey, v, annotation.expire(), System.currentTimeMillis());
-
-		this.cache.add(cacheKey, r, annotation.expire());
+		final ZCacheR re = this.cache.get(cacheKey);
+		if (re != null) {
+			final ZCacheR newR = new ZCacheR(cacheKey, v, re.getExpire(), System.currentTimeMillis());
+			this.cache.add(cacheKey, newR, re.getExpire());
+		} else {
+			final ZCacheR newR = new ZCacheR(cacheKey, v, annotation.expire(), System.currentTimeMillis());
+			this.cache.add(cacheKey, newR, annotation.expire());
+		}
 
 		return v;
 	}
