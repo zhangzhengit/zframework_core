@@ -13,7 +13,7 @@ import java.lang.annotation.Target;
  *
  * 用法如：
  *
- * 	@ZCacheable(key = "id",expire = 1000 * 5)
+ * 	@ZCacheable(key = "id",expire = 5)
 	public String cache1(final Integer id) {
 		return "from-zservice.id = " + id;
 	}
@@ -21,7 +21,8 @@ import java.lang.annotation.Target;
 	调用
 	cache1(1);
 	cache1(2);
-	执行时会根据参数id的值(1或2)来唯一缺点一个缓存key，此缓存5秒过期。
+	执行时会根据参数id的值(1或2)来唯一确定一个缓存key，此缓存5秒过期，
+	使用相同的id参数值调用此方法5秒内不会执行。
 
  *
  *
@@ -38,12 +39,25 @@ public @interface ZCacheable {
 
 	public static final int NEVER = -1;
 
-
 	/**
 	 * 指定方法的参数名称，或者参数对象的字段名。
-	 * void (String name) 指定key="name"
-	 *
-	 * void (DTO dto)	指定 key="dto" 或 key="dto.xxx"
+	 * 如果方法无参数，则不论指定什么都认为是一个固定的String值
+	 * 
+	 * 对于无参方法：
+	 * void xx()
+	 * 	指定key="name" 或者 指定key="a.b" 或者 指定key="user.name" 或者 指定key="AAA"
+	 * 等等情况都认为是key指定的字面值
+	 * 
+	 * 如果有参方法，匹配规则如下：
+	 * 对于简单类型：
+	 * 	void xx(String name) 指定key="name"
+	 * 则：
+	 * 	运行时动态取name值作为缓存K
+	 *	
+	 * 对于：
+	 * void xx(DTO dto)	指定 key="dto" 或 key="dto.xxx"
+	 * 则：
+	 * 	运行时动态取dto.xxx值作为缓存K
 	 *
 	 * 根据此值来确定一个缓存key
 	 *

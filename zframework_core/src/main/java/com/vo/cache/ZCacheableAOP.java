@@ -1,5 +1,6 @@
 package com.vo.cache;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Parameter;
 import java.util.List;
 
@@ -19,6 +20,8 @@ import com.vo.exception.CacheKeyDeclarationException;
  */
 @ZAOP(interceptType = ZCacheable.class)
 public class ZCacheableAOP implements ZIAOP {
+
+	private static final String separatorChar = ".";
 
 	public static final String PREFIX = "ZCacheable";
 
@@ -74,17 +77,56 @@ public class ZCacheableAOP implements ZIAOP {
 
 	// FIXME 2025年1月22日 下午4:16:17 zhangzhen :
 	// 这个方法也比较耗时，尤其hash方法特别耗时并且导致key不可读，并且key已经够长了可以自描述了。记得改短并且可读，三个注解都改
-	public static String gKey(final AOPParameter aopParameter, final String key, final String group) {
+	static String gKey(final AOPParameter aopParameter, final String key, final String group) {
 		final Parameter[] ps = RU.getParameters(aopParameter.getMethod());
+		if (AU.isEmpty(ps)) {
+			return PREFIX + "@" + group + "@" + key;
+		}
+		
+		final int ix = key.indexOf(separatorChar);
+		if (ix < 0) {
+			for (int i = 0; i < ps.length; i++) {
+
+				final Parameter parameter = ps[i];
+				if (parameter.getName().equals(key)) {
+
+					final String canonicalName = aopParameter.getTarget().getClass().getName();
+					final List<Object> pl = aopParameter.getParameterList();
+					return PREFIX + "@" + canonicalName + "@" + group + "@" + parameter.getName() + STU.EQUALS
+							+ gKey(pl.get(i));
+				}
+			}
+			
+			throw new CacheKeyDeclarationException(
+					"key不存在,key = " + key + ",方法名称=" + aopParameter.getMethod().getName());
+		}
+
+		if (ix == 0 || ix == key.length() - 1) {
+			throw new CacheKeyDeclarationException("key声明异常,key = " + key + ",方法名称=" + aopParameter.getMethod().getName()
+					+ ",请声明为[方法参数名.字段名]的形式,如：user.id"
+					);
+		}
+		
+		final String pname = key.substring(0, ix);
+		final String fname = key.substring(ix + separatorChar.length());
+		
 		for (int i = 0; i < ps.length; i++) {
 
 			final Parameter parameter = ps[i];
-			if (parameter.getName().equals(key)) {
+			if (parameter.getName().equals(pname)) {
 
 				final String canonicalName = aopParameter.getTarget().getClass().getName();
 				final List<Object> pl = aopParameter.getParameterList();
-				return PREFIX + "@" + canonicalName + "@" + group + "@" + parameter.getName() + STU.EQUALS
-						+ gKey(pl.get(i));
+				final Object pO = pl.get(i);
+				try {
+					final Field f = pO.getClass().getDeclaredField(fname);
+					f.setAccessible(true);
+					final Object fV= f.get(pO);
+					return PREFIX + "@" + canonicalName + "@" + group + "@" + parameter.getName() + STU.EQUALS
+							+ fV;
+				} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
+					e.printStackTrace();
+				}
 			}
 		}
 
