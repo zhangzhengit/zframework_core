@@ -26,15 +26,11 @@ public class RU {
 	}
 
 	public static <T extends Annotation> T getAnnotation(final Parameter parameter, final Class<T> annoClass) {
-
-		// FIXME 2025年1月10日 上午8:49:09 zhangzhen : 记得key要尽量防止冲突，使用 parameter.getName() + '-' + annoClass.getName()冲突了
 		final String key = parameter.hashCode() + '-' + parameter.getName() + '-' + annoClass.getName();
 		return ZRC.singleton().computeIfAbsent(key, () ->parameter.getAnnotation(annoClass) );
 	}
 
 	public static Parameter[] getParameters(final Method method){
-
-		// FIXME 2025年1月11日 下午1:13:41 zhangzhen : key加入了method.getDecalringClass ，加入了所在类，应该不会再冲突了
 		final Class<?> declaringClass = method.getDeclaringClass();
 		final int parameterCount = method.getParameterCount();
 		final String key = declaringClass.getName() + "-" + parameterCount + '-' + method.isAccessible() + '-'
@@ -57,7 +53,6 @@ public class RU {
 			return null;
 		});
 	}
-
 
 	public static Field[] getDeclaredFields(final Class<?> type) {
 		final String key = type.getName() + '-' + "getDeclaredFields";
