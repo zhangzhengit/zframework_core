@@ -47,9 +47,9 @@ public class ZCacheMixed implements ZCache<ZCacheR> {
 	public ZCacheR get(final String key) {
 		synchronized (key.intern()) {
 
-			final ZCacheR m = this.memory.get(key);
-			if (m != null) {
-				return m;
+			final ZCacheR v = this.memory.get(key);
+			if (v != null) {
+				return v;
 			}
 
 			synchronized ((key + "_REDIS").intern()) {

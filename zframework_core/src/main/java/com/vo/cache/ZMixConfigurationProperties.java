@@ -18,12 +18,12 @@ public class ZMixConfigurationProperties {
 	// cache.type.mix.expire 要小于所有的 @ZCacheable.expire?
 
 	/**
-	 * 配置内存超时毫秒数,使用Byte类型，因为此值必须配置一个很小的值，如果配置很大，超过了@ZCacheable.expire则内存缓存会晚于redis缓存超时，显然是不合理的.
+	 * 配置内存超时秒数,使用Byte类型，因为此值必须配置一个很小的值，如果配置很大，超过了@ZCacheable.expire则内存缓存会晚于redis缓存超时，显然是不合理的.
 	 * 此属相专门配置内存超时，使用MIX类型时此类才会被用到.
 	 */
 	@ZMin(min = 1)
-	@ZMax(max = Byte.MAX_VALUE)
-	private byte memoryExpire = 50;
+	@ZMax(max = 60)
+	private byte memoryExpire = 1;
 
 	public byte getMemoryExpire() {
 		return this.memoryExpire;
