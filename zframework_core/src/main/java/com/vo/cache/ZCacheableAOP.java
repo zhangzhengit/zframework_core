@@ -78,6 +78,10 @@ public class ZCacheableAOP implements ZIAOP {
 	// FIXME 2025年1月22日 下午4:16:17 zhangzhen :
 	// 这个方法也比较耗时，尤其hash方法特别耗时并且导致key不可读，并且key已经够长了可以自描述了。记得改短并且可读，三个注解都改
 	static String gKey(final AOPParameter aopParameter, final String key, final String group) {
+		if (STU.isNullOrEmptyOrBlank(key)) {
+			return ZCacheableAOP.PREFIX + "@" + aopParameter.getTarget().getClass().getCanonicalName() + "@" + group;
+		}
+		
 		final Parameter[] ps = RU.getParameters(aopParameter.getMethod());
 		if (AU.isEmpty(ps)) {
 			return PREFIX + "@" + group + "@" + key;
