@@ -543,9 +543,6 @@ public class ZResponse {
 	}
 
 	public synchronized ZResponse body(final String body) {
-
-		// FIXME 2025年1月22日 下午4:11:41 zhangzhen : 如果body很大，比如一个大html文件
-		// getBytes会很耗时
 		return this.body(body.getBytes());
 	}
 
