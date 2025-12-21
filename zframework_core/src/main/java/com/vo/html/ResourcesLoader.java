@@ -18,7 +18,6 @@ import com.google.common.collect.HashBasedTable;
 import com.vo.cache.STU;
 import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.core.ZContext;
-import com.vo.core.ZSingleton;
 import com.vo.exception.ResourceNotExistException;
 import com.vo.http.HttpStatusEnum;
 
@@ -49,8 +48,8 @@ public class ResourcesLoader {
 
 		final String resourcePath = System.getProperty(STATIC_RESOURCES_PROPERTY_NAME);
 		if (STU.isNullOrEmptyOrBlank(resourcePath)) {
-			final ServerConfigurationProperties serverConfiguration = ZSingleton
-					.getSingletonByClass(ServerConfigurationProperties.class);
+			
+			final ServerConfigurationProperties serverConfiguration = ZContext.getBean(ServerConfigurationProperties.class);
 			final String staticPrefix = serverConfiguration.getStaticPrefix();
 			final String key = staticPrefix + resourceName;
 			return loadString(key, resourceName);
@@ -101,8 +100,8 @@ public class ResourcesLoader {
 
 		final String resourcePath = System.getProperty(STATIC_RESOURCES_PROPERTY_NAME);
 		if (STU.isNullOrEmptyOrBlank(resourcePath)) {
-			final ServerConfigurationProperties serverConfiguration = ZSingleton
-					.getSingletonByClass(ServerConfigurationProperties.class);
+			final ServerConfigurationProperties serverConfiguration = ZContext
+					.getBean(ServerConfigurationProperties.class);
 			final String staticPrefix = serverConfiguration.getStaticPrefix();
 			final String key = staticPrefix + resourceName;
 			return checkInputStream(key, resourceName);
@@ -128,7 +127,7 @@ public class ResourcesLoader {
 
 		final String resourcePath = System.getProperty(STATIC_RESOURCES_PROPERTY_NAME);
 		if (STU.isNullOrEmptyOrBlank(resourcePath)) {
-			final ServerConfigurationProperties serverConfiguration = ZSingleton.getSingletonByClass(ServerConfigurationProperties.class);
+			final ServerConfigurationProperties serverConfiguration = ZContext.getBean(ServerConfigurationProperties.class);
 			final String staticPrefix = serverConfiguration.getStaticPrefix();
 			final String key = staticPrefix + resourceName;
 
