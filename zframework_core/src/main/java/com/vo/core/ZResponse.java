@@ -3,6 +3,7 @@ package com.vo.core;
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.SocketChannel;
@@ -211,8 +212,9 @@ public class ZResponse {
 
 	// FIXME 2025年1月1日 下午6:47:20 zhangzhen : 现在的4个body方法要不要设置为只允许调用一次？
 
+
 	/**
-	 * 使用 FileInputStream Transfer-Encoding:chunked 边读边写入响应
+	 * 使用 InputStream Transfer-Encoding:chunked 边读边写入响应
 	 *
 	 * 注意：本方法设置的ETag头只用了第一次读取的byte[]来计算，为了尽量防止冲突
 	 * 而用了几个hash算法的结果拼接在一起作为ETag的值。可以一边读一边算直到读取完毕，
@@ -223,12 +225,9 @@ public class ZResponse {
 	 * 注意：本方法(InputStream inputStream)的，只能在一个ZResponse响应对象的最后调用
 	 * 因为本方法会write到客户端，在调用本方法之后再调用任何方法都无意义了
 	 *
-	 * @param fileInputStream
-	 * @param exceedsCompressionMinLength 文件大小是否超过了[server.compression.min.length]
+	 * @param inputStream
 	 */
-	public synchronized void body(final FileInputStream fileInputStream, final boolean exceedsCompressionMinLength) {
-		// FIXME 2025年12月21日 21:49:00 zhangzhen : 在此判断is是否FIS，是且CT无需压缩则transferTo
-		// 否则仍用Stream 用老代码
+	public synchronized void body(final InputStream inputStream) {
 
 		this.checkBIC();
 
@@ -247,7 +246,9 @@ public class ZResponse {
 		// body部分
 		final byte[] b = new byte[DEFAULT_BUFFER_SIZE];
 
-		final BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream, BIS_DEFAULT_BUFFER_SIZE);
+		final BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream, BIS_DEFAULT_BUFFER_SIZE);
+		
+		boolean exceedsCompressionMinLength = false;
 
 		boolean readFirst = true;
 		while (true) {
@@ -256,6 +257,10 @@ public class ZResponse {
 				if (read == -1) {
 					break;
 				}
+
+				exceedsCompressionMinLength =
+						exceedsCompressionMinLength ||
+						(readFirst && (read >= (SERVER_CONFIGURATIONPROPERTIES.getCompressionMinLength() * 1024)));
 
 				if (readFirst) {
 					// FIXME 2025年12月13日 00:14:31 zhangzhen :  这里逻辑不对，304了，就不应该继续读写body了
@@ -286,7 +291,7 @@ public class ZResponse {
 
 		try {
 			bufferedInputStream.close();
-			fileInputStream.close();
+			inputStream.close();
 		} catch (final IOException e) {
 			e.printStackTrace();
 		}
@@ -297,23 +302,22 @@ public class ZResponse {
 		}
 
 	}
-
+	
 	/**
 	 * 从文件流中读取内容并写入响应中去，并在最后关闭流。
-	 * 文件大小达到配置的压缩阈值则用Stream边读取变压缩写入，
+	 * 
+	 * 文件大小达到配置的压缩阈值则用Stream边读取边压缩写入，
 	 * 未达到则零拷贝transferTo
 	 * 
 	 * 
 	 * @param fileInputStream
 	 */
 	public synchronized void body(final FileInputStream fileInputStream) {
-		// FIXME 2025年12月21日 21:49:00 zhangzhen : 在此判断is是否FIS，是且CT无需压缩则transferTo
-		// 否则仍用Stream 用老代码
 
 		if (fileInputStream == null) {
 			throw new IllegalArgumentException("fileInputStream 不能为null");
 		}
-
+		
 		this.checkBIC();
 
 		if (this.write.get()) {
@@ -321,7 +325,6 @@ public class ZResponse {
 		}
 
 		this.checkContentType();
-
 		this.fileChannel = fileInputStream.getChannel();
 		final long fs = ZResponse.getSiezFromFC(this.fileChannel);
 		
@@ -329,7 +332,7 @@ public class ZResponse {
 		// 需要压缩，仍用Stream边读边压缩写入
 		if (exceedsCompressionMinLength) {
 			this.clearBody();
-			this.body(fileInputStream, exceedsCompressionMinLength);
+			this.body((InputStream)fileInputStream);
 			return;
 		}
 		

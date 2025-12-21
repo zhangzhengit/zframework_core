@@ -1,6 +1,7 @@
 package com.vo.api;
 
 import java.io.FileInputStream;
+import java.io.InputStream;
 import java.util.Optional;
 import java.util.Set;
 
@@ -76,8 +77,12 @@ public class StaticController {
 
 		response.contentType(cte.getType());
 
-		final FileInputStream fileInputStream = ResourcesLoader.loadStaticResourceAsInputStream(resourceName);
-		response.body(fileInputStream);
+		final InputStream inputStream = ResourcesLoader.loadStaticResourceAsInputStream(resourceName);
+		if (inputStream instanceof FileInputStream) {
+			response.body((FileInputStream) inputStream);
+		} else {
+			response.body(inputStream);
+		}
 
 	}
 

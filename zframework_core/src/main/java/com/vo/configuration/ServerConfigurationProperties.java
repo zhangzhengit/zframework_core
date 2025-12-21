@@ -254,9 +254,14 @@ public class ServerConfigurationProperties {
 	
 	/**
 	 * StaticController 响应时每次读取的BufferSize，单位：字节
+	 * 
+	 * 注意：min配置为 compressionMinLength max值，是为了偷懒，不然ZResponde.body(InputStream)
+	 * 方法不太好判断是否进行压缩。
+	 * 并且min = 64KB 也不算太大
+	 * 
 	 */
 	@ZNotNull
-	@ZMin(min = 1024)
+	@ZMin(min = 1024 * 64)
 	@ZMax(max = 1024 * 1024 * 4)
 	private int staticResponseBufferSize = 1024 * 512;
 
@@ -349,11 +354,11 @@ public class ServerConfigurationProperties {
 			;
 
 	/**
-	 * body大于多少KB才启用压缩
+	 * body达到多少KB才对响应body进行压缩
 	 */
 	@ZNotNull
 	@ZMin(min = 1)
-	@ZMax(max = 1000)
+	@ZMax(max = 64)
 	private int compressionMinLength = 1;
 
 	/**

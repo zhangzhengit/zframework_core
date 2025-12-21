@@ -8,10 +8,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.UUID;
 
 import com.google.common.collect.HashBasedTable;
@@ -96,7 +94,7 @@ public class ResourcesLoader {
 	 * @return
 	 *
 	 */
-	public static FileInputStream loadStaticResourceAsInputStream(final String resourceName) {
+	public static InputStream loadStaticResourceAsInputStream(final String resourceName) {
 
 		final String resourcePath = System.getProperty(STATIC_RESOURCES_PROPERTY_NAME);
 		if (STU.isNullOrEmptyOrBlank(resourcePath)) {
@@ -170,7 +168,7 @@ public class ResourcesLoader {
 				return (byte[]) vN;
 			}
 
-			final FileInputStream in = checkInputStream(resourceName, resourceName);
+			final InputStream in = checkInputStream(resourceName, resourceName);
 			final byte[] ba2 = readByteArray0(in);
 
 			CACHE_TABLE.put(ResourcesTypeEnum.BINARY, resourceName, ba2);
@@ -197,8 +195,8 @@ public class ResourcesLoader {
 	}
 
 	private static String loadSring0(final String name, final String resourceName) {
-		final FileInputStream fileInputStream = checkInputStream(name, resourceName);
-		final InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream);
+		final InputStream inputStream = checkInputStream(name, resourceName);
+		final InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
 		final BufferedReader reader = new BufferedReader(inputStreamReader);
 
 		final StringBuilder builder = new StringBuilder();
@@ -217,7 +215,7 @@ public class ResourcesLoader {
 		try {
 			reader.close();
 			inputStreamReader.close();
-			fileInputStream.close();
+			inputStream.close();
 		} catch (final IOException e) {
 			e.printStackTrace();
 		}
@@ -225,8 +223,8 @@ public class ResourcesLoader {
 		return builder.toString();
 	}
 
-	private static byte[] readByteArray0(final FileInputStream fileInputStream) {
-		final BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream);
+	private static byte[] readByteArray0(final InputStream inputStream) {
+		final BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
 		final byte[] ba = new byte[1000 * 10];
 		final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 		while (true) {
@@ -245,7 +243,7 @@ public class ResourcesLoader {
 			// 空方法
 			byteArrayOutputStream.close();
 			bufferedInputStream.close();
-			fileInputStream.close();
+			inputStream.close();
 		} catch (final IOException e) {
 			e.printStackTrace();
 		}
@@ -254,31 +252,13 @@ public class ResourcesLoader {
 	}
 
 
-	private static FileInputStream checkInputStream(final String name, final String resourceName) {
-
-		final URL url = ResourcesLoader.class.getResource(name);
-		if (url == null) {
+	private static InputStream checkInputStream(final String name, final String resourceName) {
+		final InputStream inputStream = ResourcesLoader.class.getResourceAsStream(name);
+		if (inputStream == null) {
 			// FIXME 2025年12月8日 17:51:22 zhangzhen : 这里提示详细一点，具体时候那个资源
 			throw new ResourceNotExistException("资源不存在:" + resourceName, HttpStatusEnum.HTTP_404.getCode());
 		}
-
-		if (FILE.equals(url.getProtocol())) {
-
-			// 步骤3：创建FileInputStream
-			File file = null;
-			try {
-				file = new File(new URI(url.toString()));
-			} catch (final URISyntaxException e) {
-				e.printStackTrace();
-			}
-			try {
-				return new FileInputStream(file);
-			} catch (final IOException e) {
-				e.printStackTrace();
-			}
-		}
-
-		return null;
+		return inputStream;
 	}
 
 	public enum ResourcesTypeEnum {
