@@ -1,11 +1,13 @@
 package com.vo.core;
 
 import java.io.BufferedInputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -81,22 +83,21 @@ import com.vo.http.ZETag;
  */
 public class ZResponse {
 
-
 	private static final byte[] ZERO_RNRN_BYTES = ("0" + STU.CRLFCRLF).getBytes();
-	
+
 	private static final int BIS_DEFAULT_BUFFER_SIZE = 1024 * 32;
 
 	private static final ServerConfigurationProperties SERVER_CONFIGURATIONPROPERTIES = ZContext
 			.getBean(ServerConfigurationProperties.class);
 
 	private static final boolean compressionEnable = SERVER_CONFIGURATIONPROPERTIES.getCompressionEnable();
-	
+
 	private static final String DEFAULTCHARSET_DISPLAY_NAME = Charset.defaultCharset().displayName();
 
 	private static final String SERVER_NAME = SERVER_CONFIGURATIONPROPERTIES.getName();
 
 	private static final int DEFAULT_BUFFER_SIZE = SERVER_CONFIGURATIONPROPERTIES.getStaticResponseBufferSize();
-	
+
 	private static final byte[] NEW_LINE_BYTES = STU.CRLF.getBytes();
 
 	private static final String CHARSET = "charset";
@@ -123,6 +124,8 @@ public class ZResponse {
 	private byte[] body;
 
 	private int bIC = 0;
+	
+	FileChannel fileChannel;
 
 	/**
 	 * write()方法是否执行过了
@@ -209,7 +212,7 @@ public class ZResponse {
 	// FIXME 2025年1月1日 下午6:47:20 zhangzhen : 现在的4个body方法要不要设置为只允许调用一次？
 
 	/**
-	 * 使用 InputStream Transfer-Encoding:chunked 边读边写入响应
+	 * 使用 FileInputStream Transfer-Encoding:chunked 边读边写入响应
 	 *
 	 * 注意：本方法设置的ETag头只用了第一次读取的byte[]来计算，为了尽量防止冲突
 	 * 而用了几个hash算法的结果拼接在一起作为ETag的值。可以一边读一边算直到读取完毕，
@@ -220,9 +223,12 @@ public class ZResponse {
 	 * 注意：本方法(InputStream inputStream)的，只能在一个ZResponse响应对象的最后调用
 	 * 因为本方法会write到客户端，在调用本方法之后再调用任何方法都无意义了
 	 *
-	 * @param inputStream
+	 * @param fileInputStream
+	 * @param exceedsCompressionMinLength 文件大小是否超过了[server.compression.min.length]
 	 */
-	public synchronized void body(final InputStream inputStream) {
+	public synchronized void body(final FileInputStream fileInputStream, final boolean exceedsCompressionMinLength) {
+		// FIXME 2025年12月21日 21:49:00 zhangzhen : 在此判断is是否FIS，是且CT无需压缩则transferTo
+		// 否则仍用Stream 用老代码
 
 		this.checkBIC();
 
@@ -241,20 +247,15 @@ public class ZResponse {
 		// body部分
 		final byte[] b = new byte[DEFAULT_BUFFER_SIZE];
 
-		final BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream, BIS_DEFAULT_BUFFER_SIZE);
+		final BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream, BIS_DEFAULT_BUFFER_SIZE);
 
 		boolean readFirst = true;
-		boolean exceedsCompressionMinLength = false;
 		while (true) {
 			try {
 				final int read = bufferedInputStream.read(b);
 				if (read == -1) {
 					break;
 				}
-				
-				exceedsCompressionMinLength =
-						exceedsCompressionMinLength ||
-						(readFirst && (read > (SERVER_CONFIGURATIONPROPERTIES.getCompressionMinLength() * 1024)));
 
 				if (readFirst) {
 					// FIXME 2025年12月13日 00:14:31 zhangzhen :  这里逻辑不对，304了，就不应该继续读写body了
@@ -285,7 +286,7 @@ public class ZResponse {
 
 		try {
 			bufferedInputStream.close();
-			inputStream.close();
+			fileInputStream.close();
 		} catch (final IOException e) {
 			e.printStackTrace();
 		}
@@ -295,6 +296,82 @@ public class ZResponse {
 			NioLongConnectionServer.closeSocketChannelAndKeyCancel(null, this.socketChannel);
 		}
 
+	}
+
+	/**
+	 * 从文件流中读取内容并写入响应中去，并在最后关闭流。
+	 * 文件大小达到配置的压缩阈值则用Stream边读取变压缩写入，
+	 * 未达到则零拷贝transferTo
+	 * 
+	 * 
+	 * @param fileInputStream
+	 */
+	public synchronized void body(final FileInputStream fileInputStream) {
+		// FIXME 2025年12月21日 21:49:00 zhangzhen : 在此判断is是否FIS，是且CT无需压缩则transferTo
+		// 否则仍用Stream 用老代码
+
+		if (fileInputStream == null) {
+			throw new IllegalArgumentException("fileInputStream 不能为null");
+		}
+
+		this.checkBIC();
+
+		if (this.write.get()) {
+			return;
+		}
+
+		this.checkContentType();
+
+		this.fileChannel = fileInputStream.getChannel();
+		final long fs = ZResponse.getSiezFromFC(this.fileChannel);
+		
+		final boolean exceedsCompressionMinLength = this.compress(fs >= (SERVER_CONFIGURATIONPROPERTIES.getCompressionMinLength() * 1024));
+		// 需要压缩，仍用Stream边读边压缩写入
+		if (exceedsCompressionMinLength) {
+			this.clearBody();
+			this.body(fileInputStream, exceedsCompressionMinLength);
+			return;
+		}
+		
+		// 已经确定的header部分
+		this.beforeWrite();
+		this.header(HeaderEnum.CONTENT_LENGTH.getName(), String.valueOf(fs));
+		this.write(this.headerArray());
+
+		try {
+			long position = 0;
+			while (position < fs) {
+				final long transferred = this.fileChannel.transferTo(position, fs - position, this.socketChannel);
+				position += transferred;
+			}
+		} catch (final IOException e) {
+			e.printStackTrace();
+		}
+		
+		try {
+			fileInputStream.close();
+		} catch (final IOException e) {
+			e.printStackTrace();
+		}
+
+		this.write(ByteBuffer.wrap(ZERO_RNRN_BYTES));
+
+		this.write.set(true);
+
+		if (!ReqeustInfo.get().isKeepAlive()) {
+			// FIXME 2025年1月20日 下午4:12:37 zhangzhen : 记得把key也传过来
+			NioLongConnectionServer.closeSocketChannelAndKeyCancel(null, this.socketChannel);
+		}
+	}
+
+	private static long getSiezFromFC(final FileChannel fileChannel) {
+		long fs = 0;
+		try {
+			fs = fileChannel.size();
+		} catch (final IOException e) {
+			e.printStackTrace();
+		}
+		return fs;
 	}
 
 
@@ -376,8 +453,8 @@ public class ZResponse {
 				&& SERVER_CONFIGURATIONPROPERTIES.getCompressionEnable()
 				&& SERVER_CONFIGURATIONPROPERTIES.compressionContains(this.getContentType());
 	}
-	
-	
+
+
 
 	private void setContentEncoding(final ZRequest request, final boolean exceedsCompressionMinLength) {
 
@@ -425,7 +502,7 @@ public class ZResponse {
 				&& (body.length >= (SERVER_CONFIGURATIONPROPERTIES.getCompressionMinLength() * 1024))
 				&& SERVER_CONFIGURATIONPROPERTIES.compressionContains(this.getContentType())
 				) {
-			
+
 			byte[] compress = null;
 			final ZRequest request = ReqeustInfo.get();
 			if (request.isSupportZSTD()) {
@@ -446,7 +523,7 @@ public class ZResponse {
 		} else {
 			this.body = body;
 		}
-		
+
 		return this;
 	}
 
@@ -463,7 +540,7 @@ public class ZResponse {
 	}
 
 	public synchronized ZResponse body(final String body) {
-		
+
 		// FIXME 2025年1月22日 下午4:11:41 zhangzhen : 如果body很大，比如一个大html文件
 		// getBytes会很耗时
 		return this.body(body.getBytes());
@@ -486,9 +563,11 @@ public class ZResponse {
 		this.writeSocketChannel();
 
 		this.write.set(true);
-		
+
 		ZResponseStatus.written();
 		
+		this.close();
+
 	}
 
 	/**
@@ -536,7 +615,7 @@ public class ZResponse {
 	}
 
 	private void write(final ByteBuffer bb) {
-		
+
 		try {
 			while ((bb.remaining() > 0) && this.socketChannel.isOpen()) {
 				this.socketChannel.write(bb);
@@ -575,20 +654,19 @@ public class ZResponse {
 			b.put(NEW_LINE_BYTES);
 			return b;
 		}
-		
+
 		final ByteBuffer b = ByteBuffer.allocate(hba.length + NEW_LINE_BYTES.length);
 		b.put(hba, 0, hba.length);
 		return b;
 	}
-	
+
 	private String headerVS() {
 		if (this.headerList == null) {
 			return "";
 		}
 
 		final StringBuilder builder = new StringBuilder();
-		for (int i = 0; i < this.headerList.size(); i++) {
-			final ZHeader h = this.headerList.get(i);
+		for (final ZHeader h : this.headerList) {
 			builder.append(h.getName()).append(STU.COLON_C).append(h.getValue());
 			builder.append(STU.CRLF);
 		}
@@ -604,7 +682,7 @@ public class ZResponse {
 	public ZResponse() {
 		this.socketChannel = ZRSC.get();
 	}
-	
+
 	public ZResponse(final SocketChannel socketChannel) {
 		this.socketChannel = socketChannel;
 	}
@@ -620,5 +698,16 @@ public class ZResponse {
 	public void setContentType(final String contentType) {
 		this.contentType = contentType;
 	}
-	
+
+	private void close() {
+		// 因为这个类几个地方不能用try with resources，在此提供一个close方法，在本对象彻底用完了以后
+		// 调用本方法来关闭那几个 AutoCloseable 对象
+		if (this.fileChannel != null) {
+			try {
+				this.fileChannel.close();
+			} catch (final IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
 }

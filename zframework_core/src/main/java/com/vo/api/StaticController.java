@@ -1,6 +1,6 @@
 package com.vo.api;
 
-import java.io.InputStream;
+import java.io.FileInputStream;
 import java.util.Optional;
 import java.util.Set;
 
@@ -8,7 +8,6 @@ import com.vo.anno.ZController;
 import com.vo.cache.CU;
 import com.vo.cache.J;
 import com.vo.cache.STU;
-import com.vo.cache.ZMC;
 import com.vo.common.CR;
 import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.core.CacheControlEnum;
@@ -37,8 +36,6 @@ import com.vo.http.ZRequestMapping;
 public class StaticController {
 
 	private static final ServerConfigurationProperties SERVER_CONFIGURATION = ZContext.getBean(ServerConfigurationProperties.class);
-
-	private final ZMC zmc = new ZMC(SERVER_CONFIGURATION.getStaticControllerMemoryCacheCapacity());
 
 	@ZRequestMapping(mapping = { "/favicon\\.ico",
 			"/.+\\.txt$",
@@ -79,20 +76,8 @@ public class StaticController {
 
 		response.contentType(cte.getType());
 
-//		if (resourceName.endsWith(".js")
-//				|| resourceName.endsWith(".html")
-//				|| resourceName.endsWith(".css")
-//				|| resourceName.endsWith(".jpg")
-//				|| resourceName.endsWith(".png")
-//				|| resourceName.endsWith(".ttf")
-//				|| resourceName.endsWith(".woff")
-//				) {
-//			final byte[] ba = ResourcesLoader.loadStaticResourceAsByteArray(resourceName);
-//			response.body(ba);
-//		} else {
-			final InputStream inputStream = ResourcesLoader.loadStaticResourceAsInputStream(resourceName);
-			response.body(inputStream);
-//		}
+		final FileInputStream fileInputStream = ResourcesLoader.loadStaticResourceAsInputStream(resourceName);
+		response.body(fileInputStream);
 
 	}
 
