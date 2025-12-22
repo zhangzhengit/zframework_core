@@ -494,7 +494,7 @@ public class NioLongConnectionServer {
 
 			final Integer httpStatus = response.getHttpStatus();
 			if (httpStatus == HttpStatusEnum.HTTP_200.getCode()) {
-				setETag(socketChannel, request, response);
+				response.setETag(request, response.getBody(), ETagEnum.STRONG);
 			}
 
 			// FIXME 2025年1月3日 上午3:22:26 zhangzhen : Last-Modified
@@ -586,32 +586,6 @@ public class NioLongConnectionServer {
 		response.header(HeaderEnum.CACHE_CONTROL.getName(), joiner.toString());
 	}
 
-	/**
-	 * 设置header：ETag
-	 *
-	 * @param socketChannel
-	 * @param request
-	 * @param response
-	 */
-	public static void setETag(final SocketChannel socketChannel, final ZRequest request, final ZResponse response) {
-		final ZETag methodETag = Task.getMethodAnnotation(request, ZETag.class);
-		if (methodETag == null) {
-			return;
-		}
-
-		final String newETagValue = Hash.murmur3(response.getBody());
-
-		// 执行目标方法前，先看请求头的ETag
-		final String ifNoneMatch = request.getHeader(HeaderEnum.IF_NONE_MATCH.getName());
-		if ((ifNoneMatch != null) && Objects.equals(newETagValue, ifNoneMatch)) {
-			response.httpStatus(HttpStatusEnum.HTTP_304.getCode());
-			response.clearBody();
-			response.header(HeaderEnum.ETAG.getName(), ifNoneMatch);
-		} else {
-			response.header(HeaderEnum.ETAG.getName(), newETagValue);
-		}
-
-	}
 
 	public static class SS {
 

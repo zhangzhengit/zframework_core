@@ -98,7 +98,7 @@ public class Task {
 	 * @return
 	 * @throws Exception
 	 */
-	public static <T extends Annotation> T getMethodAnnotation(final ZRequest request, final Class<T> annoClass) {
+	static <T extends Annotation> T getMethodAnnotation(final ZRequest request, final Class<T> annoClass) {
 
 		final String key = request.getRequestURI() + '@' + annoClass.getName()  + '-' + annoClass.hashCode();
 

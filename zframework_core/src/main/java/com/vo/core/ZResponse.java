@@ -8,7 +8,6 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -265,7 +264,7 @@ public class ZResponse {
 				if (readFirst) {
 					// FIXME 2025年12月13日 00:14:31 zhangzhen :  这里逻辑不对，304了，就不应该继续读写body了
 					// 要不先读一次，和if-none-match比较，否再读写body，是则直接304？
-					this.setETag(request, b);
+					this.setETag(request, b, ETagEnum.WEAK);
 					this.setContentEncoding(request, exceedsCompressionMinLength);
 					this.write(this.headerArray());
 				}
@@ -377,25 +376,31 @@ public class ZResponse {
 		return fs;
 	}
 
-
-	private void setETag(final ZRequest request, final byte[] b) {
+	/**
+	 * 根据请求对象来计算ETag
+	 * 
+	 * @param request
+	 * @param ba       用于计算ETag的部分字节
+	 * @param eTagEnum
+	 */
+	void setETag(final ZRequest request, final byte[] ba, final ETagEnum eTagEnum) {
 		final ZETag methodETag = Task.getMethodAnnotation(request, ZETag.class);
 		if (methodETag != null) {
 
-			final String murmur3 = Hash.murmur3(b);
-			final String md5 = Hash.md5(b);
-			final String goodFastHash = Hash.goodFastHash(b);
-			final String sha256 = Hash.sha256(b);
-			final String newETagValue = murmur3 + md5 + goodFastHash + sha256;
+			final String murmur3 = Hash.murmur3(ba);
+			final String md5 = Hash.md5(ba);
+			final String goodFastHash = Hash.goodFastHash(ba);
+			final String sha256 = Hash.sha256(ba);
+			final String v4 =  murmur3 + md5 + goodFastHash + sha256;
+			
+			final String eTag = eTagEnum.handle(v4);
 
-			// 执行目标方法前，先看请求头的ETag
+			this.header(HeaderEnum.ETAG.getName(), eTag);
+
 			final String ifNoneMatch = request.getHeader(HeaderEnum.IF_NONE_MATCH.getName());
-			if ((ifNoneMatch != null) && Objects.equals(newETagValue, ifNoneMatch)) {
+			if ((ifNoneMatch != null) && Objects.equals(eTag, ifNoneMatch)) {
 				this.httpStatus(HttpStatusEnum.HTTP_304.getCode());
 				this.clearBody();
-				this.header(HeaderEnum.ETAG.getName(), ifNoneMatch);
-			} else {
-				this.header(HeaderEnum.ETAG.getName(), newETagValue);
 			}
 		}
 	}
