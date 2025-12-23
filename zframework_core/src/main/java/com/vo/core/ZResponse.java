@@ -590,7 +590,9 @@ public class ZResponse {
 		this.setServer(SERVER_NAME);
 		this.setDate(new Date());
 
-		NioLongConnectionServer.setZSessionId(request, this);
+		if (SERVER_CONFIGURATIONPROPERTIES.isResponseZSessionId()) {
+			NioLongConnectionServer.setZSessionId(request, this);
+		}
 
 		if (this.getHttpStatus() == HttpStatusEnum.HTTP_200.getCode()) {
 			NioLongConnectionServer.setCacheControl(request, this);

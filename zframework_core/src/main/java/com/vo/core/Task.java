@@ -38,6 +38,7 @@ import com.vo.cache.CU;
 import com.vo.cache.J;
 import com.vo.cache.STU;
 import com.vo.common.CR;
+import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.core.ZRequest.RequestParam;
 import com.vo.enums.MethodEnum;
 import com.vo.exception.FormPairParseException;
@@ -74,6 +75,8 @@ import com.vo.validator.ZValidator;
  */
 public class Task {
 
+	private static final ServerConfigurationProperties SERVER_CONFIGURATIONPROPERTIES = ZContext
+			.getBean(ServerConfigurationProperties.class);
 	private static final RequestValidatorConfigurationProperties REQUEST_VALIDATOR_CONFIGURATION_PROPERTIES = ZContext.getBean(RequestValidatorConfigurationProperties.class);
 
 	public static final String SP = "&";
@@ -316,7 +319,9 @@ public class Task {
 					.httpStatus(HttpStatusEnum.HTTP_429.getCode())
 					.body(J.toJSONString(error, Include.NON_NULL));
 
-					NioLongConnectionServer.setZSessionId(request, response);
+					if (SERVER_CONFIGURATIONPROPERTIES.isResponseZSessionId()) {
+						NioLongConnectionServer.setZSessionId(request, response);
+					}
 
 					return response;
 				}

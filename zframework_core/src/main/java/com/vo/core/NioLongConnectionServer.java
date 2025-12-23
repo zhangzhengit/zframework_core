@@ -445,8 +445,11 @@ public class NioLongConnectionServer {
 						.httpStatus(httpStatus != null ? httpStatus : HttpStatusEnum.HTTP_500.getCode())
 						.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 						.body(J.toJSONString(r));
-
-				NioLongConnectionServer.setZSessionId(request, response);
+				
+				if (SERVER_CONFIGURATIONPROPERTIES.isResponseZSessionId()) {
+					NioLongConnectionServer.setZSessionId(request, response);
+				}
+				
 				response.write();
 
 			} finally {
@@ -537,11 +540,10 @@ public class NioLongConnectionServer {
 		}
 	}
 
-	public static void setZSessionId(final ZRequest request, final ZResponse response) {
-		if (!SERVER_CONFIGURATIONPROPERTIES.getResponseZSessionId() || (request == null)) {
+	static void setZSessionId(final ZRequest request, final ZResponse response) {
+		if (request == null || response == null) {
 			return;
 		}
-
 
 		final ZSession sessionFALSE = request.getSession(false);
 		if (sessionFALSE != null) {

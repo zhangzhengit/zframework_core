@@ -44,7 +44,6 @@ public class ServerConfigurationProperties {
 	 * response 响应头中是否包含 Cookie (ZSESSIONID)
 	 */
 	@ZNotNull
-	@ZValue(name = "server.response.z.session.id", listenForChanges = true)
 	private boolean responseZSessionId = true;
 
 	/**
@@ -307,9 +306,8 @@ public class ServerConfigurationProperties {
 	 * 允许同时存在的session的最大数量，超过此值会自动淘汰最近最少访问的
 	 */
 	
-	@ZMin(min = 0)
+	@ZMin(min = 1)
 	@ZMax(max = Integer.MAX_VALUE)
-	// FIXME 2025年12月23日 22:06:02 zhangzhen :  考虑：要不要min=0作为一个feature，让其不存储session？
 	private int sessionMaxActive = 10000 * 100;
 
 	/**
@@ -421,7 +419,7 @@ public class ServerConfigurationProperties {
 		this.port = port;
 	}
 
-	public boolean getResponseZSessionId() {
+	public boolean isResponseZSessionId() {
 		return this.responseZSessionId;
 	}
 

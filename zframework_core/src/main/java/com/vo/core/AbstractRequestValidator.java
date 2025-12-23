@@ -19,7 +19,7 @@ import com.vo.http.AccessDeniedCodeEnum;
 abstract class AbstractRequestValidator {
 
 	private static final boolean RESPONSE_Z_SESSION_ID = ZContext.getBean(ServerConfigurationProperties.class)
-			.getResponseZSessionId();
+			.isResponseZSessionId();
 
 	private final RequestValidatorConfigurationProperties requestValidatorConfigurationProperties = ZContext
 			.getBean(RequestValidatorConfigurationProperties.class);
