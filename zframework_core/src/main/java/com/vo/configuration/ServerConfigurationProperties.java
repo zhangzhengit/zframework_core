@@ -306,8 +306,10 @@ public class ServerConfigurationProperties {
 	/**
 	 * 允许同时存在的session的最大数量，超过此值会自动淘汰最近最少访问的
 	 */
-	@ZMin(min = 1)
+	
+	@ZMin(min = 0)
 	@ZMax(max = Integer.MAX_VALUE)
+	// FIXME 2025年12月23日 22:06:02 zhangzhen :  考虑：要不要min=0作为一个feature，让其不存储session？
 	private int sessionMaxActive = 10000 * 100;
 
 	/**
