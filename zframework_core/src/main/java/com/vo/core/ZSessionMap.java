@@ -45,7 +45,7 @@ public class ZSessionMap {
 	}
 	
 	/**
-	 * 仅[活跃]一下session，无副作用，也不返回任何值
+	 * 仅[活跃]一下session，不返回任何值，如果此session已经过期，则清除
 	 * 
 	 * @param zSessionId
 	 */
