@@ -89,7 +89,7 @@ public class ServerConfigurationProperties {
 	 * 单位：KB
 	 */
 	@ZMin(min = 100)
-	@ZMax(max = 1024 * 100)
+	@ZMax(max = 1024 * 20)
 	@ZNotNull
 	private int uploadFileToTempSize = 1024;
 
