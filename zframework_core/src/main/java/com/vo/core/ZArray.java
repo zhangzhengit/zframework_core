@@ -46,7 +46,9 @@ public class ZArray {
 		this.ar = new byte[ba.length];
 		for (int i = from; i < to; i++) {
 			this.ar[i] = ba[i];
+			this.size++;
 		}
+		
 	}
 
 	public ZArray(final byte[] ba) {
