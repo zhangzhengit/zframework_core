@@ -9,7 +9,9 @@ package com.vo.core;
  */
 public class ZArray {
 	
-	/**	
+	private static final int capacityIncrement = 100;
+
+	/**
 	 * 初始化的容量
 	 */
 	public static final int INIT_C = 16;
@@ -28,7 +30,7 @@ public class ZArray {
 
 	public ZArray() {
 		// FIXME 2025年11月27日 01:45:25 zhangzhen :  暂时给个初始容量看
-		// 
+		//
 		this.ar = new byte[INIT_C] ;
 	}
 
@@ -54,7 +56,7 @@ public class ZArray {
 	public void add(final byte[] ba, final int from, final int to) {
 		
 		if (to - from + this.size > this.ar.length) {
-			final byte[] n = new byte[to - from + this.size + 500];
+			final byte[] n = new byte[to - from + this.size + capacityIncrement];
 			System.arraycopy(this.ar, 0, n, 0, this.size);
 			this.ar = n;
 		}
@@ -76,8 +78,9 @@ public class ZArray {
 		return r;
 	}
 
-	public void add(final byte[] ba) {
+	public ZArray add(final byte[] ba) {
 		this.add(ba, 0, ba.length);
+		return this;
 	}
 
 	public int length() {
@@ -85,7 +88,7 @@ public class ZArray {
 	}
 
 	public byte[] get() {
-		if(this.size == this.ar.length) {
+		if (this.size == this.ar.length) {
 			return this.ar;
 		}
 		

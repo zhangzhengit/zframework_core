@@ -663,6 +663,12 @@ public class ZRequest {
 			this.name = name;
 			this.value = value;
 		}
+		
+		@Override
+		public String toString() {
+			return "ZHeader [name=" + this.name + ", value=" + this.value + "]";
+		}
+		
 	}
 
 	@Override

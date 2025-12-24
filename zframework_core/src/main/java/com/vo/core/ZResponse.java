@@ -83,6 +83,12 @@ import com.vo.http.ZETag;
  */
 public class ZResponse {
 
+	private static final byte[] COLON_BYTES = STU.COLON.getBytes();
+
+	private static final byte[] CONTENT_LENGTH_BYTES = HeaderEnum.CONTENT_LENGTH.getName().getBytes();
+
+	private static final byte[] CRLF_BYTES = STU.CRLF.getBytes();
+
 	private static final byte[] ZERO_RNRN_BYTES = ("0" + STU.CRLFCRLF).getBytes();
 
 	private static final int BIS_DEFAULT_BUFFER_SIZE = 1024 * 32;
@@ -98,11 +104,13 @@ public class ZResponse {
 
 	private static final int DEFAULT_BUFFER_SIZE = SERVER_CONFIGURATIONPROPERTIES.getStaticResponseBufferSize();
 
-	private static final byte[] NEW_LINE_BYTES = STU.CRLF.getBytes();
-
 	private static final String CHARSET = "charset";
 
 	public static final String HTTP_1_1 = "HTTP/1.1 ";
+
+	private static final byte[] HTTP_11_BYTES = ZResponse.HTTP_1_1.getBytes();
+	public static final int CONTENT_LENGTH_BYTES_LENGTH = CONTENT_LENGTH_BYTES.length
+			;
 
 	public static final String SET_COOKIE = HeaderEnum.SET_COOKIE.getName();
 
@@ -274,7 +282,7 @@ public class ZResponse {
 				final ByteBuffer bbB = ByteBuffer.wrap(b, 0, read);
 				this.compressBodyAndWrite(request, bbB, read, exceedsCompressionMinLength);
 
-				this.write(ByteBuffer.wrap(NEW_LINE_BYTES));
+				this.write(ByteBuffer.wrap(CRLF_BYTES));
 
 				if (read < DEFAULT_BUFFER_SIZE) {
 					break;
@@ -383,6 +391,10 @@ public class ZResponse {
 	 * @param ba       用于计算ETag的部分字节
 	 * @param eTagEnum
 	 */
+	// FIXME 2025年12月24日 12:08:28 zhangzhen :  测试ETag生成还是有问题
+	// 对于INputStream的，比如测一些txt文件前面一部分都是相同内容
+	// 则每个文件读一次的byte[]很可能是相同的，从而算出来的ETag也是相同的。
+	// 显然是错的，现在还没取到文件的size和最后修改日期/名称/等等内容
 	void setETag(final ZRequest request, final byte[] ba, final ETagEnum eTagEnum) {
 		final ZETag methodETag = Task.getMethodAnnotation(request, ZETag.class);
 		if (methodETag != null) {
@@ -487,18 +499,20 @@ public class ZResponse {
 	}
 
 	private ByteBuffer headerArray() {
-		final ZArray headerArray = new ZArray();
-		headerArray.add((ZResponse.HTTP_1_1 + this.getHttpStatus()).getBytes());
-		headerArray.add(NEW_LINE_BYTES);
+		// FIXME 2025年12月24日 14:10:54 zhangzhen :  给个默认值，避免扩容,具体给多少待会再算，可以从header算出来
+		final ZArray headerArray = new ZArray(800);
+		headerArray.add((ZResponse.HTTP_1_1).getBytes()).add(String.valueOf(this.getHttpStatus()).getBytes());
+		headerArray.add(CRLF_BYTES);
 		headerArray.add((this.contentTypeAR.get()).getBytes());
-		headerArray.add(NEW_LINE_BYTES);
+		headerArray.add(CRLF_BYTES);
 		if (this.headerList != null) {
-			for (final ZHeader zHeader : this.headerList) {
-				headerArray.add((zHeader.getName() + STU.COLON + zHeader.getValue()).getBytes());
-				headerArray.add(NEW_LINE_BYTES);
+			for (int i = 0; i < this.headerList.size(); i++) {
+				final ZHeader zHeader = this.headerList.get(i);
+				headerArray.add(zHeader.getName().getBytes()).add(COLON_BYTES).add(zHeader.getValue().getBytes());
+				headerArray.add(CRLF_BYTES);
 			}
 		}
-		headerArray.add(NEW_LINE_BYTES);
+		headerArray.add(CRLF_BYTES);
 
 		return ByteBuffer.wrap(headerArray.get());
 	}
@@ -641,44 +655,58 @@ public class ZResponse {
 	private ByteBuffer fillByteBuffer()  {
 
 		this.checkContentType();
-
-		final String headerS =
-				ZResponse.HTTP_1_1 + this.getHttpStatus()
-				+ STU.CRLF
-				+ HeaderEnum.CONTENT_LENGTH.getName() + STU.COLON + this.getBodyLength()
-				+ STU.CRLF
-				+ this.contentTypeAR.get()
-				+ STU.CRLF
-				+ this.headerVS()
-				+ STU.CRLF
+		
+		// 2
+		// FIXME 2025年12月24日 11:47:12 zhangzhen :  这个类看所有的String能否直接getBytes
+		// 是否全都是ascii字符，是则length()获取长度，便于确定ZArray长度
+		int headerBytesLength = 0;
+		if (CU.isNotEmpty(this.headerList)) {
+			for (int i = 0; i < this.headerList.size(); i++) {
+				final ZHeader h = this.headerList.get(i);
+				// FIXME 2025年12月24日 12:29:01 zhangzhen : 注意：header都要先URLEncoder
+				headerBytesLength = headerBytesLength + h.getName().length();
+				headerBytesLength += STU.COLON_LENGTH;
+				headerBytesLength += h.getValue().getBytes().length;
+				headerBytesLength += STU.CRLF_LENGTH;
+			}
+		}
+		
+		final int capacity
+			= ZResponse.HTTP_1_1.length() + 4 // 4 httpStatus的字节数
+				+ STU.CRLF_LENGTH
+				+ CONTENT_LENGTH_BYTES_LENGTH + STU.COLON_LENGTH + this.getBodyLength()
+				// FIXME 2025年12月24日 13:50:33 zhangzhen :  对于ZCtest/接口，试了+6才可以正常。待会查看为什么，现在先这样写
+				+ 6
+				+ STU.CRLF_LENGTH
+				+ this.contentTypeAR.get().length()
+				+ STU.CRLF_LENGTH
+				+ headerBytesLength
+				+ STU.CRLF_LENGTH
 				;
+		
+		final ByteBuffer bbbb = ByteBuffer.allocateDirect(capacity);
+		bbbb.put(HTTP_11_BYTES).put(String.valueOf(this.getHttpStatus()).getBytes());
+		bbbb.put(CRLF_BYTES);
+		bbbb.put(CONTENT_LENGTH_BYTES)
+			.put(COLON_BYTES).put(String.valueOf(this.getBodyLength()).getBytes());
+		bbbb.put(CRLF_BYTES);
+		bbbb.put(this.contentTypeAR.get().getBytes());
+		bbbb.put(CRLF_BYTES);
 
-		final byte[] hba = headerS.getBytes();
+		if (CU.isNotEmpty(this.headerList)) {
+			for (int i = 0; i < this.headerList.size(); i++) {
+				final ZHeader h = this.headerList.get(i);
+				bbbb.put(h.getName().getBytes()).put(COLON_BYTES).put(h.getValue().getBytes());
+				bbbb.put(CRLF_BYTES);
+			}
+		}
+		bbbb.put(CRLF_BYTES);
 		if (this.body != null) {
-			final ByteBuffer b = ByteBuffer.allocate(hba.length + this.body.length + NEW_LINE_BYTES.length);
-			b.put(hba, 0, hba.length);
-			b.put(this.body, 0, this.body.length);
-			b.put(NEW_LINE_BYTES);
-			return b;
+			bbbb.put(this.body);
+			bbbb.put(CRLF_BYTES);
 		}
 
-		final ByteBuffer b = ByteBuffer.allocate(hba.length + NEW_LINE_BYTES.length);
-		b.put(hba, 0, hba.length);
-		return b;
-	}
-
-	private String headerVS() {
-		if (this.headerList == null) {
-			return "";
-		}
-
-		final StringBuilder builder = new StringBuilder();
-		for (final ZHeader h : this.headerList) {
-			builder.append(h.getName()).append(STU.COLON_C).append(h.getValue());
-			builder.append(STU.CRLF);
-		}
-
-		return builder.toString();
+		return bbbb;
 	}
 
 	/**

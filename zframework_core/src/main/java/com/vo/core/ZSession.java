@@ -7,6 +7,7 @@ import java.util.Base64.Encoder;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.vo.configuration.ServerConfigurationProperties;
@@ -23,19 +24,19 @@ public class ZSession {
 	private static SecureRandom secureRandom;
 	static final long sessionTimeout = ZContext.getBean(ServerConfigurationProperties.class).getSessionTimeout();
 
-	static {
-		try {
-		    // linux用/dev/urandom）
-		    final String osNameL = System.getProperty("os.name").toLowerCase();
-			if (osNameL.contains("linux") || osNameL.contains("mac")) {
-				secureRandom = SecureRandom.getInstance("NativePRNGNonBlocking");
-			} else {
-				secureRandom = SecureRandom.getInstance("SHA1PRNG");
-		    }
-		} catch (final NoSuchAlgorithmException e) {
-		    secureRandom = new SecureRandom();
-		}
-	}
+//	static {
+//		try {
+//		    // linux用/dev/urandom）
+//		    final String osNameL = System.getProperty("os.name").toLowerCase();
+//			if (osNameL.contains("linux") || osNameL.contains("mac")) {
+//				secureRandom = SecureRandom.getInstance("NativePRNGNonBlocking");
+//			} else {
+//				secureRandom = SecureRandom.getInstance("SHA1PRNG");
+//		    }
+//		} catch (final NoSuchAlgorithmException e) {
+//		    secureRandom = new SecureRandom();
+//		}
+//	}
 	
 	private Map<String, Object> map;
 
@@ -53,13 +54,14 @@ public class ZSession {
 	}
 
 	private static String gSessionID() {
-		final byte[] bs = new byte[32];
-		secureRandom.nextBytes(bs);
-		final Encoder e = Base64.getEncoder().withoutPadding();
-		final String id = e.encodeToString(bs);
-		return id;
+		return UUID.randomUUID().toString();
+//		final byte[] bs = new byte[32];
+//		secureRandom.nextBytes(bs);
+//		final Encoder e = Base64.getEncoder().withoutPadding();
+//		final String id = e.encodeToString(bs);
+//		return id;
 	}
-	
+
 	public long getCreationTime() {
 		this.checkInvalidate();
     	return this.createTime.getTime();

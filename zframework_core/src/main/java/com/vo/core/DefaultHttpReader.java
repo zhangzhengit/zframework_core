@@ -564,6 +564,8 @@ public class DefaultHttpReader {
 			return;
 		}
 
+		// FIXME 2025年12月24日 15:11:07 zhangzhen :  这个似乎没必要循环读？
+		// 直接开启一个同容量的buffer读一次读出来就行了吧
 		final ByteBuffer bbBody = ByteBuffer.allocate(1024 * 10);
 
 		final int nioReadTimeout = SERVER_CONFIGURATIONPROPERTIES.getNioReadTimeout();
