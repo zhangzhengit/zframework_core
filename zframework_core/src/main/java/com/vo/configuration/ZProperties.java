@@ -88,6 +88,13 @@ public class ZProperties {
 		if (!STU.hasContent(v)) {
 			return null;
 		}
+		
+		// FIXME 2025年12月26日 18:30:18 zhangzhen :  继续支持其他的
+		final boolean expression = AppH.isExpression(v);
+		if (expression) {
+			final Object r = EE.execute(AppH.gExpression(v));
+			return Integer.parseInt(String.valueOf(r));
+		}
 
 		return Integer.parseInt(v);
 	}
