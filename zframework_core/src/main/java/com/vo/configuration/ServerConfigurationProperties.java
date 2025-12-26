@@ -295,7 +295,7 @@ public class ServerConfigurationProperties {
 	// 提示修改其一
 	
 	/**
-	 * session超时时间[秒]最大值限制，用于限制[server.session.timeout]的大小，
+	 * session超时时间[秒]最大值限制，用于限制[server.session.max.timeout]的大小，
 	 * 同时设定存储器的超时时间，如果不限制可能导致一直占用内存最终OOM
 	 */
 	@ZMin(min = 60 * 60)
@@ -303,13 +303,19 @@ public class ServerConfigurationProperties {
 	private int sessionMaxTimeout = 60 * 60 * 24 * 10;
 
 	/**
-	 * 允许同时存在的session的最大数量，超过此值会自动淘汰最近最少访问的
+	 * 允许同时存在的session的最大数量，超过此值会自动删除最近最少访问的
 	 */
-	
 	@ZMin(min = 1)
 	@ZMax(max = Integer.MAX_VALUE)
 	private int sessionMaxActive = 10000 * 100;
 
+	/**
+	 * 允许内存中同时存在的session的最大数量，超过此值会自动把最近最少访问的存入DB
+	 */
+	@ZMin(min = 1)
+	@ZMax(max = 10000 * 50)
+	private int sessionMaxActiveInMemory = 10000 * 10;
+	
 	/**
 	 * 配置硬盘上的资源目录，如：E:\\x
 	 * 此值配置了，则优先读取此值下的资源文件
@@ -743,6 +749,14 @@ public class ServerConfigurationProperties {
 		this.sessionMaxTimeout = sessionMaxTimeout;
 	}
 
+	public int getSessionMaxActiveInMemory() {
+		return this.sessionMaxActiveInMemory;
+	}
+
+	public void setSessionMaxActiveInMemory(final int sessionMaxActiveInMemory) {
+		this.sessionMaxActiveInMemory = sessionMaxActiveInMemory;
+	}
+
 	@Override
 	public String toString() {
 		return "ServerConfigurationProperties [port=" + this.port + ", responseZSessionId=" + this.responseZSessionId + ", name="
@@ -760,12 +774,12 @@ public class ServerConfigurationProperties {
 				+ this.staticControllerMemoryCacheCapacity + ", staticResponseBufferSize=" + this.staticResponseBufferSize
 				+ ", keepAliveTimeout=" + this.keepAliveTimeout + ", sessionStorageType=" + this.sessionStorageType
 				+ ", sessionTimeout=" + this.sessionTimeout + ", sessionMaxTimeout=" + this.sessionMaxTimeout
-				+ ", sessionMaxActive=" + this.sessionMaxActive + ", staticPath=" + this.staticPath + ", staticPrefix="
-				+ this.staticPrefix + ", compressionEnable=" + this.compressionEnable + ", compressionTypes=" + this.compressionTypes
-				+ ", compressionMinLength=" + this.compressionMinLength + ", responseHeaders=" + this.responseHeaders
-				+ ", printConfigurationProperties=" + this.printConfigurationProperties + ", printProxyClass="
-				+ this.printProxyClass + ", showBanner=" + this.showBanner + ", showHttpHeader=" + this.showHttpHeader + "]";
+				+ ", sessionMaxActive=" + this.sessionMaxActive + ", sessionMaxActiveInMemory=" + this.sessionMaxActiveInMemory
+				+ ", staticPath=" + this.staticPath + ", staticPrefix=" + this.staticPrefix + ", compressionEnable="
+				+ this.compressionEnable + ", compressionTypes=" + this.compressionTypes + ", compressionMinLength="
+				+ this.compressionMinLength + ", responseHeaders=" + this.responseHeaders + ", printConfigurationProperties="
+				+ this.printConfigurationProperties + ", printProxyClass=" + this.printProxyClass + ", showBanner=" + this.showBanner
+				+ ", showHttpHeader=" + this.showHttpHeader + "]";
 	}
-
 
 }

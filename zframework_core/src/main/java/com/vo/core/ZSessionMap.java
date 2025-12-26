@@ -27,7 +27,7 @@ public class ZSessionMap {
 	// 清除掉超过半小时未活跃的，只会在此session活跃时(请求了某个接口)在本类active方法中判断超时清除
 	// 如果一直不活跃，可能后面的10天-半小时的时间都会一直占用内存直到达到10天或者达到MAXIMUM_SIZE而被清除
 	private static final long SESSION_MAX_TIMEOUT = ZContext.getBean(ServerConfigurationProperties.class).getSessionMaxTimeout();
-	private static final int MAXIMUM_SIZE = ZContext.getBean(ServerConfigurationProperties.class).getSessionMaxActive();
+	private static final int MAXIMUM_SIZE = ZContext.getBean(ServerConfigurationProperties.class).getSessionMaxActiveInMemory();
 	
 	private static final Cache<String, ZSession> SCS =
 			CacheBuilder.newBuilder()
