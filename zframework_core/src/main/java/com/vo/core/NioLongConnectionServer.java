@@ -13,7 +13,6 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.concurrent.ConcurrentHashMap;
@@ -34,7 +33,6 @@ import com.vo.exception.ZControllerAdviceThrowable;
 import com.vo.http.HttpStatusEnum;
 import com.vo.http.ZCacheControl;
 import com.vo.http.ZCookie;
-import com.vo.http.ZETag;
 import com.vo.http.ZLastModified;
 import com.vo.thread.ThreadModeEnum;
 import com.vo.thread.ZE;
@@ -414,7 +412,6 @@ public class NioLongConnectionServer {
 	}
 
 	public static void response(final ZRequest request, final TaskRequest taskRequest) {
-
 		synchronized (taskRequest.getSocketChannel()) {
 
 			try {
