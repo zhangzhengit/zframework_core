@@ -299,11 +299,13 @@ public class Task {
 				zrMethod.getMethod().getName());
 		if (zqpsLimitation != null) {
 
-
 			switch (zqpsLimitation.type()) {
 
-
 			case ZSESSIONID:
+				if (!SERVER_CONFIGURATIONPROPERTIES.isResponseZSessionId()) {
+					break;
+				}
+					
 				final ZSession session = Task.getOrGSession(request);
 				final String keyword = controllerName
 						+ "@" + zrMethod.getMethod().getName()
