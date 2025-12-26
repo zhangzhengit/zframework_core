@@ -153,13 +153,6 @@ public class ZCookie {
 		final ZCookie cookie = new ZCookie(HeaderEnum.Z_SESSION_ID.getName(), zSessionId).path("/").httpOnly(true);
 		return cookie;
 	}
-
-	public static ZCookie newCookie() {
-		final ZSession newSession = ZRequest.newSession();
-		newSession.setLastAccessedTime(new Date());
-		final ZCookie cookie = new ZCookie(HeaderEnum.Z_SESSION_ID.getName(), newSession.getId()).path("/").httpOnly(true);
-		return cookie;
-	}
 	
 	public String getName() {
 		return this.name;
