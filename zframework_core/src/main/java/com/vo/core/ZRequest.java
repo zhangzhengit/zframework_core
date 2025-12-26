@@ -242,7 +242,6 @@ public class ZRequest {
 					}
 
 					final ZSession newSession = ZRequest.newSession();
-					ZSessionMap.put(newSession);
 					return newSession;
 				}
 			}
@@ -252,17 +251,12 @@ public class ZRequest {
 			return null;
 		}
 
-		final ZSession session = ZRequest.newSession();
-		ZSessionMap.put(session);
-		return session;
+		final ZSession newSession = ZRequest.newSession();
+		return newSession;
 	}
 
 	public static ZSession newSession() {
-		final ZSession session = new ZSession();
-
-		ZSessionMap.put(session);
-
-		return session;
+		return new ZSession();
 	}
 
 	public int getContentLength() {
