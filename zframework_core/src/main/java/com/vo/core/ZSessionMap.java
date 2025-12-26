@@ -1,11 +1,14 @@
 package com.vo.core;
 
+import java.time.LocalDateTime;
 import java.util.concurrent.TimeUnit;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.RemovalCause;
+import com.google.common.cache.RemovalListener;
 import com.vo.configuration.ServerConfigurationProperties;
 
 /**
@@ -30,7 +33,37 @@ public class ZSessionMap {
 			CacheBuilder.newBuilder()
 			.maximumSize(MAXIMUM_SIZE)
 			.expireAfterAccess(SESSION_MAX_TIMEOUT, TimeUnit.SECONDS)
+			.removalListener(saveToSqlite())
 			.build();
+
+	/**
+	 * 如果因达到容量而清除，则判断此session是否过期，否则存入sqlite
+	 * 
+	 * @return
+	 */
+	private static RemovalListener<? super Object, ? super Object> saveToSqlite() {
+		return notification -> {
+			final ZSession session = (ZSession) notification.getValue();
+			final RemovalCause cause = notification.getCause();
+			System.out.println("session.remove.value = " + session + "\t" + "cause = " + cause);
+			if (cause == RemovalCause.SIZE) {
+				final boolean expired = isExpired(session);
+				if (!expired) {
+					// FIXME 2025年12月26日 10:39:44 zhangzhen :  做这个功能，存入db(sqlite)
+					// 重启时，从db，先判断到期的则delete，其余的按活跃时间排序，取scs容量的放入scs
+					// 达到容量时(执行到此时)，存入db
+					// 程序shutdown时，内存中的全写入db，重启时再读入shutdown时写入的(加个标识列)
+					// getSession是否加入新逻辑：内存中不存在，则读db？因为可能是因容量限制没过期但被存入了db
+					// 从db读出后先判断是否过期，是则delete并返回null，否则更新活跃时间为now
+					// 定期VACUUM？还是在某个时刻执行？如：存入了N条/删除了N条/程序shutdown/启动 等等
+				} else {
+					session.invalidate();
+				}
+
+			}
+
+		};
+	}
 
 	public static void remove(final String zSessionId) {
 		SCS.invalidate(zSessionId);
@@ -42,6 +75,7 @@ public class ZSessionMap {
 
 	public static void put(final ZSession zSession) {
 		SCS.put(zSession.getId(), zSession);
+		System.out.println(Thread.currentThread().getName() + "\t" + LocalDateTime.now() + "\t" + "ZSessionMap.put().scs.sie = " + SCS.size());
 	}
 	
 	/**
@@ -51,17 +85,33 @@ public class ZSessionMap {
 	 */
 	public static void active(final String zSessionId) {
 		@Nullable
-		final ZSession s = SCS.getIfPresent(zSessionId);
-		if (s != null) {
-			final long intervalSeconds = s.getIntervalSeconds();
-			final long lastAccessedTime = s.getLastAccessedTime();
-			final long c = System.currentTimeMillis();
-			if (c - lastAccessedTime >= intervalSeconds * 1000) {
-				s.invalidate();
-				remove(zSessionId);
-			}
+		final ZSession session = SCS.getIfPresent(zSessionId);
+		final boolean expired = isExpired(session);
+		if (expired) {
+			session.invalidate();
+			remove(zSessionId);
 		}
 
+	}
+
+	/**
+	 * 判断session是否过期
+	 * 
+	 * @param session
+	 * @return
+	 */
+	private static boolean isExpired(final ZSession session) {
+		if (session != null) {
+			final long intervalSeconds = session.getIntervalSeconds();
+			final long lastAccessedTime = session.getLastAccessedTime();
+			final long currentTimeMillis = System.currentTimeMillis();
+			if (currentTimeMillis - lastAccessedTime >= intervalSeconds * 1000) {
+				return true;
+			}
+		}
+		
+		
+		return false;
 	}
 
 }
