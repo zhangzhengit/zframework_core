@@ -38,12 +38,33 @@ public class ZSession {
 //		}
 //	}
 	
-	private Map<String, Object> map;
+	private Map<String, Object> data;
 
-	private final String id;
-	private final Date createTime;
+	private String id;
+	private Date createTime;
 	private Date lastAccessedTime;
 	private long intervalSeconds;
+	
+
+	public Map<String, Object> getData() {
+		return this.data;
+	}
+
+	public void setData(final Map<String, Object> data) {
+		this.data = data;
+	}
+
+	public static long getSessiontimeout() {
+		return sessionTimeout;
+	}
+
+	public void setId(final String id) {
+		this.id = id;
+	}
+
+	public void setCreateTime(final Date createTime) {
+		this.createTime = createTime;
+	}
 
 	private final AtomicBoolean invalidate = new AtomicBoolean(false);
 
@@ -99,18 +120,18 @@ public class ZSession {
 
     public void setAttribute(final String name, final Object value) {
 		this.checkInvalidate();
-		if (this.map == null) {
-			this.map = new HashMap<>(2, 1F);
+		if (this.data == null) {
+			this.data = new HashMap<>(2, 1F);
 		}
-    	this.map.put(name, value);
+    	this.data.put(name, value);
     }
 
     public Object getAttribute(final String name) {
     	this.checkInvalidate();
-		if (this.map == null) {
+		if (this.data == null) {
 			return null;
 		}
-    	return this.map.get(name);
+    	return this.data.get(name);
     }
 
     public void invalidate() {
@@ -120,16 +141,17 @@ public class ZSession {
 
 	private void checkInvalidate() {
 		if (this.invalidate.get()) {
+			// FIXME 2025年12月26日 17:18:14 zhangzhen :  暂时注释，不抛出
 			throw new IllegalArgumentException(ZSession.class.getCanonicalName() + " 已销毁，当前不可用");
 		}
 	}
 
 	public Map<String, Object> getMap() {
-		return this.map;
+		return this.data;
 	}
 
 	public void setMap(final Map<String, Object> map) {
-		this.map = map;
+		this.data = map;
 	}
 
 	public long getIntervalSeconds() {
@@ -152,4 +174,11 @@ public class ZSession {
 		this.lastAccessedTime = lastAccessedTime;
 	}
 
+	@Override
+	public String toString() {
+		return "ZSession [id=" + this.id + ", createTime=" + this.createTime + ", lastAccessedTime=" + this.lastAccessedTime
+				+ ", intervalSeconds=" + this.intervalSeconds + ", data=" + this.data + "]";
+	}
+
+	
 }

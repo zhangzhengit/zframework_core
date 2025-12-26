@@ -9,6 +9,7 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.RemovalCause;
 import com.google.common.cache.RemovalListener;
+import com.vo.cache.J;
 import com.vo.configuration.ServerConfigurationProperties;
 
 /**
@@ -27,15 +28,15 @@ public class ZSessionMap {
 	// 清除掉超过半小时未活跃的，只会在此session活跃时(请求了某个接口)在本类active方法中判断超时清除
 	// 如果一直不活跃，可能后面的10天-半小时的时间都会一直占用内存直到达到10天或者达到MAXIMUM_SIZE而被清除
 	private static final long SESSION_MAX_TIMEOUT = ZContext.getBean(ServerConfigurationProperties.class).getSessionMaxTimeout();
-	private static final int MAXIMUM_SIZE = ZContext.getBean(ServerConfigurationProperties.class).getSessionMaxActiveInMemory();
+	public static final int SessionMaxActiveInMemory = ZContext.getBean(ServerConfigurationProperties.class).getSessionMaxActiveInMemory();
 	
 	private static final Cache<String, ZSession> SCS =
 			CacheBuilder.newBuilder()
-			.maximumSize(MAXIMUM_SIZE)
+			.maximumSize(SessionMaxActiveInMemory)
 			.expireAfterAccess(SESSION_MAX_TIMEOUT, TimeUnit.SECONDS)
 			.removalListener(saveToSqlite())
 			.build();
-
+	
 	/**
 	 * 如果因达到容量而清除，则判断此session是否过期，否则存入sqlite
 	 * 
@@ -49,6 +50,16 @@ public class ZSessionMap {
 			if (cause == RemovalCause.SIZE) {
 				final boolean expired = isExpired(session);
 				if (!expired) {
+
+					final String content = session.getMap() == null || session.getMap().isEmpty() ? null
+							: J.toJSONString(session.getMap());
+					
+					ZSessionDB.insertOrRepaceInto(session.getId(), session.getCreationTime(), session.getLastAccessedTime(),
+							session.getIntervalSeconds(), content);
+					System.out.println("insertOrRepaceInto.id = " + session.getId()
+						+ "\t lastAccessdTime = " + session.getLastAccessedTime()
+							);
+					
 					// FIXME 2025年12月26日 10:39:44 zhangzhen :  做这个功能，存入db(sqlite)
 					// 重启时，从db，先判断到期的则delete，其余的按活跃时间排序，取scs容量的放入scs
 					// 达到容量时(执行到此时)，存入db
@@ -70,9 +81,19 @@ public class ZSessionMap {
 	}
 
 	public static ZSession get(final String zSessionId) {
+		// 2
+//		try {
+//			SCS.get(zSessionId, () ->ZSessionDB.findByid(zSessionId));
+//		} catch (final ExecutionException e) {
+//			e.printStackTrace();
+//		}
+//
+//		return null;
+		
+//		 1
 		return SCS.getIfPresent(zSessionId);
 	}
-
+	
 	public static void put(final ZSession zSession) {
 		SCS.put(zSession.getId(), zSession);
 		System.out.println(Thread.currentThread().getName() + "\t" + LocalDateTime.now() + "\t" + "ZSessionMap.put().scs.sie = " + SCS.size());
@@ -109,7 +130,6 @@ public class ZSessionMap {
 				return true;
 			}
 		}
-		
 		
 		return false;
 	}
