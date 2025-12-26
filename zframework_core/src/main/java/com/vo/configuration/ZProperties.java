@@ -62,6 +62,11 @@ public class ZProperties {
 			return null;
 		}
 
+		if (AppH.isExpression(v)) {
+			final Object r = EE.execute(AppH.gExpression(v));
+			return Byte.parseByte(String.valueOf(r));
+		}
+		
 		return Byte.parseByte(v);
 	}
 
@@ -71,6 +76,11 @@ public class ZProperties {
 			return null;
 		}
 
+		if (AppH.isExpression(v)) {
+			final Object r = EE.execute(AppH.gExpression(v));
+			return Short.parseShort(String.valueOf(r));
+		}
+		
 		return Short.parseShort(v);
 	}
 
@@ -78,6 +88,11 @@ public class ZProperties {
 		final String v = properties.getProperty(key);
 		if (!STU.hasContent(v)) {
 			return defaultValue;
+		}
+		
+		if (AppH.isExpression(v)) {
+			final Object r = EE.execute(AppH.gExpression(v));
+			return Integer.parseInt(String.valueOf(r));
 		}
 
 		return Integer.parseInt(v);
@@ -90,8 +105,7 @@ public class ZProperties {
 		}
 		
 		// FIXME 2025年12月26日 18:30:18 zhangzhen :  继续支持其他的
-		final boolean expression = AppH.isExpression(v);
-		if (expression) {
+		if (AppH.isExpression(v)) {
 			final Object r = EE.execute(AppH.gExpression(v));
 			return Integer.parseInt(String.valueOf(r));
 		}
@@ -104,6 +118,11 @@ public class ZProperties {
 		if (!STU.hasContent(v)) {
 			return null;
 		}
+		
+		if (AppH.isExpression(v)) {
+			final Object r = EE.execute(AppH.gExpression(v));
+			return Long.parseLong(String.valueOf(r));
+		}
 
 		return Long.parseLong(v);
 	}
@@ -112,6 +131,11 @@ public class ZProperties {
 		final String v = properties.getProperty(key);
 		if (!STU.hasContent(v)) {
 			return null;
+		}
+		
+		if (AppH.isExpression(v)) {
+			final Object r = EE.execute(AppH.gExpression(v));
+			return new BigInteger(String.valueOf(r));
 		}
 
 		return new BigInteger(v);
@@ -122,6 +146,11 @@ public class ZProperties {
 		if (!STU.hasContent(v)) {
 			return null;
 		}
+		
+		if (AppH.isExpression(v)) {
+			final Object r = EE.execute(AppH.gExpression(v));
+			return new BigDecimal(String.valueOf(r));
+		}
 
 		return new BigDecimal(v);
 	}
@@ -130,6 +159,11 @@ public class ZProperties {
 		final String v = properties.getProperty(key);
 		if (!STU.hasContent(v)) {
 			return null;
+		}
+		
+		if (AppH.isExpression(v)) {
+			final Object r = EE.execute(AppH.gExpression(v));
+			return Float.parseFloat(String.valueOf(r));
 		}
 
 		return Float.parseFloat(v);
@@ -140,16 +174,12 @@ public class ZProperties {
 			return null;
 		}
 
-		return Double.parseDouble(v);
-	}
-
-	public static Integer readInteger(final String key) {
-		final String v = properties.getProperty(key);
-		if (!STU.hasContent(v)) {
-			return null;
+		if (AppH.isExpression(v)) {
+			final Object r = EE.execute(AppH.gExpression(v));
+			return Double.parseDouble(String.valueOf(r));
 		}
-
-		return Integer.parseInt(v);
+		
+		return Double.parseDouble(v);
 	}
 
 	public static Boolean getBoolean(final String key) {
@@ -158,16 +188,12 @@ public class ZProperties {
 			return null;
 		}
 
-		return Boolean.parseBoolean(v);
-	}
-
-	public static Long readLong(final String key) {
-		final String v = properties.getProperty(key);
-		if (!STU.hasContent(v)) {
-			return null;
+		if (AppH.isExpression(v)) {
+			final Object r = EE.execute(AppH.gExpression(v));
+			return Boolean.parseBoolean(String.valueOf(r));
 		}
-
-		return Long.parseLong(v);
+		
+		return Boolean.parseBoolean(v);
 	}
 
 	public static Iterator<String> getKeys(final String prefix) {
@@ -184,12 +210,18 @@ public class ZProperties {
 		return list.iterator();
 	}
 
-	public static void addProperty() {
-
-	}
-
 	public static String getString(final String key) {
-		return properties.getProperty(key);
+		final String v = properties.getProperty(key);
+		if (v == null) {
+			return null;
+		}
+
+		if (AppH.isExpression(v)) {
+			final Object r = EE.execute(AppH.gExpression(v));
+			return String.valueOf(r);
+		}
+
+		return v;
 	}
 
 	public static String[] getStringArray(final String key) {
@@ -197,15 +229,18 @@ public class ZProperties {
 		if (v == null) {
 			return EMPTY_STRING_ARRAY;
 		}
-
+		
+		if (AppH.isExpression(String.valueOf(v))) {
+			final Object r = EE.execute(AppH.gExpression(String.valueOf(v)));
+			final String s1 = String.valueOf(r);
+			return s1.split(",");
+		}
+		
 		final String s1 = String.valueOf(v);
 		final String[] a = s1.split(",");
 		return a;
 	}
 
-	public static String readString(final String key) {
-		return properties.getProperty(key);
-	}
 
 	private static Properties properties;
 
