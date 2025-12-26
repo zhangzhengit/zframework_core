@@ -51,6 +51,7 @@ public class ZSession {
 		this.id = gSessionID();
 		this.createTime = new Date();
 		this.setMaxInactiveInterval(sessionTimeout);
+		ZSessionMap.put(this);
 	}
 
 	private static String gSessionID() {
@@ -89,7 +90,6 @@ public class ZSession {
 	public void setMaxInactiveInterval(final long interval) {
 		this.checkInvalidate();
 		this.intervalSeconds = interval;
-		ZSessionMap.put(this);
 	}
 
     public long getMaxInactiveInterval() {
