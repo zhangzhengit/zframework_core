@@ -6,6 +6,8 @@ import java.util.UUID;
 import java.util.function.Supplier;
 
 import com.vo.cache.ZCapacityMap;
+import com.vo.zclass.CU;
+import com.vo.zclass.SCU;
 
 /**
  * 一个通用的的缓存，只适合于[有就更好一点，没有也无所谓]的锦上添花场景。

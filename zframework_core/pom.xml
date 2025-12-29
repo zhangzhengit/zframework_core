@@ -66,9 +66,9 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.vo</groupId>
-			<artifactId>sb_zclass</artifactId>
-			<version>1.0.0-SNAPSHOT-jdk8</version>
+			<groupId>org.codehaus.janino</groupId>
+			<artifactId>janino</artifactId>
+			<version>3.1.9</version>
 		</dependency>
 
 		<dependency>

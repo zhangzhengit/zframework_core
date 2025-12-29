@@ -11,9 +11,9 @@ import com.google.common.collect.HashBasedTable;
 import com.vo.cache.STU;
 import com.vo.core.QCTimeEnum;
 import com.vo.core.QPSEnum;
-import com.vo.core.SCU;
 import com.vo.enums.MethodEnum;
 import com.vo.exception.StartupException;
+import com.vo.zclass.SCU;
 
 /**
  * 存取接口方法
