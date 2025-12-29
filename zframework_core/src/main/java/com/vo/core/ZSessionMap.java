@@ -96,7 +96,6 @@ public class ZSessionMap {
 	
 	public static void put(final ZSession zSession) {
 		SCS.put(zSession.getId(), zSession);
-		System.out.println(Thread.currentThread().getName() + "\t" + LocalDateTime.now() + "\t" + "ZSessionMap.put().scs.sie = " + SCS.size());
 	}
 	
 	/**
