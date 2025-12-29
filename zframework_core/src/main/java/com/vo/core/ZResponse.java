@@ -682,6 +682,7 @@ public class ZResponse {
 				+ STU.CRLF_LENGTH
 				+ headerBytesLength
 				+ STU.CRLF_LENGTH
+				+ STU.CRLF_LENGTH
 				;
 		
 		final ByteBuffer bbbb = ByteBuffer.allocateDirect(capacity);
