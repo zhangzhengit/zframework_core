@@ -350,7 +350,7 @@ public class ZResponse {
 
 		try {
 			long position = 0;
-			while (position < fs) {
+			while (position < fs && this.socketChannel.isOpen()) {
 				final long transferred = this.fileChannel.transferTo(position, fs - position, this.socketChannel);
 				position += transferred;
 			}
