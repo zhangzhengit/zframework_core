@@ -660,6 +660,7 @@ public class ZValidator {
 	 * @param field
 	 * @return
 	 */
+	// FIXME 2026年1月3日 23:12:09 zhangzhen :  这个方法有问题，@ZCP.prefix未配置时，提示未[.key]，记得去掉.
 	private static String gItemName(final Object object, final Field field) {
 		final ZConfigurationProperties zcp = object.getClass().getAnnotation(ZConfigurationProperties.class);
 		if (zcp == null) {
