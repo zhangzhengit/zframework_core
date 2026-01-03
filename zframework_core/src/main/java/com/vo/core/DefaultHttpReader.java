@@ -226,10 +226,13 @@ public class DefaultHttpReader {
 	}
 
 	/**
-	 * 已经读取完成的一个完整的http请求的header部分
+	 * 从当前读取出的内容中检验header部分，
+	 * 如：必须存在某个header/某个header必须是某个值等等
 	 *
-	 * @param ar
-	 * @return 本类默认为true
+	 * @param ar 当前读取出的内容，可能包含了部分body的内容
+	 * @return
+	 * 			检验通过返回true，继续后续流程；
+	 * 			不通过返回false并且自己构造一个 @see ZResponse
 	 */
 	public boolean checkHeader(final AR ar) {
 		return true;
