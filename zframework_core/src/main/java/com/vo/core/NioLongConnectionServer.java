@@ -236,6 +236,9 @@ public class NioLongConnectionServer {
 
 	private void action(final SelectionKey selectionKey, final SocketChannel socketChannel) {
 		
+		Task.SCTL.set(socketChannel);
+
+		
 		ZArray array = null;
 		try {
 			array = HTTPProcessor.process(socketChannel, selectionKey);

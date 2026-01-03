@@ -92,9 +92,6 @@ public final class TaskRequestHandler extends Thread {
 	@SuppressWarnings("resource")
 	private void handle(final TaskRequest taskRequest) {
 		
-
-		Task.SCTL.set(taskRequest.getSocketChannel());
-
 		try {
 
 			final ZRequest request = BodyReader.parseHeader(taskRequest.getRequestData());
