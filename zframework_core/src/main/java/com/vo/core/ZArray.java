@@ -71,7 +71,7 @@ public class ZArray {
 	public byte remove(final int index) {
 		final byte r = this.ar[index];
 		this.ar[index] = 0;
-		for (int i = index; i < this.size; i++) {
+		for (int i = index; i < this.size-1; i++) {
 			this.ar[i] = this.ar[i + 1];
 		}
 		this.ar[this.size - 1] = 0;
