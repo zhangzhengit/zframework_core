@@ -40,6 +40,9 @@ public class MR {
 		if ((MethodEnum.GET.name().equalsIgnoreCase(this.methodName))
 				|| MethodEnum.TRACE.name().equalsIgnoreCase(this.methodName)
 				|| MethodEnum.HEAD.name().equalsIgnoreCase(this.methodName)
+				|| MethodEnum.DELETE.name().equalsIgnoreCase(this.methodName)
+				|| MethodEnum.OPTIONS.name().equalsIgnoreCase(this.methodName)
+				|| MethodEnum.CONNECT.name().equalsIgnoreCase(this.methodName)
 				) {
 			return BYTE_BUFFER_SIZE;
 		}
@@ -47,9 +50,6 @@ public class MR {
 		if (MethodEnum.POST.name().equalsIgnoreCase(this.methodName)
 				|| MethodEnum.PUT.name().equalsIgnoreCase(this.methodName)
 				|| MethodEnum.PATCH.name().equalsIgnoreCase(this.methodName)
-				|| MethodEnum.DELETE.name().equalsIgnoreCase(this.methodName)
-				|| MethodEnum.OPTIONS.name().equalsIgnoreCase(this.methodName)
-				|| MethodEnum.CONNECT.name().equalsIgnoreCase(this.methodName)
 				) {
 			return POST_BYTE_LENGTH;
 		}
