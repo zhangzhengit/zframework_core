@@ -1,6 +1,7 @@
 package com.vo.http;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -11,6 +12,7 @@ import com.google.common.collect.HashBasedTable;
 import com.vo.cache.STU;
 import com.vo.core.QCTimeEnum;
 import com.vo.core.QPSEnum;
+import com.vo.core.ZMultipartFile;
 import com.vo.enums.MethodEnum;
 import com.vo.exception.StartupException;
 import com.vo.zclass.SCU;
@@ -47,6 +49,25 @@ public class ZControllerMap {
 		final ZRequestMapping requestMapping = method.getAnnotation(ZRequestMapping.class);
 
 		checkAPI(methodEnum, mapping, method, object, requestMapping);
+		
+		final Parameter[] ps = method.getParameters();
+		for (final Parameter pp : ps) {
+			if(pp.getType().equals(ZMultipartFile.class) && (methodEnum != MethodEnum.POST
+					&& methodEnum != MethodEnum.PUT
+					&& methodEnum != MethodEnum.PATCH)
+					) {
+				
+				
+				throw new StartupException(
+						"接口 " + method.getName() + " 带有 " + ZMultipartFile.class.getSimpleName() + " 参数，请改为 "
+				
+							+ MethodEnum.POST.name() + "/" + MethodEnum.PUT.name() + "/" + MethodEnum.PATCH.name()
+								
+						);
+				
+			}
+			
+		}
 		
 		methodPathTable.put(methodEnum, mapping, new ZRMethod(method, cte));
 
