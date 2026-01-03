@@ -717,7 +717,13 @@ public class Task {
 					final Optional<FD2> findAny = fdList.stream().filter(fd -> fd.getName().equals(p.getName()))
 							.findAny();
 					if (findAny.isPresent()) {
+						// 走到这，说明是读到内存的，所以构造ByteArrayInputStream
 
+						if (findAny.get().getBody() == null) {
+							throw new FormPairParseException("上传文件的[" + p.getName() + "]的内容不存在",
+									HttpStatusEnum.HTTP_400.getCode());
+						}
+						
 						final InputStream inputStream = new ByteArrayInputStream(findAny.get().getBody());
 						final ZMultipartFile file = new ZMultipartFile(findAny.get().getName(),
 								null,
@@ -733,6 +739,7 @@ public class Task {
 							throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在", HttpStatusEnum.HTTP_400.getCode());
 						}
 
+						// 走到这，说明是读到临时文件的的，所以从临时文件读
 						InputStream inputStream = null;
 						try {
 							inputStream = new FileInputStream(request.getTf().getFile());
