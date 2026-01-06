@@ -28,10 +28,29 @@ public class BodyReader {
 	/**
 	 * 从http请求报文中解析出header，是只解析header，不解析header下面的部分
 	 *
-	 * @param ba 完整的http请求报文
+	 * @param taskRequest
+	 * @return
+	 */
+	public static ZRequest parseHeader(final TaskRequest taskRequest) {
+		final ZRequest r = parseHeader(taskRequest.getRequestData());
+		r.setSocketChannel(taskRequest.getSocketChannel());
+		return r;
+	}
+	
+	public static ZRequest parseHeader(final AR ar) {
+		final ZRequest r = parseHeader(ar.getArray().get());
+		r.setSocketChannel(ar.getSocketChannel());
+		return r;
+	}
+
+	/**
+	 * 从http请求报文中解析出header，是只解析header，不解析header下面的部分
+	 *
+	 * @param ba
 	 * @return
 	 */
 	public static ZRequest parseHeader(final byte[] ba) {
+		
 		final int headerEndIndex = search(ba, STU.CRLFCRLF, 1, 0);
 
 		final byte[] headerBA = Arrays.copyOfRange(ba, 0, headerEndIndex);
@@ -41,7 +60,7 @@ public class BodyReader {
 
 		final byte[] readFullBody = readFullBody(ba, request.getContentType(), headerEndIndex, request.getBoundary());
 		request.setBody(readFullBody);
-
+		
 		return request;
 	}
 

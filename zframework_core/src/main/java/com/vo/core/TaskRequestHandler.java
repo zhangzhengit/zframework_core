@@ -45,7 +45,7 @@ public final class TaskRequestHandler extends Thread {
 		
 		super(new ThreadGroup(GROUP_NAME), GROUP_NAME + "@" + NAME);
 
-		this.setName(NAME);
+		setName(NAME);
 
 		final Collection<Object> beanConnection = ZContext.all().values();
 
@@ -85,7 +85,7 @@ public final class TaskRequestHandler extends Thread {
 				e1.printStackTrace();
 			}
 
-			this.handle(taskRequest);
+			handle(taskRequest);
 		}
 	}
 
@@ -94,10 +94,9 @@ public final class TaskRequestHandler extends Thread {
 		
 		try {
 
-			final ZRequest request = BodyReader.parseHeader(taskRequest.getRequestData());
+			final ZRequest request = BodyReader.parseHeader(taskRequest);
 
 			if (showHttpHeader) {
-
 				final String clientIp = request.getClientIp();
 				final String h = new String(taskRequest.getRequestData());
 				LOG.debug("\r\n新请求:\r\nclientIp={}\r\n{}", clientIp,h);

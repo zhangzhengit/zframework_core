@@ -42,6 +42,8 @@ public class ZRequest {
 	public static final int requestHeaderSizeLimit = SERVERCONFIGURATIONPROPERTIES.getRequestHeaderSizeLimit();
 	public static final String MULTIPART_FORM_DATA = "multipart/form-data";
 	
+	 SocketChannel socketChannel;
+	
 	// -------------------------------------------------------------------------------------------------
 	private final List<String> lineList;
 
@@ -63,9 +65,9 @@ public class ZRequest {
 	MethodEnum methodEnum;
 
 	/**
-	 * 完整的path，包含参数的,如：/hello?name=z&age=20
+	 * 完整的requestURI，如：/hello?name=z&age=20
 	 */
-	String fullpath;
+	String requestURI;
 
 	/**
 	 * 简单的path，不含参数，如：/hello
@@ -97,23 +99,23 @@ public class ZRequest {
 	/**
 	 * 客户端IP
 	 */
-	private final String clientIp;
+	private String clientIp;
 	
 
 	public boolean isSupportZSTD() {
-		return this.supportCompression(AcceptEncodingEnum.ZSTD);
+		return supportCompression(AcceptEncodingEnum.ZSTD);
 	}
 
 	public boolean isSupportDEFLATE() {
-		return this.supportCompression(AcceptEncodingEnum.DEFLATE);
+		return supportCompression(AcceptEncodingEnum.DEFLATE);
 	}
 
 	public boolean isSupportGZIP() {
-		return this.supportCompression(AcceptEncodingEnum.GZIP);
+		return supportCompression(AcceptEncodingEnum.GZIP);
 	}
 
 	private boolean supportCompression(final AcceptEncodingEnum aeEnum) {
-		final String a = this.getHeader(HeaderEnum.ACCEPT_ENCODING.getName());
+		final String a = getHeader(HeaderEnum.ACCEPT_ENCODING.getName());
 		if (STU.isEmpty(a)) {
 			return false;
 		}
@@ -129,11 +131,11 @@ public class ZRequest {
 	}
 
 	public String getHost() {
-		return this.getHeader(HeaderEnum.HOST.getName());
+		return getHeader(HeaderEnum.HOST.getName());
 	}
 
 	public String getMethod() {
-		return this.getMethodEnum().getMethod();
+		return getMethodEnum().getMethod();
 	}
 
 	public byte[] getBody() {
@@ -142,7 +144,7 @@ public class ZRequest {
 
 	public int getServerPort() {
 
-		final String host = this.getHeaderMap().get(HeaderEnum.HOST.getName());
+		final String host = getHeaderMap().get(HeaderEnum.HOST.getName());
 
 		final int i = host.indexOf(STU.COLON);
 		if (i > -1) {
@@ -154,11 +156,11 @@ public class ZRequest {
 	}
 
 	public String getRequestURL() {
-		return this.getHost() + this.getPath();
+		return getHost() + getRequestURI();
 	}
 
 	public String getRequestURI() {
-		return this.getPath();
+		return this.requestURI;
 	}
 
 	/**
@@ -167,7 +169,7 @@ public class ZRequest {
 	 * @return
 	 */
 	public String getContentType() {
-		return this.getHeader(HeaderEnum.CONTENT_TYPE.getName());
+		return getHeader(HeaderEnum.CONTENT_TYPE.getName());
 	}
 
 	/**
@@ -180,10 +182,10 @@ public class ZRequest {
 	 * @return
 	 */
 	public String getBoundary() {
-		if (!this.isContentTypeFormData()) {
+		if (!isContentTypeFormData()) {
 			return null;
 		}
-		final String ct = this.getHeaderMap().get(HeaderEnum.CONTENT_TYPE.getName());
+		final String ct = getHeaderMap().get(HeaderEnum.CONTENT_TYPE.getName());
 
 		final int i = ct.indexOf(BOUNDARY);
 		if (i > -1) {
@@ -199,7 +201,7 @@ public class ZRequest {
 	 * @return
 	 */
 	public boolean isContentTypeFormData() {
-		final String ct = this.getContentType();
+		final String ct = getContentType();
 		return ct == null ? false : ct.contains(MULTIPART_FORM_DATA);
 	}
 
@@ -225,7 +227,7 @@ public class ZRequest {
 	 * @return
 	 */
 	public synchronized ZSession getSession(final boolean create) {
-		final ZCookie[] cs = this.getCookies();
+		final ZCookie[] cs = getCookies();
 
 		if (AU.isNotEmpty(cs)) {
 			for (final ZCookie zc : cs) {
@@ -260,13 +262,13 @@ public class ZRequest {
 	}
 
 	public int getContentLength() {
-		final String s = this.getHeader(HeaderEnum.CONTENT_LENGTH.getName());
+		final String s = getHeader(HeaderEnum.CONTENT_LENGTH.getName());
 		return s == null ? -1 : Integer.parseInt(s);
 	}
 
 	public ZCookie getCookie(final String name) {
 		
-		final String cookisString = this.getHeaderMap().get(HeaderEnum.COOKIE.getName());
+		final String cookisString = getHeaderMap().get(HeaderEnum.COOKIE.getName());
 		if (STU.isEmpty(cookisString)) {
 			return null;
 		}
@@ -285,7 +287,7 @@ public class ZRequest {
 	
 	public ZCookie[] getCookies() {
 
-		final String cookisString = this.getHeaderMap().get(HeaderEnum.COOKIE.getName());
+		final String cookisString = getHeaderMap().get(HeaderEnum.COOKIE.getName());
 		if (STU.isEmpty(cookisString)) {
 			return null;
 		}
@@ -305,7 +307,7 @@ public class ZRequest {
 	}
 
 	public ZCookie getZSESSIONID() {
-		final ZCookie[] cookies = this.getCookies();
+		final ZCookie[] cookies = getCookies();
 		if (AU.isEmpty(cookies)) {
 			return null;
 		}
@@ -320,15 +322,15 @@ public class ZRequest {
 	}
 
 	public String getUserAgent() {
-		return this.getHeaderMap().get(HeaderEnum.USER_AGENT.getName());
+		return getHeaderMap().get(HeaderEnum.USER_AGENT.getName());
 	}
 
 	public String getHeader(final String name) {
-		return this.getHeaderMap().get(name);
+		return getHeaderMap().get(name);
 	}
 
 	public boolean isKeepAlive() {
-		final String connection = this.getHeader(HeaderEnum.CONNECTION.getName());
+		final String connection = getHeader(HeaderEnum.CONNECTION.getName());
 		final boolean keepAlive = STU.isNotEmpty(connection)
 				&& connection.length() == ConnectionEnum.KEEP_ALIVE.getValue().length()
 				&& (connection.equals(ConnectionEnum.KEEP_ALIVE.getValue())
@@ -339,7 +341,7 @@ public class ZRequest {
 	public Object getParameter(final String name) {
 		// FIXME 2024年12月9日 下午6:30:42 zhangzhen : 这个方法是否要改
 		// 因为@ZRequestParam加入了默认值，用此方法取还是原值而非默认值
-		final Set<RequestParam> ps = this.getParamSet();
+		final Set<RequestParam> ps = getParamSet();
 		if (CU.isEmpty(ps)) {
 			return null;
 		}
@@ -362,8 +364,6 @@ public class ZRequest {
 		Collections.addAll(this.lineList, lineArray);
 
 		parseRequest(this);
-
-		this.clientIp = this.getClientIp0();
 	}
 
 	private static ZRequest parseRequest(final ZRequest request) {
@@ -415,23 +415,22 @@ public class ZRequest {
 
 	private String getClientIp0() {
 
-		final String xRealIp = this.getHeader(HeaderEnum.X_REAL_IP.getName());
+		final String xRealIp = getHeader(HeaderEnum.X_REAL_IP.getName());
 		if (xRealIp != null) {
 			return xRealIp;
 		}
 
-		final String xForwardedFor = this.getHeader(HeaderEnum.X_Forwarded_For.getName());
+		final String xForwardedFor = getHeader(HeaderEnum.X_Forwarded_For.getName());
 		if (xForwardedFor != null) {
 			return xForwardedFor;
 		}
 
-		final SocketChannel socketChannel = Task.SCTL.get();
-		if (socketChannel == null) {
+		if (this.socketChannel == null) {
 			return null;
 		}
 
 		// FIXME 2023年11月16日 下午2:47:38 zhanghen: ab 测试这里可能取不到,修复掉
-		final Socket socket = socketChannel.socket();
+		final Socket socket = this.socketChannel.socket();
 		if (socket == null) {
 			return null;
 		}
@@ -452,14 +451,14 @@ public class ZRequest {
 			throw new IllegalArgumentException("请求行错误：找不到path");
 		}
 
-		final String fullPath = s.substring(methodIndex  + 1, pathI);
+		final String requestURI = s.substring(methodIndex  + 1, pathI);
 
-		final int wenI = fullPath.indexOf("?");
+		final int wenI = requestURI.indexOf("?");
 		if (wenI > -1) {
-			request.queryString = fullPath.substring(("?".length() + wenI) - 1);
+			request.queryString = requestURI.substring(("?".length() + wenI) - 1);
 			final Set<RequestParam> paramSet = new HashSet<>();
-			final String param = fullPath.substring("?".length() + wenI);
-			final String simplePath = fullPath.substring(0,wenI);
+			final String param = requestURI.substring("?".length() + wenI);
+			final String simplePath = requestURI.substring(0,wenI);
 
 			try {
 				request.path = java.net.URLDecoder.decode(simplePath, Task.DEFAULT_CHARSET_NAME);
@@ -491,12 +490,17 @@ public class ZRequest {
 
 		} else {
 			try {
-				request.path = (java.net.URLDecoder.decode(fullPath, Task.DEFAULT_CHARSET_NAME));
+				request.path = java.net.URLDecoder.decode(requestURI, Task.DEFAULT_CHARSET_NAME);
 			} catch (final UnsupportedEncodingException e) {
 				e.printStackTrace();
 			}
 		}
-		request.fullpath = fullPath;
+		
+		try {
+			request.requestURI = java.net.URLDecoder.decode(requestURI, Task.DEFAULT_CHARSET_NAME);
+		} catch (final UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
 	}
 
 	private static void parseHost(final String line, final ZRequest request) {
@@ -569,10 +573,7 @@ public class ZRequest {
 	public MethodEnum getMethodEnum() {
 		return this.methodEnum;
 	}
-
-	public String getFullpath() {
-		return this.fullpath;
-	}
+	
 
 	public String getPath() {
 		return this.path;
@@ -599,6 +600,9 @@ public class ZRequest {
 	}
 
 	public String getClientIp() {
+		if (this.clientIp == null) {
+			this.clientIp = getClientIp0();
+		}
 		return this.clientIp;
 	}
 
@@ -664,15 +668,23 @@ public class ZRequest {
 		}
 		
 	}
+	
+	void setSocketChannel(final SocketChannel socketChannel) {
+		this.socketChannel = socketChannel;
+	}
+	
+	public SocketChannel getSocketChannel() {
+		return this.socketChannel;
+	}
 
 	@Override
 	public String toString() {
 		return "ZRequest [lineList=" + this.lineList + ", original=" + this.original + ", queryString=" + this.queryString + ", tf="
-				+ this.tf + ", methodEnum=" + this.methodEnum + ", fullpath=" + this.fullpath + ", path=" + this.path + ", paramSet="
+				+ this.tf + ", methodEnum=" + this.methodEnum + ", fullpath=" + this.requestURI + ", path=" + this.path + ", paramSet="
 				+ this.paramSet + ", version=" + this.version + ", headerMap=" + this.headerMap + ", originalRequestBytes="
 				+ Arrays.toString(this.originalRequestBytes) + ", body=" + Arrays.toString(this.body) + ", clientIp=" + this.clientIp
 				+ "]";
 	}
-	
+
 	
 }

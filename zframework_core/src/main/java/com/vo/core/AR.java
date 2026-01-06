@@ -1,5 +1,6 @@
 package com.vo.core;
 
+import java.nio.channels.SocketChannel;
 import java.util.Arrays;
 
 /**
@@ -13,6 +14,8 @@ public class AR {
 	private ZArray array;
 
 	private int headerEndIndex;
+	
+	private SocketChannel socketChannel;
 
 	public ZArray getArray() {
 		return this.array;
@@ -43,6 +46,20 @@ public class AR {
 	public AR(final ZArray array, final int headerEndIndex) {
 		this.array = array;
 		this.headerEndIndex = headerEndIndex;
+	}
+
+	public SocketChannel getSocketChannel() {
+		return this.socketChannel;
+	}
+
+	public void setSocketChannel(final SocketChannel socketChannel) {
+		this.socketChannel = socketChannel;
+	}
+
+	public AR(final ZArray array, final int headerEndIndex, final SocketChannel socketChannel) {
+		this.array = array;
+		this.headerEndIndex = headerEndIndex;
+		this.socketChannel = socketChannel;
 	}
 
 }

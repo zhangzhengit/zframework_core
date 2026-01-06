@@ -86,7 +86,6 @@ public class Task {
 	public static final int HTTP_STATUS_500 = 500;
 	public static final String INTERNAL_SERVER_ERROR = "Internal Server Error";
 	public static final ContentTypeEnum DEFAULT_CONTENT_TYPE = ContentTypeEnum.APPLICATION_JSON;
-	public static final ThreadLocal<SocketChannel> SCTL = new ThreadLocal<>();
 	private final SocketChannel socketChannel;
 
 	public Task(final SocketChannel socketChannel) {
@@ -191,7 +190,7 @@ public class Task {
 			}
 
 			final Object zController = ZControllerMap.getObjectByMethod(zrMethod.getMethod());
-			final ZResponse re = this.invokeAndResponse(zrMethod, parameterArray, zController, request);
+			final ZResponse re = invokeAndResponse(zrMethod, parameterArray, zController, request);
 			return re;
 
 		} catch (final Exception e) {
@@ -336,7 +335,7 @@ public class Task {
 
 		ZResponseStatus.initialization();
 		
-		this.setZRequestAndZResponse(parametersArray, request, zrMethod);
+		setZRequestAndZResponse(parametersArray, request, zrMethod);
 
 		Object r = null;
 		// 在此zhi执行
@@ -430,7 +429,7 @@ public class Task {
 		final String[] ps = zrMethod.getProduces();
 		if (AU.isNotEmpty(ps)) {
 			if ((ps.length == 1)) {
-				return this.responseCT(r, ps[0], zrMethod.getCtea()[0]);
+				return responseCT(r, ps[0], zrMethod.getCtea()[0]);
 			}
 			final int x = 20;
 			// FIXME 2025年12月6日 00:39:34 zhangzhen : 多个ps的待会再做，先做下面简单的
@@ -441,9 +440,9 @@ public class Task {
 		// 否则一律application/json
 		if (zrMethod.hasResponseBody()) {
 			if (zrMethod.isRTString()) {
-				return this.responseTextPlain(r);
+				return responseTextPlain(r);
 			}
-			return this.responseAppJSON(r);
+			return responseAppJSON(r);
 		}
 		
 		// 第4优先：@ZRestCon还是@ZCon注解,ZC则默认为html名称，
@@ -451,15 +450,15 @@ public class Task {
 		final CTEnum ctEnum = zrMethod.getCtEnum();
 		// 响应 html
 		if ((ctEnum == CTEnum.NORMAL) ) {
-			return this.responseHtml(r);
+			return responseHtml(r);
 		}
 		
 		if ((ctEnum == CTEnum.REST) && zrMethod.isRTString()) {
-			return this.responseTextPlain(r);
+			return responseTextPlain(r);
 		}
 		
 		// 默认响应json
-		return this.responseAppJSON(r);
+		return responseAppJSON(r);
 	}
 
 	static String findProduces(final ZRequest request, final String[] ps) {

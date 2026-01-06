@@ -147,7 +147,7 @@ public class NioLongConnectionServer {
 			}
 
 			if (this.zc >= ZC_THRESHOLD) {
-				this.rebuildSelector();
+				rebuildSelector();
 				this.zc = 0;
 			}
 
@@ -183,8 +183,7 @@ public class NioLongConnectionServer {
 
 						if (SKStatusEnum.READING == selectionKey.attachment()) {
 							NioLongConnectionServer.ZE.executeByNameInASpecificThread(keyword,
-									() -> this.action(selectionKey, socketChannel));
-
+									() -> action(selectionKey, socketChannel));
 						}
 
 					}
@@ -235,9 +234,6 @@ public class NioLongConnectionServer {
 	}
 
 	private void action(final SelectionKey selectionKey, final SocketChannel socketChannel) {
-		
-		Task.SCTL.set(socketChannel);
-
 		
 		ZArray array = null;
 		try {

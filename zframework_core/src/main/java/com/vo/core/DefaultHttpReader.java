@@ -302,7 +302,7 @@ public class DefaultHttpReader {
 		}
 		byteBuffer.clear();
 
-		return new AR(array, headerEndIndex);
+		return new AR(array, headerEndIndex, socketChannel);
 	}
 
 	private static void add(final ByteBuffer byteBuffer, final ZArray array) {
