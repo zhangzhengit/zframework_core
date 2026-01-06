@@ -466,7 +466,7 @@ public class ZConfigurationPropertiesScanner {
 		while (keys2.hasNext()) {
 			final String k = keys2.next();
 
-			final String kName = k.replace(convert + '.', STU.SAPCE);
+			final String kName = k.replace(convert + '.', STU.EMPTY);
 
 			final String value = ZProperties.getString(k);
 			map.put(kName, value);
