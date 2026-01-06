@@ -1,11 +1,13 @@
 package com.vo.configuration;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
 import com.vo.anno.ZConfigurationProperties;
 import com.vo.anno.ZOrder;
 import com.vo.anno.ZValue;
+import com.vo.core.ContentTypeEnum;
 import com.vo.core.PortChecker;
 import com.vo.core.QPSEnum;
 import com.vo.enums.ZSessionStorageTypeEnum;
@@ -229,6 +231,14 @@ public class ServerConfigurationProperties {
 	 */
 	@ZNotNull
 	private boolean staticControllerEnable = true;
+
+	/**
+	 * StaticController 接口响应的Content-Type
+	 * <k,v>配置为<文件后缀名,响应的Content-Type>，如:
+	 * server.static.controller.content.type.jpg=image/jpg
+	 */
+	@ZNotEmtpy
+	private Map<String, String> staticControllerContentType = initCTM();
 
 	/**
 	 * StaticController 中允许的Referer，
@@ -782,4 +792,37 @@ public class ServerConfigurationProperties {
 				+ ", showHttpHeader=" + this.showHttpHeader + "]";
 	}
 
+	public Map<String, String> getStaticControllerContentType() {
+		return this.staticControllerContentType;
+	}
+
+	public void setStaticControllerContentType(final Map<String, String> staticControllerContentType) {
+		this.staticControllerContentType = staticControllerContentType;
+	}
+
+	
+	static Map<String, String> initCTM() {
+		final Map<String, String> ctm = new HashMap<>(16, 1F);
+		ctm.put("jpg", ContentTypeEnum.IMAGE_JPG.getType());
+		ctm.put("jpeg", ContentTypeEnum.IMAGE_JPGE.getType());
+		ctm.put("gif", ContentTypeEnum.IMAGE_GIF.getType());
+		ctm.put("png", ContentTypeEnum.IMAGE_PNG.getType());
+		ctm.put("ico", ContentTypeEnum.IMAGE_ICON.getType());
+
+		ctm.put("wav", ContentTypeEnum.AUDIO_WAV.getType());
+		ctm.put("mp3", ContentTypeEnum.AUDIO_MP3.getType());
+		ctm.put("mp4", ContentTypeEnum.VIDEO_MP4.getType());
+		ctm.put("pdf", ContentTypeEnum.APPLICATION_PDF.getType());
+
+		ctm.put("doc", ContentTypeEnum.WORD.getType());
+		ctm.put("js", ContentTypeEnum.JS.getType());
+		
+		ctm.put("txt", ContentTypeEnum.TEXT_PLAIN.getType());
+		ctm.put("css", ContentTypeEnum.TEXT_CSS.getType());
+		ctm.put("html", ContentTypeEnum.TEXT_HTML.getType());
+		
+
+		return ctm;
+	}
+	
 }

@@ -2,6 +2,7 @@ package com.vo.api;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -41,11 +42,12 @@ public class StaticController {
 	@ZRequestMapping(mapping = { "/favicon\\.ico",
 			"/.+\\.txt$",
 			"/.+\\.png$",
-			"/.+\\.ttf$","/.+\\.woff$",
 			"/.+\\.wav$",
 			"/.+\\.js$", "/.+\\.jpg$", "/.+\\.mp3$", "/.+\\.mp4$", "/.+\\.pdf$",
-			"/.+\\.gif$", "/.+\\.doc$", "/.+\\.css$", "/.+\\.html$" }, isRegex = { true, true, true, true, true, true,
-					true, true,true,true, true, true, true, true, true }, count = 10000 * 10)
+			"/.+\\.gif$", "/.+\\.doc$", "/.+\\.css$", "/.+\\.html$" }
+		, isRegex = { true, true, true, true, true, true,
+					true,true, true, true, true, true, true },
+				count = 10000 * 10)
 
 	@ZQPSLimitation(count = 2000, type = ZQPSLimitationEnum.ZSESSIONID)
 	@ZETag
@@ -67,15 +69,17 @@ public class StaticController {
 			return;
 		}
 
-		final ContentTypeEnum cte = ContentTypeEnum.gType(resourceName.substring(i + 1));
-		if (cte == null) {
+		final String sn = resourceName.substring(i + 1);
+		final Map<String, String> ctm = SERVER_CONFIGURATION.getStaticControllerContentType();
+		final String ct = ctm.get(sn);
+		if (com.vo.common.STU.isEmpty(ct)) {
 			response.httpStatus(HttpStatusEnum.HTTP_500.getCode())
 					.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 					.body(J.toJSONString(CR.error("不支持的文件类型")));
 			return;
 		}
 
-		response.contentType(cte.getType());
+		response.contentType(ct);
 
 		final InputStream inputStream = ResourcesLoader.loadStaticResourceAsInputStream(resourceName);
 		if (inputStream instanceof FileInputStream) {
