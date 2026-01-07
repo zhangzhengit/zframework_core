@@ -87,11 +87,11 @@ public class NioLongConnectionServer {
 	ServerSocketChannel serverSocketChannel;
 	Selector selector = null;
 	int zc = 0;
-	
+
 	public void startNIOServer(final int serverPort) {
 		final ThreadGroup group = new ThreadGroup("nio");
 		final Thread thread = new Thread(group, () -> NioLongConnectionServer.this.startNIOServer0(serverPort));
-		thread.setName("nio-Thread");
+		thread.setName("nioT");
 		thread.setPriority(Thread.MAX_PRIORITY);
 		thread.start();
 
@@ -112,8 +112,8 @@ public class NioLongConnectionServer {
 		keepAliveTimeoutJOB();
 
 		// 创建ServerSocketChannel
-		
-		
+
+
 		try {
 			this.serverSocketChannel = ServerSocketChannel.open();
 			this.serverSocketChannel.configureBlocking(false);
@@ -168,7 +168,7 @@ public class NioLongConnectionServer {
 
 						synchronized (selectionKey) {
 							final Object attachment = selectionKey.attachment();
-							if ((attachment != null) && (attachment == SKStatusEnum.READING)) {
+							if (attachment != null && attachment == SKStatusEnum.READING) {
 								continue;
 							}
 						}
@@ -234,7 +234,7 @@ public class NioLongConnectionServer {
 	}
 
 	private void action(final SelectionKey selectionKey, final SocketChannel socketChannel) {
-		
+
 		ZArray array = null;
 		try {
 			array = HTTPProcessor.process(socketChannel, selectionKey);
@@ -357,7 +357,7 @@ public class NioLongConnectionServer {
 
 			final long now = System.currentTimeMillis();
 			for (final Long key : keySet) {
-				if ((now - key) >= (keepAliveTimeout * 1000)) {
+				if (now - key >= keepAliveTimeout * 1000) {
 					delete.add(key);
 				}
 			}
@@ -441,11 +441,11 @@ public class NioLongConnectionServer {
 						.httpStatus(httpStatus != null ? httpStatus : HttpStatusEnum.HTTP_500.getCode())
 						.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 						.body(J.toJSONString(r));
-				
+
 				if (SERVER_CONFIGURATIONPROPERTIES.isResponseZSessionId()) {
 					NioLongConnectionServer.setZSessionId(request, response);
 				}
-				
+
 				response.write();
 
 			} finally {
@@ -484,7 +484,7 @@ public class NioLongConnectionServer {
 		try {
 			final ZResponse response = task.invoke(request, socketChannel);
 
-			if ((response == null) || response.isWritten()) {
+			if (response == null || response.isWritten()) {
 				return;
 			}
 
@@ -532,7 +532,7 @@ public class NioLongConnectionServer {
 	private static void addConnectionToKAMap(final SelectionKey key, final SocketChannel socketChannel,
 			final boolean keepAlive) {
 		if (keepAlive) {
-			SOCKET_CHANNEL_MAP.put((System.currentTimeMillis() / 1000) * 1000, new SS(socketChannel, key));
+			SOCKET_CHANNEL_MAP.put(System.currentTimeMillis() / 1000 * 1000, new SS(socketChannel, key));
 		}
 	}
 
