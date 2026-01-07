@@ -61,7 +61,7 @@ public class StaticController {
 
 		final String resourceName = request.getRequestURI();
 
-		final int i = resourceName.indexOf(".");
+		final int i = resourceName.lastIndexOf(".");
 		if (i <= -1) {
 			response.httpStatus(HttpStatusEnum.HTTP_500.getCode())
 					.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
