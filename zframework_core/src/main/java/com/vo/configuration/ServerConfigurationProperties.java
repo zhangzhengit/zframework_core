@@ -86,12 +86,10 @@ public class ServerConfigurationProperties {
 	/**
 	 * 上传文件时从[一次性读取内存]改为[边读边写入到临时文件]的阈值
 	 *
-	 * 现在为一次性读取到内存的最大值，max值设得小一点防止占用太大内存
-	 *
 	 * 单位：KB
 	 */
 	@ZMin(min = 100)
-	@ZMax(max = 1024 * 20)
+	@ZMax(max = 1024 * 1024 * 10)
 	@ZNotNull
 	private int uploadFileToTempSize = 1024;
 
@@ -260,14 +258,14 @@ public class ServerConfigurationProperties {
 	@ZMin(min = 1024 * 1024 * 1)
 	@ZMax(max = Integer.MAX_VALUE)
 	private int staticControllerMemoryCacheCapacity = 1024 * 1024 * 100;
-	
+
 	/**
 	 * StaticController 响应时每次读取的BufferSize，单位：字节
-	 * 
+	 *
 	 * 注意：min配置为 compressionMinLength max值，是为了偷懒，不然ZResponde.body(InputStream)
 	 * 方法不太好判断是否进行压缩。
 	 * 并且min = 64KB 也不算太大
-	 * 
+	 *
 	 */
 	@ZNotNull
 	@ZMin(min = 1024 * 64)
@@ -300,10 +298,10 @@ public class ServerConfigurationProperties {
 	@ZMax(max = 60 * 60 * 24 * 7)
 	@ZValue(name = "server.session.timeout", listenForChanges = true)
 	private int sessionTimeout = 60 * 30;
-	
+
 	// FIXME 2025年12月20日 06:42:51 zhangzhen :  写一个校验器，检验  sessionTimeout 不能大于 sessionMaxTimeout
 	// 提示修改其一
-	
+
 	/**
 	 * session超时时间[秒]最大值限制，用于限制[server.session.max.timeout]的大小，
 	 * 同时设定存储器的超时时间，如果不限制可能导致一直占用内存最终OOM
@@ -325,7 +323,7 @@ public class ServerConfigurationProperties {
 	@ZMin(min = 1)
 	@ZMax(max = 10000 * 50)
 	private int sessionMaxActiveInMemory = 10000 * 10;
-	
+
 	/**
 	 * 配置硬盘上的资源目录，如：E:\\x
 	 * 此值配置了，则优先读取此值下的资源文件
@@ -394,7 +392,7 @@ public class ServerConfigurationProperties {
 	 */
 	@ZNotNull
 	private boolean printProxyClass = false;
-	
+
 	/**
 	 *	启动时是否打印banner
 	 */
@@ -404,9 +402,9 @@ public class ServerConfigurationProperties {
 	 * 是否打印请求的header
 	 */
 	private boolean showHttpHeader = false;
-	
+
 	public boolean compressionContains(final String contentType) {
-		final String[] a = this.getCompressionType();
+		final String[] a = getCompressionType();
 		for (final String string : a) {
 			if (string.equals(contentType)) {
 				return true;
@@ -738,7 +736,7 @@ public class ServerConfigurationProperties {
 	public void setStaticResponseBufferSize(final int staticResponseBufferSize) {
 		this.staticResponseBufferSize = staticResponseBufferSize;
 	}
-	
+
 	public boolean getShowHttpHeader() {
 		return this.showHttpHeader;
 	}
@@ -800,7 +798,7 @@ public class ServerConfigurationProperties {
 		this.staticControllerContentType = staticControllerContentType;
 	}
 
-	
+
 	static Map<String, String> initCTM() {
 		final Map<String, String> ctm = new HashMap<>(16, 1F);
 		ctm.put("jpg", ContentTypeEnum.IMAGE_JPG.getType());
@@ -816,13 +814,13 @@ public class ServerConfigurationProperties {
 
 		ctm.put("doc", ContentTypeEnum.WORD.getType());
 		ctm.put("js", ContentTypeEnum.JS.getType());
-		
+
 		ctm.put("txt", ContentTypeEnum.TEXT_PLAIN.getType());
 		ctm.put("css", ContentTypeEnum.TEXT_CSS.getType());
 		ctm.put("html", ContentTypeEnum.TEXT_HTML.getType());
-		
+
 
 		return ctm;
 	}
-	
+
 }
