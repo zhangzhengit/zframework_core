@@ -143,18 +143,28 @@ public class DefaultHttpReader {
 					return array;
 				}
 
-				final int uploadFileToTempSize = SERVER_CONFIGURATIONPROPERTIES.getUploadFileToTempSize();
-				if (newNeedReadBodyLength > uploadFileToTempSize * _1024) {
-					// 文件写入临时文件之前，把读header时多读出的超出header的部分删掉
-					final int writeArrayLength = array.length() - ar.getHeaderEndIndex() - BodyReader.RN_BYTES_LENGTH
-							- BodyReader.RN_BYTES_LENGTH;
+//				final int uploadFileToTempSize = SERVER_CONFIGURATIONPROPERTIES.getUploadFileToTempSize();
+				// 文件写入临时文件之前，把读header时多读出的超出header的部分删掉
+				final int writeArrayLength = array.length() - ar.getHeaderEndIndex() - BodyReader.RN_BYTES_LENGTH
+						- BodyReader.RN_BYTES_LENGTH;
 
-					final TF tf = readBodyToTempFile(key, socketChannel, array, newNeedReadBodyLength,
-							writeArrayLength);
-					array.setTf(tf);
-				} else {
-					readBodyToMemory(key, socketChannel, array, newNeedReadBodyLength);
-				}
+				// 2 直接全部写入临时文件
+				final TF tf = readBodyToTempFile(key, socketChannel, array, newNeedReadBodyLength,
+						writeArrayLength);
+				array.setTf(tf);
+
+				// 1 根据配置写入内存或文件
+//				if (newNeedReadBodyLength > uploadFileToTempSize * _1024) {
+//					// 文件写入临时文件之前，把读header时多读出的超出header的部分删掉
+//					final int writeArrayLength = array.length() - ar.getHeaderEndIndex() - BodyReader.RN_BYTES_LENGTH
+//							- BodyReader.RN_BYTES_LENGTH;
+//
+//					final TF tf = readBodyToTempFile(key, socketChannel, array, newNeedReadBodyLength,
+//							writeArrayLength);
+//					array.setTf(tf);
+//				} else {
+//					readBodyToMemory(key, socketChannel, array, newNeedReadBodyLength);
+//				}
 			}
 		}
 		return array;

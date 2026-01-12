@@ -41,9 +41,9 @@ public class ZRequest {
 			.getBean(ServerConfigurationProperties.class);
 	public static final int requestHeaderSizeLimit = SERVERCONFIGURATIONPROPERTIES.getRequestHeaderSizeLimit();
 	public static final String MULTIPART_FORM_DATA = "multipart/form-data";
-	
+
 	 SocketChannel socketChannel;
-	
+
 	// -------------------------------------------------------------------------------------------------
 	private final List<String> lineList;
 
@@ -100,7 +100,7 @@ public class ZRequest {
 	 * 客户端IP
 	 */
 	private String clientIp;
-	
+
 
 	public boolean isSupportZSTD() {
 		return supportCompression(AcceptEncodingEnum.ZSTD);
@@ -267,7 +267,7 @@ public class ZRequest {
 	}
 
 	public ZCookie getCookie(final String name) {
-		
+
 		final String cookisString = getHeaderMap().get(HeaderEnum.COOKIE.getName());
 		if (STU.isEmpty(cookisString)) {
 			return null;
@@ -281,10 +281,10 @@ public class ZRequest {
 				return zCookie;
 			}
 		}
-		
+
 		return null;
 	}
-	
+
 	public ZCookie[] getCookies() {
 
 		final String cookisString = getHeaderMap().get(HeaderEnum.COOKIE.getName());
@@ -385,7 +385,7 @@ public class ZRequest {
 		if (methodIndex <= -1) {
 			throw new IllegalArgumentException("请求行错误");
 		}
-		
+
 		final String methodS = line.substring(0, methodIndex);
 		final MethodEnum me = MethodEnum.valueOfMethodStringUpper(methodS);
 		// 可能是null，在这里不管，在外面处理，返回405
@@ -455,7 +455,7 @@ public class ZRequest {
 
 		final int wenI = requestURI.indexOf("?");
 		if (wenI > -1) {
-			request.queryString = requestURI.substring(("?".length() + wenI) - 1);
+			request.queryString = requestURI.substring("?".length() + wenI - 1);
 			final Set<RequestParam> paramSet = new HashSet<>();
 			final String param = requestURI.substring("?".length() + wenI);
 			final String simplePath = requestURI.substring(0,wenI);
@@ -495,7 +495,7 @@ public class ZRequest {
 				e.printStackTrace();
 			}
 		}
-		
+
 		try {
 			request.requestURI = java.net.URLDecoder.decode(requestURI, Task.DEFAULT_CHARSET_NAME);
 		} catch (final UnsupportedEncodingException e) {
@@ -553,7 +553,7 @@ public class ZRequest {
 
 		request.headerMap = hm;
 	}
-	
+
 	public String getOriginal() {
 		return this.original;
 	}
@@ -573,7 +573,7 @@ public class ZRequest {
 	public MethodEnum getMethodEnum() {
 		return this.methodEnum;
 	}
-	
+
 
 	public String getPath() {
 		return this.path;
@@ -638,7 +638,7 @@ public class ZRequest {
 
 		public RequestParam() {
 		}
-		
+
 	}
 
 	public static class ZHeader {
@@ -661,18 +661,18 @@ public class ZRequest {
 			this.name = name;
 			this.value = value;
 		}
-		
+
 		@Override
 		public String toString() {
 			return "ZHeader [name=" + this.name + ", value=" + this.value + "]";
 		}
-		
+
 	}
-	
+
 	void setSocketChannel(final SocketChannel socketChannel) {
 		this.socketChannel = socketChannel;
 	}
-	
+
 	public SocketChannel getSocketChannel() {
 		return this.socketChannel;
 	}
@@ -686,5 +686,5 @@ public class ZRequest {
 				+ "]";
 	}
 
-	
+
 }

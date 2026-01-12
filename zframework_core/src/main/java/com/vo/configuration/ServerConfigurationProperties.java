@@ -83,15 +83,15 @@ public class ServerConfigurationProperties {
 	@ZNotNull
 	private int uploadFileSize = 1024 * 50;
 
-	/**
-	 * 上传文件时从[一次性读取内存]改为[边读边写入到临时文件]的阈值
-	 *
-	 * 单位：KB
-	 */
-	@ZMin(min = 100)
-	@ZMax(max = 1024 * 1024 * 10)
-	@ZNotNull
-	private int uploadFileToTempSize = 1024;
+//	/**
+//	 * 上传文件时从[一次性读取内存]改为[边读边写入到临时文件]的阈值
+//	 *
+//	 * 单位：KB
+//	 */
+//	@ZMin(min = 1)
+//	@ZMax(max = 1024 * 1024 * 10)
+//	@ZNotNull
+//	private int uploadFileToTempSize = 1024;
 
 	/**
 	 * 上传文件时存放临时文件的目录，
@@ -473,13 +473,13 @@ public class ServerConfigurationProperties {
 		this.uploadFileSize = uploadFileSize;
 	}
 
-	public int getUploadFileToTempSize() {
-		return this.uploadFileToTempSize;
-	}
-
-	public void setUploadFileToTempSize(final int uploadFileToTempSize) {
-		this.uploadFileToTempSize = uploadFileToTempSize;
-	}
+//	public int getUploadFileToTempSize() {
+//		return this.uploadFileToTempSize;
+//	}
+//
+//	public void setUploadFileToTempSize(final int uploadFileToTempSize) {
+//		this.uploadFileToTempSize = uploadFileToTempSize;
+//	}
 
 	public String getUploadTempDir() {
 		return this.uploadTempDir;
@@ -769,7 +769,9 @@ public class ServerConfigurationProperties {
 	public String toString() {
 		return "ServerConfigurationProperties [port=" + this.port + ", responseZSessionId=" + this.responseZSessionId + ", name="
 				+ this.name + ", byteBufferSize=" + this.byteBufferSize + ", nioReadTimeout=" + this.nioReadTimeout
-				+ ", uploadFileSize=" + this.uploadFileSize + ", uploadFileToTempSize=" + this.uploadFileToTempSize
+				+ ", uploadFileSize=" + this.uploadFileSize
+//				+ ", uploadFileToTempSize="
+//				+ this.uploadFileToTempSize
 				+ ", uploadTempDir=" + this.uploadTempDir + ", threadCount=" + this.threadCount + ", threadName=" + this.threadName
 				+ ", staticResourceCacheEnable=" + this.staticResourceCacheEnable + ", scanPackage=" + this.scanPackage
 				+ ", qpsLimitEnabled=" + this.qpsLimitEnabled + ", qps=" + this.qps + ", qpsExceedMessage=" + this.qpsExceedMessage

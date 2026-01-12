@@ -193,8 +193,9 @@ public class BodyReader {
 						fd2.setContentType(ct);
 
 						final byte[] bodyFullBA = Arrays.copyOfRange(oneBA,
-								ctIndex + line.getBytes().length, oneBA.length);
-						fd2.setBody(bodyFullBA);
+								ctIndex + STU.CRLFCRLF.length() + line.getBytes().length, oneBA.length);
+						fd2.setBody(bodyFullBA
+								);
 						break;
 					}
 				}
