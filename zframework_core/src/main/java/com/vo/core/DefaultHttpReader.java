@@ -489,7 +489,16 @@ public class DefaultHttpReader {
 						i++;
 					}
 
-					final byte[] xxx = Arrays.copyOfRange(ba, arrayList.get(arrayList.size() - 1), ctI);
+					int cdI = 0;
+					// 找到小于ctI的最大的那个cdI
+					for (int ix = arrayList.size(); ix-- > 0;) {
+						if (arrayList.get(ix) < ctI) {
+							cdI = arrayList.get(ix);
+							break;
+						}
+					}
+
+					final byte[] xxx = Arrays.copyOfRange(ba, cdI, ctI);
 					final String cdLine = new String(xxx);
 					final Map<String, String> cdMap = parseCDLine(cdLine);
 					tf.setName(cdMap.get("name"));
