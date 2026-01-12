@@ -1,5 +1,7 @@
 package com.vo.core;
 
+import java.util.Arrays;
+
 /**
  * 表示formdata中的一个请求项
  *
@@ -48,7 +50,7 @@ public class FD2 {
 	private String value;
 
 	public String getContentDisposition() {
-		return contentDisposition;
+		return this.contentDisposition;
 	}
 
 	public void setContentDisposition(String contentDisposition) {
@@ -56,7 +58,7 @@ public class FD2 {
 	}
 
 	public String getName() {
-		return name;
+		return this.name;
 	}
 
 	public void setName(String name) {
@@ -64,7 +66,7 @@ public class FD2 {
 	}
 
 	public String getFileName() {
-		return fileName;
+		return this.fileName;
 	}
 
 	public void setFileName(String fileName) {
@@ -72,7 +74,7 @@ public class FD2 {
 	}
 
 	public String getContentType() {
-		return contentType;
+		return this.contentType;
 	}
 
 	public void setContentType(String contentType) {
@@ -80,7 +82,7 @@ public class FD2 {
 	}
 
 	public byte[] getBody() {
-		return body;
+		return this.body;
 	}
 
 	public void setBody(byte[] body) {
@@ -88,12 +90,18 @@ public class FD2 {
 	}
 
 	public String getValue() {
-		return value;
+		return this.value;
 	}
 
 	public void setValue(String value) {
 		this.value = value;
 	}
 
-	
+	@Override
+	public String toString() {
+		return "FD2 [contentDisposition=" + this.contentDisposition + ", name=" + this.name + ", fileName=" + this.fileName
+				+ ", contentType=" + this.contentType + ", body=" + Arrays.toString(this.body) + ", value=" + this.value + "]";
+	}
+
+
 }

@@ -14,17 +14,17 @@ import java.io.OutputStream;
 // FIXME 2024年12月21日 下午8:51:01 zhangzhen : 此类功能和 ZMFile大多都重复了，看能不能少去一步从本类到ZMF的流程？
 public class TF {
 
-	private final File file;
+	private File file;
 	private final String tempFilePath;
-	private final String name;
-	private final String fileName;
+	private String name;
+	private String fileName;
 	private String contentType;
 	private final OutputStream outputStream;
 	private final BufferedOutputStream bufferedOutputStream;
 
 	public TF(final File file, final String tempFilePath, final String name, final String fileName, final OutputStream outputStream,
 			final BufferedOutputStream bufferedOutputStream) {
-		this.file = file;
+		setFile(file);
 		this.tempFilePath = tempFilePath;
 		this.name = name;
 		this.fileName = fileName;
@@ -33,7 +33,15 @@ public class TF {
 	}
 
 	public String getContentType() {
-		return contentType;
+		return this.contentType;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public void setFileName(String fileName) {
+		this.fileName = fileName;
 	}
 
 	public void setContentType(String contentType) {
@@ -41,39 +49,42 @@ public class TF {
 	}
 
 	public File getFile() {
-		return file;
+		return this.file;
 	}
 
 	public String getTempFilePath() {
-		return tempFilePath;
+		return this.tempFilePath;
 	}
 
 	public String getName() {
-		return name;
+		return this.name;
 	}
 
 	public String getFileName() {
-		return fileName;
+		return this.fileName;
 	}
 
 	public OutputStream getOutputStream() {
-		return outputStream;
+		return this.outputStream;
 	}
 
 	public BufferedOutputStream getBufferedOutputStream() {
-		return bufferedOutputStream;
+		return this.bufferedOutputStream;
 	}
 
 	public TF(File file, String tempFilePath, String name, String fileName, String contentType,
 			OutputStream outputStream, BufferedOutputStream bufferedOutputStream) {
-		super();
-		this.file = file;
+		setFile(file);
 		this.tempFilePath = tempFilePath;
 		this.name = name;
 		this.fileName = fileName;
 		this.contentType = contentType;
 		this.outputStream = outputStream;
 		this.bufferedOutputStream = bufferedOutputStream;
+	}
+
+	public void setFile(File file) {
+		this.file = file;
 	}
 
 }

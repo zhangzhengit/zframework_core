@@ -36,7 +36,7 @@ public class BodyReader {
 		r.setSocketChannel(taskRequest.getSocketChannel());
 		return r;
 	}
-	
+
 	public static ZRequest parseHeader(final AR ar) {
 		final ZRequest r = parseHeader(ar.getArray().get());
 		r.setSocketChannel(ar.getSocketChannel());
@@ -50,7 +50,7 @@ public class BodyReader {
 	 * @return
 	 */
 	public static ZRequest parseHeader(final byte[] ba) {
-		
+
 		final int headerEndIndex = search(ba, STU.CRLFCRLF, 1, 0);
 
 		final byte[] headerBA = Arrays.copyOfRange(ba, 0, headerEndIndex);
@@ -60,7 +60,7 @@ public class BodyReader {
 
 		final byte[] readFullBody = readFullBody(ba, request.getContentType(), headerEndIndex, request.getBoundary());
 		request.setBody(readFullBody);
-		
+
 		return request;
 	}
 
@@ -84,7 +84,7 @@ public class BodyReader {
 		// boundary 不为空表示formdata，则根据 boundary来截取body
 		if (boundary != null) {
 			final int boundaryStartIndex = search(ba, boundary, 1, contentTypeIndex);
-			if ((boundaryStartIndex > -1)) {
+			if (boundaryStartIndex > -1) {
 				final int boundaryEndIndex = search(ba, STU.CRLF + BOUNDARY_PREFIX + boundary + BOUNDARY_SUFFIX, 1, boundaryStartIndex);
 				if (boundaryEndIndex > boundaryStartIndex) {
 					final byte[] fullBodyBA = Arrays.copyOfRange(ba,
@@ -133,27 +133,22 @@ public class BodyReader {
 			return Collections.emptyList();
 		}
 
-		int bI = 1;
-		final List<Integer> biList = new ArrayList<>(4);
-		while (true) {
-			final int boundaryIndex = search(ba, STU.CRLF + BOUNDARY_PREFIX + boundary, bI,
-					contentTypeIndex + contentType.getBytes().length);
-			if (boundaryIndex <= -1) {
-				break;
-			}
-			biList.add(boundaryIndex);
-			bI++;
-		}
-
 		final List<FD2> fd2l = new ArrayList<>();
 
-		for (int from = 0; from < (biList.size() - 1); from++) {
-			final int to = from + 1;
-			final byte[] oneBA = Arrays.copyOfRange(ba,
-					biList.get(from) + (STU.CRLF + BOUNDARY_PREFIX + boundary).getBytes().length + STU.CRLF.getBytes().length,
-					biList.get(to));
-			final FD2 one = handleOneItem(oneBA);
-			fd2l.add(one);
+		final int bodySI = search(ba, STU.CRLFCRLF + BOUNDARY_PREFIX + boundary, 1,0);
+
+		final String bas = new String(Arrays.copyOfRange(ba, bodySI, ba.length));
+		final String[] baa = bas.split(BOUNDARY_PREFIX + boundary);
+		for (final String b1 : baa) {
+			if (b1 == null || b1.isEmpty()) {
+				continue;
+			}
+
+			final String b1Trim = b1.trim();
+			if (b1Trim.startsWith(HeaderEnum.CONTENT_DISPOSITION.getName())) {
+				final FD2 one = handleOneItem(b1Trim.getBytes());
+				fd2l.add(one);
+			}
 		}
 
 		return fd2l;
@@ -175,7 +170,7 @@ public class BodyReader {
 		final int ctIndex = search(oneBA, HeaderEnum.CONTENT_TYPE.getName(), 1, 0);
 		for (int i = 0; i < ba.length; i++) {
 			if (ba[i] == '\r') {
-				if ((i < (ba.length - 1)) && (ba[i + 1] == '\n')) {
+				if (i < ba.length - 1 && ba[i + 1] == '\n') {
 					final byte[] lineBA = listToArray(bl);
 					final String line = new String(lineBA);
 
@@ -198,7 +193,7 @@ public class BodyReader {
 						fd2.setContentType(ct);
 
 						final byte[] bodyFullBA = Arrays.copyOfRange(oneBA,
-								ctIndex + line.getBytes().length + STU.CRLFCRLF.getBytes().length, oneBA.length);
+								ctIndex + line.getBytes().length, oneBA.length);
 						fd2.setBody(bodyFullBA);
 						break;
 					}
@@ -250,7 +245,7 @@ public class BodyReader {
 	 * @return
 	 */
 	public static int search(final byte[] ba,final String keyword, final int iN, final int fromBAIndex) {
-		if ((keyword == null) || keyword.isEmpty()) {
+		if (keyword == null || keyword.isEmpty()) {
 			return -1;
 		}
 		final byte[] kb = keyword.getBytes();
@@ -258,7 +253,7 @@ public class BodyReader {
 		int findN = 0;
 		for (int i = fromBAIndex; i < ba.length; i++) {
 			boolean find = true;
-			if (i >= ((ba.length - kb.length) + 1)) {
+			if (i >= ba.length - kb.length + 1) {
 				find = false;
 				break;
 			}

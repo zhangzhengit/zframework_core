@@ -244,13 +244,13 @@ public class Task {
 			final ZFException ev = (ZFException) e;
 			return ev.getMessagezf();
 		}
-		
+
 		final Throwable cause = e.getCause();
 		if (cause instanceof ZFException) {
 			final ZFException ev1 = (ZFException) cause;
 			return ev1.getMessagezf();
 		}
-		
+
 		return e.getLocalizedMessage();
 	}
 
@@ -263,12 +263,12 @@ public class Task {
 	@SuppressWarnings("boxing")
 	private ZResponse invokeAndResponse(final ZRMethod zrMethod, final Object[] parametersArray, final Object zControllerObject, final ZRequest request)
 			throws IllegalAccessException, InvocationTargetException, IOException {
-		
+
 		final String controllerName = zControllerObject.getClass().getName();
 		final Integer qps = ZControllerMap.getQPSByControllerNameAndMethodName(controllerName, zrMethod.getMethod().getName());
 
 		final QCTimeEnum qcTimeEnum = ZControllerMap.getQCTimeByControllerNameAndMethodName(controllerName, zrMethod.getMethod().getName());
-		
+
 		final QPSHandlingEnum handlingEnum = REQUEST_VALIDATOR_CONFIGURATION_PROPERTIES.getHandlingEnum(request.getUserAgent());
 		final boolean allow = QC.allow(qcTimeEnum,
 				"a-" + controllerName.hashCode() + '@' + zrMethod.getMethod().getName().hashCode(), qps,
@@ -304,7 +304,7 @@ public class Task {
 				if (!SERVER_CONFIGURATIONPROPERTIES.isResponseZSessionId()) {
 					break;
 				}
-					
+
 				final ZSession session = Task.getOrGSession(request);
 				final String keyword = controllerName
 						+ "@" + zrMethod.getMethod().getName()
@@ -334,7 +334,7 @@ public class Task {
 		}
 
 		ZResponseStatus.initialization();
-		
+
 		setZRequestAndZResponse(parametersArray, request, zrMethod);
 
 		Object r = null;
@@ -400,14 +400,14 @@ public class Task {
 				// 已write了，业务代码自己处理过了，停止
 				return null;
 			}
-			
+
 			final ZResponse response = ZHttpContext.getZResponseAndRemove();
 			// 无ZR参数，直接给一个默认的json 200
 			if (response == null) {
 				return new ZResponse(this.socketChannel)
 						.contentType(ContentTypeEnum.APPLICATION_JSON.getType());
 			}
-			
+
 			// 有ZR参数未CT，根据produces然后看类的注解
 			final String contentType = response.getContentType();
 			if (contentType == null) {
@@ -419,7 +419,7 @@ public class Task {
 				// 或者直接简单点?框架只管CT，body格式让用户自己设置？
 //				response.bo
 			}
-			
+
 			// 到此，有ZR参数且CT了，直接返回
 			return response;
 		}
@@ -428,14 +428,14 @@ public class Task {
 		// 只设定了一个则就按这个，设置多个则选择匹配度最高的，都不匹配则按顺序返回第一个
 		final String[] ps = zrMethod.getProduces();
 		if (AU.isNotEmpty(ps)) {
-			if ((ps.length == 1)) {
+			if (ps.length == 1) {
 				return responseCT(r, ps[0], zrMethod.getCtea()[0]);
 			}
 			final int x = 20;
 			// FIXME 2025年12月6日 00:39:34 zhangzhen : 多个ps的待会再做，先做下面简单的
 
 		}
-		
+
 		// 第三优先：@ZResponseBody 注解，返回类型String则响应text/plain
 		// 否则一律application/json
 		if (zrMethod.hasResponseBody()) {
@@ -444,19 +444,19 @@ public class Task {
 			}
 			return responseAppJSON(r);
 		}
-		
+
 		// 第4优先：@ZRestCon还是@ZCon注解,ZC则默认为html名称，
 		// ZRC则区分returnType为String则CT为text/plain，其他一律json
 		final CTEnum ctEnum = zrMethod.getCtEnum();
 		// 响应 html
-		if ((ctEnum == CTEnum.NORMAL) ) {
+		if (ctEnum == CTEnum.NORMAL ) {
 			return responseHtml(r);
 		}
-		
-		if ((ctEnum == CTEnum.REST) && zrMethod.isRTString()) {
+
+		if (ctEnum == CTEnum.REST && zrMethod.isRTString()) {
 			return responseTextPlain(r);
 		}
-		
+
 		// 默认响应json
 		return responseAppJSON(r);
 	}
@@ -476,7 +476,7 @@ public class Task {
 
 		return null;
 	}
-	
+
 	/**
 	 * 优先从request中获取ZSESSIONID，如果服务器中不存在，则生成新的并Set-Cookie
 	 *
@@ -547,7 +547,7 @@ public class Task {
 		cte.body(r, rx);
 		return rx;
 	}
-	
+
 	private ZResponse responseTextPlain(final Object r) {
 		return new ZResponse(this.socketChannel).contentType(ContentTypeEnum.TEXT_PLAIN.getType()).body(r instanceof String ? (String) r : String.valueOf(r));
 	}
@@ -570,7 +570,7 @@ public class Task {
 		} catch (final Exception e) {
 			e.printStackTrace();
 			final String em = Task.gExceptionMessage(e);
-			
+
 			if (e instanceof ResourceNotExistException) {
 				final ResourceNotExistException ex = (ResourceNotExistException) e;
 				return new ZResponse(this.socketChannel)
@@ -578,7 +578,7 @@ public class Task {
 						.contentType(DEFAULT_CONTENT_TYPE.getType())
 						.body(J.toJSONString(CR.error(ex.getMessagezf()),Include.NON_NULL));
 			}
-			
+
 			return new ZResponse(this.socketChannel)
 					.httpStatus(HttpStatusEnum.HTTP_500.getCode())
 					.contentType(DEFAULT_CONTENT_TYPE.getType())
@@ -609,7 +609,7 @@ public class Task {
 				final ZRequestHeader a = RU.getAnnotation(p, ZRequestHeader.class);
 				final String name = a.value();
 				final String headerValue = request.getHeaderMap().get(name);
-				if ((headerValue == null) && a.required()) {
+				if (headerValue == null && a.required()) {
 					final String message = "请求方法[" + path + "]的header[" + p.getName() + "]不存在";
 					throw new FormPairParseException(message, HttpStatusEnum.HTTP_400.getCode());
 				}
@@ -631,7 +631,7 @@ public class Task {
 						final Optional<ZCookie> c = Arrays.stream(cookies)
 								.filter(cookie -> Objects.equals(cookie.getName(), cookieName)).findAny();
 						if (c.isPresent()) {
-							if (pType == (String.class)) {
+							if (pType == String.class) {
 								parametersArray[pI] = c.get().getValue();
 								pI++;
 							} else if (pType == ZCookie.class) {
@@ -715,44 +715,25 @@ public class Task {
 							request.getContentType(), request.getBoundary());
 					final Optional<FD2> findAny = fdList.stream().filter(fd -> fd.getName().equals(p.getName()))
 							.findAny();
-					if (findAny.isPresent()) {
-						// 走到这，说明是读到内存的，所以构造ByteArrayInputStream
+					if (!findAny.isPresent()) {
+						throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在", HttpStatusEnum.HTTP_400.getCode());
+					}
 
+					if (request.getTf() != null) {
+						pI = tf(parametersArray, request, path, zpvPI, p);
+					} else {
+						// 走到这，说明是读到内存的，所以构造ByteArrayInputStream
 						if (findAny.get().getBody() == null) {
 							throw new FormPairParseException("上传文件的[" + p.getName() + "]的内容不存在",
 									HttpStatusEnum.HTTP_400.getCode());
 						}
-						
+
 						final InputStream inputStream = new ByteArrayInputStream(findAny.get().getBody());
 						final ZMultipartFile file = new ZMultipartFile(findAny.get().getName(),
 								null,
 								findAny.get().getFileName(),
 								findAny.get().getBody(), false,
 								findAny.get().getContentType(), inputStream);
-
-						pI = Task.setValue(parametersArray, pI, p, file);
-
-					} else {
-
-						if ((request.getTf() == null) || !p.getName().equals(request.getTf().getName())) {
-							throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在", HttpStatusEnum.HTTP_400.getCode());
-						}
-
-						// 走到这，说明是读到临时文件的的，所以从临时文件读
-						InputStream inputStream = null;
-						try {
-							inputStream = new FileInputStream(request.getTf().getFile());
-						} catch (final FileNotFoundException e) {
-							e.printStackTrace();
-						}
-
-						final String contentType = request.getTf().getContentType();
-
-						final ZMultipartFile file = new ZMultipartFile(request.getTf().getName(),
-								request.getTf().getTempFilePath(),
-								request.getTf().getFileName(),
-								null, true,
-								contentType, inputStream);
 
 						pI = Task.setValue(parametersArray, pI, p, file);
 					}
@@ -763,6 +744,32 @@ public class Task {
 		}
 
 		return parametersArray;
+	}
+
+	private static int tf(final Object[] parametersArray, final ZRequest request, final String path, int pI,
+			final Parameter p) {
+		if (request.getTf() == null || !p.getName().equals(request.getTf().getName())) {
+			throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在", HttpStatusEnum.HTTP_400.getCode());
+		}
+
+		// 走到这，说明是读到临时文件的的，所以从临时文件读
+		InputStream inputStream = null;
+		try {
+			inputStream = new FileInputStream(request.getTf().getFile());
+		} catch (final FileNotFoundException e) {
+			e.printStackTrace();
+		}
+
+		final String contentType = request.getTf().getContentType();
+
+		final ZMultipartFile file = new ZMultipartFile(request.getTf().getName(),
+				request.getTf().getTempFilePath(),
+				request.getTf().getFileName(),
+				null, true,
+				contentType, inputStream);
+
+		pI = Task.setValue(parametersArray, pI, p, file);
+		return pI;
 	}
 
 	/**
@@ -907,7 +914,7 @@ public class Task {
 	private static void checkT(final Object object, final Field field) {
 		final Class<?> ftype = field.getType();
 		// FIXME 2024年6月28日 下午5:44:43 zhangzhen : 忘了是否支持Map类型了，看@ZNotEmtpy的javadoc是支持Map的，记不清了是否支持了？
-		if ((ftype == List.class) || (ftype == Set.class)) {
+		if (ftype == List.class || ftype == Set.class) {
 			try {
 				field.setAccessible(true);
 				final Iterable<?> it = (Iterable<?>) field.get(object);
