@@ -113,13 +113,7 @@ public class BodyReader {
 	 * @return
 	 */
 	public static List<FD2> readFormData(final byte[] ba, final String contentType, final String boundary) {
-
-		// final int hash = ba.hashCode();
-		// final int hash = Arrays.hashCode(ba);
-		final String k = "ba" + "-" + ba.length + "-" + boundary.hashCode();
-
-		final List<FD2> computeIfAbsent = ZRC.singleton().computeIfAbsent(k, () -> readFormData0(ba, contentType, boundary));
-		return computeIfAbsent;
+		return readFormData0(ba, contentType, boundary);
 	}
 
 	private static List<FD2> readFormData0(final byte[] ba, final String contentType, final String boundary) {

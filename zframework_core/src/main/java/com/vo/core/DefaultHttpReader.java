@@ -348,19 +348,7 @@ public class DefaultHttpReader {
 
 		final List<Byte> removeFromHeaderList = remove(array, writeArrayLength);
 
-		// FIXME 2024年12月20日 下午7:15:50 zhangzhen : 这个方法极有可能有问题，就是这个方法每次解析CD CT RNRNR
-		// BOUNDARY 等等内容
-		// 都是从一次read出的ByteBuffer中解析的，有可能上述关键字出现在一个BB和下一个BB之间
-		// 如：本次read出的BB 结尾是----------------，下一次read的BB开头是 ----lxkcjvlsjdljfljljlj
-		// 那么这个boundary就会解析不到。只是现在ByteBuffer的capacity设置得很大，还没发现这个bug。
-		// 看不要 N次读取之间两个相邻的ByteBuffer合并在一起来解析？
-
-		// FIXME 2025年11月28日 09:28:25 zhangzhen :  严重bug：1024 * 10
-		// 上传一个 大小2,907,911 字节 占用2,908,160 字节的imgge时发现 .IllegalArgumentException:10154 > 81",
-		// 暂时改为1024 * 500 把，以后再仔细测试
-
-		final ByteBuffer bbBody = ByteBuffer.allocate(1024 * 500);
-		// final ByteBuffer bbBody = ByteBuffer.allocate(uploadFileToTempSize * 1024);
+		final ByteBuffer bbBody = ByteBuffer.allocate(1024 * 20);
 
 		// 开始读取body部分
 		Collections.reverse(removeFromHeaderList);
@@ -368,13 +356,10 @@ public class DefaultHttpReader {
 			bbBody.put(b);
 		}
 
-		final int nioReadTimeout = SERVER_CONFIGURATIONPROPERTIES.getNioReadTimeout();
-
 		final String randomFileName = "file_" + Math.abs(RANDOM.nextLong()) + "_" + nnReadBodyLength;
 		final TF tf = saveToTempFile(randomFileName, "111", "111.txt");
 		final Fm fm = hFM(array);
-		final boolean findBody = false;
-		final String bbb = "" +  fm.getBoundary();
+		final String boundary = "" +  fm.getBoundary();
 		try {
 			int totalBytesRead = 0;
 			while (totalBytesRead < nnReadBodyLength) {
@@ -404,8 +389,8 @@ public class DefaultHttpReader {
 			// 一次删除除了body部分的剩下的文件就是上传的源文件内容
 			// 但是，多了几次IO
 
-			readFileNameAndContentType(fm.getBoundary(), tf);
-			removeNB(tf, bbb, array);
+			readFileNameAndContentType(tf);
+			removeNB(tf, boundary, array);
 		} catch (final IOException e) {
 			e.printStackTrace();
 			NioLongConnectionServer.closeSocketChannelAndKeyCancel(key, socketChannel);
@@ -417,96 +402,10 @@ public class DefaultHttpReader {
 		return tf;
 	}
 
+	private static void removeNB(TF tf, String boundary, ZArray array) {
 
-	static void readFileToOther2(String boundary, TF tf, ZArray array) {
-		final File nf = new File(tf.getFile().getAbsoluteFile() + "_temp");
-		BufferedOutputStream ooo = null;
-		try {
-			if (!nf.exists()) {
-				nf.createNewFile();
-			}
-			final BufferedInputStream bbbb = new BufferedInputStream(new FileInputStream(tf.getFile()));
-			ooo = new BufferedOutputStream(new FileOutputStream(nf));
-			final byte[] ba = new byte[10240];
-			boolean findBody = false;
-			while (true) {
-				final int read = bbbb.read(ba);
-				if (read <= -1) {
-					break;
-				}
-
-				if (findBody) {
-
-					final int bEndI = BodyReader.search(ba, boundary + "--", 1, 0);
-					if (bEndI <= -1) {
-						ooo.write(ba);
-						ooo.flush();
-					} else {
-						final int bGGEndI = BodyReader.search(ba, "--" + boundary + "--", 1, 0);
-						if (bGGEndI < bEndI) {
-							final byte[] fileBody = Arrays.copyOfRange(ba, 0, bGGEndI);
-							ooo.write(fileBody);
-							ooo.flush();
-						}
-					}
-
-					continue;
-				}
-
-				final int cdI = BodyReader.search(ba, "Content-Disposition", 1, 0);
-				if (cdI > -1) {
-					final int ctI = BodyReader.search(ba, STU.CRLF, 1, cdI);
-
-					if (ctI > cdI) {
-						final byte[] ss = Arrays.copyOfRange(ba, cdI, ctI);
-						final String cdLIne = new String(ss);
-//						System.out.println("ss = " + cdLIne);
-						if (isCDFile(cdLIne)) {
-							final int bodyStartI = BodyReader.search(ba, STU.CRLFCRLF, 1, ctI);
-							if (bodyStartI > ctI) {
-								final int bodyEndI = BodyReader.search(ba, boundary, 1, bodyStartI);
-								System.out.println("bsi = " + bodyStartI);
-								if (bodyEndI > bodyStartI) {
-									final int bodyGGEndI = BodyReader.search(ba, STU.CRLF + "--" + boundary, 1,
-											bodyStartI);
-									if (bodyGGEndI + STU.CRLF.length() + "--".length() == bodyEndI) {
-										final byte[] fileBodyBA = Arrays.copyOfRange(ba,
-												bodyStartI + STU.CRLFCRLF.length(), bodyGGEndI);
-										ooo.write(fileBodyBA);
-									} else {
-										final byte[] fileBodyBA = Arrays.copyOfRange(ba,
-												bodyStartI + STU.CRLFCRLF.length(), bodyEndI);
-										ooo.write(fileBodyBA);
-
-									}
-									ooo.flush();
-								}
-
-								findBody = true;
-							}
-
-						}
-					}
-				}
-
-			}
-
-		} catch (final IOException e) {
-			e.printStackTrace();
-		} finally {
-			try {
-				ooo.close();
-			} catch (final IOException e) {
-				e.printStackTrace();
-			}
-			tf.setFile(nf);
-		}
-	}
-
-	static void removeNB(TF tf, String boundary, ZArray array) {
-
-		final int bs = 1024 * 10;
-		final byte[] ba = new byte[bs];
+		final int bsC = 1024 * 20;
+		final byte[] ba = new byte[bsC];
 		boolean findBody = false;
 		long tR = 0;
 		int readCount = 0;
@@ -522,23 +421,17 @@ public class DefaultHttpReader {
 				readCount++;
 				tR += read;
 
-				final int cdI = BodyReader.search(ba, HeaderEnum.CONTENT_DISPOSITION.getName(), 1, 0);
-				if (cdI > -1) {
-					final int ctI = BodyReader.search(ba, STU.CRLF, 1, cdI);
+				final int ctI = BodyReader.search(ba, HeaderEnum.CONTENT_TYPE.getName(), 1, 0);
+				if (ctI > -1) {
+					final int crlf2I = BodyReader.search(ba, STU.CRLFCRLF, 1, ctI);
+					if (crlf2I > ctI) {
+						bodyStartI = crlf2I;
 
-					if (ctI > cdI) {
-						final byte[] ss = Arrays.copyOfRange(ba, cdI, ctI);
-						final String cdLIne = new String(ss);
-						if (isCDFile(cdLIne)) {
-							bodyStartI = BodyReader.search(ba, STU.CRLFCRLF, 1, ctI);
-							if (bodyStartI > ctI) {
-								// 找到了文件body开始位置了，直接删掉前面的
-								findBody = true;
+						// 找到了文件body开始位置了，直接删掉前面的
+						findBody = true;
 
-								final byte[] cc = Arrays.copyOfRange(ba, 0, bodyStartI);
-								array.add(cc);
-							}
-						}
+						final byte[] cc = Arrays.copyOfRange(ba, 0, bodyStartI);
+						array.add(cc);
 					}
 				}
 
@@ -571,51 +464,43 @@ public class DefaultHttpReader {
 		}
 	}
 
-	static void readFileNameAndContentType(String boundary, TF tf) {
+	private static void readFileNameAndContentType(TF tf) {
 
 		try (FileInputStream in = new FileInputStream(tf.getFile());
 				final BufferedInputStream bufferedInputStream = new BufferedInputStream(in)) {
 
-			final byte[] ba = new byte[10000];
+			final byte[] ba = new byte[1024 * 20];
 			while (true) {
 				final int read = bufferedInputStream.read(ba);
 				if (read <= -1) {
 					break;
 				}
 
-				final int bStartI = BodyReader.search(ba, boundary, 1, 0);
-				if (bStartI > -1) {
-					// 找到了b开头，看下一行CD是否文件
-					final int cdI = BodyReader.search(ba, HeaderEnum.CONTENT_DISPOSITION.getName(), 1,
-							bStartI + boundary.length());
-					if (cdI > bStartI) {
-						// Content-Disposition 后面的一个CRLF
-						final int crlfI = BodyReader.search(ba, STU.CRLF, 1, cdI);
-						if (crlfI > cdI) {
-							// 此值是b后面到CD后的CRLF前的内容，即：CD那一行
-							final byte[] cdBA = Arrays.copyOfRange(ba, bStartI + boundary.length(), crlfI);
-							final String cds = new String(cdBA);
-							if (isCDFile(cds)) {
-								final Map<String, String> cdMap = parseCDLine(cds);
-								tf.setName(cdMap.get("name"));
-								tf.setFileName(cdMap.get("filename"));
-								// 是文件，则读取name和filename的content-type，继续忽略，直到非文件的部分
-								final int ctI = BodyReader.search(ba, HeaderEnum.CONTENT_TYPE.getName(), 1, crlfI);
-								if (ctI > crlfI) {
-									final int crlf2I = BodyReader.search(ba, STU.CRLFCRLF, 1, ctI);
-									if (crlf2I > ctI) {
-										final byte[] ctBA = Arrays.copyOfRange(ba, crlfI, crlf2I);
-
-										// 找到了Content-Type。本次ba后面的都是文件内容
-										final String contentType = gCT(new String(ctBA));
-										tf.setContentType(contentType);
-										break;
-									}
-								}
-							}
+				final int ctI = BodyReader.search(ba, HeaderEnum.CONTENT_TYPE.getName(), 1, 0);
+				if (ctI > -1) {
+					final List<Integer> arrayList = new ArrayList<>();
+					int i = 0;
+					while (true) {
+						final int sr = BodyReader.search(ba, HeaderEnum.CONTENT_DISPOSITION.getName(), i, 0);
+						if (sr <= -1) {
+							break;
 						}
+						arrayList.add(sr);
+						i++;
 					}
 
+					final byte[] xxx = Arrays.copyOfRange(ba, arrayList.get(arrayList.size() - 1), ctI);
+					final String cdLine = new String(xxx);
+					final Map<String, String> cdMap = parseCDLine(cdLine);
+					tf.setName(cdMap.get("name"));
+					tf.setFileName(cdMap.get("filename"));
+					final int crlf2I = BodyReader.search(ba, STU.CRLFCRLF, 1, ctI);
+					if (crlf2I > ctI) {
+						final byte[] ctBA = Arrays.copyOfRange(ba, ctI, crlf2I);
+						final String contentType = gCT(new String(ctBA));
+						tf.setContentType(contentType);
+						break;
+					}
 				}
 			}
 
@@ -629,6 +514,7 @@ public class DefaultHttpReader {
 		final int i = cts.indexOf(":");
 		return cts.substring(i + 1).trim();
 	}
+
 	static boolean isCDFile(String cds) {
 		final int indexOf = cds.indexOf("filename");
 		return indexOf > -1;
