@@ -404,7 +404,7 @@ public class DefaultHttpReader {
 
 	private static void removeNB(TF tf, String boundary, ZArray array) {
 
-		final int bsC = 1024 * 20;
+		final int bsC = 1024 * 64;
 		final byte[] ba = new byte[bsC];
 		boolean findBody = false;
 		long tR = 0;
@@ -421,21 +421,22 @@ public class DefaultHttpReader {
 				readCount++;
 				tR += read;
 
-				final int ctI = BodyReader.search(ba, HeaderEnum.CONTENT_TYPE.getName(), 1, 0);
-				if (ctI > -1) {
-					final int crlf2I = BodyReader.search(ba, STU.CRLFCRLF, 1, ctI);
-					if (crlf2I > ctI) {
-						bodyStartI = crlf2I;
 
-						// 找到了文件body开始位置了，直接删掉前面的
-						findBody = true;
+				if(!findBody) {
+					final int ctI = BodyReader.search(ba, HeaderEnum.CONTENT_TYPE.getName(), 1, 0);
+					if (ctI > -1) {
+						final int crlf2I = BodyReader.search(ba, STU.CRLFCRLF, 1, ctI);
+						if (crlf2I > ctI) {
+							bodyStartI = crlf2I;
 
-						final byte[] cc = Arrays.copyOfRange(ba, 0, bodyStartI);
-						array.add(cc);
+							// 找到了文件body开始位置了，直接删掉前面的
+							findBody = true;
+
+							final byte[] cc = Arrays.copyOfRange(ba, 0, bodyStartI);
+							array.add(cc);
+						}
 					}
-				}
-
-				if (findBody) {
+				} else {
 
 					final int bendI = BodyReader.search(ba, "--" + boundary, 1, readCount == 1 ? bodyStartI : 0);
 					if (bendI > -1) {
@@ -625,7 +626,7 @@ public class DefaultHttpReader {
             }
 
             // 2. 定义缓冲区（提升读写效率，可根据需求调整大小）
-            final byte[] buffer = new byte[1024 * 4]; // 4KB 缓冲区
+            final byte[] buffer = new byte[1024 * 64];
             int bytesRead; // 每次实际读取的字节数
 
             // 3. 定位到「要删除部分的下一个字节」（即需要向前移动的起始位置）
