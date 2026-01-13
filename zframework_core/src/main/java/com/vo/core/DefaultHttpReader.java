@@ -421,22 +421,21 @@ public class DefaultHttpReader {
 				readCount++;
 				tR += read;
 
+				final int ctI = BodyReader.search(ba, HeaderEnum.CONTENT_TYPE.getName(), 1, 0);
+				if (ctI > -1) {
+					final int crlf2I = BodyReader.search(ba, STU.CRLFCRLF, 1, ctI);
+					if (crlf2I > ctI) {
+						bodyStartI = crlf2I;
 
-				if(!findBody) {
-					final int ctI = BodyReader.search(ba, HeaderEnum.CONTENT_TYPE.getName(), 1, 0);
-					if (ctI > -1) {
-						final int crlf2I = BodyReader.search(ba, STU.CRLFCRLF, 1, ctI);
-						if (crlf2I > ctI) {
-							bodyStartI = crlf2I;
+						// 找到了文件body开始位置了，直接删掉前面的
+						findBody = true;
 
-							// 找到了文件body开始位置了，直接删掉前面的
-							findBody = true;
-
-							final byte[] cc = Arrays.copyOfRange(ba, 0, bodyStartI);
-							array.add(cc);
-						}
+						final byte[] cc = Arrays.copyOfRange(ba, 0, bodyStartI);
+						array.add(cc);
 					}
-				} else {
+				}
+
+				if (findBody) {
 
 					final int bendI = BodyReader.search(ba, "--" + boundary, 1, readCount == 1 ? bodyStartI : 0);
 					if (bendI > -1) {
@@ -470,7 +469,7 @@ public class DefaultHttpReader {
 		try (FileInputStream in = new FileInputStream(tf.getFile());
 				final BufferedInputStream bufferedInputStream = new BufferedInputStream(in)) {
 
-			final byte[] ba = new byte[1024 * 20];
+			final byte[] ba = new byte[1024 * 64];
 			while (true) {
 				final int read = bufferedInputStream.read(ba);
 				if (read <= -1) {
