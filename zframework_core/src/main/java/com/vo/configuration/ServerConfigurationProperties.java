@@ -51,7 +51,7 @@ public class ServerConfigurationProperties {
 	/**
 	 * server的name，用于响应头中的Server字段
 	 */
-	@ZNotNull
+	@ZNotEmtpy
 	private String name = "ZServer";
 
 	/**
