@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.vo.cache.STU;
+import com.vo.http.HttpStatusEnum;
+import com.vo.validator.ZFException;
 
 /**
  *
@@ -131,7 +133,10 @@ public class BodyReader {
 
 		final int bodySI = search(ba, STU.CRLFCRLF + BOUNDARY_PREFIX + boundary, 1,0);
 
-		// FIXME 2026年1月15日 20:34:50 zhangzhen : upload file没选文件，此行异常，待会再看
+		if (bodySI <= -1) {
+			throw new ZFException("上传文件不存在", HttpStatusEnum.HTTP_400.getCode());
+		}
+
 		final String bas = new String(Arrays.copyOfRange(ba, bodySI, ba.length));
 		final String[] baa = bas.split(BOUNDARY_PREFIX + boundary);
 		for (final String b1 : baa) {
