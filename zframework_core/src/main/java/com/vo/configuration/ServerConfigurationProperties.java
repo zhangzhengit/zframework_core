@@ -56,13 +56,11 @@ public class ServerConfigurationProperties {
 
 	/**
 	 * 读取http请求的header的ByteBuffer的容量大小
-	 * 并且只有在 GET/TRACE/HEAD 的METHOD时才使用此值
-	 * 其他的POST/PUT/PATCH等固定使用1的容量
 	 */
 	@ZNotNull
 	@ZMin(min = 100)
 	@ZMax(max = 10240)
-	private int byteBufferSize = 1024 * 2;
+	private int byteBufferSize = 1024 * 1;
 
 	/**
 	 * nio 读取http请求的body时
@@ -404,7 +402,7 @@ public class ServerConfigurationProperties {
 	private boolean showHttpHeader = false;
 
 	public boolean compressionContains(final String contentType) {
-		final String[] a = getCompressionType();
+		final String[] a = this.getCompressionType();
 		for (final String string : a) {
 			if (string.equals(contentType)) {
 				return true;
