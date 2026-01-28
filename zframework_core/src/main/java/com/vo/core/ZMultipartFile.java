@@ -14,9 +14,6 @@ import java.io.InputStream;
  * @date 2023年10月26日
  *
  */
-// FIXME 2026年1月3日 23:49:26 zhangzhen :  发现严重bug：上传文件的接口，用get
-// 测试image时图片会非原图，而用post正常。目前只测了这两个method
-// 猜测和目前的实现：带body的一个byte读有关？
 public class ZMultipartFile {
 
 	private final String name;
