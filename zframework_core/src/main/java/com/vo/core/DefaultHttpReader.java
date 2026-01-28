@@ -72,32 +72,6 @@ public class DefaultHttpReader {
 			.getBean(ServerConfigurationProperties.class);
 	private static final SecureRandom RANDOM = new SecureRandom();
 
-	/**
-	 * hr2 先读header，然后解析content-length来读取body
-	 *
-	 * @param key
-	 * @return
-	 */
-	// FIXME 2024年12月19日 上午11:25:20 zhangzhen : 考虑好以下情况：
-	// 考虑好如下情况：
-	// POST PUT PATCH 有content-type则一定有body，但是
-	// GET HEAD OPTIONS 有CT不一定有body，想好怎么处理
-	//	public ZArray handleRead(final SelectionKey key) throws Exception {
-	//
-	//		final SocketChannel socketChannel = (SocketChannel) key.channel();
-	//		if (!socketChannel.isOpen()) {
-	//			NioLongConnectionServer.closeSocketChannelAndKeyCancel(key, socketChannel);
-	//			return null;
-	//		}
-	//
-	//		final AR ar = this.readHeader(key, socketChannel);
-	//		if (ar == null) {
-	//			return null;
-	//		}
-	//
-	//		return this.readBody(se, socketChannel, ar);
-	//	}
-
 	public ZArray readBody(final SelectionKey key, final SocketChannel socketChannel, final AR ar) {
 		final ZArray array = ar.getArray();
 
@@ -119,7 +93,7 @@ public class DefaultHttpReader {
 				}
 
 				final int uploadFileSize = SERVER_CONFIGURATIONPROPERTIES.getUploadFileSize();
-				if (contentLength >= uploadFileSize * _1024) {
+				if (contentLength >= (uploadFileSize * _1024)) {
 					// FIXME 2025年1月20日 下午9:12:49 zhangzhen : 又遇到问题：
 					// 比如 /upload 限制zsessiond.qps=1，则到此throw了就走不到限制qps的逻辑了，
 					// 导致可以恶意刷接口，故意上传特别大的文件来浪费服务器性能
@@ -183,11 +157,6 @@ public class DefaultHttpReader {
 	}
 
 	private static MR readMethod(final SelectionKey key, final SocketChannel socketChannel) {
-
-		// FIXME 2024年12月20日 下午4:17:48 zhangzhen : 这个方法是妥协，不想debug
-		// post时的提取body存入临时文件并且把普通表单字段继续存入内存了
-		// 直接 无body 使用配置值，有body一个byte一个byte读header
-
 		if (!socketChannel.isOpen() || !key.isReadable()) {
 			return null;
 		}
@@ -253,26 +222,25 @@ public class DefaultHttpReader {
 
 	public AR readHeader(final SelectionKey key, final SocketChannel socketChannel) {
 
+		// FIXME 2026年1月28日 11:12:40 zhangzhen : 现在改了 带body的不读1了，记得把本方法和readMethod也改为一个
 		final MR mr = readMethod(key, socketChannel);
 		if (mr == null) {
 			return null;
 		}
 
-		// FIXME 2024年12月20日 下午4:17:48 zhangzhen : 2是妥协，不想debug
-		// post时的提取body存入临时文件并且把普通表单字段继续存入内存了
-		// 2 由method来确定，不带body使用配置项的值，带body一个一个byte读
-		final int byteBufferSize = mr.getByteBufferSize();
+		final int byteBufferSize = SERVER_CONFIGURATIONPROPERTIES.getByteBufferSize();
 
 		final ByteBuffer byteBuffer = ByteBuffer.allocate(byteBufferSize);
 		final byte[] mra = mr.getArray();
 		final ZArray array = new ZArray(byteBufferSize);
 		array.add(mra);
 
-		final int byteBufferSizeREAD = byteBufferSize - mr.getArray().length;
+//		final int byteBufferSizeREAD = byteBufferSize - mr.getArray().length;
 
 		int headerEndIndex = -1;
 		final long startTime = System.currentTimeMillis();
 		int totalBytesRead = 0;
+		int rC = 0;
 		while (true) {
 			try {
 				if (!socketChannel.isOpen()) {
@@ -280,6 +248,7 @@ public class DefaultHttpReader {
 				}
 
 				final int tR = socketChannel.read(byteBuffer);
+				rC++;
 				totalBytesRead += tR;
 				if (tR == -1) {
 					NioLongConnectionServer.closeSocketChannelAndKeyCancel(key, socketChannel);
@@ -287,20 +256,22 @@ public class DefaultHttpReader {
 				}
 
 				if (tR > 0) {
-					DefaultHttpReader.add(byteBuffer, array);
-					headerEndIndex = gethttpHeaderEndIndex(array.get());
+					final byte[] a = DefaultHttpReader.add(byteBuffer, array);
+					headerEndIndex = BodyReader.search(rC == 1 ? a : array.get(), STU.CRLFCRLF, 1, 4);
 					if (headerEndIndex > -1) {
 						break;
 					}
 
+					// FIXME 2026年1月28日 11:18:58 zhangzhen : 现在看这个判断无意义，先注释了，以后再测试不带
+					// \r\n\r\n的请求
 					// 没找到\r\n\r\n，读到的不足byteBufferSize，说明不存在\r\n\r\n，是bad request
-					if (tR < byteBufferSizeREAD) {
-						throw new IllegalArgumentException("header截止错误");
-					}
+//					if (tR < byteBufferSizeREAD) {
+//						throw new IllegalArgumentException("header截止错误");
+//					}
 				} else // 如果读取返回 0，则检查超时
-				if ((totalBytesRead == 0 || tR == 0)
-						&& System.currentTimeMillis() - startTime > SERVER_CONFIGURATIONPROPERTIES
-								.getNioReadTimeout()) {
+				if (((totalBytesRead == 0) || (tR == 0))
+						&& ((System.currentTimeMillis() - startTime) > SERVER_CONFIGURATIONPROPERTIES
+								.getNioReadTimeout())) {
 
 					LOG.error("readHeader超时[{}]", SERVER_CONFIGURATIONPROPERTIES.getNioReadTimeout());
 					return null;
@@ -318,16 +289,18 @@ public class DefaultHttpReader {
 		return new AR(array, headerEndIndex, socketChannel);
 	}
 
-	private static void add(final ByteBuffer byteBuffer, final ZArray array) {
+	private static byte[] add(final ByteBuffer byteBuffer, final ZArray array) {
 		byteBuffer.flip();
 		if (byteBuffer.remaining() <= 0) {
-			return;
+			return null;
 		}
 
 		final byte[] tempA = new byte[byteBuffer.remaining()];
 		byteBuffer.get(tempA);
 		array.add(tempA);
 		byteBuffer.clear();
+
+		return tempA;
 	}
 
 	private static int gethttpHeaderEndIndex(final byte[] headerBA) {
@@ -402,7 +375,7 @@ public class DefaultHttpReader {
 		return tf;
 	}
 
-	private static void removeNB(TF tf, String boundary, ZArray array) {
+	private static void removeNB(final TF tf, final String boundary, final ZArray array) {
 
 		final int bsC = 1024 * 64;
 		final byte[] ba = new byte[bsC];
@@ -464,7 +437,7 @@ public class DefaultHttpReader {
 		}
 	}
 
-	private static void readFileNameAndContentType(TF tf) {
+	private static void readFileNameAndContentType(final TF tf) {
 
 		try (FileInputStream in = new FileInputStream(tf.getFile());
 				final BufferedInputStream bufferedInputStream = new BufferedInputStream(in)) {
@@ -519,12 +492,12 @@ public class DefaultHttpReader {
 	}
 
 
-	static String gCT(String cts) {
+	static String gCT(final String cts) {
 		final int i = cts.indexOf(":");
 		return cts.substring(i + 1).trim();
 	}
 
-	static boolean isCDFile(String cds) {
+	static boolean isCDFile(final String cds) {
 		final int indexOf = cds.indexOf("filename");
 		return indexOf > -1;
 	}
@@ -581,8 +554,8 @@ public class DefaultHttpReader {
 				totalBytesRead += read;
 
 				// 如果读取返回 0，则检查超时
-				if ((totalBytesRead == 0 || read == 0)
-						&& System.currentTimeMillis() - startTime > nioReadTimeout) {
+				if (((totalBytesRead == 0) || (read == 0))
+						&& ((System.currentTimeMillis() - startTime) > nioReadTimeout)) {
 					throw new IllegalArgumentException("读取body超时,nioReadTimeout = " + nioReadTimeout);
 				}
 				if (bbBody != null) {
@@ -608,18 +581,18 @@ public class DefaultHttpReader {
 	 * @return
 	 * @throws IOException 文件操作异常
 	 */
-    public static void deleteFileBytes(String filePath, long start, long length) throws IOException {
+    public static void deleteFileBytes(final String filePath, final long start, final long length) throws IOException {
 
 
         // 1. 参数合法性校验
-        if (start < 0 || length <= 0) {
+        if ((start < 0) || (length <= 0)) {
             throw new IllegalArgumentException("起始位置不能为负数，删除长度必须大于0");
         }
 
         try (RandomAccessFile raf = new RandomAccessFile(filePath, "rw")) {
             final long fileTotalLength = raf.length(); // 获取文件总长度
             // 校验删除范围是否超出文件边界
-            if (start + length > fileTotalLength) {
+            if ((start + length) > fileTotalLength) {
                 throw new IllegalArgumentException("删除范围超出文件总长度！文件总长度：" + fileTotalLength
                         + "，删除结束位置：" + (start + length));
             }
