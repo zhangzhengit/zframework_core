@@ -190,7 +190,7 @@ public class Task {
 			}
 
 			final Object zController = ZControllerMap.getObjectByMethod(zrMethod.getMethod());
-			final ZResponse re = invokeAndResponse(zrMethod, parameterArray, zController, request);
+			final ZResponse re = this.invokeAndResponse(zrMethod, parameterArray, zController, request);
 			return re;
 
 		} catch (final Exception e) {
@@ -262,7 +262,7 @@ public class Task {
 
 	@SuppressWarnings("boxing")
 	private ZResponse invokeAndResponse(final ZRMethod zrMethod, final Object[] parametersArray, final Object zControllerObject, final ZRequest request)
-			throws IllegalAccessException, InvocationTargetException, IOException {
+			throws IllegalAccessException, InvocationTargetException {
 
 		final String controllerName = zControllerObject.getClass().getName();
 		final Integer qps = ZControllerMap.getQPSByControllerNameAndMethodName(controllerName, zrMethod.getMethod().getName());
@@ -335,7 +335,7 @@ public class Task {
 
 		ZResponseStatus.initialization();
 
-		setZRequestAndZResponse(parametersArray, request, zrMethod);
+		this.setZRequestAndZResponse(parametersArray, request, zrMethod);
 
 		Object r = null;
 		// 在此zhi执行
@@ -429,7 +429,7 @@ public class Task {
 		final String[] ps = zrMethod.getProduces();
 		if (AU.isNotEmpty(ps)) {
 			if (ps.length == 1) {
-				return responseCT(r, ps[0], zrMethod.getCtea()[0]);
+				return this.responseCT(r, ps[0], zrMethod.getCtea()[0]);
 			}
 			final int x = 20;
 			// FIXME 2025年12月6日 00:39:34 zhangzhen : 多个ps的待会再做，先做下面简单的
@@ -440,9 +440,9 @@ public class Task {
 		// 否则一律application/json
 		if (zrMethod.hasResponseBody()) {
 			if (zrMethod.isRTString()) {
-				return responseTextPlain(r);
+				return this.responseTextPlain(r);
 			}
-			return responseAppJSON(r);
+			return this.responseAppJSON(r);
 		}
 
 		// 第4优先：@ZRestCon还是@ZCon注解,ZC则默认为html名称，
@@ -450,15 +450,15 @@ public class Task {
 		final CTEnum ctEnum = zrMethod.getCtEnum();
 		// 响应 html
 		if (ctEnum == CTEnum.NORMAL ) {
-			return responseHtml(r);
+			return this.responseHtml(r);
 		}
 
-		if (ctEnum == CTEnum.REST && zrMethod.isRTString()) {
-			return responseTextPlain(r);
+		if ((ctEnum == CTEnum.REST) && zrMethod.isRTString()) {
+			return this.responseTextPlain(r);
 		}
 
 		// 默认响应json
-		return responseAppJSON(r);
+		return this.responseAppJSON(r);
 	}
 
 	static String findProduces(final ZRequest request, final String[] ps) {
@@ -609,7 +609,7 @@ public class Task {
 				final ZRequestHeader a = RU.getAnnotation(p, ZRequestHeader.class);
 				final String name = a.value();
 				final String headerValue = request.getHeaderMap().get(name);
-				if (headerValue == null && a.required()) {
+				if ((headerValue == null) && a.required()) {
 					final String message = "请求方法[" + path + "]的header[" + p.getName() + "]不存在";
 					throw new FormPairParseException(message, HttpStatusEnum.HTTP_400.getCode());
 				}
@@ -748,7 +748,7 @@ public class Task {
 
 	private static int tf(final Object[] parametersArray, final ZRequest request, final String path, int pI,
 			final Parameter p) {
-		if (request.getTf() == null || !p.getName().equals(request.getTf().getName())) {
+		if ((request.getTf() == null) || !p.getName().equals(request.getTf().getName())) {
 			throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在", HttpStatusEnum.HTTP_400.getCode());
 		}
 
@@ -914,7 +914,7 @@ public class Task {
 	private static void checkT(final Object object, final Field field) {
 		final Class<?> ftype = field.getType();
 		// FIXME 2024年6月28日 下午5:44:43 zhangzhen : 忘了是否支持Map类型了，看@ZNotEmtpy的javadoc是支持Map的，记不清了是否支持了？
-		if (ftype == List.class || ftype == Set.class) {
+		if ((ftype == List.class) || (ftype == Set.class)) {
 			try {
 				field.setAccessible(true);
 				final Iterable<?> it = (Iterable<?>) field.get(object);
