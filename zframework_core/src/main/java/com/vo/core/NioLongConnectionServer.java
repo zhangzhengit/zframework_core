@@ -147,7 +147,7 @@ public class NioLongConnectionServer {
 			}
 
 			if (this.zc >= ZC_THRESHOLD) {
-				rebuildSelector();
+				this.rebuildSelector();
 				this.zc = 0;
 			}
 
@@ -168,7 +168,7 @@ public class NioLongConnectionServer {
 
 						synchronized (selectionKey) {
 							final Object attachment = selectionKey.attachment();
-							if (attachment != null && attachment == SKStatusEnum.READING) {
+							if ((attachment != null) && (attachment == SKStatusEnum.READING)) {
 								continue;
 							}
 						}
@@ -183,7 +183,7 @@ public class NioLongConnectionServer {
 
 						if (SKStatusEnum.READING == selectionKey.attachment()) {
 							NioLongConnectionServer.ZE.executeByNameInASpecificThread(keyword,
-									() -> action(selectionKey, socketChannel));
+									() -> this.action(selectionKey, socketChannel));
 						}
 
 					}
@@ -342,8 +342,8 @@ public class NioLongConnectionServer {
 
 	private static void keepAliveTimeoutJOB() {
 
-		final Integer keepAliveTimeout = SERVER_CONFIGURATIONPROPERTIES.getKeepAliveTimeout();
-		LOG.info("长连接超时任务启动,keepAliveTimeout=[{}]秒", SERVER_CONFIGURATIONPROPERTIES.getKeepAliveTimeout());
+		final int keepAliveTimeout = SERVER_CONFIGURATIONPROPERTIES.getKeepAliveTimeout();
+		LOG.info("长连接超时任务启动,keepAliveTimeout=[{}]秒", keepAliveTimeout);
 
 		TIMEOUT_ZE.scheduleAtFixedRate(() -> {
 
@@ -356,8 +356,8 @@ public class NioLongConnectionServer {
 			final List<Long> delete = new ArrayList<>(10);
 
 			final long now = System.currentTimeMillis();
-			for (final Long key : keySet) {
-				if (now - key >= keepAliveTimeout * 1000) {
+			for (final long key : keySet) {
+				if ((now - key) >= (keepAliveTimeout * 1000)) {
 					delete.add(key);
 				}
 			}
@@ -484,7 +484,7 @@ public class NioLongConnectionServer {
 		try {
 			final ZResponse response = task.invoke(request, socketChannel);
 
-			if (response == null || response.isWritten()) {
+			if ((response == null) || response.isWritten()) {
 				return;
 			}
 
@@ -532,12 +532,12 @@ public class NioLongConnectionServer {
 	private static void addConnectionToKAMap(final SelectionKey key, final SocketChannel socketChannel,
 			final boolean keepAlive) {
 		if (keepAlive) {
-			SOCKET_CHANNEL_MAP.put(System.currentTimeMillis() / 1000 * 1000, new SS(socketChannel, key));
+			SOCKET_CHANNEL_MAP.put((System.currentTimeMillis() / 1000) * 1000, new SS(socketChannel, key));
 		}
 	}
 
 	static void setZSessionId(final ZRequest request, final ZResponse response) {
-		if (request == null || response == null) {
+		if ((request == null) || (response == null)) {
 			return;
 		}
 
