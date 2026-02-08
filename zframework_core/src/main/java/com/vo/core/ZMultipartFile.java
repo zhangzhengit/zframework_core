@@ -9,12 +9,23 @@ import java.io.InputStream;
 
 /**
  * 接收 multipart/form-data 上传的文件，专指文件。
+ * 用在接口方法上声明为一个参数即可，如：
+ *
+    @ZRequestMapping(mapping = { "/upload" }, method = MethodEnum.POST)
+	public CR upload(final ZMultipartFile file){
+		// xxx
+	}
+
+	即可接收到上传的文件
+
  *
  * @author zhangzhen
  * @date 2023年10月26日
  *
  */
 public class ZMultipartFile {
+
+	private static final int BUFFER_SIZE = 1024 * 10;
 
 	private final String name;
 	private final String tempFilePath;
@@ -135,29 +146,22 @@ public class ZMultipartFile {
 			dest.createNewFile();
 		}
 
-		final InputStream inputStream2 = this.getInputStream();
-		final BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream2);
-
-		final FileOutputStream fileOutputStream = new FileOutputStream(dest);
-		final BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(fileOutputStream);
-
-		final byte[] b = new byte[1024 * 10];
-		while (true) {
-			final int read = bufferedInputStream.read(b);
-			if (read <= -1) {
-				break;
+		try (InputStream inputStream2 = this.getInputStream();
+				BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream2);
+				FileOutputStream fileOutputStream = new FileOutputStream(dest);
+				BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(fileOutputStream)) {
+			final byte[] buffer = new byte[BUFFER_SIZE];
+			while (true) {
+				final int read = bufferedInputStream.read(buffer);
+				if (read <= -1) {
+					break;
+				}
+				bufferedOutputStream.write(buffer, 0, read);
 			}
-			bufferedOutputStream.write(b, 0, read);
+
+			bufferedOutputStream.flush();
+			fileOutputStream.flush();
 		}
-
-		bufferedOutputStream.flush();
-		fileOutputStream.flush();
-
-		bufferedOutputStream.close();
-		fileOutputStream.close();
-
-		bufferedInputStream.close();
-		inputStream2.close();
 
 	}
 
