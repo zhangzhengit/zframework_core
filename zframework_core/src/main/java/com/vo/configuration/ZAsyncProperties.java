@@ -34,7 +34,7 @@ public class ZAsyncProperties {
 	 */
 	@ZNotNull
 	@ZNotEmtpy
-	private String threadNamePrefix = "async-Thread-";
+	private String threadNamePrefix = "aT-";
 
 	public int getThreadCount() {
 		return this.threadCount;
@@ -55,5 +55,5 @@ public class ZAsyncProperties {
 	public static int getMin() {
 		return MIN;
 	}
-	
+
 }

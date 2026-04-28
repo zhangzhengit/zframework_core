@@ -2,7 +2,6 @@ package com.vo.core;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.LinkedBlockingDeque;
 import java.util.stream.Collectors;
 
 import com.vo.cache.J;
@@ -20,32 +19,15 @@ import com.vo.http.HttpStatusEnum;
  * @date 2023年11月23日
  *
  */
-public final class TaskRequestHandler extends Thread {
+public final class TaskRequestHandler {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
-	
-	/**
-	 * request-Dispatcher-Thread
-	 */
-	public static final String NAME = "rDT";
-	
-	/**
-	 * dispatcher-Group
-	 */
-	public static final String GROUP_NAME = "dG";
-
-	private final LinkedBlockingDeque<TaskRequest> queue = new LinkedBlockingDeque<>(
-			ZContext.getBean(ServerConfigurationProperties.class).getPendingTasks());
 
 	static final boolean showHttpHeader = ZContext.getBean(ServerConfigurationProperties.class).getShowHttpHeader();
 
 	private final AbstractRequestValidator requestValidator;
 
 	public TaskRequestHandler() {
-		
-		super(new ThreadGroup(GROUP_NAME), GROUP_NAME + "@" + NAME);
-
-		setName(NAME);
 
 		final Collection<Object> beanConnection = ZContext.all().values();
 
@@ -73,25 +55,8 @@ public final class TaskRequestHandler extends Thread {
 
 	}
 
-	@Override
-	public void run() {
+	public void handle(final TaskRequest taskRequest) {
 
-		while (true) {
-
-			TaskRequest taskRequest = null;
-			try {
-				taskRequest = this.queue.take();
-			} catch (final InterruptedException e1) {
-				e1.printStackTrace();
-			}
-
-			handle(taskRequest);
-		}
-	}
-
-	@SuppressWarnings("resource")
-	private void handle(final TaskRequest taskRequest) {
-		
 		try {
 
 			final ZRequest request = BodyReader.parseHeader(taskRequest);
@@ -124,20 +89,4 @@ public final class TaskRequestHandler extends Thread {
 		}
 	}
 
-	/**
-	 *	把请求放入待处理队列：
-	 *	如果当前待处理任务个数 < pendingTasks (server.pending.tasks 配置项)则放入队列等待处理并且返回true；
-	 *	否则返回false
-	 *
-	 * @param taskRequest
-	 * @return
-	 *
-	 */
-	public boolean addLast(final TaskRequest taskRequest) {
-		return this.queue.offerLast(taskRequest);
-	}
-
-	public boolean addFirst(final TaskRequest taskRequest) {
-		return this.queue.offerFirst(taskRequest);
-	}
 }

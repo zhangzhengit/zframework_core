@@ -16,17 +16,18 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.vo.cache.J;
 import com.vo.cache.STU;
 import com.vo.common.CR;
 import com.vo.configuration.ServerConfigurationProperties;
-import com.vo.configuration.TaskResponsiveModeEnum;
 import com.vo.enums.ConnectionEnum;
 import com.vo.exception.ZControllerAdviceActuator;
 import com.vo.exception.ZControllerAdviceThrowable;
@@ -34,9 +35,6 @@ import com.vo.http.HttpStatusEnum;
 import com.vo.http.ZCacheControl;
 import com.vo.http.ZCookie;
 import com.vo.http.ZLastModified;
-import com.vo.thread.ThreadModeEnum;
-import com.vo.thread.ZE;
-import com.vo.thread.ZES;
 
 /**
  * NIO长连接server
@@ -53,19 +51,12 @@ public class NioLongConnectionServer {
 
 	public static final String Z_SERVER_QPS = "zsq";
 
+	public static final AtomicLong VT_N = new AtomicLong(0L);
 	private static final ServerConfigurationProperties SERVER_CONFIGURATIONPROPERTIES= ZContext.getBean(ServerConfigurationProperties.class);
 
 	private static final boolean ENABLE_SERVER_QPS_LIMITED = SERVER_CONFIGURATIONPROPERTIES.getQpsLimitEnabled();
 
 	private final AtomicBoolean serverStarted = new AtomicBoolean(false);
-
-
-	public final static ZE ZE = ZES.newZE(SERVER_CONFIGURATIONPROPERTIES.getThreadCount(),
-			"zf",
-			SERVER_CONFIGURATIONPROPERTIES.getThreadName(),
-			TaskResponsiveModeEnum.IMMEDIATELY.name().equals(SERVER_CONFIGURATIONPROPERTIES.getTaskResponsiveMode())
-			? ThreadModeEnum.IMMEDIATELY
-					: ThreadModeEnum.LAZY);
 
 	private static final String SERVER_NAME = ZContext.getBean(ServerConfigurationProperties.class).getName();
 
@@ -105,14 +96,10 @@ public class NioLongConnectionServer {
 	}
 
 	private void startNIOServer0(final int serverPort) {
-		this.requestHandler.start();
 
 		ZContext.addBean(this.requestHandler.getClass(), this.requestHandler);
 
 		keepAliveTimeoutJOB();
-
-		// 创建ServerSocketChannel
-
 
 		try {
 			this.serverSocketChannel = ServerSocketChannel.open();
@@ -177,13 +164,12 @@ public class NioLongConnectionServer {
 							selectionKey.attach(SKStatusEnum.READING);
 						}
 
-						final SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
-
-						final String keyword = NioLongConnectionServer.gKeyword(socketChannel);
-
 						if (SKStatusEnum.READING == selectionKey.attachment()) {
-							NioLongConnectionServer.ZE.executeByNameInASpecificThread(keyword,
-									() -> this.action(selectionKey, socketChannel));
+							final SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
+							// FIXME 2026年4月29日 05:14:19 zhangzhen : 21 虚拟
+							final String tName = SERVER_CONFIGURATIONPROPERTIES.getThreadName();
+							Thread.ofVirtual().name(tName + VT_N.incrementAndGet())
+							.start(() -> this.action(selectionKey, socketChannel));
 						}
 
 					}
@@ -309,15 +295,10 @@ public class NioLongConnectionServer {
 	}
 
 	private void response(final SelectionKey selectionKey, final ZArray array) {
-		final TaskRequest taskRequest = new TaskRequest(selectionKey,
-				(SocketChannel) selectionKey.channel(), array.get(), array.getTf(),
-				new Date());
-		final boolean responseAsync = NioLongConnectionServer.this.requestHandler
-				.addLast(taskRequest);
-		if (!responseAsync) {
-			NioLongConnectionServer.response429Async(selectionKey,
-					SERVER_CONFIGURATIONPROPERTIES.getPendingTasksExceedMessage());
-		}
+		final TaskRequest taskRequest = new TaskRequest(selectionKey, (SocketChannel) selectionKey.channel(),
+				array.get(), array.getTf(), new Date());
+
+		NioLongConnectionServer.this.requestHandler.handle(taskRequest);
 	}
 
 	private static boolean allow() {
@@ -326,7 +307,9 @@ public class NioLongConnectionServer {
 	}
 
 	public static void response429Async(final SelectionKey key, final String message) {
-		NioLongConnectionServer.ZE.executeInQueue(() -> NioLongConnectionServer.response429(key, message));
+		// FIXME 2026年4月29日 05:14:51 zhangzhen : 21虚拟
+		Thread.ofVirtual().name("response429Async")
+		.start(() -> NioLongConnectionServer.response429(key, message));
 	}
 
 	public static void response429(final SelectionKey key, final String message) {

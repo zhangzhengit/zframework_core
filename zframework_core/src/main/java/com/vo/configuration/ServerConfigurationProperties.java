@@ -81,16 +81,6 @@ public class ServerConfigurationProperties {
 	@ZNotNull
 	private int uploadFileSize = 1024 * 50;
 
-//	/**
-//	 * 上传文件时从[一次性读取内存]改为[边读边写入到临时文件]的阈值
-//	 *
-//	 * 单位：KB
-//	 */
-//	@ZMin(min = 1)
-//	@ZMax(max = 1024 * 1024 * 10)
-//	@ZNotNull
-//	private int uploadFileToTempSize = 1024;
-
 	/**
 	 * 上传文件时存放临时文件的目录，
 	 * 默认为[user.dir]下的temp目录
@@ -99,18 +89,10 @@ public class ServerConfigurationProperties {
 	private String uploadTempDir;
 
 	/**
-	 * 处理http请求的最大线程数量
-	 */
-	@ZNotNull
-	@ZMin(min = 1)
-	@ZMax(max = 2000)
-	private int threadCount = Runtime.getRuntime().availableProcessors() * 4;
-
-	/**
 	 * 处理http请求的线程的名称前缀，生成的线程以此为前缀分别命名为1、2、3以此类推
 	 */
 	@ZNotEmtpy
-	private String threadName = "hT-";
+	private String threadName = "hT-"; //$NON-NLS-1$
 
 	/**
 	 * 是否启用静态资源的缓存
@@ -123,7 +105,7 @@ public class ServerConfigurationProperties {
 	 * 扫描的包配置，如：com.vo
 	 */
 	@ZNotNull
-	private String scanPackage = "com.vo";
+	private String scanPackage = "com.vo"; //$NON-NLS-1$
 
 	/**
 	 * 是否启用QPS限制 (server.qps)
@@ -162,38 +144,6 @@ public class ServerConfigurationProperties {
 	@ZMin(min = 1)
 	@ZMax(max = 1024 * 16)
 	private int requestHeaderSizeLimit = 500;
-
-	/**
-	 * 当前待处理的请求数最大值限制，来新请求时如果当前待处理请求数已经达到此值，则拒绝本次请求并返回错误码
-	 */
-	@ZMin(min = 52)
-	@ZMax(max = 10000 * 1)
-	private int pendingTasks = 100;
-
-	/**
-	 *	请求超过 [server.pending.tasks] 配置值时给客户端的提示信息
-	 */
-	@ZNotEmtpy
-	@ZValue(name = "server.pending.tasks.exceed.message", listenForChanges = true)
-	private String pendingTasksExceedMessage = "待处理请求队列已满，请稍后再试";
-
-	/**
-	 * 对于请求的响应模式
-	 */
-	@ZCustom(cls = TaskResponsiveModeValidator.class)
-	@ZNotEmtpy
-	private String taskResponsiveMode = TaskResponsiveModeEnum.QUEUE.name();
-
-	/**
-	 * 从服务器接收到请求的时间点开始，到处理本次请求的时间点截止，超过此值就返回【服务器忙】的信息。单位：毫秒
-	 *
-	 * 注意：仅 taskResponsiveMode=IMMEDIATELY 时，本配置项才生效
-	 *
-	 */
-	@ZMin(min = 1)
-	@ZMax(max = 1000 * 100)
-	@ZValue(name = "server.task.timeout.milliseconds", listenForChanges = true)
-	private int taskTimeoutMilliseconds = 100;
 
 	/**
 	 * 是否启用对一个client的qps限制
@@ -471,28 +421,12 @@ public class ServerConfigurationProperties {
 		this.uploadFileSize = uploadFileSize;
 	}
 
-//	public int getUploadFileToTempSize() {
-//		return this.uploadFileToTempSize;
-//	}
-//
-//	public void setUploadFileToTempSize(final int uploadFileToTempSize) {
-//		this.uploadFileToTempSize = uploadFileToTempSize;
-//	}
-
 	public String getUploadTempDir() {
 		return this.uploadTempDir;
 	}
 
 	public void setUploadTempDir(final String uploadTempDir) {
 		this.uploadTempDir = uploadTempDir;
-	}
-
-	public int getThreadCount() {
-		return this.threadCount;
-	}
-
-	public void setThreadCount(final int threadCount) {
-		this.threadCount = threadCount;
 	}
 
 	public String getThreadName() {
@@ -549,38 +483,6 @@ public class ServerConfigurationProperties {
 
 	public void setRequestHeaderSizeLimit(final int requestHeaderSizeLimit) {
 		this.requestHeaderSizeLimit = requestHeaderSizeLimit;
-	}
-
-	public int getPendingTasks() {
-		return this.pendingTasks;
-	}
-
-	public void setPendingTasks(final int pendingTasks) {
-		this.pendingTasks = pendingTasks;
-	}
-
-	public String getPendingTasksExceedMessage() {
-		return this.pendingTasksExceedMessage;
-	}
-
-	public void setPendingTasksExceedMessage(final String pendingTasksExceedMessage) {
-		this.pendingTasksExceedMessage = pendingTasksExceedMessage;
-	}
-
-	public String getTaskResponsiveMode() {
-		return this.taskResponsiveMode;
-	}
-
-	public void setTaskResponsiveMode(final String taskResponsiveMode) {
-		this.taskResponsiveMode = taskResponsiveMode;
-	}
-
-	public int getTaskTimeoutMilliseconds() {
-		return this.taskTimeoutMilliseconds;
-	}
-
-	public void setTaskTimeoutMilliseconds(final int taskTimeoutMilliseconds) {
-		this.taskTimeoutMilliseconds = taskTimeoutMilliseconds;
 	}
 
 	public boolean getEnableClientQps() {
@@ -763,33 +665,6 @@ public class ServerConfigurationProperties {
 		this.sessionMaxActiveInMemory = sessionMaxActiveInMemory;
 	}
 
-	@Override
-	public String toString() {
-		return "ServerConfigurationProperties [port=" + this.port + ", responseZSessionId=" + this.responseZSessionId + ", name="
-				+ this.name + ", byteBufferSize=" + this.byteBufferSize + ", nioReadTimeout=" + this.nioReadTimeout
-				+ ", uploadFileSize=" + this.uploadFileSize
-//				+ ", uploadFileToTempSize="
-//				+ this.uploadFileToTempSize
-				+ ", uploadTempDir=" + this.uploadTempDir + ", threadCount=" + this.threadCount + ", threadName=" + this.threadName
-				+ ", staticResourceCacheEnable=" + this.staticResourceCacheEnable + ", scanPackage=" + this.scanPackage
-				+ ", qpsLimitEnabled=" + this.qpsLimitEnabled + ", qps=" + this.qps + ", qpsExceedMessage=" + this.qpsExceedMessage
-				+ ", requestHeaderSizeLimit=" + this.requestHeaderSizeLimit + ", pendingTasks=" + this.pendingTasks
-				+ ", pendingTasksExceedMessage=" + this.pendingTasksExceedMessage + ", taskResponsiveMode="
-				+ this.taskResponsiveMode + ", taskTimeoutMilliseconds=" + this.taskTimeoutMilliseconds + ", enableClientQps="
-				+ this.enableClientQps + ", clientQps=" + this.clientQps + ", sessionIdQps=" + this.sessionIdQps
-				+ ", staticControllerEnable=" + this.staticControllerEnable + ", staticControllerReferersAllowed="
-				+ this.staticControllerReferersAllowed + ", staticControllerMemoryCacheCapacity="
-				+ this.staticControllerMemoryCacheCapacity + ", staticResponseBufferSize=" + this.staticResponseBufferSize
-				+ ", keepAliveTimeout=" + this.keepAliveTimeout + ", sessionStorageType=" + this.sessionStorageType
-				+ ", sessionTimeout=" + this.sessionTimeout + ", sessionMaxTimeout=" + this.sessionMaxTimeout
-				+ ", sessionMaxActive=" + this.sessionMaxActive + ", sessionMaxActiveInMemory=" + this.sessionMaxActiveInMemory
-				+ ", staticPath=" + this.staticPath + ", staticPrefix=" + this.staticPrefix + ", compressionEnable="
-				+ this.compressionEnable + ", compressionTypes=" + this.compressionTypes + ", compressionMinLength="
-				+ this.compressionMinLength + ", responseHeaders=" + this.responseHeaders + ", printConfigurationProperties="
-				+ this.printConfigurationProperties + ", printProxyClass=" + this.printProxyClass + ", showBanner=" + this.showBanner
-				+ ", showHttpHeader=" + this.showHttpHeader + "]";
-	}
-
 	public Map<String, String> getStaticControllerContentType() {
 		return this.staticControllerContentType;
 	}
@@ -798,6 +673,28 @@ public class ServerConfigurationProperties {
 		this.staticControllerContentType = staticControllerContentType;
 	}
 
+	@Override
+	public String toString() {
+		return "ServerConfigurationProperties [port=" + this.port + ", responseZSessionId=" + this.responseZSessionId + ", name="
+				+ this.name + ", byteBufferSize=" + this.byteBufferSize + ", nioReadTimeout=" + this.nioReadTimeout
+				+ ", uploadFileSize=" + this.uploadFileSize + ", uploadTempDir=" + this.uploadTempDir + ", threadName="
+				+ this.threadName + ", staticResourceCacheEnable=" + this.staticResourceCacheEnable + ", scanPackage="
+				+ this.scanPackage + ", qpsLimitEnabled=" + this.qpsLimitEnabled + ", qps=" + this.qps + ", qpsExceedMessage="
+				+ this.qpsExceedMessage + ", requestHeaderSizeLimit=" + this.requestHeaderSizeLimit + ", enableClientQps="
+				+ this.enableClientQps + ", clientQps=" + this.clientQps + ", sessionIdQps=" + this.sessionIdQps
+				+ ", staticControllerEnable=" + this.staticControllerEnable + ", staticControllerContentType="
+				+ this.staticControllerContentType + ", staticControllerReferersAllowed=" + this.staticControllerReferersAllowed
+				+ ", staticControllerMemoryCacheCapacity=" + this.staticControllerMemoryCacheCapacity
+				+ ", staticResponseBufferSize=" + this.staticResponseBufferSize + ", keepAliveTimeout=" + this.keepAliveTimeout
+				+ ", sessionStorageType=" + this.sessionStorageType + ", sessionTimeout=" + this.sessionTimeout
+				+ ", sessionMaxTimeout=" + this.sessionMaxTimeout + ", sessionMaxActive=" + this.sessionMaxActive
+				+ ", sessionMaxActiveInMemory=" + this.sessionMaxActiveInMemory + ", staticPath=" + this.staticPath
+				+ ", staticPrefix=" + this.staticPrefix + ", compressionEnable=" + this.compressionEnable + ", compressionTypes="
+				+ this.compressionTypes + ", compressionMinLength=" + this.compressionMinLength + ", responseHeaders="
+				+ this.responseHeaders + ", printConfigurationProperties=" + this.printConfigurationProperties
+				+ ", printProxyClass=" + this.printProxyClass + ", showBanner=" + this.showBanner + ", showHttpHeader="
+				+ this.showHttpHeader + "]";
+	}
 
 	static Map<String, String> initCTM() {
 		final Map<String, String> ctm = new HashMap<>(16, 1F);

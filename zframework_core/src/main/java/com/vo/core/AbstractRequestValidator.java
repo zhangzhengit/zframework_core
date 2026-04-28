@@ -1,7 +1,6 @@
 package com.vo.core;
 
 import com.vo.configuration.ServerConfigurationProperties;
-import com.vo.configuration.TaskResponsiveModeEnum;
 import com.vo.http.AccessDeniedCodeEnum;
 
 
@@ -21,46 +20,16 @@ abstract class AbstractRequestValidator {
 	private static final boolean RESPONSE_Z_SESSION_ID = ZContext.getBean(ServerConfigurationProperties.class)
 			.isResponseZSessionId();
 
+	private static final ServerConfigurationProperties SERVER_CONFIGURATIONPROPERTIES= ZContext.getBean(ServerConfigurationProperties.class);
+
+	private static final String T_NAME = SERVER_CONFIGURATIONPROPERTIES.getThreadName();
+
 	private final RequestValidatorConfigurationProperties requestValidatorConfigurationProperties = ZContext
 			.getBean(RequestValidatorConfigurationProperties.class);
 
-	private static final String TASK_RESPONSIVE_MODE = ZContext.getBean(ServerConfigurationProperties.class).getTaskResponsiveMode();
 	private static final RequestVerificationResult ALLOW = new RequestVerificationResult(true);
 
 	public void handle(final ZRequest request, final TaskRequest taskRequest) {
-
-		// 如果任务执行模式为[排队执行]，则使用队列模式来执行
-		if (TaskResponsiveModeEnum.QUEUE.name().equals(AbstractRequestValidator.TASK_RESPONSIVE_MODE)) {
-			// 直接放入线程队列等待处理
-			NioLongConnectionServer.ZE.executeInQueue(() -> this.handle0(request, taskRequest));
-			return;
-		}
-
-		if (TaskResponsiveModeEnum.IMMEDIATELY.name().equals(AbstractRequestValidator.TASK_RESPONSIVE_MODE)) {
-
-			final boolean executeImmediately = NioLongConnectionServer.ZE
-					.executeImmediately(() -> this.handle0(request, taskRequest));
-
-			// 当前有空闲线程，直接处理
-			if (executeImmediately) {
-				return;
-			}
-
-			// 超时，直接返回[429任务超时]
-			if (this.timeout(taskRequest)) {
-				final String message = "服务器忙：当前无空闲线程&任务等待超时："
-						+ ZContext.getBean(ServerConfigurationProperties.class).getTaskTimeoutMilliseconds();
-				NioLongConnectionServer.response429(taskRequest.getSelectionKey(), message);
-			} else // 没超时，则优先处理放入任务队列最前面，成功则此任务会等待下次调用本方法优先处理，失败则返回[429任务队列满]
-			if (!ZContext.getBean(TaskRequestHandler.class).addFirst(taskRequest)) {
-				final String message = "服务器忙：当前无空闲线程&任务队列满";
-				NioLongConnectionServer.response429(taskRequest.getSelectionKey(), message);
-			}
-		}
-
-	}
-
-	private void handle0(final ZRequest request, final TaskRequest taskRequest) {
 		final RequestVerificationResult r = this.validated(request, taskRequest);
 		if (r.isPassed()) {
 			this.passed(request, taskRequest);
@@ -69,24 +38,12 @@ abstract class AbstractRequestValidator {
 		}
 	}
 
-	public boolean timeout(final TaskRequest taskRequest) {
 
-		final int taskTimeoutMilliseconds = ZContext.getBean(ServerConfigurationProperties.class)
-				.getTaskTimeoutMilliseconds();
-
-		final long now = System.currentTimeMillis();
-		if ((now - taskRequest.getRequestTime().getTime()) > taskTimeoutMilliseconds) {
-			return true;
-		}
-
-		return false;
-	}
-
-	public int getSessionIdQps() {
+	public static int getSessionIdQps() {
 		return ZContext.getBean(ServerConfigurationProperties.class).getSessionIdQps();
 	}
 
-	public int getClientQps() {
+	public static int getClientQps() {
 		return ZContext.getBean(ServerConfigurationProperties.class).getClientQps();
 	}
 
@@ -121,11 +78,11 @@ abstract class AbstractRequestValidator {
 				final String sessionId = session.getId();
 
 				ZSessionMap.active(sessionId);
-				
+
 				final String smoothUserAgentKeyword = "zsid@" + sessionId;
 				final QPSHandlingEnum handlingEnum = this.requestValidatorConfigurationProperties
 						.getHandlingEnum(userAgent);
-				final boolean allow = QC.allow(QCTimeEnum.SECOND, smoothUserAgentKeyword, this.getSessionIdQps(),
+				final boolean allow = QC.allow(QCTimeEnum.SECOND, smoothUserAgentKeyword, AbstractRequestValidator.getSessionIdQps(),
 						handlingEnum);
 
 				if (allow) {
@@ -140,7 +97,7 @@ abstract class AbstractRequestValidator {
 		final String keyword = request.getClientIp() + "@" + userAgent;
 
 		final QPSHandlingEnum handlingEnum = this.requestValidatorConfigurationProperties.getHandlingEnum(userAgent);
-		final boolean allow = QC.allow(QCTimeEnum.SECOND,keyword, this.getClientQps(), handlingEnum);
+		final boolean allow = QC.allow(QCTimeEnum.SECOND,keyword, AbstractRequestValidator.getClientQps(), handlingEnum);
 
 		if (allow) {
 			return ALLOW;

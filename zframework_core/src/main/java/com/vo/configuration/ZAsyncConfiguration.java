@@ -18,7 +18,7 @@ import com.vo.thread.ZES;
 @ZConfiguration
 public class ZAsyncConfiguration {
 
-	private static final String ASYNC_GROUP = "async-Group";
+	private static final String ASYNC_GROUP = "aG";
 
 	@ZAutowired
 	private ZAsyncProperties zAsyncProperties;
