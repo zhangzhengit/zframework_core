@@ -51,7 +51,7 @@ public class NioLongConnectionServer {
 
 	public static final String Z_SERVER_QPS = "zsq";
 
-	public static final AtomicLong VT_N = new AtomicLong(0L);
+	private static final AtomicLong VT_N = new AtomicLong(0L);
 	private static final ServerConfigurationProperties SERVER_CONFIGURATIONPROPERTIES= ZContext.getBean(ServerConfigurationProperties.class);
 
 	private static final boolean ENABLE_SERVER_QPS_LIMITED = SERVER_CONFIGURATIONPROPERTIES.getQpsLimitEnabled();

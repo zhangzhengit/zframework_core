@@ -17,8 +17,6 @@ import java.util.Properties;
 
 import com.vo.configuration.ZProperties;
 import com.vo.core.ZLog2;
-import com.vo.thread.ZE;
-import com.vo.thread.ZES;
 
 /**
  * 配置文件监听器，监听配置变动，及时更新 @ZConfigurationProperties、 @ZValue 等
@@ -30,14 +28,19 @@ import com.vo.thread.ZES;
 public class ZPropertiesListener {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
-	private static final ZE ZE = ZES.newZE(1, ZProperties.PROPERTIES_NAME + "-Thread-");
 
 	public static void listen(final String filePath) {
 
 		LOG.info("配置热更新监听器启动,filePath={}", filePath);
 
-		ZE.executeInQueue(() -> {
+		final Thread thread = new Thread(task(filePath));
+		thread.setName(ZProperties.PROPERTIES_NAME + "-Thread");
+		thread.start();
 
+	}
+
+	private static Runnable task(final String filePath) {
+		return () -> {
 			// 创建一个WatchService对象
 			WatchService watchService = null;
 			try {
@@ -88,7 +91,7 @@ public class ZPropertiesListener {
 										Charset.defaultCharset().displayName());
 								properties.load(isr);
 								final Enumeration<Object> keys = properties.keys();
-								while(keys.hasMoreElements()) {
+								while (keys.hasMoreElements()) {
 									final Object k = keys.nextElement();
 
 									final Object v = properties.get(k);
@@ -114,8 +117,7 @@ public class ZPropertiesListener {
 					break;
 				}
 			}
-
-		});
+		};
 
 	}
 

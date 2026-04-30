@@ -7,14 +7,13 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 import com.google.common.collect.HashBasedTable;
-import com.vo.anno.ZAutowired;
 import com.vo.anno.ZComponent;
 import com.vo.cache.AU;
 import com.vo.core.ZContext;
 import com.vo.exception.StartupException;
-import com.vo.thread.ZE;
 
 /**
  * 事件发布者
@@ -26,12 +25,13 @@ import com.vo.thread.ZE;
 @ZComponent
 public final class ZApplicationEventPublisher {
 
+	private static final String TRREAD_NAME = "aeT-";
+
+	private static final AtomicLong VT_N = new AtomicLong(0L);
+
 	private static final HashBasedTable<Class<? extends ZApplicationEvent>, Method, Class<?>> TABLE = HashBasedTable.create();
 
 	private static final AtomicBoolean executed = new AtomicBoolean(false);
-
-	@ZAutowired(name = "zeForApplicationEventPublisher")
-	private ZE ze;
 
 	/**
 	 * 使用此方法来发布时一个事件，通知此事件的 @ZEventListener 来处理
@@ -49,21 +49,21 @@ public final class ZApplicationEventPublisher {
 				continue;
 			}
 
-			this.invoke(entry.getKey(), bean, event);
+			ZApplicationEventPublisher.invoke(entry.getKey(), bean, event);
 
 		}
-
 	}
 
-	private void invoke(final Method method, final Object object, final ZApplicationEvent event) {
+	private static void invoke(final Method method, final Object object, final ZApplicationEvent event) {
 
-		this.ze.executeInQueue(() -> {
+		Thread.ofVirtual().name(TRREAD_NAME + VT_N.incrementAndGet()).start(() -> {
 			try {
 				method.invoke(object, event);
-			} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+			} catch (IllegalAccessException | InvocationTargetException e) {
 				e.printStackTrace();
 			}
 		});
+
 	}
 
 	public void publishEvent(final ZApplicationEvent... events) {
