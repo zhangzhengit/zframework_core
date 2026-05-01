@@ -16,7 +16,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -57,8 +56,6 @@ public class NioLongConnectionServer {
 	private static final boolean ENABLE_SERVER_QPS_LIMITED = SERVER_CONFIGURATIONPROPERTIES.getQpsLimitEnabled();
 
 	private final AtomicBoolean serverStarted = new AtomicBoolean(false);
-
-	private static final String SERVER_NAME = ZContext.getBean(ServerConfigurationProperties.class).getName();
 
 	/**
 	 * 执行长连接超时任务的线程池
