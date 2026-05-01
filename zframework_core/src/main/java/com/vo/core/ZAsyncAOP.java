@@ -17,7 +17,7 @@ import com.vo.aop.ZIAOP;
 @ZAOP(interceptType = ZAsync.class)
 public class ZAsyncAOP implements ZIAOP {
 
-	private static final String THREAD_NAME = "aT-";
+	private static final String THREAD_NAME = "asyncT-";
 
 	private static final AtomicLong VT_N = new AtomicLong(0L);
 

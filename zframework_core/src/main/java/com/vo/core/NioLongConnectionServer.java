@@ -308,7 +308,7 @@ public class NioLongConnectionServer {
 
 	public static void response429Async(final SelectionKey key, final String message) {
 		// FIXME 2026年4月29日 05:14:51 zhangzhen : 21虚拟
-		Thread.ofVirtual().name("response429Async")
+		Thread.ofVirtual().name("response429AsyncT")
 		.start(() -> NioLongConnectionServer.response429(key, message));
 	}
 
