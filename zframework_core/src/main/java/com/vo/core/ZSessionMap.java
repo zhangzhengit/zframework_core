@@ -34,7 +34,7 @@ public class ZSessionMap {
 			CacheBuilder.newBuilder()
 			.maximumSize(SessionMaxActiveInMemory)
 			.expireAfterAccess(SESSION_MAX_TIMEOUT, TimeUnit.SECONDS)
-			.removalListener(saveToSqlite())
+//			.removalListener(saveToSqlite())
 			.build();
 	
 	/**
