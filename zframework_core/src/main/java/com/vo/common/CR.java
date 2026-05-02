@@ -2,7 +2,7 @@ package com.vo.common;
 
 import java.io.Serializable;
 
-import com.vo.thread.ErrorEnum;
+import com.vo.enums.ErrorEnum;
 
 
 /**

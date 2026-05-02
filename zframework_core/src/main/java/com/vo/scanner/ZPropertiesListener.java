@@ -14,11 +14,11 @@ import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.util.Enumeration;
 import java.util.Properties;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-import com.vo.configuration.ZProperties;
+import com.vo.configuration.ZLThreadFactory;
 import com.vo.core.ZLog2;
-import com.vo.thread.ZE;
-import com.vo.thread.ZES;
 
 /**
  * 配置文件监听器，监听配置变动，及时更新 @ZConfigurationProperties、 @ZValue 等
@@ -30,13 +30,14 @@ import com.vo.thread.ZES;
 public class ZPropertiesListener {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
-	private static final ZE ZE = ZES.newZE(1, ZProperties.PROPERTIES_NAME + "-Thread-");
+
+	private static final ExecutorService ZE = Executors.newSingleThreadExecutor(new ZLThreadFactory());
 
 	public static void listen(final String filePath) {
 
 		LOG.info("配置热更新监听器启动,filePath={}", filePath);
 
-		ZE.executeInQueue(() -> {
+		ZE.execute(() -> {
 
 			// 创建一个WatchService对象
 			WatchService watchService = null;

@@ -32,14 +32,18 @@ abstract class AbstractRequestValidator {
 		// 如果任务执行模式为[排队执行]，则使用队列模式来执行
 		if (TaskResponsiveModeEnum.QUEUE.name().equals(AbstractRequestValidator.TASK_RESPONSIVE_MODE)) {
 			// 直接放入线程队列等待处理
-			NioLongConnectionServer.ZE.executeInQueue(() -> this.handle0(request, taskRequest));
+			NioLongConnectionServer.ZE.execute(() -> this.handle0(request, taskRequest));
+//			NioLongConnectionServer.ZE.executeInQueue(() -> this.handle0(request, taskRequest));
 			return;
 		}
 
 		if (TaskResponsiveModeEnum.IMMEDIATELY.name().equals(AbstractRequestValidator.TASK_RESPONSIVE_MODE)) {
 
-			final boolean executeImmediately = NioLongConnectionServer.ZE
-					.executeImmediately(() -> this.handle0(request, taskRequest));
+			boolean executeImmediately = false;
+			if (NioLongConnectionServer.ZE.getActiveCount() < NioLongConnectionServer.ZE.getCorePoolSize()) {
+				executeImmediately = true;
+				NioLongConnectionServer.ZE.execute(() -> this.handle0(request, taskRequest));
+			}
 
 			// 当前有空闲线程，直接处理
 			if (executeImmediately) {
@@ -121,7 +125,7 @@ abstract class AbstractRequestValidator {
 				final String sessionId = session.getId();
 
 				ZSessionMap.active(sessionId);
-				
+
 				final String smoothUserAgentKeyword = "zsid@" + sessionId;
 				final QPSHandlingEnum handlingEnum = this.requestValidatorConfigurationProperties
 						.getHandlingEnum(userAgent);

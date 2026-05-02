@@ -1,11 +1,17 @@
 package com.vo.configuration;
 
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import com.vo.anno.ZAutowired;
 import com.vo.anno.ZBean;
 import com.vo.anno.ZConfiguration;
-import com.vo.thread.ThreadModeEnum;
-import com.vo.thread.ZE;
-import com.vo.thread.ZES;
 
 /**
  *
@@ -18,15 +24,16 @@ import com.vo.thread.ZES;
 @ZConfiguration
 public class ZAsyncConfiguration {
 
-	private static final String ASYNC_GROUP = "async-Group";
+	public static final String ASYNC_GROUP = "asyncGroup";
 
 	@ZAutowired
 	private ZAsyncProperties zAsyncProperties;
 
 	@ZBean
-	public ZE zeZAsync() {
-		return ZES.newZE(this.zAsyncProperties.getThreadCount(), ASYNC_GROUP,
-				this.zAsyncProperties.getThreadNamePrefix(), ThreadModeEnum.LAZY);
+	public ThreadPoolExecutor zAsyncES() {
+		final ThreadPoolExecutor executor = new ThreadPoolExecutor(1, this.zAsyncProperties.getThreadCount(), 10,
+				TimeUnit.SECONDS, new LinkedBlockingQueue<>(), new ZAsyncThreadFactory());
+		return executor;
 	}
 
 }

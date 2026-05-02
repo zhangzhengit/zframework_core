@@ -1,11 +1,12 @@
 package com.vo.core;
 
+import java.util.concurrent.ExecutorService;
+
 import com.vo.anno.ZAsync;
 import com.vo.anno.ZAutowired;
 import com.vo.aop.AOPParameter;
 import com.vo.aop.ZAOP;
 import com.vo.aop.ZIAOP;
-import com.vo.thread.ZE;
 
 /**
  * @ZAsync 的AOP类，实现异步处理
@@ -17,8 +18,8 @@ import com.vo.thread.ZE;
 @ZAOP(interceptType = ZAsync.class)
 public class ZAsyncAOP implements ZIAOP {
 
-	@ZAutowired(name = "zeZAsync")
-	private ZE ze;
+	@ZAutowired(name = "zAsyncES")
+	private ExecutorService ze;
 
 	@Override
 	public Object before(final AOPParameter aopParameter) {
@@ -28,9 +29,7 @@ public class ZAsyncAOP implements ZIAOP {
 	@Override
 	public Object around(final AOPParameter aopParameter) {
 
-		this.ze.executeInQueue(() -> {
-			final Object invoke = aopParameter.invoke();
-		});
+		this.ze.execute(() -> aopParameter.invoke());
 
 		return null;
 	}

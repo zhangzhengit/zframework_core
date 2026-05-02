@@ -1,4 +1,4 @@
-package com.vo.thread;
+package com.vo.enums;
 
 /**
  *

@@ -1,11 +1,13 @@
 package com.vo.scanner;
 
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
 import com.vo.anno.ZAutowired;
 import com.vo.anno.ZBean;
 import com.vo.anno.ZConfiguration;
-import com.vo.thread.ThreadModeEnum;
-import com.vo.thread.ZE;
-import com.vo.thread.ZES;
+import com.vo.configuration.ZAEThreadFactory;
 
 /**
  * ZApplicationEventPublisher 事件机制的配置类
@@ -21,8 +23,11 @@ public class ZApplicationEventConfiguration {
 	private ZApplicationEventConfigurationProperties applicationEventConfigurationProperties;
 
 	@ZBean
-	public ZE zeForApplicationEventPublisher() {
-		return ZES.newZE(this.applicationEventConfigurationProperties.getThreadCount(),
-				this.applicationEventConfigurationProperties.getThreadNamePrefix(), ThreadModeEnum.LAZY);
+	public ThreadPoolExecutor zeForApplicationEventPublisher() {
+		final ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(1,
+				this.applicationEventConfigurationProperties.getThreadCount(), 10, TimeUnit.SECONDS,
+				new LinkedBlockingQueue<>(), new ZAEThreadFactory());
+
+		return threadPoolExecutor;
 	}
 }

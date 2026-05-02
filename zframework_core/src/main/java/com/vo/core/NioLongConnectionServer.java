@@ -17,7 +17,9 @@ import java.util.Set;
 import java.util.StringJoiner;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -26,7 +28,7 @@ import com.vo.cache.J;
 import com.vo.cache.STU;
 import com.vo.common.CR;
 import com.vo.configuration.ServerConfigurationProperties;
-import com.vo.configuration.TaskResponsiveModeEnum;
+import com.vo.configuration.ZHttpThreadFactory;
 import com.vo.enums.ConnectionEnum;
 import com.vo.exception.ZControllerAdviceActuator;
 import com.vo.exception.ZControllerAdviceThrowable;
@@ -34,9 +36,6 @@ import com.vo.http.HttpStatusEnum;
 import com.vo.http.ZCacheControl;
 import com.vo.http.ZCookie;
 import com.vo.http.ZLastModified;
-import com.vo.thread.ThreadModeEnum;
-import com.vo.thread.ZE;
-import com.vo.thread.ZES;
 
 /**
  * NIO长连接server
@@ -60,14 +59,9 @@ public class NioLongConnectionServer {
 	private final AtomicBoolean serverStarted = new AtomicBoolean(false);
 
 
-	public final static ZE ZE = ZES.newZE(SERVER_CONFIGURATIONPROPERTIES.getThreadCount(),
-			"zf",
-			SERVER_CONFIGURATIONPROPERTIES.getThreadName(),
-			TaskResponsiveModeEnum.IMMEDIATELY.name().equals(SERVER_CONFIGURATIONPROPERTIES.getTaskResponsiveMode())
-			? ThreadModeEnum.IMMEDIATELY
-					: ThreadModeEnum.LAZY);
-
-	private static final String SERVER_NAME = ZContext.getBean(ServerConfigurationProperties.class).getName();
+	public final static ThreadPoolExecutor ZE = new ThreadPoolExecutor(1,
+			SERVER_CONFIGURATIONPROPERTIES.getThreadCount(), 1,
+			TimeUnit.MINUTES, new LinkedBlockingQueue<>(), new ZHttpThreadFactory());
 
 	/**
 	 * 执行长连接超时任务的线程池
@@ -182,8 +176,10 @@ public class NioLongConnectionServer {
 						final String keyword = NioLongConnectionServer.gKeyword(socketChannel);
 
 						if (SKStatusEnum.READING == selectionKey.attachment()) {
-							NioLongConnectionServer.ZE.executeByNameInASpecificThread(keyword,
+							NioLongConnectionServer.ZE.execute(
 									() -> this.action(selectionKey, socketChannel));
+//							NioLongConnectionServer.ZE.executeByNameInASpecificThread(keyword,
+//									() -> this.action(selectionKey, socketChannel));
 						}
 
 					}
@@ -326,7 +322,7 @@ public class NioLongConnectionServer {
 	}
 
 	public static void response429Async(final SelectionKey key, final String message) {
-		NioLongConnectionServer.ZE.executeInQueue(() -> NioLongConnectionServer.response429(key, message));
+		NioLongConnectionServer.ZE.execute(() -> NioLongConnectionServer.response429(key, message));
 	}
 
 	public static void response429(final SelectionKey key, final String message) {

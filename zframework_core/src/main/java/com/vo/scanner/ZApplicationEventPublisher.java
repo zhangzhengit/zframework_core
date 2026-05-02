@@ -6,6 +6,7 @@ import java.lang.reflect.Parameter;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.google.common.collect.HashBasedTable;
@@ -14,7 +15,6 @@ import com.vo.anno.ZComponent;
 import com.vo.cache.AU;
 import com.vo.core.ZContext;
 import com.vo.exception.StartupException;
-import com.vo.thread.ZE;
 
 /**
  * 事件发布者
@@ -31,7 +31,7 @@ public final class ZApplicationEventPublisher {
 	private static final AtomicBoolean executed = new AtomicBoolean(false);
 
 	@ZAutowired(name = "zeForApplicationEventPublisher")
-	private ZE ze;
+	private ThreadPoolExecutor ze;
 
 	/**
 	 * 使用此方法来发布时一个事件，通知此事件的 @ZEventListener 来处理
@@ -57,7 +57,7 @@ public final class ZApplicationEventPublisher {
 
 	private void invoke(final Method method, final Object object, final ZApplicationEvent event) {
 
-		this.ze.executeInQueue(() -> {
+		this.ze.execute(() -> {
 			try {
 				method.invoke(object, event);
 			} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
