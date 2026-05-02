@@ -59,7 +59,7 @@ public class NioLongConnectionServer {
 	private final AtomicBoolean serverStarted = new AtomicBoolean(false);
 
 
-	public final static ThreadPoolExecutor ZE = new ThreadPoolExecutor(1,
+	public final static ThreadPoolExecutor ZE = new ThreadPoolExecutor(SERVER_CONFIGURATIONPROPERTIES.getThreadCount(),
 			SERVER_CONFIGURATIONPROPERTIES.getThreadCount(), 1,
 			TimeUnit.MINUTES, new LinkedBlockingQueue<>(), new ZHttpThreadFactory());
 

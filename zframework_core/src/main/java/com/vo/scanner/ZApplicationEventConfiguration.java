@@ -24,7 +24,7 @@ public class ZApplicationEventConfiguration {
 
 	@ZBean
 	public ThreadPoolExecutor zeForApplicationEventPublisher() {
-		final ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(1,
+		final ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(this.applicationEventConfigurationProperties.getThreadCount(),
 				this.applicationEventConfigurationProperties.getThreadCount(), 10, TimeUnit.SECONDS,
 				new LinkedBlockingQueue<>(), new ZAEThreadFactory());
 

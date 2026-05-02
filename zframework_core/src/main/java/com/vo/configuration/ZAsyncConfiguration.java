@@ -31,7 +31,8 @@ public class ZAsyncConfiguration {
 
 	@ZBean
 	public ThreadPoolExecutor zAsyncES() {
-		final ThreadPoolExecutor executor = new ThreadPoolExecutor(1, this.zAsyncProperties.getThreadCount(), 10,
+		final ThreadPoolExecutor executor = new ThreadPoolExecutor(this.zAsyncProperties.getThreadCount(),
+				this.zAsyncProperties.getThreadCount(), 10,
 				TimeUnit.SECONDS, new LinkedBlockingQueue<>(), new ZAsyncThreadFactory());
 		return executor;
 	}
