@@ -6,8 +6,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import com.vo.core.ZPathVariable;
-
 /**
  *
  * 放在字段上，表示此字段最小值不能比指定的值大，用于数值类型上，所有  extends Number 的类型。
@@ -21,9 +19,7 @@ import com.vo.core.ZPathVariable;
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
-// FIXME 2026年5月3日 11:06:05 zhangzhen : 这个也要支持和ZMin一样
-// 如：@ZPathVariable @ZMin(min = 100) @ZMax(max = 10000 * 3) final Integer count
-@Target({ ElementType.FIELD })
+@Target({ ElementType.FIELD, ElementType.PARAMETER })
 public @interface ZMax {
 
 	public static final String MESSAGE = "[%s]不能大于[%s],当前值[%s]";

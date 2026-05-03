@@ -127,7 +127,7 @@ public class ZValidator {
 			|| "float".equals(nnnn)
 			|| "double".equals(nnnn)
 			|| "byte".equals(nnnn)
-		
+
 		|| (cls == Byte.class) || (cls == Short.class) || (cls == Integer.class) || (cls == Long.class)
 				|| (cls == Float.class) || (cls == Double.class) || (cls == BigDecimal.class) || (cls == BigInteger.class)
 				|| (cls == AtomicLong.class) || (cls == AtomicInteger.class);
@@ -287,6 +287,64 @@ public class ZValidator {
 		}
 	}
 
+	public static void validatedZMax(final Parameter p, final Object paramValue, final Object maxValue) {
+		if (paramValue == null) {
+			ZValidator.throwZNotNullException(p.getName());
+			return;
+		}
+
+		if (!ZValidator.isZMinZMaxSupported(paramValue.getClass())) {
+			throw new ValidatedException("@" + ZMin.class.getSimpleName()
+					+ " 只能用于Byte,Short,Integer,Long,Float,Double,BigDecimal,BigInteger,AtomicLong,AtomicInteger类型,当前用于["
+					+ p.getName() + "]", HttpStatusEnum.HTTP_400.getCode());
+		}
+
+		final String canonicalName = paramValue.getClass().getCanonicalName();
+		if (canonicalName.equals(Byte.class.getCanonicalName())) {
+			if (Byte.valueOf(String.valueOf(paramValue)) > ((Number) maxValue).byteValue()) {
+				ZValidator.throwZMaxMessage(p.getName(), paramValue, ((Number) maxValue).byteValue());
+			}
+		} else if (canonicalName.equals(Short.class.getCanonicalName())) {
+			if (Short.valueOf(String.valueOf(paramValue)) > ((Number) maxValue).shortValue()) {
+				ZValidator.throwZMaxMessage(p.getName(), paramValue, ((Number) maxValue).shortValue());
+			}
+		} else if (canonicalName.equals(Integer.class.getCanonicalName())) {
+			if (Integer.valueOf(String.valueOf(paramValue)) > ((Number) maxValue).intValue()) {
+				ZValidator.throwZMaxMessage(p.getName(), paramValue, ((Number) maxValue).intValue());
+			}
+		} else if (canonicalName.equals(Long.class.getCanonicalName())) {
+			if (Long.valueOf(String.valueOf(paramValue)) > ((Number) maxValue).longValue()) {
+				ZValidator.throwZMaxMessage(p.getName(), paramValue, ((Number) maxValue).longValue());
+			}
+		} else if (canonicalName.equals(Float.class.getCanonicalName())) {
+			if (Float.valueOf(String.valueOf(paramValue)) > ((Number) maxValue).floatValue()) {
+				ZValidator.throwZMaxMessage(p.getName(), paramValue, ((Number) maxValue).floatValue());
+			}
+		} else if (canonicalName.equals(Double.class.getCanonicalName())
+				&& (Double.valueOf(String.valueOf(paramValue)) > ((Number) maxValue).doubleValue())) {
+			ZValidator.throwZMaxMessage(p.getName(), paramValue, ((Number) maxValue).doubleValue());
+		} else if (canonicalName.equals(BigInteger.class.getCanonicalName())) {
+			final BigInteger bi = (BigInteger) paramValue;
+			if (bi.doubleValue() > ((BigInteger) maxValue).doubleValue()) {
+				ZValidator.throwZMaxMessage(p.getName(), paramValue, maxValue);
+			}
+		} else if (canonicalName.equals(BigDecimal.class.getCanonicalName())) {
+			final BigDecimal bd = (BigDecimal) paramValue;
+			if (bd.doubleValue() > ((BigDecimal) maxValue).doubleValue()) {
+				ZValidator.throwZMaxMessage(p.getName(), paramValue, maxValue);
+			}
+		} else if (canonicalName.equals(AtomicInteger.class.getCanonicalName())) {
+			final AtomicInteger ai = (AtomicInteger) paramValue;
+			if (ai.doubleValue() > ((AtomicInteger) maxValue).doubleValue()) {
+				ZValidator.throwZMaxMessage(p.getName(), paramValue, maxValue);
+			}
+		} else if (canonicalName.equals(AtomicLong.class.getCanonicalName())) {
+			final AtomicLong al = (AtomicLong) paramValue;
+			if (al.doubleValue() > ((AtomicLong) maxValue).decrementAndGet()) {
+				ZValidator.throwZMaxMessage(p.getName(), paramValue, maxValue);
+			}
+		}
+	}
 	public static void validatedZMin(final Parameter p, final Object paramValue, final Object minValue) {
 		if (paramValue == null) {
 			ZValidator.throwZNotNullException(p.getName());
@@ -603,6 +661,13 @@ public class ZValidator {
 			e.printStackTrace();
 		}
 		return null;
+	}
+
+	private static void throwZMaxMessage(final String paramName, final Object maxFiledValue, final Object maxValue) {
+		final String message = ZMax.MESSAGE;
+		final String t = paramName;
+		final String format = String.format(message, t, maxValue, maxFiledValue);
+		throw new ValidatedException(format);
 	}
 
 	private static void throwZMinMessage(final String paramName, final Object minFiledValue, final Object minValue) {

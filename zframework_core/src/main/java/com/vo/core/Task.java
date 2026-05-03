@@ -61,6 +61,7 @@ import com.vo.template.ZModel;
 import com.vo.template.ZTemplate;
 import com.vo.validator.ParsingRequestParamException;
 import com.vo.validator.ZFException;
+import com.vo.validator.ZMax;
 import com.vo.validator.ZMin;
 import com.vo.validator.ZPositive;
 import com.vo.validator.ZValidated;
@@ -693,12 +694,19 @@ public class Task {
 					}
 
 					// FIXME 2023年11月8日 下午10:47:54 zhanghen: TODO 继续支持 校验注解
+					if (RU.isAnnotationPresent(p, ZMax.class)) {
+						ZValidator.validatedZMax(p, parametersArray[pI], RU.getAnnotation(p, ZMax.class).max());
+					}
+
 					if (RU.isAnnotationPresent(p, ZPositive.class)) {
 						ZValidator.validatedZPositive(p, parametersArray[pI]);
 					}
+
 					if (RU.isAnnotationPresent(p, ZMin.class)) {
 						ZValidator.validatedZMin(p, parametersArray[pI], RU.getAnnotation(p, ZMin.class).min());
 					}
+
+
 					pI++;
 				} else if (pType == ZMultipartFile.class) {
 
