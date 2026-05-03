@@ -5,11 +5,11 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.List;
 
+import com.vo.anno.ZSynchronously;
 import com.vo.aop.AOPParameter;
 import com.vo.aop.ZAOP;
 import com.vo.aop.ZIAOP;
 import com.vo.exception.ZSynchronouslyAOPException;
-import com.vo.http.ZSynchronously;
 
 /**
  * @ZSynchronously 的AOP类
