@@ -96,12 +96,16 @@ public class ZAOPScaner {
 //					ZFH.set(cls.getName() + "@" + f.getType().getName(), f.get(cls.newInstance()));
 //					zf.setValue(ZFH.class.getName() + ".get(\"" + cls.getName() + "@"
 //							+ f.getType().getName() + "\")");
-					
-					
+
+
+					// FIXME 2026年5月3日 11:15:53 zhangzhen : 暂时发现，非ZIAOP字段都可以不复制到子类（代理类）
+					// 并且复制了还可能到处编译报错，如字段：int i = 0;按现在的强转写法会报错
+					if (f.getType() != ZIAOP.class) {
+						continue;
+					}
+
 					final ZField zf = new ZField(f.getType().getName(),f.getName(),ZFH.class.getName() + ".get(\"" + cls.getName() + "@"
 							+ f.getType().getName() + "\")");
-					
-					
 
 					final Annotation[] fas = f.getAnnotations();
 					if (fas != null) {
@@ -375,7 +379,7 @@ public class ZAOPScaner {
 	 */
 	private static String replaceLast(final String string, final String replace, final String target) {
 
-		if (replace == null || replace.length() == 0 || "".equals(replace.trim())) {
+		if ((replace == null) || (replace.length() == 0) || "".equals(replace.trim())) {
 			return string;
 		}
 
