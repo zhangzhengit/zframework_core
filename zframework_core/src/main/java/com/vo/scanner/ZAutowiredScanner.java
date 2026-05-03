@@ -18,9 +18,9 @@ import com.vo.aop.ZAOP;
 import com.vo.aop.ZAOPScaner;
 import com.vo.cache.STU;
 import com.vo.core.ZContext;
-import com.vo.core.ZLog2;
 import com.vo.core.ZSingleton;
 import com.vo.exception.BeanNotExistException;
+import com.vo.log.core.ZLog2;
 
 /**
  * 扫描 @ZController 的类，注册为一个控制类

@@ -12,10 +12,10 @@ import com.vo.cache.STU;
 import com.vo.core.ReqeustInfo;
 import com.vo.core.Task;
 import com.vo.core.ZContext;
-import com.vo.core.ZLog2;
 import com.vo.core.ZRequest;
 import com.vo.email.ZMail;
 import com.vo.email.ZMailNotificationConfigurationProperties;
+import com.vo.log.core.ZLog2;
 
 /**
  * 运行时处理 @ZControllerAdvice 定义的方法
