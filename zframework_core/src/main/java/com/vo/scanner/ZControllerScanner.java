@@ -20,7 +20,6 @@ import com.vo.cache.STU;
 import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.core.Task;
 import com.vo.core.ZContext;
-import com.vo.core.ZLog2;
 import com.vo.core.ZMultipartFile;
 import com.vo.core.ZObjectGeneratorStarter;
 import com.vo.core.ZPathVariable;
@@ -33,6 +32,7 @@ import com.vo.http.CTEnum;
 import com.vo.http.ZControllerMap;
 import com.vo.http.ZCookie;
 import com.vo.http.ZRequestMapping;
+import com.vo.log.core.ZLog2;
 
 /**
  * 扫描 @ZController 的类，注册为一个控制类
@@ -57,7 +57,7 @@ public class ZControllerScanner {
 	private static final int ZMF_SIZE = 1;
 
 	private static final HashSet<Class<? extends Annotation>> HTTP_METHOD_SET = new HashSet<>();
-	
+
 	static {
 		HTTP_METHOD_SET.add(ZRequestMapping.class);
 	}
@@ -77,10 +77,10 @@ public class ZControllerScanner {
 				}
 			}
 		}
-		
+
 		final Set<Class<?>> zcSet = new HashSet<>(zcSet1);
 		zcSet.addAll(cSet);
-		
+
 		final ServerConfigurationProperties serverConfiguration = ZSingleton.getSingletonByClass(ServerConfigurationProperties.class);
 
 		for (final Class<?> cls : zcSet) {
@@ -124,7 +124,7 @@ public class ZControllerScanner {
 					for (int i = 0; i < requestMappingArray.length; i++) {
 						final String mapping = requestMappingArray[i];
 						final MethodEnum methodEnum = requestMappingAnnotation.method();
-						
+
 						ZControllerMap.put(methodEnum, prefix + mapping, method,
 								restController!=null ? CTEnum.REST : CTEnum.NORMAL
 								, controllerObject, isRegex[i]);
@@ -200,11 +200,11 @@ public class ZControllerScanner {
 			}
 		}
 	}
-	
+
 	private static void checkNoVoidWithZResponse(final Method method) {
 		if (!Task.VOID.equals(method.getReturnType().getCanonicalName())) {
 			final Parameter[] ps = method.getParameters();
-			
+
 			final Optional<Parameter> ro =
 					Arrays.stream(ps)
 					.filter(p -> p.getType().getCanonicalName().equals(ZResponse.class.getCanonicalName()))
@@ -276,7 +276,7 @@ public class ZControllerScanner {
 					}
 				}
 			}
-			
+
 			final List<Parameter> zpvPList =
 					Arrays.stream(ps)
 					.filter(p -> p.isAnnotationPresent(ZPathVariable.class)).collect(Collectors.toList());
@@ -386,17 +386,17 @@ public class ZControllerScanner {
 				break;
 			}
 		}
-		
+
 		final ZController c = zcClass.getAnnotation(ZController.class);
 		if (c != null) {
-			
+
 			final BeanModeEnum modeEnum = c.modeEnum();
-			
+
 			switch (modeEnum) {
 			case SINGLETON:
 				final Object singletonByClass = ZSingleton.getSingletonByClass(zcClass);
 				return singletonByClass;
-				
+
 			default:
 				break;
 			}

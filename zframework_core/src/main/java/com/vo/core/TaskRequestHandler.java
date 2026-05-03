@@ -12,6 +12,7 @@ import com.vo.enums.ConnectionEnum;
 import com.vo.exception.StartupException;
 import com.vo.exception.ZControllerAdviceThrowable;
 import com.vo.http.HttpStatusEnum;
+import com.vo.log.core.ZLog2;
 
 /**
  * 处理请求
@@ -23,12 +24,12 @@ import com.vo.http.HttpStatusEnum;
 public final class TaskRequestHandler extends Thread {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
-	
+
 	/**
 	 * request-Dispatcher-Thread
 	 */
 	public static final String NAME = "rDT";
-	
+
 	/**
 	 * dispatcher-Group
 	 */
@@ -42,10 +43,10 @@ public final class TaskRequestHandler extends Thread {
 	private final AbstractRequestValidator requestValidator;
 
 	public TaskRequestHandler() {
-		
+
 		super(new ThreadGroup(GROUP_NAME), GROUP_NAME + "@" + NAME);
 
-		setName(NAME);
+		this.setName(NAME);
 
 		final Collection<Object> beanConnection = ZContext.all().values();
 
@@ -85,13 +86,13 @@ public final class TaskRequestHandler extends Thread {
 				e1.printStackTrace();
 			}
 
-			handle(taskRequest);
+			this.handle(taskRequest);
 		}
 	}
 
 	@SuppressWarnings("resource")
 	private void handle(final TaskRequest taskRequest) {
-		
+
 		try {
 
 			final ZRequest request = BodyReader.parseHeader(taskRequest);

@@ -7,8 +7,8 @@ import com.vo.anno.ZConditional;
 import com.vo.anno.ZConfiguration;
 import com.vo.core.Task;
 import com.vo.core.ZContext;
-import com.vo.core.ZLog2;
 import com.vo.exception.StartupException;
+import com.vo.log.core.ZLog2;
 
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;

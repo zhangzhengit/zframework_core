@@ -1,12 +1,8 @@
 package com.vo.scanner;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 import java.util.Set;
 
 import com.vo.anno.ZAutowired;
@@ -19,8 +15,8 @@ import com.vo.anno.ZValue;
 import com.vo.cache.CU;
 import com.vo.core.Task;
 import com.vo.core.ZContext;
-import com.vo.core.ZLog2;
 import com.vo.core.ZSingleton;
+import com.vo.log.core.ZLog2;
 
 /**
  *	扫描 @ZConfiguration 注解，找到里面的 @ZBean方法，来生成一个配置类

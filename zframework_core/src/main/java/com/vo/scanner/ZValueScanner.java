@@ -24,7 +24,7 @@ import com.vo.cache.CU;
 import com.vo.configuration.ZProperties;
 import com.vo.core.Task;
 import com.vo.core.ZContext;
-import com.vo.core.ZLog2;
+import com.vo.log.core.ZLog2;
 import com.vo.validator.ZValidator;
 
 /**

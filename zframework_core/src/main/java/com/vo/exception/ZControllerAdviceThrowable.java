@@ -8,9 +8,9 @@ import com.vo.cache.STU;
 import com.vo.common.CR;
 import com.vo.core.ReqeustInfo;
 import com.vo.core.ZContext;
-import com.vo.core.ZLog2;
 import com.vo.core.ZRequest;
 import com.vo.http.ZCookie;
+import com.vo.log.core.ZLog2;
 import com.vo.validator.ZFException;
 
 /**

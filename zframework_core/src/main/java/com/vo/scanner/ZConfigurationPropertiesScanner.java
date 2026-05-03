@@ -33,10 +33,10 @@ import com.vo.cache.CU;
 import com.vo.cache.STU;
 import com.vo.configuration.ZProperties;
 import com.vo.core.ZContext;
-import com.vo.core.ZLog2;
 import com.vo.core.ZSingleton;
 import com.vo.exception.StartupException;
 import com.vo.exception.TypeNotSupportedExcpetion;
+import com.vo.log.core.ZLog2;
 import com.vo.validator.ZConfigurationPropertiesException;
 import com.vo.validator.ZValidator;
 
@@ -456,7 +456,7 @@ public class ZConfigurationPropertiesScanner {
 			final String k = keys.next();
 
 			final String kName = k.replace(key + '.', STU.EMPTY);
-			
+
 			final String value = ZProperties.getString(k);
 			map.put(kName, value);
 		}

@@ -18,7 +18,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import com.vo.configuration.ZLThreadFactory;
-import com.vo.core.ZLog2;
+import com.vo.log.core.ZLog2;
 
 /**
  * 配置文件监听器，监听配置变动，及时更新 @ZConfigurationProperties、 @ZValue 等

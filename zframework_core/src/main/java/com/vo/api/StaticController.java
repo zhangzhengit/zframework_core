@@ -72,7 +72,7 @@ public class StaticController {
 		final String sn = resourceName.substring(i + 1);
 		final Map<String, String> ctm = SERVER_CONFIGURATION.getStaticControllerContentType();
 		final String ct = ctm.get(sn);
-		if (com.vo.common.STU.isEmpty(ct)) {
+		if (STU.isEmpty(ct)) {
 			response.httpStatus(HttpStatusEnum.HTTP_500.getCode())
 					.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 					.body(J.toJSONString(CR.error("不支持的文件类型")));
