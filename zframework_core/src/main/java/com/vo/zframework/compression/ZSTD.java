@@ -1,0 +1,58 @@
+package com.vo.zframework.compression;
+
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
+import java.util.Arrays;
+
+import com.github.luben.zstd.Zstd;
+import com.vo.zframework.cache.AU;
+import com.vo.zframework.cache.STU;
+
+/**
+ *
+ * zstd压缩
+ *
+ * @author zhangzhen
+ * @date 2025年1月2日 下午8:37:12
+ *
+ */
+public class ZSTD {
+
+	public static byte[] decompression(final byte[] ba) {
+		if (AU.isEmpty(ba)) {
+			return null;
+		}
+
+		final long decompressedSize = Zstd.decompressedSize(ba);
+
+		final byte[] buffer = new byte[(int) decompressedSize];
+
+		final long decompress = Zstd.decompress(buffer, ba);
+		return Arrays.copyOf(buffer, (int) decompress);
+	}
+
+	public static byte[] compress(final byte[] ba) {
+		if (AU.isEmpty(ba)) {
+			return null;
+		}
+
+		return Zstd.compress(ba,3);
+	}
+
+	public static byte[] compress(final String string) {
+		if (STU.isNullOrEmpty(string)) {
+			return null;
+		}
+
+		byte[] ba = null;
+		try {
+			ba = string.getBytes(Charset.defaultCharset().displayName());
+		} catch (final UnsupportedEncodingException e1) {
+			e1.printStackTrace();
+		}
+
+		return compress(ba);
+	}
+
+
+}

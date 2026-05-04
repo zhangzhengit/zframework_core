@@ -1,0 +1,54 @@
+package com.vo.zframework.validator;
+
+import java.lang.reflect.Field;
+
+import com.vo.zframework.anno.ZValue;
+import com.vo.zframework.core.QPSEnum;
+import com.vo.zframework.exception.ValidatedException;
+
+/**
+ * 必须可以被 MIN_VALUE 整除
+ *
+ * @author zhangzhen
+ * @date 2023年11月14日
+ *
+ */
+public class ZServerQPSValidator implements ZCustomValidator {
+
+	/**
+	 * 此值最小为1，即使[server.qps]支持了配置为0，此值也最小为1，因为会qps/此值
+	 */
+	public static final int MIN_VALUE = 1;
+	public static final int MAX_VALUE = 10000 * 100;
+	public static final int DEFAULT_VALUE = 10000 * 10;
+
+	@Override
+	public void validated(final Object object, final Field field) throws Exception {
+
+		try {
+			field.setAccessible(true);
+			final Object value = field.get(object);
+			final Integer v = (Integer) value;
+
+			if ((v % QPSEnum.SERVER.getMinValue()) != 0) {
+				final String message = field.getAnnotation(ZCustom.class).message();
+
+				final String pName = field.isAnnotationPresent(ZValue.class)
+						? "[" + field.getAnnotation(ZValue.class).name() + "]"
+								: "";
+				final String t = object.getClass().getSimpleName() + "." + field.getName() + " " + pName + " 必须配置为可以被 "
+						+ QPSEnum.SERVER.getMinValue() + " (" + QPSEnum.class.getCanonicalName() + ".SERVER.getMinValue)"
+						+ " 整除";
+
+				final String format = String.format(message, t);
+				throw new ValidatedException(format);
+
+			}
+
+		} catch (IllegalArgumentException | IllegalAccessException e) {
+			throw e;
+		}
+
+	}
+
+}
