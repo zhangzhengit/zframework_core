@@ -19,7 +19,7 @@ import java.lang.annotation.Target;
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ ElementType.FIELD })
+@Target({ ElementType.FIELD, ElementType.PARAMETER})
 public @interface ZMax {
 
 	public static final String MESSAGE = "[%s]不能大于[%s],当前值[%s]";
