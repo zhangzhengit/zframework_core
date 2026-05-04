@@ -43,7 +43,8 @@ public class ZControllerAdviceScanner {
 			for (final Method m : zehList) {
 				final int modifiers = m.getModifiers();
 				if (!Modifier.isPublic(modifiers)) {
-					throw new StartupException("@ZExceptionHandler 方法必须为public修饰，当前方法=" + m.getName());
+					throw new StartupException("@" + ZExceptionHandler.class.getSimpleName()
+							 + " 方法必须为public修饰，当前方法=" + m.getName());
 				}
 
 				if (Modifier.isStatic(modifiers)) {
@@ -51,17 +52,20 @@ public class ZControllerAdviceScanner {
 				}
 
 				if (Task.VOID.equals(m.getReturnType().getCanonicalName())) {
-					throw new StartupException("@ZExceptionHandler 方法必须有返回值，当前方法=" + m.getName());
+					throw new StartupException("@+ ZExceptionHandler.class.getSimpleName()\r\n"
+							+ " 方法必须有返回值，当前方法=" + m.getName());
 				}
 
 				final Parameter[] ps = m.getParameters();
 				if (AU.isEmpty(ps) || (ps.length != 1)) {
-					throw new StartupException("@ZExceptionHandler 方法必须有且只有一个参数，当前方法=" + m.getName());
+					throw new StartupException("@" + ZExceptionHandler.class.getSimpleName()
+							 + " 方法必须有且只有一个参数，当前方法=" + m.getName());
 				}
 
 				final Class<? extends Throwable> ec = m.getAnnotation(ZExceptionHandler.class).value();
 				if (!ps[0].getType().getCanonicalName().equals(Throwable.class.getCanonicalName())) {
-					throw new StartupException("@ZExceptionHandler 方法参数必须为 (Throwable throwable)，当前方法=" + m.getName()
+					throw new StartupException("@"+ ZExceptionHandler.class.getSimpleName()
+							 + " 方法参数必须为 (Throwable throwable)，当前方法=" + m.getName()
 					+ ",当前方法参数类型=" + ps[0].getType().getCanonicalName());
 				}
 
@@ -71,7 +75,8 @@ public class ZControllerAdviceScanner {
 				final Optional<ZControllerAdviceBody> findAny = LIST.stream()
 						.filter(z -> z.getThrowable().getCanonicalName().equals(ec.getCanonicalName())).findAny();
 				if (findAny.isPresent()) {
-					throw new StartupException("@ZExceptionHandler.value值不能重复，当前方法=" + m.getName());
+					throw new StartupException("@"+ ZExceptionHandler.class.getSimpleName()
+							 + ".value值不能重复，当前方法=" + m.getName());
 				}
 
 				LIST.add(e);
