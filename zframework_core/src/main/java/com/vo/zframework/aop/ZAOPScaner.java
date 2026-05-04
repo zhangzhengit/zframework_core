@@ -3,6 +3,7 @@ package com.vo.zframework.aop;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -79,6 +80,10 @@ public class ZAOPScaner {
 
 			final HashSet<ZMethod> zms = new HashSet<>();
 			for (final Method m : mss) {
+				if (m.isSynthetic() || (Modifier.isPrivate(m.getModifiers()))) {
+					continue;
+				}
+
 				addZMethod(table, cls, proxyZClass, zms, m);
 			}
 
