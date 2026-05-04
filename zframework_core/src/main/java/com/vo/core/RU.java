@@ -4,6 +4,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.util.Optional;
 
 /**
  * 反射相关方法
@@ -59,18 +60,17 @@ public class RU {
 		return ZRC.singleton().computeIfAbsent(key, () -> type.getDeclaredFields());
 	}
 
-	public static Field getDeclaredField(final Class<?> type, final String javaFieldName)
+	public static Optional<Field> getDeclaredField(final Class<?> type, final String javaFieldName)
 			throws SecurityException {
 
 		final String key = type.getName() + '-' + javaFieldName;
 
 		return ZRC.singleton().computeIfAbsent(key, () -> {
 			try {
-				return type.getDeclaredField(javaFieldName);
+				return Optional.of(type.getDeclaredField(javaFieldName));
 			} catch (NoSuchFieldException | SecurityException e) {
-				e.printStackTrace();
 			}
-			return null;
+			return Optional.empty();
 		});
 	}
 
