@@ -122,7 +122,7 @@ public class NioLongConnectionServer {
 
 		while (true) {
 			try {
-				final int select = this.selector.select();
+				final int select = this.selector.select(1);
 				if (select == 0) {
 					this.zc++;
 					continue;
@@ -132,8 +132,8 @@ public class NioLongConnectionServer {
 			}
 
 			if (this.zc >= ZC_THRESHOLD) {
-				this.rebuildSelector();
 				this.zc = 0;
+				this.rebuildSelector();
 			}
 
 			final Set<SelectionKey> selectedKeys = this.selector.selectedKeys();
@@ -151,23 +151,22 @@ public class NioLongConnectionServer {
 						// 如果content-length>0再用线程池继续读取body部分，但是同步还有问题，并且上传大文件会导致其他的socketChannel.read阻塞，继续查什么原因
 						// 只试了测试100W次简单get接口，上述方法5W/S左右，而如下方式4.2W左右
 
+						boolean shouldProcess = false;
 						synchronized (selectionKey) {
-							final Object attachment = selectionKey.attachment();
-							if ((attachment != null) && (attachment == SKStatusEnum.READING)) {
-								continue;
+							final Object att = selectionKey.attachment();
+							if (att != SKStatusEnum.READING) { // 包含 null 和 IDLE 的情况
+								selectionKey.attach(SKStatusEnum.READING);
+								shouldProcess = true;
 							}
 						}
 
-						synchronized (selectionKey) {
-							selectionKey.attach(SKStatusEnum.READING);
-						}
-
-						if (SKStatusEnum.READING == selectionKey.attachment()) {
+						if (shouldProcess) {
 							final SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
 							// FIXME 2026年4月29日 05:14:19 zhangzhen : 21 虚拟
 							final String tName = SERVER_CONFIGURATIONPROPERTIES.getThreadName();
+
 							Thread.ofVirtual().name(tName + VT_N.incrementAndGet())
-							.start(() -> this.action(selectionKey, socketChannel));
+									.start(() -> this.action(selectionKey, socketChannel));
 						}
 
 					}
