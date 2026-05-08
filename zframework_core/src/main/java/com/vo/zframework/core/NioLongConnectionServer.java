@@ -132,8 +132,8 @@ public class NioLongConnectionServer {
 			}
 
 			if (this.zc >= ZC_THRESHOLD) {
-				this.zc = 0;
 				this.rebuildSelector();
+				this.zc = 0;
 			}
 
 			final Set<SelectionKey> selectedKeys = this.selector.selectedKeys();
