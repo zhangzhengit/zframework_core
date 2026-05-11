@@ -112,7 +112,6 @@ public class NioLongConnectionServer {
 			LOG.error("启动失败,程序即将退出,serverPort={}", serverPort);
 			System.exit(0);
 		}
-
 		LOG.info("httpServer启动成功,等待连接,serverPort={}", serverPort);
 		this.serverStarted.set(true);
 
@@ -122,10 +121,10 @@ public class NioLongConnectionServer {
 
 		while (true) {
 			try {
-				final int select = this.selector.select(1);
+				final int select = this.selector.select();
+//				LOG.debug("select={}", select);
 				if (select == 0) {
 					this.zc++;
-					continue;
 				}
 			} catch (final IOException e) {
 				e.printStackTrace();
@@ -137,15 +136,18 @@ public class NioLongConnectionServer {
 			}
 
 			final Set<SelectionKey> selectedKeys = this.selector.selectedKeys();
-			final Iterator<SelectionKey> iterator = selectedKeys.iterator();
-			while (iterator.hasNext()) {
-				final SelectionKey selectionKey = iterator.next();
-				iterator.remove();
-
+			for (final SelectionKey selectionKey : selectedKeys) {
 				try {
 					if (selectionKey.isValid() && selectionKey.isAcceptable()) {
 						handleAccept(selectionKey, this.selector);
 					} else if (selectionKey.isValid() && selectionKey.isReadable()) {
+
+						final SocketChannel sc = (SocketChannel) selectionKey.channel();
+						// 快速检查：如果通道已关闭或未连接，直接清理
+						if (!sc.isConnected() || !sc.isOpen()) {
+							closeSocketChannelAndKeyCancel(selectionKey, sc);
+							continue;
+						}
 
 						// FIXME 2025年1月15日 下午7:45:55 zhangzhen : 在尝试：只在NIO线程read
 						// 如果content-length>0再用线程池继续读取body部分，但是同步还有问题，并且上传大文件会导致其他的socketChannel.read阻塞，继续查什么原因
@@ -171,11 +173,12 @@ public class NioLongConnectionServer {
 
 					}
 				} catch (final Exception e) {
-					//					final String message = Task.gExceptionMessage(e);
-					//					LOG.error("foreach-selector.selectedKeys-异常,message={}", message);
+					final String message = Task.gExceptionMessage(e);
+					LOG.error("foreach-selector.selectedKeys-异常,message={}", message);
 					continue;
 				}
 			}
+			selectedKeys.clear();
 		}
 	}
 
@@ -269,14 +272,6 @@ public class NioLongConnectionServer {
 			synchronized (selectionKey) {
 				selectionKey.attach(SKStatusEnum.IDLE);
 			}
-		}
-	}
-
-	private static String gKeyword(final SocketChannel socketChannel) {
-		try {
-			return socketChannel.getRemoteAddress().toString();
-		} catch (final IOException e) {
-			return socketChannel.toString();
 		}
 	}
 

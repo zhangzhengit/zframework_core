@@ -175,6 +175,7 @@ public class DefaultHttpReader {
 			tR = socketChannel.read(byteBuffer);
 		} catch (final IOException e1) {
 			NioLongConnectionServer.closeSocketChannelAndKeyCancel(key, socketChannel);
+			LOG.error("readMethod_ERROR", e1.getCause());
 			return null;
 		}
 
@@ -249,12 +250,13 @@ public class DefaultHttpReader {
 				}
 
 				final int tR = socketChannel.read(byteBuffer);
-				rC++;
-				totalBytesRead += tR;
 				if (tR == -1) {
 					NioLongConnectionServer.closeSocketChannelAndKeyCancel(key, socketChannel);
 					return null;
 				}
+
+				rC++;
+				totalBytesRead += tR;
 
 				if (tR > 0) {
 					final byte[] a = DefaultHttpReader.add(byteBuffer, array);
@@ -275,6 +277,7 @@ public class DefaultHttpReader {
 								.getNioReadTimeout())) {
 
 					LOG.error("readHeader超时[{}]", SERVER_CONFIGURATIONPROPERTIES.getNioReadTimeout());
+					NioLongConnectionServer.closeSocketChannelAndKeyCancel(key, socketChannel);
 					return null;
 				}
 
@@ -339,6 +342,8 @@ public class DefaultHttpReader {
 			while (totalBytesRead < nnReadBodyLength) {
 				final int read = socketChannel.isOpen() ? socketChannel.read(bbBody) : -1;
 				if (read <= -1) {
+					 // 对端已关闭，必须关闭本地连接
+			        NioLongConnectionServer.closeSocketChannelAndKeyCancel(key, socketChannel);
 					break;
 				}
 				totalBytesRead += read;

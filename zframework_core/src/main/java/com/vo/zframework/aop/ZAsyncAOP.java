@@ -38,18 +38,18 @@ public class ZAsyncAOP implements ZIAOP {
 	public Object around(final AOPParameter aopParameter) {
 
 		if (aopParameter.getIsVOID()) {
-			Thread.ofVirtual()
-				.name(gTN())
-				.start(() -> aopParameter.invoke());
+			this.ves.execute(() -> {
+				Thread.currentThread().setName(gTN());
+				aopParameter.invoke();
+			});
 			return null;
 		}
 
-		final CompletableFuture<Object> future = CompletableFuture
-				.supplyAsync(() -> {
-					Thread.currentThread().setName(gTN());
-					final Object invoke = aopParameter.invoke();
-					return invoke;
-				}, this.ves);
+		final CompletableFuture<Object> future = CompletableFuture.supplyAsync(() -> {
+			Thread.currentThread().setName(gTN());
+			final Object rv = aopParameter.invoke();
+			return rv;
+		}, this.ves);
 
 		final ZAsyncRV<Object> rv = new ZAsyncRV<>();
 		rv.setFuture(future);
