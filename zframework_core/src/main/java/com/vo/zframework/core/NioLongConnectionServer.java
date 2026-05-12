@@ -10,7 +10,6 @@ import java.nio.channels.SocketChannel;
 import java.nio.channels.spi.SelectorProvider;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -57,8 +56,8 @@ public class NioLongConnectionServer {
 
 	private static final boolean ENABLE_SERVER_QPS_LIMITED = SERVER_CONFIGURATIONPROPERTIES.getQpsLimitEnabled();
 
+	private static final boolean printNioSelect = SERVER_CONFIGURATIONPROPERTIES.getPrintNioSelect();
 	private final AtomicBoolean serverStarted = new AtomicBoolean(false);
-
 	private final ExecutorService ves = Executors.newVirtualThreadPerTaskExecutor();
 
 
@@ -125,8 +124,10 @@ public class NioLongConnectionServer {
 
 		while (true) {
 			try {
-				final int select = this.selector.select();
-//				LOG.debug("select={}", select);
+				final int select = this.selector.select(500);
+				if (printNioSelect) {
+					LOG.debug("select={}", select);
+				}
 				if (select == 0) {
 					this.zc++;
 				}
