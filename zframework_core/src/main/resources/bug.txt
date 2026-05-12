@@ -1,0 +1,16 @@
+bug记录：
+1、20250512:
+	最近发现，用了21的虚拟线程后，并且支持了带返回值的@ZAsync后，在几个平台压测
+	armbian/ubuntu/debian，jdk21都会迅速出现nio线程cpu100%，升级jdk25/24后缓解，但
+	还是会出现。问了deepseek，改了一些代码，主要是及时关闭客户端已经断掉的连接，
+	但是还是会出现。
+	本次记录如下：
+		在ubuntu16虚拟机1核4G，-Xmx2g启动
+		http://192.168.88.129:5555/asyncL
+		测试87并行度 测试1800多万次时停止压测，
+		又复现了。
+		arthas监控 thread 出现在下面这行：
+		final int select = this.selector.select();
+		
+	可能很早之前就有这个问题，只是这几天刚支持了带返回值的@ZAsync，测试了才发现？
+	
