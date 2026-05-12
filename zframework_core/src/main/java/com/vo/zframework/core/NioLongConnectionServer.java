@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -57,6 +58,9 @@ public class NioLongConnectionServer {
 	private static final boolean ENABLE_SERVER_QPS_LIMITED = SERVER_CONFIGURATIONPROPERTIES.getQpsLimitEnabled();
 
 	private final AtomicBoolean serverStarted = new AtomicBoolean(false);
+
+	private final ExecutorService ves = Executors.newVirtualThreadPerTaskExecutor();
+
 
 	/**
 	 * 执行长连接超时任务的线程池
@@ -163,16 +167,22 @@ public class NioLongConnectionServer {
 						}
 
 						if (shouldProcess) {
-							final SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
-							// FIXME 2026年4月29日 05:14:19 zhangzhen : 21 虚拟
 							final String tName = SERVER_CONFIGURATIONPROPERTIES.getThreadName();
 
-							Thread.ofVirtual().name(tName + VT_N.incrementAndGet())
-									.start(() -> this.action(selectionKey, socketChannel));
+							// FIXME 2026年4月29日 05:14:19 zhangzhen : 21 虚拟
+//							Thread.ofVirtual().name(tName + VT_N.incrementAndGet())
+//									.start(() -> this.action(selectionKey, socketChannel));
+
+							this.ves.execute(() -> {
+								final SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
+								Thread.currentThread().setName(tName + VT_N.incrementAndGet());
+								this.action(selectionKey, socketChannel);
+							});
 						}
 
 					}
 				} catch (final Exception e) {
+					closeSocketChannelAndKeyCancel(selectionKey, (SocketChannel) selectionKey.channel());
 					final String message = Task.gExceptionMessage(e);
 					LOG.error("foreach-selector.selectedKeys-异常,message={}", message);
 					continue;
