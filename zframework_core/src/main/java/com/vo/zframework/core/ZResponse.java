@@ -686,7 +686,7 @@ public class ZResponse {
 				+ STU.CRLF_LENGTH
 				;
 
-		final ByteBuffer bbbb = ByteBuffer.allocateDirect(capacity);
+		final ByteBuffer bbbb = ByteBuffer.allocate(capacity);
 		bbbb.put(HTTP_11_BYTES).put(String.valueOf(this.getHttpStatus()).getBytes());
 		bbbb.put(CRLF_BYTES);
 		bbbb.put(CONTENT_LENGTH_BYTES)
