@@ -113,7 +113,7 @@ public final class TaskRequestHandler extends Thread {
 			final String message = ZControllerAdviceThrowable.findCausedby(e);
 			final Integer httpStatus = ZControllerAdviceThrowable.findHttpStatus(e);
 
-			final ZResponse response = new ZResponse(taskRequest.getSocketChannel());
+			final ZResponse response = new ZResponse(taskRequest.getSelectionKey(), taskRequest.getSocketChannel());
 			final String error = J.toJSONString(CR.error(message));
 			response.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 			.httpStatus(httpStatus != null ? httpStatus : HttpStatusEnum.HTTP_500.getCode())

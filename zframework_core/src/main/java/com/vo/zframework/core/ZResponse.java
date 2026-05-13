@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -126,13 +127,14 @@ public class ZResponse {
 	private final AtomicReference<String> contentTypeAR = new AtomicReference<>(Task.DEFAULT_CONTENT_TYPE.getValue());
 
 	private final SocketChannel socketChannel;
+	private final SelectionKey selectionKey;
 
 	private List<ZHeader> headerList;
 
 	private byte[] body;
 
 	private int bIC = 0;
-	
+
 	FileChannel fileChannel;
 
 	/**
@@ -254,7 +256,7 @@ public class ZResponse {
 		final byte[] b = new byte[DEFAULT_BUFFER_SIZE];
 
 		final BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream, BIS_DEFAULT_BUFFER_SIZE);
-		
+
 		boolean exceedsCompressionMinLength = false;
 
 		boolean readFirst = true;
@@ -304,19 +306,18 @@ public class ZResponse {
 		}
 
 		if (!ReqeustInfo.get().isKeepAlive()) {
-			// FIXME 2025年1月20日 下午4:12:37 zhangzhen : 记得把key也传过来
-			NioLongConnectionServer.closeSocketChannelAndKeyCancel(null, this.socketChannel);
+			NioLongConnectionServer.closeSocketChannelAndKeyCancel(this.selectionKey, this.socketChannel);
 		}
 
 	}
-	
+
 	/**
 	 * 从文件流中读取内容并写入响应中去，并在最后关闭流。
-	 * 
+	 *
 	 * 文件大小达到配置的压缩阈值则用Stream边读取边压缩写入，
 	 * 未达到则零拷贝transferTo
-	 * 
-	 * 
+	 *
+	 *
 	 * @param fileInputStream
 	 */
 	public synchronized void body(final FileInputStream fileInputStream) {
@@ -324,7 +325,7 @@ public class ZResponse {
 		if (fileInputStream == null) {
 			throw new IllegalArgumentException("fileInputStream 不能为null");
 		}
-		
+
 		this.checkBIC();
 
 		if (this.write.get()) {
@@ -334,7 +335,7 @@ public class ZResponse {
 		this.checkContentType();
 		this.fileChannel = fileInputStream.getChannel();
 		final long fs = ZResponse.getSiezFromFC(this.fileChannel);
-		
+
 		final boolean exceedsCompressionMinLength = this.compress(fs >= (SERVER_CONFIGURATIONPROPERTIES.getCompressionMinLength() * 1024));
 		// 需要压缩，仍用Stream边读边压缩写入
 		if (exceedsCompressionMinLength) {
@@ -342,7 +343,7 @@ public class ZResponse {
 			this.body((InputStream)fileInputStream);
 			return;
 		}
-		
+
 		// 已经确定的header部分
 		this.beforeWrite();
 		this.header(HeaderEnum.CONTENT_LENGTH.getName(), String.valueOf(fs));
@@ -350,14 +351,14 @@ public class ZResponse {
 
 		try {
 			long position = 0;
-			while (position < fs && this.socketChannel.isOpen()) {
+			while ((position < fs) && this.socketChannel.isOpen()) {
 				final long transferred = this.fileChannel.transferTo(position, fs - position, this.socketChannel);
 				position += transferred;
 			}
 		} catch (final IOException e) {
 			e.printStackTrace();
 		}
-		
+
 		try {
 			fileInputStream.close();
 		} catch (final IOException e) {
@@ -369,8 +370,7 @@ public class ZResponse {
 		this.write.set(true);
 
 		if (!ReqeustInfo.get().isKeepAlive()) {
-			// FIXME 2025年1月20日 下午4:12:37 zhangzhen : 记得把key也传过来
-			NioLongConnectionServer.closeSocketChannelAndKeyCancel(null, this.socketChannel);
+			NioLongConnectionServer.closeSocketChannelAndKeyCancel(this.selectionKey, this.socketChannel);
 		}
 	}
 
@@ -386,7 +386,7 @@ public class ZResponse {
 
 	/**
 	 * 根据请求对象来计算ETag
-	 * 
+	 *
 	 * @param request
 	 * @param ba       用于计算ETag的部分字节
 	 * @param eTagEnum
@@ -404,7 +404,7 @@ public class ZResponse {
 			final String goodFastHash = Hash.goodFastHash(ba);
 			final String sha256 = Hash.sha256(ba);
 			final String v4 =  murmur3 + md5 + goodFastHash + sha256;
-			
+
 			final String eTag = eTagEnum.handle(v4);
 
 			this.header(HeaderEnum.ETAG.getName(), eTag);
@@ -584,7 +584,7 @@ public class ZResponse {
 		this.write.set(true);
 
 		ZResponseStatus.written();
-		
+
 		this.close();
 
 	}
@@ -642,7 +642,7 @@ public class ZResponse {
 				this.socketChannel.write(bb);
 			}
 		} catch (final IOException e) {
-			//			e.printStackTrace();
+			NioLongConnectionServer.closeSocketChannelAndKeyCancel(this.selectionKey, this.socketChannel);
 		}
 	}
 
@@ -655,7 +655,7 @@ public class ZResponse {
 	private ByteBuffer fillByteBuffer()  {
 
 		this.checkContentType();
-		
+
 		// 2
 		// FIXME 2025年12月24日 11:47:12 zhangzhen :  这个类看所有的String能否直接getBytes
 		// 是否全都是ascii字符，是则length()获取长度，便于确定ZArray长度
@@ -670,7 +670,7 @@ public class ZResponse {
 				headerBytesLength += STU.CRLF_LENGTH;
 			}
 		}
-		
+
 		final int capacity
 			= ZResponse.HTTP_1_1.length() + 4 // 4 httpStatus的字节数
 				+ STU.CRLF_LENGTH
@@ -684,7 +684,7 @@ public class ZResponse {
 				+ STU.CRLF_LENGTH
 				+ STU.CRLF_LENGTH
 				;
-		
+
 		final ByteBuffer bbbb = ByteBuffer.allocateDirect(capacity);
 		bbbb.put(HTTP_11_BYTES).put(String.valueOf(this.getHttpStatus()).getBytes());
 		bbbb.put(CRLF_BYTES);
@@ -710,16 +710,8 @@ public class ZResponse {
 		return bbbb;
 	}
 
-	/**
-	 * 	使用当前上下文中的socketChannel对象来构造一个响应对象
-	 *  注意：只有在void的接口方法中并且必须在当前线程中才可以获取到当前socketChannel
-	 */
-	// FIXME 2025年12月5日 23:50:25 zhangzhen :  注意：自己new的ZR需要完全自己设置所有的header
-	public ZResponse() {
-		this.socketChannel = ZRSC.get();
-	}
-
-	public ZResponse(final SocketChannel socketChannel) {
+	public ZResponse(final SelectionKey selectionKey, final SocketChannel socketChannel) {
+		this.selectionKey = selectionKey;
 		this.socketChannel = socketChannel;
 	}
 
