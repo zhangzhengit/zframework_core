@@ -306,7 +306,7 @@ public class ZResponse {
 		}
 
 		if (!ReqeustInfo.get().isKeepAlive()) {
-			NioLongConnectionServer.closeSocketChannelAndKeyCancel(this.selectionKey, this.socketChannel);
+			NioLongConnectionServer.closeSocketChannelAndKeyCancel(this.selectionKey);
 		}
 
 	}
@@ -371,7 +371,7 @@ public class ZResponse {
 
 		if (!ReqeustInfo.get().isKeepAlive()) {
 			// FIXME 2025年1月20日 下午4:12:37 zhangzhen : 记得把key也传过来
-			NioLongConnectionServer.closeSocketChannelAndKeyCancel(this.selectionKey, this.socketChannel);
+			NioLongConnectionServer.closeSocketChannelAndKeyCancel(this.selectionKey);
 		}
 	}
 
@@ -643,7 +643,7 @@ public class ZResponse {
 				this.socketChannel.write(bb);
 			}
 		} catch (final IOException e) {
-			NioLongConnectionServer.closeSocketChannelAndKeyCancel(this.selectionKey, this.socketChannel);
+			NioLongConnectionServer.closeSocketChannelAndKeyCancel(this.selectionKey);
 		}
 	}
 
@@ -711,9 +711,9 @@ public class ZResponse {
 		return bbbb;
 	}
 
-	public ZResponse(final SelectionKey selectionKey, final SocketChannel socketChannel) {
+	public ZResponse(final SelectionKey selectionKey) {
 		this.selectionKey = selectionKey;
-		this.socketChannel = socketChannel;
+		this.socketChannel = (SocketChannel) selectionKey.channel();
 	}
 
 	public AtomicBoolean getSetContentType() {

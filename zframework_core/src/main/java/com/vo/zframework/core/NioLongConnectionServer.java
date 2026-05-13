@@ -150,13 +150,9 @@ public class NioLongConnectionServer {
 						final SocketChannel sc = (SocketChannel) selectionKey.channel();
 						// 快速检查：如果通道已关闭或未连接，直接清理
 						if (!sc.isConnected() || !sc.isOpen()) {
-							closeSocketChannelAndKeyCancel(selectionKey, sc);
+							closeSocketChannelAndKeyCancel(selectionKey);
 							continue;
 						}
-
-						// FIXME 2025年1月15日 下午7:45:55 zhangzhen : 在尝试：只在NIO线程read
-						// 如果content-length>0再用线程池继续读取body部分，但是同步还有问题，并且上传大文件会导致其他的socketChannel.read阻塞，继续查什么原因
-						// 只试了测试100W次简单get接口，上述方法5W/S左右，而如下方式4.2W左右
 
 						boolean shouldProcess = false;
 						synchronized (selectionKey) {
@@ -169,23 +165,17 @@ public class NioLongConnectionServer {
 
 						if (shouldProcess) {
 							final String tName = SERVER_CONFIGURATIONPROPERTIES.getThreadName();
-
-							// FIXME 2026年4月29日 05:14:19 zhangzhen : 21 虚拟
-//							Thread.ofVirtual().name(tName + VT_N.incrementAndGet())
-//									.start(() -> this.action(selectionKey, socketChannel));
-
 							this.ves.execute(() -> {
-								final SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
 								Thread.currentThread().setName(tName + VT_N.incrementAndGet());
-								this.action(selectionKey, socketChannel);
+								this.action(selectionKey);
 							});
 						}
 
 					}
 				} catch (final Exception e) {
-					closeSocketChannelAndKeyCancel(selectionKey, (SocketChannel) selectionKey.channel());
+					closeSocketChannelAndKeyCancel(selectionKey);
 					final String message = Task.gExceptionMessage(e);
-					LOG.error("foreach-selector.selectedKeys-异常,message={}", message);
+					LOG.warn("foreach-selector.selectedKeys-异常,message={}", message);
 					continue;
 				}
 			}
@@ -203,15 +193,15 @@ public class NioLongConnectionServer {
 			e.printStackTrace();
 		}
 
-		for (final SelectionKey key : oldSelector.keys()) {
-			if (!key.isValid()) {
+		for (final SelectionKey oldSelectionKey : oldSelector.keys()) {
+			if (!oldSelectionKey.isValid()) {
 				continue;
 			}
 			try {
-				final int interestOps = key.interestOps();
-				final Object attachment = key.attachment();
-				key.cancel();
-				key.channel().register(newSelector, interestOps, attachment);
+				final int oldInterestOps = oldSelectionKey.interestOps();
+				final Object attachment = oldSelectionKey.attachment();
+				oldSelectionKey.cancel();
+				oldSelectionKey.channel().register(newSelector, oldInterestOps, attachment);
 			} catch (final ClosedChannelException e) {
 				e.printStackTrace();
 				continue;
@@ -230,18 +220,20 @@ public class NioLongConnectionServer {
 		}
 	}
 
-	private void action(final SelectionKey selectionKey, final SocketChannel socketChannel) {
+	private void action(final SelectionKey selectionKey) {
+
+//		final SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
 
 		ZArray array = null;
 		try {
-			array = HTTPProcessor.process(socketChannel, selectionKey);
+			array = HTTPProcessor.process(selectionKey);
 		} catch (final Exception e) {
 
 			final ZControllerAdviceActuator a = ZContext.getBean(ZControllerAdviceActuator.class);
 			final Object r = a.execute(e);
 
 			final Integer httpStatus = ZControllerAdviceThrowable.findHttpStatus(e);
-			final ZResponse response = new ZResponse(selectionKey, socketChannel)
+			final ZResponse response = new ZResponse(selectionKey)
 					.httpStatus(httpStatus != null ? httpStatus : HttpStatusEnum.HTTP_500.getCode())
 					.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 					.body(J.toJSONString(r));
@@ -261,7 +253,7 @@ public class NioLongConnectionServer {
 				} catch (final Exception e) {
 					final String message = Task.gExceptionMessage(e);
 					LOG.error("response429Async-异常,message={}", message);
-					closeSocketChannelAndKeyCancel(selectionKey, socketChannel);
+					closeSocketChannelAndKeyCancel(selectionKey);
 				}
 
 			} else {
@@ -275,7 +267,7 @@ public class NioLongConnectionServer {
 					final String errorMessage = J.toJSONString(
 							CR.error(HttpStatusEnum.HTTP_500.getMessage() + STU.SAPCE + message), Include.NON_NULL);
 
-					NioLongConnectionServer.r500AndCloseSocketChannel(selectionKey, socketChannel, errorMessage);
+					NioLongConnectionServer.r500AndCloseSocketChannel(selectionKey, errorMessage);
 				}
 			}
 
@@ -286,20 +278,20 @@ public class NioLongConnectionServer {
 		}
 	}
 
-	public static void r500AndCloseSocketChannel(final SelectionKey selectionKey, final SocketChannel socketChannel, final String errorMessage) {
-		new ZResponse(selectionKey, socketChannel)
+	public static void r500AndCloseSocketChannel(final SelectionKey selectionKey, final String errorMessage) {
+		new ZResponse(selectionKey)
 		.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 		.httpStatus(HttpStatusEnum.HTTP_500.getCode())
 		.header(HeaderEnum.CONNECTION.getName(), ConnectionEnum.CLOSE.getValue())
 		.body(errorMessage)
 		.write();
 
-		closeSocketChannelAndKeyCancel(selectionKey, socketChannel);
+		closeSocketChannelAndKeyCancel(selectionKey);
 	}
 
 	private void response(final SelectionKey selectionKey, final ZArray array) {
-		final TaskRequest taskRequest = new TaskRequest(selectionKey, (SocketChannel) selectionKey.channel(),
-				array.get(), array.getTf(), new Date());
+		final TaskRequest taskRequest = new TaskRequest(selectionKey, array.get(),
+				array.getTf(), new Date());
 
 		NioLongConnectionServer.this.requestHandler.handle(taskRequest);
 	}
@@ -309,17 +301,13 @@ public class NioLongConnectionServer {
 				SERVER_CONFIGURATIONPROPERTIES.getQps(), QPSHandlingEnum.SMOOTH);
 	}
 
-	public static void response429Async(final SelectionKey key, final String message) {
-		// FIXME 2026年4月29日 05:14:51 zhangzhen : 21虚拟
+	public static void response429Async(final SelectionKey selectionKey, final String message) {
 		Thread.ofVirtual().name("response429AsyncT")
-		.start(() -> NioLongConnectionServer.response429(key, message));
+				.start(() -> NioLongConnectionServer.response429(selectionKey, message));
 	}
 
 	public static void response429(final SelectionKey selectionKey, final String message) {
-
-		final SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
-
-		new ZResponse(selectionKey, socketChannel)
+		new ZResponse(selectionKey)
 		.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 		.httpStatus(HttpStatusEnum.HTTP_429.getCode())
 		.body(J.toJSONString(CR.error(message), Include.NON_NULL))
@@ -370,8 +358,8 @@ public class NioLongConnectionServer {
 		}, 1, 1, TimeUnit.SECONDS);
 	}
 
-	private static void handleAccept(final SelectionKey key, final Selector selector) {
-		final ServerSocketChannel serverSocketChannel = (ServerSocketChannel) key.channel();
+	private static void handleAccept(final SelectionKey selectionKey, final Selector selector) {
+		final ServerSocketChannel serverSocketChannel = (ServerSocketChannel) selectionKey.channel();
 		SocketChannel socketChannel = null;
 		try {
 			socketChannel = serverSocketChannel.accept();
@@ -401,7 +389,7 @@ public class NioLongConnectionServer {
 
 			try {
 				ReqeustInfo.set(request);
-				final Task task = new Task(taskRequest.getSelectionKey(), taskRequest.getSocketChannel());
+				final Task task = new Task(taskRequest.getSelectionKey());
 				final String contentType = request.getContentType();
 				if (STU.isNotEmpty(contentType)
 						&& contentType.toLowerCase().startsWith(ContentTypeEnum.MULTIPART_FORM_DATA.getType().toLowerCase())) {
@@ -411,8 +399,7 @@ public class NioLongConnectionServer {
 				}
 
 				if (taskRequest.getSocketChannel().isOpen()) {
-					NioLongConnectionServer.response(taskRequest.getSelectionKey(), taskRequest.getSocketChannel(),
-							request, task);
+					NioLongConnectionServer.response(taskRequest.getSelectionKey(), request, task);
 				}
 
 			} catch (final Exception e) {
@@ -422,7 +409,7 @@ public class NioLongConnectionServer {
 
 				final Integer httpStatus = ZControllerAdviceThrowable.findHttpStatus(e);
 				final ZResponse response =
-						new ZResponse(taskRequest.getSelectionKey(), taskRequest.getSocketChannel())
+						new ZResponse(taskRequest.getSelectionKey())
 						.httpStatus(httpStatus != null ? httpStatus : HttpStatusEnum.HTTP_500.getCode())
 						.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 						.body(J.toJSONString(r));
@@ -440,13 +427,14 @@ public class NioLongConnectionServer {
 
 	}
 
-	public static void closeSocketChannelAndKeyCancel(final SelectionKey key, final SocketChannel socketChannel) {
+	public static void closeSocketChannelAndKeyCancel(final SelectionKey selectionKey) {
 
 		try {
-			if (key != null) {
-				key.cancel();
+			if (selectionKey != null) {
+				selectionKey.cancel();
 			}
 
+			final SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
 			if (socketChannel != null) {
 				socketChannel.close();
 			}
@@ -459,23 +447,22 @@ public class NioLongConnectionServer {
 	 * 最终真正响应的方法，所有的响应(当前实现为非异常的响应)都在此方法中执行，以便于统一处理一些逻辑
 	 *
 	 * @param selectionKey
-	 * @param socketChannel
 	 * @param request
 	 * @param task
+	 * @param socketChannel
 	 * @throws Exception
 	 */
-	private static void response(final SelectionKey selectionKey, final SocketChannel socketChannel, final ZRequest request,
-			final Task task) throws Exception {
+	private static void response(final SelectionKey selectionKey, final ZRequest request, final Task task) throws Exception {
 
 		try {
-			final ZResponse response = task.invoke(request, selectionKey, socketChannel);
+			final ZResponse response = task.invoke(request, selectionKey);
 
 			if ((response == null) || response.isWritten()) {
 				return;
 			}
 
 			final boolean keepAlive = request.isKeepAlive();
-			addConnectionToKAMap(selectionKey, socketChannel, keepAlive);
+			addConnectionToKAMap(keepAlive, selectionKey);
 
 			final Integer httpStatus = response.getHttpStatus();
 			if (httpStatus == HttpStatusEnum.HTTP_200.getCode()) {
@@ -490,7 +477,7 @@ public class NioLongConnectionServer {
 			response.write();
 
 			if (!keepAlive) {
-				closeSocketChannelAndKeyCancel(selectionKey, socketChannel);
+				closeSocketChannelAndKeyCancel(selectionKey);
 			}
 
 		} catch (final Exception e) {
@@ -515,10 +502,10 @@ public class NioLongConnectionServer {
 		response.header("Last-Modified", ZDateUtil.gmt(new Date()));
 	}
 
-	private static void addConnectionToKAMap(final SelectionKey key, final SocketChannel socketChannel,
-			final boolean keepAlive) {
+	private static void addConnectionToKAMap(final boolean keepAlive, final SelectionKey selectionKey) {
 		if (keepAlive) {
-			SOCKET_CHANNEL_MAP.put((System.currentTimeMillis() / 1000) * 1000, new SS(socketChannel, key));
+			final SS ss = new SS(selectionKey);
+			SOCKET_CHANNEL_MAP.put((System.currentTimeMillis() / 1000) * 1000, ss);
 		}
 	}
 
@@ -573,11 +560,11 @@ public class NioLongConnectionServer {
 
 	public static class SS {
 
-		private final SocketChannel socketChannel;
 		private final SelectionKey selectionKey;
+		private final SocketChannel socketChannel;
 
-		public SS(final SocketChannel socketChannel, final SelectionKey selectionKey) {
-			this.socketChannel = socketChannel;
+		public SS(final SelectionKey selectionKey) {
+			this.socketChannel = (SocketChannel) selectionKey.channel();
 			this.selectionKey = selectionKey;
 		}
 

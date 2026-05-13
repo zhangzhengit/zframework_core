@@ -1,7 +1,6 @@
 package com.vo.zframework.core;
 
 import java.nio.channels.SelectionKey;
-import java.nio.channels.SocketChannel;
 
 import com.vo.zframework.cache.J;
 import com.vo.zframework.common.CR;
@@ -16,16 +15,16 @@ import com.vo.zframework.http.HttpStatusEnum;
  */
 public class ReU {
 
-	public static ZResponse response405(final SelectionKey selectionKey, final SocketChannel socketChannel, final String message) {
-		final ZResponse r = new ZResponse(selectionKey, socketChannel)
+	public static ZResponse response405(final SelectionKey selectionKey, final String message) {
+		final ZResponse r = new ZResponse(selectionKey)
 				.httpStatus(HttpStatusEnum.HTTP_405.getCode())
 				.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 				.body(J.toJSONString(CR.error("请求Method不支持：[" + message + "]")));
 		return r;
 	}
 
-	public static ZResponse response404(final SelectionKey selectionKey, final SocketChannel socketChannel, final String message) {
-		final ZResponse r = new ZResponse(selectionKey, socketChannel)
+	public static ZResponse response404(final SelectionKey selectionKey, final String message) {
+		final ZResponse r = new ZResponse(selectionKey)
 				.httpStatus(HttpStatusEnum.HTTP_404.getCode())
 				.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 				.body(J.toJSONString(CR.error("请求路径不存在[" + message + "]")));

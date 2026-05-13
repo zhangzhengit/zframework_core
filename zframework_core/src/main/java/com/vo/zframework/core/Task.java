@@ -88,12 +88,10 @@ public class Task {
 	public static final int HTTP_STATUS_500 = 500;
 	public static final String INTERNAL_SERVER_ERROR = "Internal Server Error";
 	public static final ContentTypeEnum DEFAULT_CONTENT_TYPE = ContentTypeEnum.APPLICATION_JSON;
-	private final SocketChannel socketChannel;
 	private final SelectionKey selectionKey;
 
-	public Task(final SelectionKey selectionKey, final SocketChannel socketChannel) {
+	public Task(final SelectionKey selectionKey) {
 		this.selectionKey = selectionKey;
-		this.socketChannel = socketChannel;
 	}
 
 	/**
@@ -142,13 +140,12 @@ public class Task {
 	 * 执行目标方法（接口Method）
 	 *
 	 * @param request 请求体
-	 * @param selectionKey 
-	 * @param socketChannel 
+	 * @param selectionKey
 	 * @return 响应结果，已根据具体的方法处理好header、cookie、body等内容，只是没write
 	 * @throws Exception
 	 *
 	 */
-	public ZResponse invoke(final ZRequest request, final SelectionKey selectionKey, final SocketChannel socketChannel) throws Exception {
+	public ZResponse invoke(final ZRequest request, final SelectionKey selectionKey) throws Exception {
 
 		final String path = request.getPath();
 		ZRMethod zrMethod = ZControllerMap.getMethodByMethodEnumAndPath(request.getMethodEnum(), path);
@@ -171,13 +168,13 @@ public class Task {
 			}, true);
 
 			if (noRequestMethodMethod != null) {
-				return ReU.response405(selectionKey, socketChannel, request.getMethodEnum().getMethod());
+				return ReU.response405(selectionKey, request.getMethodEnum().getMethod());
 			}
 
 			// 用正则依然匹配不到，响应404
 			final ZRMethod matcheZRMethod = Task.getMatcheMethod(request, path);
 			if (matcheZRMethod == null) {
-				return ReU.response404(selectionKey, socketChannel, path);
+				return ReU.response404(selectionKey, path);
 			}
 
 			zrMethod = matcheZRMethod;
@@ -185,7 +182,7 @@ public class Task {
 
 		try {
 			if (zrMethod.isVoid()) {
-				ZRSC.set(socketChannel);
+				ZRSC.set((SocketChannel) selectionKey.channel());
 			}
 
 			// 找到目标方法了，开始生成参数了
@@ -290,7 +287,7 @@ public class Task {
 			final CR<Object> error = CR.error(AccessDeniedCodeEnum.API.getCode(),
 					AccessDeniedCodeEnum.API.getInternalMessage());
 
-			final ZResponse response = new ZResponse(this.selectionKey, this.socketChannel);
+			final ZResponse response = new ZResponse(this.selectionKey);
 			response.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 			.httpStatus(HttpStatusEnum.HTTP_429.getCode())
 			.body(J.toJSONString(error, Include.NON_NULL));
@@ -320,7 +317,7 @@ public class Task {
 					//				if (!QC.allow(QCTimeEnum.SECOND, keyword, zqpsLimitation.count(), handlingEnum)) {
 
 					final CR<Object> error = CR.error(AccessDeniedCodeEnum.ZSESSIONID.getCode(), AccessDeniedCodeEnum.ZSESSIONID.getMessageToClient());
-					final ZResponse response = new ZResponse(this.selectionKey, this.socketChannel);
+					final ZResponse response = new ZResponse(this.selectionKey);
 					response.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 					.httpStatus(HttpStatusEnum.HTTP_429.getCode())
 					.body(J.toJSONString(error, Include.NON_NULL));
@@ -348,7 +345,7 @@ public class Task {
 		if (CU.isEmpty(zhiList)) {
 			r = invoke0(zrMethod.getMethod(), parametersArray, zControllerObject);
 		} else {
-			final ZResponse response = new ZResponse(this.selectionKey, this.socketChannel);
+			final ZResponse response = new ZResponse(this.selectionKey);
 			final ArrayList<Object> pa = new ArrayList<>();
 			Collections.addAll(pa, parametersArray);
 			final InterceptorParameter interceptorParameter = new InterceptorParameter(zrMethod.getMethod().getName(), zrMethod.getMethod(),
@@ -409,7 +406,7 @@ public class Task {
 			final ZResponse response = ZHttpContext.getZResponseAndRemove();
 			// 无ZR参数，直接给一个默认的json 200
 			if (response == null) {
-				return new ZResponse(this.selectionKey, this.socketChannel)
+				return new ZResponse(this.selectionKey)
 						.contentType(ContentTypeEnum.APPLICATION_JSON.getType());
 			}
 
@@ -548,18 +545,18 @@ public class Task {
 	}
 
 	private ZResponse responseCT(final Object r, final String contentType, final ContentTypeEnum cte) {
-		final ZResponse rx = new ZResponse(this.selectionKey, this.socketChannel).contentType(contentType);
+		final ZResponse rx = new ZResponse(this.selectionKey).contentType(contentType);
 		cte.body(r, rx);
 		return rx;
 	}
 
 	private ZResponse responseTextPlain(final Object r) {
-		return new ZResponse(this.selectionKey, this.socketChannel).contentType(ContentTypeEnum.TEXT_PLAIN.getType()).body(r instanceof String ? (String) r : String.valueOf(r));
+		return new ZResponse(this.selectionKey).contentType(ContentTypeEnum.TEXT_PLAIN.getType()).body(r instanceof String ? (String) r : String.valueOf(r));
 	}
 
 	private ZResponse responseAppJSON(final Object r) {
 		final String json = J.toJSONString(r, Include.NON_NULL);
-		return new ZResponse(this.selectionKey, this.socketChannel).contentType(DEFAULT_CONTENT_TYPE.getType()).body(json);
+		return new ZResponse(this.selectionKey).contentType(DEFAULT_CONTENT_TYPE.getType()).body(json);
 	}
 
 	private ZResponse responseHtml(final Object r) {
@@ -570,7 +567,7 @@ public class Task {
 			final String html = ZTemplate.freemarker(r instanceof String ? (String)r : String.valueOf(r), htmlContent);
 			ZModel.clear();
 
-			return new ZResponse(this.selectionKey, this.socketChannel).contentType(ContentTypeEnum.TEXT_HTML.getType()).body(html);
+			return new ZResponse(this.selectionKey).contentType(ContentTypeEnum.TEXT_HTML.getType()).body(html);
 
 		} catch (final Exception e) {
 			e.printStackTrace();
@@ -578,13 +575,13 @@ public class Task {
 
 			if (e instanceof ResourceNotExistException) {
 				final ResourceNotExistException ex = (ResourceNotExistException) e;
-				return new ZResponse(this.selectionKey, this.socketChannel)
+				return new ZResponse(this.selectionKey)
 						.httpStatus(ex.getHttpStatus())
 						.contentType(DEFAULT_CONTENT_TYPE.getType())
 						.body(J.toJSONString(CR.error(ex.getMessagezf()),Include.NON_NULL));
 			}
 
-			return new ZResponse(this.selectionKey, this.socketChannel)
+			return new ZResponse(this.selectionKey)
 					.httpStatus(HttpStatusEnum.HTTP_500.getCode())
 					.contentType(DEFAULT_CONTENT_TYPE.getType())
 					.body(J.toJSONString(CR.error(em),Include.NON_NULL));
@@ -656,7 +653,7 @@ public class Task {
 					parametersArray[pI] = request;
 					pI++;
 				} else if (pType == ZResponse.class) {
-					final ZResponse response = new ZResponse(this.selectionKey, this.socketChannel);
+					final ZResponse response = new ZResponse(this.selectionKey);
 					parametersArray[pI] = response;
 					pI++;
 				} else if (pType == ZModel.class) {
@@ -1012,7 +1009,7 @@ public class Task {
 		}
 
 		if (!sR) {
-			ZHttpContext.setZResponse(new ZResponse(this.selectionKey, this.socketChannel));
+			ZHttpContext.setZResponse(new ZResponse(this.selectionKey));
 		}
 	}
 
