@@ -19,7 +19,7 @@ import com.vo.zframework.exception.ZSynchronouslyAOPException;
  *
  */
 @ZAOP(interceptType = ZSynchronously.class)
-public class ZSynchronouslyuAOP implements ZIAOP {
+public class ZSynchronouslyAOP implements ZIAOP {
 
 	@Override
 	public Object before(final AOPParameter AOPParameter) {
@@ -29,7 +29,7 @@ public class ZSynchronouslyuAOP implements ZIAOP {
 	@Override
 	public Object around(final AOPParameter AOPParameter) {
 
-		final String value = ZSynchronouslyuAOP.gValue(AOPParameter);
+		final String value = ZSynchronouslyAOP.gValue(AOPParameter);
 		
 		synchronized (("AOPLock" + value).intern()) {
 			final Object v = AOPParameter.invoke();
@@ -46,7 +46,7 @@ public class ZSynchronouslyuAOP implements ZIAOP {
 		final Method method = AOPParameter.getMethod();
 		final Parameter[] parameters = method.getParameters();
 
-		return ZSynchronouslyuAOP.getKeyValue(AOPParameter, key, parameters);
+		return ZSynchronouslyAOP.getKeyValue(AOPParameter, key, parameters);
 	}
 
 	private static String getKeyValue(final AOPParameter AOPParameter, final String key, final Parameter[] parameters) {
