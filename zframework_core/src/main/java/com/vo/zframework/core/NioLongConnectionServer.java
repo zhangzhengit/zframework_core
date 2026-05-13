@@ -124,7 +124,7 @@ public class NioLongConnectionServer {
 
 		while (true) {
 			try {
-				final int select = this.selector.select(500);
+				final int select = this.selector.select();
 				if (printNioSelect) {
 					LOG.debug("select={}", select);
 				}
