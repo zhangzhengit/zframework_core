@@ -306,7 +306,6 @@ public class ZResponse {
 		}
 
 		if (!ReqeustInfo.get().isKeepAlive()) {
-			// FIXME 2025年1月20日 下午4:12:37 zhangzhen : 记得把key也传过来
 			NioLongConnectionServer.closeSocketChannelAndKeyCancel(this.selectionKey, this.socketChannel);
 		}
 
