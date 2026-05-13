@@ -241,7 +241,7 @@ public class NioLongConnectionServer {
 			final Object r = a.execute(e);
 
 			final Integer httpStatus = ZControllerAdviceThrowable.findHttpStatus(e);
-			final ZResponse response = new ZResponse(socketChannel)
+			final ZResponse response = new ZResponse(selectionKey, socketChannel)
 					.httpStatus(httpStatus != null ? httpStatus : HttpStatusEnum.HTTP_500.getCode())
 					.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 					.body(J.toJSONString(r));
@@ -287,7 +287,7 @@ public class NioLongConnectionServer {
 	}
 
 	public static void r500AndCloseSocketChannel(final SelectionKey selectionKey, final SocketChannel socketChannel, final String errorMessage) {
-		new ZResponse(socketChannel)
+		new ZResponse(selectionKey, socketChannel)
 		.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 		.httpStatus(HttpStatusEnum.HTTP_500.getCode())
 		.header(HeaderEnum.CONNECTION.getName(), ConnectionEnum.CLOSE.getValue())
@@ -315,11 +315,11 @@ public class NioLongConnectionServer {
 		.start(() -> NioLongConnectionServer.response429(key, message));
 	}
 
-	public static void response429(final SelectionKey key, final String message) {
+	public static void response429(final SelectionKey selectionKey, final String message) {
 
-		final SocketChannel socketChannel = (SocketChannel) key.channel();
+		final SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
 
-		new ZResponse(socketChannel)
+		new ZResponse(selectionKey, socketChannel)
 		.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 		.httpStatus(HttpStatusEnum.HTTP_429.getCode())
 		.body(J.toJSONString(CR.error(message), Include.NON_NULL))
@@ -401,8 +401,7 @@ public class NioLongConnectionServer {
 
 			try {
 				ReqeustInfo.set(request);
-
-				final Task task = new Task(taskRequest.getSocketChannel());
+				final Task task = new Task(taskRequest.getSelectionKey(), taskRequest.getSocketChannel());
 				final String contentType = request.getContentType();
 				if (STU.isNotEmpty(contentType)
 						&& contentType.toLowerCase().startsWith(ContentTypeEnum.MULTIPART_FORM_DATA.getType().toLowerCase())) {
@@ -423,7 +422,7 @@ public class NioLongConnectionServer {
 
 				final Integer httpStatus = ZControllerAdviceThrowable.findHttpStatus(e);
 				final ZResponse response =
-						new ZResponse(taskRequest.getSocketChannel())
+						new ZResponse(taskRequest.getSelectionKey(), taskRequest.getSocketChannel())
 						.httpStatus(httpStatus != null ? httpStatus : HttpStatusEnum.HTTP_500.getCode())
 						.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 						.body(J.toJSONString(r));
@@ -442,6 +441,7 @@ public class NioLongConnectionServer {
 	}
 
 	public static void closeSocketChannelAndKeyCancel(final SelectionKey key, final SocketChannel socketChannel) {
+
 		try {
 			if (key != null) {
 				key.cancel();
@@ -458,24 +458,24 @@ public class NioLongConnectionServer {
 	/**
 	 * 最终真正响应的方法，所有的响应(当前实现为非异常的响应)都在此方法中执行，以便于统一处理一些逻辑
 	 *
-	 * @param key
+	 * @param selectionKey
 	 * @param socketChannel
 	 * @param request
 	 * @param task
 	 * @throws Exception
 	 */
-	private static void response(final SelectionKey key, final SocketChannel socketChannel, final ZRequest request,
+	private static void response(final SelectionKey selectionKey, final SocketChannel socketChannel, final ZRequest request,
 			final Task task) throws Exception {
 
 		try {
-			final ZResponse response = task.invoke(request, socketChannel);
+			final ZResponse response = task.invoke(request, selectionKey, socketChannel);
 
 			if ((response == null) || response.isWritten()) {
 				return;
 			}
 
 			final boolean keepAlive = request.isKeepAlive();
-			addConnectionToKAMap(key, socketChannel, keepAlive);
+			addConnectionToKAMap(selectionKey, socketChannel, keepAlive);
 
 			final Integer httpStatus = response.getHttpStatus();
 			if (httpStatus == HttpStatusEnum.HTTP_200.getCode()) {
@@ -490,7 +490,7 @@ public class NioLongConnectionServer {
 			response.write();
 
 			if (!keepAlive) {
-				closeSocketChannelAndKeyCancel(key, socketChannel);
+				closeSocketChannelAndKeyCancel(selectionKey, socketChannel);
 			}
 
 		} catch (final Exception e) {
