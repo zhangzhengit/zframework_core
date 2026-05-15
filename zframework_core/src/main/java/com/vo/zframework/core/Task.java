@@ -235,11 +235,8 @@ public class Task {
 		e.printStackTrace(writer);
 
 		final String zfm = getZFMessage(e);
-		final String eMessage =  (STU.isEmpty(zfm) ? "" : "\r\n\tmessage=" + zfm + "\r\n\t")
-				+stringWriter
-				;
 
-		return eMessage;
+		return zfm + stringWriter;
 	}
 
 	private static String getZFMessage(final Throwable e) {
