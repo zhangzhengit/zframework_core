@@ -19,6 +19,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
+import com.vo.log.core.ZLog2;
 import com.vo.zframework.cache.CU;
 import com.vo.zframework.cache.STU;
 import com.vo.zframework.compression.Deflater;
@@ -83,6 +84,8 @@ import com.vo.zframework.http.ZETag;
  *
  */
 public class ZResponse {
+
+	static ZLog2 LOG = ZLog2.getInstance();
 
 	private static final byte[] COLON_BYTES = STU.COLON.getBytes();
 
@@ -636,13 +639,15 @@ public class ZResponse {
 		}
 	}
 
-	private void write(final ByteBuffer bb) {
+	private void write(final ByteBuffer byteBuffer) {
 
 		try {
-			while ((bb.remaining() > 0) && this.socketChannel.isOpen()) {
-				this.socketChannel.write(bb);
+			while ((byteBuffer.remaining() > 0) && this.socketChannel.isOpen()) {
+				this.socketChannel.write(byteBuffer);
 			}
 		} catch (final IOException e) {
+			final String message = Task.gExceptionMessage(e);
+			LOG.error("ZResponseWRITE异常,message={}", message);
 			NioLongConnectionServer.closeSocketChannelAndKeyCancel(this.selectionKey);
 		}
 	}

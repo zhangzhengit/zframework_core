@@ -197,6 +197,7 @@ public class Task {
 
 		} catch (final Exception e) {
 			//			e.printStackTrace();
+			// 这里不处理，抛出去
 			throw e;
 		}
 
@@ -980,9 +981,7 @@ public class Task {
 	}
 
 	private Object[] generateParameters(final Method method, final ZRequest request, final String path)
-			throws
-			NumberFormatException
-	{
+			throws NumberFormatException {
 		final Object[] parametersArray = new Object[method.getParameterCount()];
 		return this.generateParameters(method, parametersArray, request, path);
 	}

@@ -1,5 +1,6 @@
 package com.vo.zframework.core;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -78,13 +79,17 @@ public final class TaskRequestHandler {
 			final String message = ZControllerAdviceThrowable.findCausedby(e);
 			final Integer httpStatus = ZControllerAdviceThrowable.findHttpStatus(e);
 
-			final ZResponse response = new ZResponse(taskRequest.getSelectionKey());
 			final String error = J.toJSONString(CR.error(message));
-			response.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
-			.httpStatus(httpStatus != null ? httpStatus : HttpStatusEnum.HTTP_500.getCode())
-			.header(HeaderEnum.CONNECTION.getName(), ConnectionEnum.CLOSE.getValue())
-			.body(error);
-			response.write();
+			new ZResponse(taskRequest.getSelectionKey())
+				.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
+				.httpStatus(httpStatus != null ? httpStatus : HttpStatusEnum.HTTP_500.getCode())
+				.header(HeaderEnum.CONNECTION.getName(), ConnectionEnum.CLOSE.getValue())
+				.body(error)
+				.write();
+
+			if (e instanceof IOException) {
+				NioLongConnectionServer.closeSocketChannelAndKeyCancel(taskRequest.getSelectionKey());
+			}
 
 			return;
 		}

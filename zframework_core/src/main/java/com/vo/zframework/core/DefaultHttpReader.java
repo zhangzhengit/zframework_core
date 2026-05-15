@@ -180,6 +180,8 @@ public class DefaultHttpReader {
 		try {
 			tR = socketChannel.read(byteBuffer);
 		} catch (final IOException e1) {
+			final String message = Task.gExceptionMessage(e1);
+			LOG.error("socketChannel.read异常,message={}", message);
 			NioLongConnectionServer.closeSocketChannelAndKeyCancel(selectionKey);
 			return null;
 		}
@@ -292,6 +294,8 @@ public class DefaultHttpReader {
 			} catch (final IOException e) {
 				// 不打印了
 				e.printStackTrace();
+				final String message = Task.gExceptionMessage(e);
+				LOG.error("readHeaderWhile异常,message={}", message);
 				NioLongConnectionServer.closeSocketChannelAndKeyCancel(selectionKey);
 				return null;
 			}
@@ -383,6 +387,8 @@ public class DefaultHttpReader {
 			removeNB(tf, boundary, array);
 		} catch (final IOException e) {
 			e.printStackTrace();
+			final String message = Task.gExceptionMessage(e);
+			LOG.error("readBodyToTempFileWhile异常,message={}", message);
 			NioLongConnectionServer.closeSocketChannelAndKeyCancel(selectionKey);
 			return null;
 		} finally {
