@@ -73,7 +73,8 @@ public class DefaultHttpReader {
 			.getBean(ServerConfigurationProperties.class);
 	private static final SecureRandom RANDOM = new SecureRandom();
 
-	public ZArray readBody(final SelectionKey key, final SocketChannel socketChannel, final AR ar) {
+	public static ZArray readBody(final SelectionKey selectionKey, final AR ar) {
+
 		final ZArray array = ar.getArray();
 
 		final int cLIndex = BodyReader.search(array.get(), HeaderEnum.CONTENT_LENGTH.getName(), 1, 0);
@@ -124,8 +125,7 @@ public class DefaultHttpReader {
 						- BodyReader.RN_BYTES_LENGTH;
 
 				// 2 直接全部写入临时文件
-				final TF tf = readBodyToTempFile(key, socketChannel, array, newNeedReadBodyLength,
-						writeArrayLength);
+				final TF tf = readBodyToTempFile(selectionKey, array, newNeedReadBodyLength, writeArrayLength);
 				array.setTf(tf);
 
 				// 1 根据配置写入内存或文件
@@ -157,8 +157,14 @@ public class DefaultHttpReader {
 		return (int) cl;
 	}
 
-	private static MR readMethod(final SelectionKey key, final SocketChannel socketChannel) {
-		if (!socketChannel.isOpen() || !key.isReadable()) {
+	private static MR readMethod(final SelectionKey selectionKey) {
+
+		if (!selectionKey.isReadable()) {
+			return null;
+		}
+
+		final SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
+		if (!socketChannel.isOpen()) {
 			return null;
 		}
 
@@ -174,7 +180,9 @@ public class DefaultHttpReader {
 		try {
 			tR = socketChannel.read(byteBuffer);
 		} catch (final IOException e1) {
-			NioLongConnectionServer.closeSocketChannelAndKeyCancel(key, socketChannel);
+			final String message = Task.gExceptionMessage(e1);
+			LOG.error("socketChannel.read异常,message={}", message);
+			NioLongConnectionServer.closeSocketChannelAndKeyCancel(selectionKey);
 			return null;
 		}
 
@@ -186,7 +194,7 @@ public class DefaultHttpReader {
 			// FIXME 2024年12月22日 下午3:00:40 zhangzhen : 有疑问：
 			// firefox和edge不会走到这，qq浏览器和360极速浏览器(都是chrome)会走到此，-1了，结果在这直接给close了
 			// 都走不到后面流程去判断是否长连接了.待会debug看下 后2个浏览器连接是否是上次的SC对象
-			NioLongConnectionServer.closeSocketChannelAndKeyCancel(key, socketChannel);
+			NioLongConnectionServer.closeSocketChannelAndKeyCancel(selectionKey);
 			return null;
 		}
 
@@ -221,10 +229,13 @@ public class DefaultHttpReader {
 		return true;
 	}
 
-	public AR readHeader(final SelectionKey key, final SocketChannel socketChannel) {
+	public static AR readHeader(final SelectionKey selectionKey) {
 
 		// FIXME 2026年1月28日 11:12:40 zhangzhen : 现在改了 带body的不读1了，记得把本方法和readMethod也改为一个
-		final MR mr = readMethod(key, socketChannel);
+
+		final SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
+
+		final MR mr = readMethod(selectionKey);
 		if (mr == null) {
 			return null;
 		}
@@ -249,12 +260,13 @@ public class DefaultHttpReader {
 				}
 
 				final int tR = socketChannel.read(byteBuffer);
-				rC++;
-				totalBytesRead += tR;
 				if (tR == -1) {
-					NioLongConnectionServer.closeSocketChannelAndKeyCancel(key, socketChannel);
+					NioLongConnectionServer.closeSocketChannelAndKeyCancel(selectionKey);
 					return null;
 				}
+
+				rC++;
+				totalBytesRead += tR;
 
 				if (tR > 0) {
 					final byte[] a = DefaultHttpReader.add(byteBuffer, array);
@@ -275,13 +287,16 @@ public class DefaultHttpReader {
 								.getNioReadTimeout())) {
 
 					LOG.error("readHeader超时[{}]", SERVER_CONFIGURATIONPROPERTIES.getNioReadTimeout());
+					NioLongConnectionServer.closeSocketChannelAndKeyCancel(selectionKey);
 					return null;
 				}
 
 			} catch (final IOException e) {
 				// 不打印了
 				e.printStackTrace();
-				NioLongConnectionServer.closeSocketChannelAndKeyCancel(key, socketChannel);
+				final String message = Task.gExceptionMessage(e);
+				LOG.error("readHeaderWhile异常,message={}", message);
+				NioLongConnectionServer.closeSocketChannelAndKeyCancel(selectionKey);
 				return null;
 			}
 		}
@@ -309,16 +324,16 @@ public class DefaultHttpReader {
 	}
 
 	/**
-	 * @param key
-	 * @param socketChannel
+	 * @param selectionKey
 	 * @param array
 	 * @param nnReadBodyLength
 	 * @param writeArrayLength
+	 * @param socketChannel
 	 * @return
 	 */
-	private static TF readBodyToTempFile(final SelectionKey key, final SocketChannel socketChannel,
-			final ZArray array,
-			final int nnReadBodyLength, final int writeArrayLength) {
+	private static TF readBodyToTempFile(final SelectionKey selectionKey, final ZArray array,
+			final int nnReadBodyLength,
+			final int writeArrayLength) {
 
 		final List<Byte> removeFromHeaderList = remove(array, writeArrayLength);
 
@@ -334,11 +349,16 @@ public class DefaultHttpReader {
 		final TF tf = saveToTempFile(randomFileName, "111", "111.txt");
 		final Fm fm = hFM(array);
 		final String boundary = "" +  fm.getBoundary();
+
+		final SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
+
 		try {
 			int totalBytesRead = 0;
 			while (totalBytesRead < nnReadBodyLength) {
 				final int read = socketChannel.isOpen() ? socketChannel.read(bbBody) : -1;
 				if (read <= -1) {
+					 // 对端已关闭，必须关闭本地连接
+			        NioLongConnectionServer.closeSocketChannelAndKeyCancel(selectionKey);
 					break;
 				}
 				totalBytesRead += read;
@@ -367,7 +387,9 @@ public class DefaultHttpReader {
 			removeNB(tf, boundary, array);
 		} catch (final IOException e) {
 			e.printStackTrace();
-			NioLongConnectionServer.closeSocketChannelAndKeyCancel(key, socketChannel);
+			final String message = Task.gExceptionMessage(e);
+			LOG.error("readBodyToTempFileWhile异常,message={}", message);
+			NioLongConnectionServer.closeSocketChannelAndKeyCancel(selectionKey);
 			return null;
 		} finally {
 			closeTFStream(tf);

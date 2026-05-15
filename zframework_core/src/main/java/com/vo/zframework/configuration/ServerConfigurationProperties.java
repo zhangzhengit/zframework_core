@@ -392,6 +392,11 @@ public class ServerConfigurationProperties {
 	private boolean printProxyClass = false;
 
 	/**
+	 *
+	 */
+	private boolean printNioSelect = false;
+
+	/**
 	 *	启动时是否打印banner
 	 */
 	private boolean showBanner = false;
@@ -453,6 +458,10 @@ public class ServerConfigurationProperties {
 
 	public void setByteBufferSize(final int byteBufferSize) {
 		this.byteBufferSize = byteBufferSize;
+	}
+
+	public boolean getPrintNioSelect() {
+		return this.printNioSelect;
 	}
 
 	public int getNioReadTimeout() {
@@ -821,6 +830,10 @@ public class ServerConfigurationProperties {
 
 
 		return ctm;
+	}
+
+	public void setPrintNioSelect(final boolean printNioSelect) {
+		this.printNioSelect = printNioSelect;
 	}
 
 }

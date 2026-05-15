@@ -40,25 +40,25 @@ public class ZMail {
 
 	@ZAsync
 	public void sendTextPlainAsync(final String subject, final String body, final String receiver) {
-		send(subject, body, receiver, TEXT_PLAIN_CHARSET_UTF_8);
+		this.send(subject, body, receiver, TEXT_PLAIN_CHARSET_UTF_8);
 	}
 
 	public void sendTextPlain(final String subject, final String body, final String receiver) {
-		send(subject, body, receiver, TEXT_PLAIN_CHARSET_UTF_8);
+		this.send(subject, body, receiver, TEXT_PLAIN_CHARSET_UTF_8);
 	}
 
 	@ZAsync
 	public void sendTextHtmlAsync(final String subject, final String body, final String receiver) {
-		send(subject, body, receiver, TEXT_HTML_CHARSET_UTF_8);
+		this.send(subject, body, receiver, TEXT_HTML_CHARSET_UTF_8);
 	}
 
 	public void sendTextHtml(final String subject, final String body, final String receiver) {
-		send(subject, body, receiver, TEXT_HTML_CHARSET_UTF_8);
+		this.send(subject, body, receiver, TEXT_HTML_CHARSET_UTF_8);
 	}
 
 	@ZAsync
 	public void sendAsync(final String subject, final String body, final String receiver, final String contentType) {
-		send(subject, body, receiver, TEXT_PLAIN_CHARSET_UTF_8);
+		this.send(subject, body, receiver, TEXT_PLAIN_CHARSET_UTF_8);
 	}
 
 	public void send(final String subject, final String body, final String receiver, final String contentType) {

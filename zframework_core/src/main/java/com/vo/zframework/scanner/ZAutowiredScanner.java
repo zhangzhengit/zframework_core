@@ -42,7 +42,6 @@ public class ZAutowiredScanner {
 
 
 		for (final Class<?> cls : zcSet) {
-			final String canonicalName = cls.getCanonicalName();
 			Object o2 = null;
 			if ((annoClass == ZRestController.class)
 					|| (annoClass == ZController.class)

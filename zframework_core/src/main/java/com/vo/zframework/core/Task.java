@@ -91,9 +91,9 @@ public class Task {
 	private final SocketChannel socketChannel;
 	private final SelectionKey selectionKey;
 
-	public Task(final SelectionKey selectionKey, final SocketChannel socketChannel) {
+	public Task(final SelectionKey selectionKey) {
 		this.selectionKey = selectionKey;
-		this.socketChannel = socketChannel;
+		this.socketChannel = (SocketChannel) selectionKey.channel();
 	}
 
 	/**
@@ -144,11 +144,11 @@ public class Task {
 	 * @param request 请求体
 	 * @param selectionKey TODO
 	 * @param socketChannel TODO
-	 * @return 响应结果，已根据具体的方法处理好header、cookie、body等内容，只是没write
+	 * @param selectionKey
 	 * @throws Exception
 	 *
 	 */
-	public ZResponse invoke(final ZRequest request, final SelectionKey selectionKey, final SocketChannel socketChannel) throws Exception {
+	public ZResponse invoke(final ZRequest request, final SelectionKey selectionKey) throws Exception {
 
 		final String path = request.getPath();
 		ZRMethod zrMethod = ZControllerMap.getMethodByMethodEnumAndPath(request.getMethodEnum(), path);
@@ -171,13 +171,13 @@ public class Task {
 			}, true);
 
 			if (noRequestMethodMethod != null) {
-				return ReU.response405(selectionKey, socketChannel, request.getMethodEnum().getMethod());
+				return ReU.response405(selectionKey, request.getMethodEnum().getMethod());
 			}
 
 			// 用正则依然匹配不到，响应404
 			final ZRMethod matcheZRMethod = Task.getMatcheMethod(request, path);
 			if (matcheZRMethod == null) {
-				return ReU.response404(selectionKey, socketChannel, path);
+				return ReU.response404(selectionKey, path);
 			}
 
 			zrMethod = matcheZRMethod;
@@ -185,7 +185,7 @@ public class Task {
 
 		try {
 			if (zrMethod.isVoid()) {
-				ZRSC.set(socketChannel);
+				ZRSC.set((SocketChannel) selectionKey.channel());
 			}
 
 			// 找到目标方法了，开始生成参数了
@@ -200,6 +200,7 @@ public class Task {
 
 		} catch (final Exception e) {
 			//			e.printStackTrace();
+			// 这里不处理，抛出去
 			throw e;
 		}
 
@@ -237,11 +238,8 @@ public class Task {
 		e.printStackTrace(writer);
 
 		final String zfm = getZFMessage(e);
-		final String eMessage =  (STU.isEmpty(zfm) ? "" : "\r\n\tmessage=" + zfm + "\r\n\t")
-				+stringWriter
-				;
 
-		return eMessage;
+		return zfm + stringWriter;
 	}
 
 	private static String getZFMessage(final Throwable e) {
@@ -290,7 +288,7 @@ public class Task {
 			final CR<Object> error = CR.error(AccessDeniedCodeEnum.API.getCode(),
 					AccessDeniedCodeEnum.API.getInternalMessage());
 
-			final ZResponse response = new ZResponse(this.selectionKey, this.socketChannel);
+			final ZResponse response = new ZResponse(this.selectionKey);
 			response.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 			.httpStatus(HttpStatusEnum.HTTP_429.getCode())
 			.body(J.toJSONString(error, Include.NON_NULL));
@@ -320,7 +318,7 @@ public class Task {
 					//				if (!QC.allow(QCTimeEnum.SECOND, keyword, zqpsLimitation.count(), handlingEnum)) {
 
 					final CR<Object> error = CR.error(AccessDeniedCodeEnum.ZSESSIONID.getCode(), AccessDeniedCodeEnum.ZSESSIONID.getMessageToClient());
-					final ZResponse response = new ZResponse(this.selectionKey, this.socketChannel);
+					final ZResponse response = new ZResponse(this.selectionKey);
 					response.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 					.httpStatus(HttpStatusEnum.HTTP_429.getCode())
 					.body(J.toJSONString(error, Include.NON_NULL));
@@ -342,13 +340,12 @@ public class Task {
 
 		this.setZRequestAndZResponse(parametersArray, request, zrMethod);
 
-		Object r = null;
-		// 在此zhi执行
 		final List<ZHandlerInterceptor> zhiList = ZHandlerInterceptorScanner.match(request.getRequestURI());
+		Object r=null;
 		if (CU.isEmpty(zhiList)) {
 			r = invoke0(zrMethod.getMethod(), parametersArray, zControllerObject);
 		} else {
-			final ZResponse response = new ZResponse(this.selectionKey, this.socketChannel);
+			final ZResponse response = new ZResponse(this.selectionKey);
 			final ArrayList<Object> pa = new ArrayList<>();
 			Collections.addAll(pa, parametersArray);
 			final InterceptorParameter interceptorParameter = new InterceptorParameter(zrMethod.getMethod().getName(), zrMethod.getMethod(),
@@ -409,7 +406,7 @@ public class Task {
 			final ZResponse response = ZHttpContext.getZResponseAndRemove();
 			// 无ZR参数，直接给一个默认的json 200
 			if (response == null) {
-				return new ZResponse(this.selectionKey, this.socketChannel)
+				return new ZResponse(this.selectionKey)
 						.contentType(ContentTypeEnum.APPLICATION_JSON.getType());
 			}
 
@@ -417,7 +414,7 @@ public class Task {
 			final String contentType = response.getContentType();
 			if (contentType == null) {
 				final String p1 = findProduces(request, zrMethod.getProduces());
-				response.contentType(p1==null ? DEFAULT_CONTENT_TYPE.getType() : p1);
+				response.contentType(p1 == null ? DEFAULT_CONTENT_TYPE.getType() : p1);
 				// FIXME 2025年12月6日 00:08:25 zhangzhen :  逻辑似乎不对
 				// 到此应该在代码里已经设置了body了（如果有body），那么在body后设置CT已经无意义了
 				// 应该在invoke前先匹配好先设置CT，在body时根据CT来选择不同的CT格式
@@ -548,18 +545,18 @@ public class Task {
 	}
 
 	private ZResponse responseCT(final Object r, final String contentType, final ContentTypeEnum cte) {
-		final ZResponse rx = new ZResponse(this.selectionKey, this.socketChannel).contentType(contentType);
+		final ZResponse rx = new ZResponse(this.selectionKey).contentType(contentType);
 		cte.body(r, rx);
 		return rx;
 	}
 
 	private ZResponse responseTextPlain(final Object r) {
-		return new ZResponse(this.selectionKey, this.socketChannel).contentType(ContentTypeEnum.TEXT_PLAIN.getType()).body(r instanceof String ? (String) r : String.valueOf(r));
+		return new ZResponse(this.selectionKey).contentType(ContentTypeEnum.TEXT_PLAIN.getType()).body(r instanceof String ? (String) r : String.valueOf(r));
 	}
 
 	private ZResponse responseAppJSON(final Object r) {
 		final String json = J.toJSONString(r, Include.NON_NULL);
-		return new ZResponse(this.selectionKey, this.socketChannel).contentType(DEFAULT_CONTENT_TYPE.getType()).body(json);
+		return new ZResponse(this.selectionKey).contentType(DEFAULT_CONTENT_TYPE.getType()).body(json);
 	}
 
 	private ZResponse responseHtml(final Object r) {
@@ -570,7 +567,7 @@ public class Task {
 			final String html = ZTemplate.freemarker(r instanceof String ? (String)r : String.valueOf(r), htmlContent);
 			ZModel.clear();
 
-			return new ZResponse(this.selectionKey, this.socketChannel).contentType(ContentTypeEnum.TEXT_HTML.getType()).body(html);
+			return new ZResponse(this.selectionKey).contentType(ContentTypeEnum.TEXT_HTML.getType()).body(html);
 
 		} catch (final Exception e) {
 			e.printStackTrace();
@@ -578,13 +575,13 @@ public class Task {
 
 			if (e instanceof ResourceNotExistException) {
 				final ResourceNotExistException ex = (ResourceNotExistException) e;
-				return new ZResponse(this.selectionKey, this.socketChannel)
+				return new ZResponse(this.selectionKey)
 						.httpStatus(ex.getHttpStatus())
 						.contentType(DEFAULT_CONTENT_TYPE.getType())
 						.body(J.toJSONString(CR.error(ex.getMessagezf()),Include.NON_NULL));
 			}
 
-			return new ZResponse(this.selectionKey, this.socketChannel)
+			return new ZResponse(this.selectionKey)
 					.httpStatus(HttpStatusEnum.HTTP_500.getCode())
 					.contentType(DEFAULT_CONTENT_TYPE.getType())
 					.body(J.toJSONString(CR.error(em),Include.NON_NULL));
@@ -656,7 +653,7 @@ public class Task {
 					parametersArray[pI] = request;
 					pI++;
 				} else if (pType == ZResponse.class) {
-					final ZResponse response = new ZResponse(this.selectionKey, this.socketChannel);
+					final ZResponse response = new ZResponse(this.selectionKey);
 					parametersArray[pI] = response;
 					pI++;
 				} else if (pType == ZModel.class) {
@@ -701,12 +698,16 @@ public class Task {
 					if (RU.isAnnotationPresent(p, ZMax.class)) {
 						ZValidator.validatedZMax(p, parametersArray[pI], RU.getAnnotation(p, ZMax.class).max());
 					}
+
 					if (RU.isAnnotationPresent(p, ZPositive.class)) {
 						ZValidator.validatedZPositive(p, parametersArray[pI]);
 					}
+
 					if (RU.isAnnotationPresent(p, ZMin.class)) {
 						ZValidator.validatedZMin(p, parametersArray[pI], RU.getAnnotation(p, ZMin.class).min());
 					}
+
+
 					pI++;
 				} else if (pType == ZMultipartFile.class) {
 
@@ -979,9 +980,7 @@ public class Task {
 	}
 
 	private Object[] generateParameters(final Method method, final ZRequest request, final String path)
-			throws
-			NumberFormatException
-	{
+			throws NumberFormatException {
 		final Object[] parametersArray = new Object[method.getParameterCount()];
 		return this.generateParameters(method, parametersArray, request, path);
 	}
@@ -1008,7 +1007,7 @@ public class Task {
 		}
 
 		if (!sR) {
-			ZHttpContext.setZResponse(new ZResponse(this.selectionKey, this.socketChannel));
+			ZHttpContext.setZResponse(new ZResponse(this.selectionKey));
 		}
 	}
 

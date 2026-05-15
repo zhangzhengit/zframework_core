@@ -30,6 +30,7 @@ public class ZSynchronouslyAOP implements ZIAOP {
 	public Object around(final AOPParameter AOPParameter) {
 
 		final String value = ZSynchronouslyAOP.gValue(AOPParameter);
+
 		synchronized (("AOPLock" + value).intern()) {
 			final Object v = AOPParameter.invoke();
 			return v;
@@ -45,16 +46,15 @@ public class ZSynchronouslyAOP implements ZIAOP {
 		final Method method = AOPParameter.getMethod();
 		final Parameter[] parameters = method.getParameters();
 
-
-		final String value = ZSynchronouslyAOP.getKeyValue(AOPParameter, key, parameters);
-		return value;
+		return ZSynchronouslyAOP.getKeyValue(AOPParameter, key, parameters);
 	}
 
 	private static String getKeyValue(final AOPParameter AOPParameter, final String key, final Parameter[] parameters) {
 
 		final String p = AOPParameter.getTarget().getClass().getCanonicalName()
 				+ "@" + AOPParameter.getMethodName()
-				+ "@" + key;
+				+ "@" + key
+				;
 
 		for (int i = 0; i < parameters.length; i++) {
 			final Parameter parameter = parameters[i];
@@ -62,7 +62,7 @@ public class ZSynchronouslyAOP implements ZIAOP {
 			if (name.equals(key)) {
 				final List<Object> pl = AOPParameter.getParameterList();
 				final Object a = pl.get(i);
-				return p + '=' + a;
+				return p +'='+ a;
 			}
 
 			if (key.startsWith(name)) {
@@ -84,6 +84,8 @@ public class ZSynchronouslyAOP implements ZIAOP {
 			}
 		}
 
+		// FIXME 2023年10月28日 上午1:15:39 zhanghen: TODO 启动时先校验 key是否存在（是否匹配参数名或参数名.字段名）
+		// 不要等执行时在此抛异常
 		throw new ZSynchronouslyAOPException("key 指定参数名不存在");
 	}
 

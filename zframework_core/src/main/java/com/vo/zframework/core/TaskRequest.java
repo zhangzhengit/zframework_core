@@ -23,33 +23,31 @@ public class TaskRequest {
 	final Date requestTime;
 
 	public SelectionKey getSelectionKey() {
-		return selectionKey;
+		return this.selectionKey;
 	}
 
 	public SocketChannel getSocketChannel() {
-		return socketChannel;
+		return this.socketChannel;
 	}
 
 	public byte[] getRequestData() {
-		return requestData;
+		return this.requestData;
 	}
 
 	public TF getTf() {
-		return tf;
+		return this.tf;
 	}
 
 	public Date getRequestTime() {
-		return requestTime;
+		return this.requestTime;
 	}
 
-	public TaskRequest(SelectionKey selectionKey, SocketChannel socketChannel, byte[] requestData, TF tf,
-			Date requestTime) {
-		super();
+	public TaskRequest(final SelectionKey selectionKey, final byte[] requestData, final TF tf, final Date requestTime) {
 		this.selectionKey = selectionKey;
-		this.socketChannel = socketChannel;
+		this.socketChannel = (SocketChannel) selectionKey.channel();
 		this.requestData = requestData;
 		this.tf = tf;
 		this.requestTime = requestTime;
 	}
-	
+
 }

@@ -19,6 +19,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
+import com.vo.log.core.ZLog2;
 import com.vo.zframework.cache.CU;
 import com.vo.zframework.cache.STU;
 import com.vo.zframework.compression.Deflater;
@@ -83,6 +84,8 @@ import com.vo.zframework.http.ZETag;
  *
  */
 public class ZResponse {
+
+	static ZLog2 LOG = ZLog2.getInstance();
 
 	private static final byte[] COLON_BYTES = STU.COLON.getBytes();
 
@@ -306,7 +309,7 @@ public class ZResponse {
 		}
 
 		if (!ReqeustInfo.get().isKeepAlive()) {
-			NioLongConnectionServer.closeSocketChannelAndKeyCancel(this.selectionKey, this.socketChannel);
+			NioLongConnectionServer.closeSocketChannelAndKeyCancel(this.selectionKey);
 		}
 
 	}
@@ -370,7 +373,7 @@ public class ZResponse {
 		this.write.set(true);
 
 		if (!ReqeustInfo.get().isKeepAlive()) {
-			NioLongConnectionServer.closeSocketChannelAndKeyCancel(this.selectionKey, this.socketChannel);
+			NioLongConnectionServer.closeSocketChannelAndKeyCancel(this.selectionKey);
 		}
 	}
 
@@ -635,14 +638,16 @@ public class ZResponse {
 		}
 	}
 
-	private void write(final ByteBuffer bb) {
+	private void write(final ByteBuffer byteBuffer) {
 
 		try {
-			while ((bb.remaining() > 0) && this.socketChannel.isOpen()) {
-				this.socketChannel.write(bb);
+			while ((byteBuffer.remaining() > 0) && this.socketChannel.isOpen()) {
+				this.socketChannel.write(byteBuffer);
 			}
 		} catch (final IOException e) {
-			NioLongConnectionServer.closeSocketChannelAndKeyCancel(this.selectionKey, this.socketChannel);
+			final String message = Task.gExceptionMessage(e);
+			LOG.error("ZResponseWRITE异常,message={}", message);
+			NioLongConnectionServer.closeSocketChannelAndKeyCancel(this.selectionKey);
 		}
 	}
 
@@ -685,7 +690,7 @@ public class ZResponse {
 				+ STU.CRLF_LENGTH
 				;
 
-		final ByteBuffer bbbb = ByteBuffer.allocateDirect(capacity);
+		final ByteBuffer bbbb = ByteBuffer.allocate(capacity);
 		bbbb.put(HTTP_11_BYTES).put(String.valueOf(this.getHttpStatus()).getBytes());
 		bbbb.put(CRLF_BYTES);
 		bbbb.put(CONTENT_LENGTH_BYTES)
@@ -710,9 +715,9 @@ public class ZResponse {
 		return bbbb;
 	}
 
-	public ZResponse(final SelectionKey selectionKey, final SocketChannel socketChannel) {
+	public ZResponse(final SelectionKey selectionKey) {
 		this.selectionKey = selectionKey;
-		this.socketChannel = socketChannel;
+		this.socketChannel = (SocketChannel) selectionKey.channel();
 	}
 
 	public AtomicBoolean getSetContentType() {
