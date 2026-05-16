@@ -236,7 +236,7 @@ public class Task {
 
 		final String zfm = getZFMessage(e);
 
-		return zfm + stringWriter;
+		return (zfm == null ? "" : zfm) + " " + stringWriter;
 	}
 
 	private static String getZFMessage(final Throwable e) {
