@@ -271,6 +271,8 @@ public class NioLongConnectionServer {
 
 		try {
 			if (array == null) {
+				LOG.error("arrayNull了,开始close");
+				NioLongConnectionServer.closeSocketChannelAndKeyCancel(selectionKey);
 				return;
 			}
 
