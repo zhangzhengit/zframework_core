@@ -145,7 +145,7 @@ public class NioLongConnectionServer {
 					} catch (final Exception e) {
 						closeSocketChannelAndKeyCancel(selectionKey);
 						final String message = Task.gExceptionMessage(e);
-						LOG.warn("foreach-selector.selectedKeys-异常,message={}", message);
+						LOG.error("foreachSelector_selectedKeys异常,message={}", message);
 						continue;
 					}
 				}
