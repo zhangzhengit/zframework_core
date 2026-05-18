@@ -159,7 +159,7 @@ public class DefaultHttpReader {
 
 	private static MR readMethod(final SelectionKey selectionKey) {
 
-		if (!selectionKey.isReadable()) {
+		if (!selectionKey.isValid() || !selectionKey.isReadable()) {
 			return null;
 		}
 
@@ -167,6 +167,7 @@ public class DefaultHttpReader {
 		if (!socketChannel.isOpen()) {
 			return null;
 		}
+
 
 		// FIXME 2025年11月28日 15:51:33 zhangzhen :  发现问题
 		// 1 小问题，+10无意义，忘了当时怎么想的了，如果只是为了为了METHOD后面的空格给区分开，没必要+10
