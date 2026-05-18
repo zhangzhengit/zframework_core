@@ -271,8 +271,8 @@ public class NioLongConnectionServer {
 
 		try {
 			if (array == null) {
-				LOG.error("arrayNull了,开始close");
-				NioLongConnectionServer.closeSocketChannelAndKeyCancel(selectionKey);
+//				LOG.error("arrayNull了,开始close");
+//				NioLongConnectionServer.closeSocketChannelAndKeyCancel(selectionKey);
 				return;
 			}
 
@@ -388,7 +388,7 @@ public class NioLongConnectionServer {
 
 			for (final Long k : delete) {
 				final SS ss = SOCKET_CHANNEL_MAP.remove(k);
-				synchronized (ss.getSocketChannel()) {
+				synchronized (ss.getSelectionKey()) {
 					try {
 
 						if (ss.getSocketChannel().isOpen()) {
@@ -451,7 +451,7 @@ public class NioLongConnectionServer {
 	}
 
 	public static void response(final ZRequest request, final TaskRequest taskRequest) {
-		synchronized (taskRequest.getSocketChannel()) {
+//		synchronized (taskRequest.getSelectionKey()) {
 
 			try {
 				ReqeustInfo.set(request);
@@ -499,24 +499,21 @@ public class NioLongConnectionServer {
 			} finally {
 				ReqeustInfo.remove();
 			}
-		}
+//		}
 
 	}
 
 	public static void closeSocketChannelAndKeyCancel(final SelectionKey selectionKey) {
 
-		try {
-			if (selectionKey != null) {
+		synchronized (selectionKey) {
+			try {
 				selectionKey.cancel();
+				selectionKey.channel().close();
+			} catch (final IOException e) {
+				e.printStackTrace();
 			}
-
-			final SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
-			if (socketChannel != null) {
-				socketChannel.close();
-			}
-		} catch (final IOException e) {
-			e.printStackTrace();
 		}
+
 	}
 
 	/**
