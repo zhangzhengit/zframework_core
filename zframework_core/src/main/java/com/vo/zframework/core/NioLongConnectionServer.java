@@ -107,6 +107,8 @@ public class NioLongConnectionServer {
 
 		while (true) {
 			try {
+				// FIXME 2026年5月19日 20:42:14 zhangzhen : 还是不行，继续测试1.4亿次后停止，下面这行又一直返回136了
+//				当前k = 141451000	qps = 8006.118227201558 URL = http://192.168.88.148:200/asyncL
 				final int select = this.selector.select();
 				if (printNioSelect) {
 					LOG.debug("select={}", select);
