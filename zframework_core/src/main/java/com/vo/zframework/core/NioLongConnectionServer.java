@@ -132,11 +132,14 @@ public class NioLongConnectionServer {
 					final SelectionKey selectionKey = iterator.next();
 					iterator.remove();
 
-					if (!selectionKey.isValid()) {
-						continue;
-					}
-
 					try {
+						if (!selectionKey.isValid()) {
+							continue;
+						}
+
+						// FIXME 2026年5月19日 10:05:59 zhangzhen : 下面两个sk.XX方法报CancelledKeyException也没关系
+						// 这个try里的就不加 sync(sKey)了
+
 						if (selectionKey.isAcceptable()) {
 							handleAccept(selectionKey, this.selector);
 						} else if (selectionKey.isReadable()) {
@@ -195,7 +198,11 @@ public class NioLongConnectionServer {
 			final String tName = SERVER_CONFIGURATIONPROPERTIES.getThreadName();
 			this.ves.execute(() -> {
 				Thread.currentThread().setName(tName + VT_N.incrementAndGet());
-				this.action(selectionKey);
+				try {
+					this.action(selectionKey);
+				} finally {
+					SK.setSelectionKeyIDLE(selectionKey);
+				}
 			});
 		}
 	}
@@ -211,17 +218,20 @@ public class NioLongConnectionServer {
 		}
 
 		for (final SelectionKey oldSelectionKey : oldSelector.keys()) {
-			if (!oldSelectionKey.isValid()) {
-				continue;
-			}
-			try {
-				final int oldInterestOps = oldSelectionKey.interestOps();
-				final Object attachment = oldSelectionKey.attachment();
-				oldSelectionKey.cancel();
-				oldSelectionKey.channel().register(newSelector, oldInterestOps, attachment);
-			} catch (final ClosedChannelException e) {
-				e.printStackTrace();
-				continue;
+			synchronized (oldSelectionKey) {
+				if (!oldSelectionKey.isValid()) {
+					continue;
+				}
+
+				try {
+					final int oldInterestOps = oldSelectionKey.interestOps();
+					final Object attachment = oldSelectionKey.attachment();
+					oldSelectionKey.cancel();
+					oldSelectionKey.channel().register(newSelector, oldInterestOps, attachment);
+				} catch (final ClosedChannelException e) {
+					e.printStackTrace();
+					continue;
+				}
 			}
 		}
 		try {
@@ -269,61 +279,50 @@ public class NioLongConnectionServer {
 			return;
 		}
 
-		try {
-			if (array == null) {
-//				LOG.error("arrayNull了,开始close");
-//				NioLongConnectionServer.closeSocketChannelAndKeyCancel(selectionKey);
-				return;
+		if (array == null) {
+			return;
+		}
+
+		if (!NioLongConnectionServer.allow()) {
+			try {
+				NioLongConnectionServer.response429Async(selectionKey,
+						SERVER_CONFIGURATIONPROPERTIES.getQpsExceedMessage());
+			} catch (final Exception e) {
+				final String message = Task.gExceptionMessage(e);
+
+				LOG.error("NioLongConnectionServer.response429Async异常,message={}", message);
+				// 响应429不需要关闭连接
+				// closeSocketChannelAndKeyCancel(selectionKey);
 			}
 
-			if (!NioLongConnectionServer.allow()) {
-				try {
-					NioLongConnectionServer.response429Async(selectionKey,
-							SERVER_CONFIGURATIONPROPERTIES.getQpsExceedMessage());
-				} catch (final Exception e) {
-					final String message = Task.gExceptionMessage(e);
+		} else {
 
-					LOG.error("NioLongConnectionServer.response429Async异常,message={}", message);
-					// 响应429不需要关闭连接
-					// closeSocketChannelAndKeyCancel(selectionKey);
+			try {
+				this.response(selectionKey, array);
+			} catch (final Exception e) {
+
+				final ZControllerAdviceActuator a = ZContext.getBean(ZControllerAdviceActuator.class);
+				final Object r = a.execute(e);
+
+				final Integer httpStatus = ZControllerAdviceThrowable.findHttpStatus(e);
+				final ZResponse response = new ZResponse(selectionKey)
+						.httpStatus(httpStatus != null ? httpStatus : HttpStatusEnum.HTTP_500.getCode())
+						.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
+						.body(J.toJSONString(r));
+
+				final String message = Task.gExceptionMessage(e);
+				LOG.error("this.response(selectionKey, array)异常,e.class={},httpStatus={},r={},message={}",
+						e.getClass().getCanonicalName(),
+						httpStatus,
+						r,
+						message);
+
+				response.write();
+
+				if (e instanceof IOException) {
+					closeSocketChannelAndKeyCancel(selectionKey);
 				}
 
-			} else {
-
-				try {
-					this.response(selectionKey, array);
-				} catch (final Exception e) {
-
-					final ZControllerAdviceActuator a = ZContext.getBean(ZControllerAdviceActuator.class);
-					final Object r = a.execute(e);
-
-					final Integer httpStatus = ZControllerAdviceThrowable.findHttpStatus(e);
-					final ZResponse response = new ZResponse(selectionKey)
-							.httpStatus(httpStatus != null ? httpStatus : HttpStatusEnum.HTTP_500.getCode())
-							.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
-							.body(J.toJSONString(r));
-
-					final String message = Task.gExceptionMessage(e);
-					LOG.error("this.response(selectionKey, array)异常,e.class={},httpStatus={},r={},message={}",
-							e.getClass().getCanonicalName(),
-							httpStatus,
-							r,
-							message);
-
-					response.write();
-
-					if (e instanceof IOException) {
-						closeSocketChannelAndKeyCancel(selectionKey);
-					}
-
-				}
-			}
-
-		} finally {
-			if (selectionKey.isValid()) {
-				synchronized (selectionKey) {
-					selectionKey.attach(SKStatusEnum.IDLE);
-				}
 			}
 		}
 	}
@@ -388,20 +387,13 @@ public class NioLongConnectionServer {
 
 			for (final Long k : delete) {
 				final SS ss = SOCKET_CHANNEL_MAP.remove(k);
-				synchronized (ss.getSelectionKey()) {
-					try {
+				try {
+					SK.closeSocketChannelAndSelectionKeyCancel(ss.getSelectionKey());
+					// LOG.debug("长连接超时({}秒)已关闭.当前剩余长连接数[{}]个", keepAliveTimeout,
+					// SOCKET_CHANNEL_MAP.size());
 
-						if (ss.getSocketChannel().isOpen()) {
-							ss.getSocketChannel().close();
-						}
-
-						ss.getSelectionKey().cancel();
-						//						LOG.info("长连接超时({}秒)已关闭.当前剩余长连接数[{}]个", keepAliveTimeout, SOCKET_CHANNEL_MAP.size());
-
-						SOCKET_CHANNEL_MAP.remove(k);
-					} catch (final IOException e) {
-						e.printStackTrace();
-					}
+				} catch (final Exception e) {
+					continue;
 				}
 			}
 
@@ -451,69 +443,58 @@ public class NioLongConnectionServer {
 	}
 
 	public static void response(final ZRequest request, final TaskRequest taskRequest) {
-//		synchronized (taskRequest.getSelectionKey()) {
 
-			try {
-				ReqeustInfo.set(request);
-				final Task task = new Task(taskRequest.getSelectionKey());
-				final String contentType = request.getContentType();
-				if (STU.isNotEmpty(contentType)
-						&& contentType.toLowerCase().startsWith(ContentTypeEnum.MULTIPART_FORM_DATA.getType().toLowerCase())) {
-					// setOriginalRequestBytes方法会导致qps降低，FORM_DATA 才set
-					// 后续解析需要，或是不需要，再看.
-					request.setOriginalRequestBytes(taskRequest.getRequestData());
-				}
-
-				if (taskRequest.getSocketChannel().isOpen()) {
-					NioLongConnectionServer.response(taskRequest.getSelectionKey(), request, task);
-				}
-
-			} catch (final Exception e) {
-
-				// 这个catch里 真正处理 response里的异常，用统一配置的异常处理器来处理
-				final ZControllerAdviceActuator a = ZContext.getBean(ZControllerAdviceActuator.class);
-				final Object r = a.execute(e);
-
-				final Integer httpStatus = ZControllerAdviceThrowable.findHttpStatus(e);
-				final ZResponse response =
-						new ZResponse(taskRequest.getSelectionKey())
-						.httpStatus(httpStatus != null ? httpStatus : HttpStatusEnum.HTTP_500.getCode())
-						.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
-						.body(J.toJSONString(r));
-
-				if (SERVER_CONFIGURATIONPROPERTIES.isResponseZSessionId()) {
-					NioLongConnectionServer.setZSessionId(request, response);
-				}
-
-				response.write();
-
-				if (e instanceof IOException) {
-					final String message = Task.gExceptionMessage(e);
-					LOG.error("responseIOException异常,message={}", message);
-					NioLongConnectionServer.closeSocketChannelAndKeyCancel(taskRequest.getSelectionKey());
-				} else {
-					final String message = Task.gExceptionMessage(e);
-					LOG.error("response业务异常,message={}", message);
-				}
-
-			} finally {
-				ReqeustInfo.remove();
+		try {
+			ReqeustInfo.set(request);
+			final Task task = new Task(taskRequest.getSelectionKey());
+			final String contentType = request.getContentType();
+			if (STU.isNotEmpty(contentType)
+					&& contentType.toLowerCase().startsWith(ContentTypeEnum.MULTIPART_FORM_DATA.getType().toLowerCase())) {
+				// setOriginalRequestBytes方法会导致qps降低，FORM_DATA 才set
+				// 后续解析需要，或是不需要，再看.
+				request.setOriginalRequestBytes(taskRequest.getRequestData());
 			}
-//		}
+
+			if (taskRequest.getSocketChannel().isOpen()) {
+				NioLongConnectionServer.response(taskRequest.getSelectionKey(), request, task);
+			}
+
+		} catch (final Exception e) {
+
+			// 这个catch里 真正处理 response里的异常，用统一配置的异常处理器来处理
+			final ZControllerAdviceActuator a = ZContext.getBean(ZControllerAdviceActuator.class);
+			final Object r = a.execute(e);
+
+			final Integer httpStatus = ZControllerAdviceThrowable.findHttpStatus(e);
+			final ZResponse response =
+					new ZResponse(taskRequest.getSelectionKey())
+					.httpStatus(httpStatus != null ? httpStatus : HttpStatusEnum.HTTP_500.getCode())
+					.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
+					.body(J.toJSONString(r));
+
+			if (SERVER_CONFIGURATIONPROPERTIES.isResponseZSessionId()) {
+				NioLongConnectionServer.setZSessionId(request, response);
+			}
+
+			response.write();
+
+			if (e instanceof IOException) {
+				final String message = Task.gExceptionMessage(e);
+				LOG.error("responseIOException异常,message={}", message);
+				NioLongConnectionServer.closeSocketChannelAndKeyCancel(taskRequest.getSelectionKey());
+			} else {
+				final String message = Task.gExceptionMessage(e);
+				LOG.error("response业务异常,message={}", message);
+			}
+
+		} finally {
+			ReqeustInfo.remove();
+		}
 
 	}
 
 	public static void closeSocketChannelAndKeyCancel(final SelectionKey selectionKey) {
-
-		synchronized (selectionKey) {
-			try {
-				selectionKey.cancel();
-				selectionKey.channel().close();
-			} catch (final IOException e) {
-				e.printStackTrace();
-			}
-		}
-
+		SK.closeSocketChannelAndSelectionKeyCancel(selectionKey);
 	}
 
 	/**
