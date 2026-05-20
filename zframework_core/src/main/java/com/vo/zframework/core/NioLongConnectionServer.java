@@ -255,6 +255,7 @@ public class NioLongConnectionServer {
 		try {
 			array = HTTPProcessor.process(selectionKey);
 		} catch (final Exception e) {
+			SK.setSelectionKeyIDLE(selectionKey);
 
 			final ZControllerAdviceActuator a = ZContext.getBean(ZControllerAdviceActuator.class);
 			final Object r = a.execute(e);
@@ -279,6 +280,8 @@ public class NioLongConnectionServer {
 			}
 
 			return;
+		} finally {
+			SK.setSelectionKeyIDLE(selectionKey);
 		}
 
 		if (array == null) {
@@ -302,6 +305,7 @@ public class NioLongConnectionServer {
 			try {
 				this.response(selectionKey, array);
 			} catch (final Exception e) {
+				SK.setSelectionKeyIDLE(selectionKey);
 
 				final ZControllerAdviceActuator a = ZContext.getBean(ZControllerAdviceActuator.class);
 				final Object r = a.execute(e);
@@ -325,6 +329,8 @@ public class NioLongConnectionServer {
 					closeSocketChannelAndKeyCancel(selectionKey);
 				}
 
+			} finally {
+				SK.setSelectionKeyIDLE(selectionKey);
 			}
 		}
 	}

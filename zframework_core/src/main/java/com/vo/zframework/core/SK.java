@@ -38,11 +38,11 @@ public class SK {
 
 	public static void setSelectionKeyIDLE(final SelectionKey selectionKey) {
 
-		if (selectionKey.isValid()) {
+//		if (selectionKey.isValid()) {
 			synchronized (selectionKey) {
 				selectionKey.attach(SKStatusEnum.IDLE);
 			}
-		}
+//		}
 
 	}
 
