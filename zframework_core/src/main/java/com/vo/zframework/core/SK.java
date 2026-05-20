@@ -40,7 +40,11 @@ public class SK {
 
 //		if (selectionKey.isValid()) {
 			synchronized (selectionKey) {
-				selectionKey.attach(SKStatusEnum.IDLE);
+				final Object attachment = selectionKey.attachment();
+				final ConnectionState state = (ConnectionState) attachment;
+				state.setLastActiveTime(System.currentTimeMillis());
+				state.setStatusEnum(SKStatusEnum.IDLE);
+//				selectionKey.attach(SKStatusEnum.IDLE);
 			}
 //		}
 

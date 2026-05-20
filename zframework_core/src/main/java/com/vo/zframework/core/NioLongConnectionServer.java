@@ -8,10 +8,9 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.spi.SelectorProvider;
-import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
@@ -21,6 +20,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -101,15 +101,16 @@ public class NioLongConnectionServer {
 
 		ZContext.addBean(this.requestHandler.getClass(), this.requestHandler);
 
-		keepAliveTimeoutJOB();
+		this.keepAliveTimeoutJOB();
 
 		this.start(serverPort);
 
 		while (true) {
+			 int select= -1;
 			try {
 				// FIXME 2026年5月19日 20:42:14 zhangzhen : 还是不行，继续测试1.4亿次后停止，下面这行又一直返回136了
 //				当前k = 141451000	qps = 8006.118227201558 URL = http://192.168.88.148:200/asyncL
-				final int select = this.selector.select();
+				select = this.selector.select();
 				if (printNioSelect) {
 					LOG.debug("select={}", select);
 				}
@@ -129,24 +130,34 @@ public class NioLongConnectionServer {
 			final Set<SelectionKey> selectedKeys = this.selector.selectedKeys();
 			final Iterator<SelectionKey> iterator = selectedKeys.iterator();
 
+			int read = 0;
+			int accept = 0;
+
+			final AtomicInteger readSTrue = new AtomicInteger(0);
+			final AtomicInteger readSFalse = new AtomicInteger(0);
+
 			try {
 				while (iterator.hasNext()) {
 					final SelectionKey selectionKey = iterator.next();
 					iterator.remove();
 
 					try {
-						if (!selectionKey.isValid()) {
-							continue;
+						synchronized (selectionKey) {
+							if (!selectionKey.isValid()) {
+								continue;
+							}
 						}
-
-						// FIXME 2026年5月19日 10:05:59 zhangzhen : 下面两个sk.XX方法报CancelledKeyException也没关系
-						// 这个try里的就不加 sync(sKey)了
+							// FIXME 2026年5月19日 10:05:59 zhangzhen : 下面两个sk.XX方法报CancelledKeyException也没关系
+							// 这个try里的就不加 sync(sKey)了
 
 						if (selectionKey.isAcceptable()) {
 							handleAccept(selectionKey, this.selector);
+							accept++;
 						} else if (selectionKey.isReadable()) {
-							this.handleRead(selectionKey);
+							this.handleRead(selectionKey, readSFalse, readSTrue);
+							read++;
 						}
+
 					} catch (final Exception e) {
 						closeSocketChannelAndKeyCancel(selectionKey);
 						final String message = Task.gExceptionMessage(e);
@@ -155,6 +166,23 @@ public class NioLongConnectionServer {
 					}
 				}
 			} finally {
+				if (printNioSelect) {
+					LOG.debug("read ={}", read);
+					LOG.debug("accept ={}", accept);
+					LOG.debug("readSTrue ={}", readSTrue);
+					LOG.debug("readSFalse ={}", readSFalse);
+
+					if (readSFalse.get() == select) {
+//						LOG.debug("readSFalse ={}", readSFalse);
+						final long attNullCount = selectedKeys.stream().filter(k-> k.attachment() == null).count();
+						final long attReadingCount = selectedKeys.stream().filter(k-> k.attachment() == SKStatusEnum.READING).count();
+						final long attIDLECount = selectedKeys.stream().filter(k-> k.attachment() == SKStatusEnum.IDLE).count();
+
+						LOG.debug("readSFalse==select.attNullCount={},attReadingCount={},attIDLECount={}",
+								attNullCount,attReadingCount,attIDLECount);
+
+					}
+				}
 				selectedKeys.clear();
 			}
 
@@ -180,7 +208,12 @@ public class NioLongConnectionServer {
 		this.serverStarted.set(true);
 	}
 
-	private void handleRead(final SelectionKey selectionKey) {
+	private void handleRead(final SelectionKey selectionKey, final AtomicInteger fa, final AtomicInteger t) {
+
+		if (!selectionKey.isValid()) {
+			return;
+		}
+
 		final SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
 		if (!socketChannel.isConnected() || !socketChannel.isOpen()) {
 			closeSocketChannelAndKeyCancel(selectionKey);
@@ -190,13 +223,31 @@ public class NioLongConnectionServer {
 		boolean shouldProcess = false;
 		synchronized (selectionKey) {
 			final Object att = selectionKey.attachment();
-			if (att != SKStatusEnum.READING) {
-				selectionKey.attach(SKStatusEnum.READING);
+
+			// 2
+			if (att == null) {
+				final ConnectionState state = new ConnectionState();
+				state.setLastActiveTime(System.currentTimeMillis());
+				state.setStatusEnum(SKStatusEnum.READING);
+				selectionKey.attach(state);
 				shouldProcess = true;
+			} else {
+				final ConnectionState state = (ConnectionState) att;
+				if (state.getStatusEnum() != SKStatusEnum.READING) {
+					state.setStatusEnum(SKStatusEnum.READING);
+					shouldProcess = true;
+				}
 			}
+
+			// 1
+//			if (att != SKStatusEnum.READING) {
+//				selectionKey.attach(SKStatusEnum.READING);
+//				shouldProcess = true;
+//			}
 		}
 
 		if (shouldProcess) {
+			t.incrementAndGet();
 			final String tName = SERVER_CONFIGURATIONPROPERTIES.getThreadName();
 			this.ves.execute(() -> {
 				Thread.currentThread().setName(tName + VT_N.incrementAndGet());
@@ -206,6 +257,8 @@ public class NioLongConnectionServer {
 					SK.setSelectionKeyIDLE(selectionKey);
 				}
 			});
+		} else {
+			fa.incrementAndGet();
 		}
 	}
 
@@ -285,6 +338,7 @@ public class NioLongConnectionServer {
 		}
 
 		if (array == null) {
+//			LOG.error("arrayNull");
 			return;
 		}
 
@@ -371,39 +425,62 @@ public class NioLongConnectionServer {
 		.write();
 	}
 
-	private static void keepAliveTimeoutJOB() {
+	private  void keepAliveTimeoutJOB() {
 
 		final int keepAliveTimeout = SERVER_CONFIGURATIONPROPERTIES.getKeepAliveTimeout();
-		LOG.info("长连接超时任务启动,keepAliveTimeout=[{}]秒", keepAliveTimeout);
+		LOG.debug("长连接超时任务启动,keepAliveTimeout=[{}]秒", keepAliveTimeout);
 
 		TIMEOUT_ZE.scheduleAtFixedRate(() -> {
 
-			if (SOCKET_CHANNEL_MAP.isEmpty()) {
-				return;
-			}
-
-			final Set<Long> keySet = SOCKET_CHANNEL_MAP.keySet();
-
-			final List<Long> delete = new ArrayList<>(10);
+			// 2
+			final Set<SelectionKey> set = new HashSet<>(this.selector.keys());
+//			LOG.debug("keepAliveTimeoutJOB开始执行.selector.keys().size={}", set.size());
 
 			final long now = System.currentTimeMillis();
-			for (final long key : keySet) {
-				if ((now - key) >= (keepAliveTimeout * 1000)) {
-					delete.add(key);
-				}
-			}
-
-			for (final Long k : delete) {
-				final SS ss = SOCKET_CHANNEL_MAP.remove(k);
-				try {
-					SK.closeSocketChannelAndSelectionKeyCancel(ss.getSelectionKey());
-					// LOG.debug("长连接超时({}秒)已关闭.当前剩余长连接数[{}]个", keepAliveTimeout,
-					// SOCKET_CHANNEL_MAP.size());
-
-				} catch (final Exception e) {
+			for (final SelectionKey key : set) {
+				if (!key.isValid()) {
 					continue;
 				}
+				final ConnectionState state = (ConnectionState) key.attachment();
+
+				if ((state != null) && ((now - state.lastActiveTime) > (keepAliveTimeout * 1000))) {
+
+//					LOG.debug("keepAliveTimeoutJOB.sKey超时,sKey={}", key);
+					closeSocketChannelAndKeyCancel(key);
+				}
 			}
+
+//			LOG.debug("keepAliveTimeoutJOB之行结束.selector.keys().size={}", set.size());
+
+
+			// 1
+
+//			if (SOCKET_CHANNEL_MAP.isEmpty()) {
+//				return;
+//			}
+//
+//			final Set<Long> keySet = SOCKET_CHANNEL_MAP.keySet();
+//
+//			final List<Long> delete = new ArrayList<>(10);
+//
+//			final long now = System.currentTimeMillis();
+//			for (final long key : keySet) {
+//				if ((now - key) >= (keepAliveTimeout * 1000)) {
+//					delete.add(key);
+//				}
+//			}
+//
+//			for (final Long k : delete) {
+//				final SS ss = SOCKET_CHANNEL_MAP.remove(k);
+//				try {
+//					SK.closeSocketChannelAndSelectionKeyCancel(ss.getSelectionKey());
+//					// LOG.debug("长连接超时({}秒)已关闭.当前剩余长连接数[{}]个", keepAliveTimeout,
+//					// SOCKET_CHANNEL_MAP.size());
+//
+//				} catch (final Exception e) {
+//					continue;
+//				}
+//			}
 
 		}, 1, 1, TimeUnit.SECONDS);
 	}
@@ -447,6 +524,16 @@ public class NioLongConnectionServer {
 			LOG.error("socketChannel.register异常,message={}", message);
 
 		}
+
+//		final Object att = selectionKey.attachment();
+//		if (att != SKStatusEnum.READING) {
+//			selectionKey.attach(SKStatusEnum.READING);
+//		}
+//
+//		final ConnectionState state= new ConnectionState();
+//		state.setLastActiveTime(System.currentTimeMillis());
+//		state.setStatusEnum(SKStatusEnum.IDLE);
+//		selectionKey.attach(state);
 
 	}
 
