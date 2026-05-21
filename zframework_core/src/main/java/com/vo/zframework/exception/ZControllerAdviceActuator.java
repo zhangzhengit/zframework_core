@@ -40,9 +40,6 @@ public class ZControllerAdviceActuator {
 
 		final String message = Task.gExceptionMessage(throwable);
 		LOG.error("执行异常,message={}", message);
-		// FIXME 2026年5月17日 16:21:42 zhangzhen : 压测发现上面42行异常信息：
-		// 执行异常,message= java.nio.channels.CancelledKeyException
-		// 是否在此判断IOE则关闭? 查看调用者都处理了，如果是ioe则关闭了
 
 		final ZMailNotificationConfigurationProperties mn = ZContext.getBean(ZMailNotificationConfigurationProperties.class);
 		if (mn.getEnable() && CU.isNotEmpty(mn.getReceiver())

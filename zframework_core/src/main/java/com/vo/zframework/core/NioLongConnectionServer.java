@@ -20,7 +20,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -54,6 +53,8 @@ public class NioLongConnectionServer {
 
 	private static final AtomicLong VT_N = new AtomicLong(0L);
 	private static final ServerConfigurationProperties SERVER_CONFIGURATIONPROPERTIES= ZContext.getBean(ServerConfigurationProperties.class);
+
+	private static final String THREAD_NAME = SERVER_CONFIGURATIONPROPERTIES.getThreadName();
 
 	private static final boolean ENABLE_SERVER_QPS_LIMITED = SERVER_CONFIGURATIONPROPERTIES.getQpsLimitEnabled();
 
@@ -101,16 +102,13 @@ public class NioLongConnectionServer {
 
 		ZContext.addBean(this.requestHandler.getClass(), this.requestHandler);
 
-		this.keepAliveTimeoutJOB();
+//		this.keepAliveTimeoutJOB();
 
 		this.start(serverPort);
 
 		while (true) {
-			 int select= -1;
 			try {
-				// FIXME 2026年5月19日 20:42:14 zhangzhen : 还是不行，继续测试1.4亿次后停止，下面这行又一直返回136了
-//				当前k = 141451000	qps = 8006.118227201558 URL = http://192.168.88.148:200/asyncL
-				select = this.selector.select();
+				final int select = this.selector.select();
 				if (printNioSelect) {
 					LOG.debug("select={}", select);
 				}
@@ -130,12 +128,6 @@ public class NioLongConnectionServer {
 			final Set<SelectionKey> selectedKeys = this.selector.selectedKeys();
 			final Iterator<SelectionKey> iterator = selectedKeys.iterator();
 
-			int read = 0;
-			int accept = 0;
-
-			final AtomicInteger readSTrue = new AtomicInteger(0);
-			final AtomicInteger readSFalse = new AtomicInteger(0);
-
 			try {
 				while (iterator.hasNext()) {
 					final SelectionKey selectionKey = iterator.next();
@@ -147,15 +139,13 @@ public class NioLongConnectionServer {
 								continue;
 							}
 						}
-							// FIXME 2026年5月19日 10:05:59 zhangzhen : 下面两个sk.XX方法报CancelledKeyException也没关系
-							// 这个try里的就不加 sync(sKey)了
+						// FIXME 2026年5月19日 10:05:59 zhangzhen : 下面两个sk.XX方法报CancelledKeyException也没关系
+						// 这个try里的就不加 sync(sKey)了
 
 						if (selectionKey.isAcceptable()) {
 							handleAccept(selectionKey, this.selector);
-							accept++;
 						} else if (selectionKey.isReadable()) {
-							this.handleRead(selectionKey, readSFalse, readSTrue);
-							read++;
+							this.handleRead(selectionKey);
 						}
 
 					} catch (final Exception e) {
@@ -166,23 +156,6 @@ public class NioLongConnectionServer {
 					}
 				}
 			} finally {
-				if (printNioSelect) {
-					LOG.debug("read ={}", read);
-					LOG.debug("accept ={}", accept);
-					LOG.debug("readSTrue ={}", readSTrue);
-					LOG.debug("readSFalse ={}", readSFalse);
-
-					if (readSFalse.get() == select) {
-//						LOG.debug("readSFalse ={}", readSFalse);
-						final long attNullCount = selectedKeys.stream().filter(k-> k.attachment() == null).count();
-						final long attReadingCount = selectedKeys.stream().filter(k-> k.attachment() == SKStatusEnum.READING).count();
-						final long attIDLECount = selectedKeys.stream().filter(k-> k.attachment() == SKStatusEnum.IDLE).count();
-
-						LOG.debug("readSFalse==select.attNullCount={},attReadingCount={},attIDLECount={}",
-								attNullCount,attReadingCount,attIDLECount);
-
-					}
-				}
 				selectedKeys.clear();
 			}
 
@@ -208,7 +181,7 @@ public class NioLongConnectionServer {
 		this.serverStarted.set(true);
 	}
 
-	private void handleRead(final SelectionKey selectionKey, final AtomicInteger fa, final AtomicInteger t) {
+	private void handleRead(final SelectionKey selectionKey) {
 
 		if (!selectionKey.isValid()) {
 			return;
@@ -224,7 +197,6 @@ public class NioLongConnectionServer {
 		synchronized (selectionKey) {
 			final Object att = selectionKey.attachment();
 
-			// 2
 			if (att == null) {
 				final ConnectionState state = new ConnectionState();
 				state.setLastActiveTime(System.currentTimeMillis());
@@ -233,32 +205,22 @@ public class NioLongConnectionServer {
 				shouldProcess = true;
 			} else {
 				final ConnectionState state = (ConnectionState) att;
-				if (state.getStatusEnum() != SKStatusEnum.READING) {
+				if (state.getStatusEnum() == SKStatusEnum.IDLE) {
 					state.setStatusEnum(SKStatusEnum.READING);
 					shouldProcess = true;
 				}
 			}
-
-			// 1
-//			if (att != SKStatusEnum.READING) {
-//				selectionKey.attach(SKStatusEnum.READING);
-//				shouldProcess = true;
-//			}
 		}
 
 		if (shouldProcess) {
-			t.incrementAndGet();
-			final String tName = SERVER_CONFIGURATIONPROPERTIES.getThreadName();
 			this.ves.execute(() -> {
-				Thread.currentThread().setName(tName + VT_N.incrementAndGet());
+				Thread.currentThread().setName(THREAD_NAME + VT_N.incrementAndGet());
 				try {
 					this.action(selectionKey);
 				} finally {
 					SK.setSelectionKeyIDLE(selectionKey);
 				}
 			});
-		} else {
-			fa.incrementAndGet();
 		}
 	}
 
@@ -579,7 +541,7 @@ public class NioLongConnectionServer {
 				NioLongConnectionServer.closeSocketChannelAndKeyCancel(taskRequest.getSelectionKey());
 			} else {
 				final String message = Task.gExceptionMessage(e);
-				LOG.error("response业务异常,message={}", message);
+//				LOG.error("response业务异常,message={}", message);
 			}
 
 		} finally {

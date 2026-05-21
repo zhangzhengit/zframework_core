@@ -6,11 +6,12 @@ package com.vo.zframework.core;
  * @author zhangzhen
  * @date 2026年5月20日 22:30:34
  */
+//FIXME 2026年5月21日 13:23:48 zhangzhen : 是否继续添加功能，如：累积当前读到的byte[] 累计执行次数等等
 public class ConnectionState {
 
-	private SKStatusEnum statusEnum;
+	private volatile SKStatusEnum statusEnum;
 
-	public long lastActiveTime;
+	public volatile long lastActiveTime;
 
 	public SKStatusEnum getStatusEnum() {
 		return this.statusEnum;
