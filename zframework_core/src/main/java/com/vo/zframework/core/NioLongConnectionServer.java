@@ -102,7 +102,7 @@ public class NioLongConnectionServer {
 
 		ZContext.addBean(this.requestHandler.getClass(), this.requestHandler);
 
-//		this.keepAliveTimeoutJOB();
+		this.keepAliveTimeoutJOB();
 
 		this.start(serverPort);
 
@@ -394,9 +394,7 @@ public class NioLongConnectionServer {
 
 		TIMEOUT_ZE.scheduleAtFixedRate(() -> {
 
-			// 2
 			final Set<SelectionKey> set = new HashSet<>(this.selector.keys());
-//			LOG.debug("keepAliveTimeoutJOB开始执行.selector.keys().size={}", set.size());
 
 			final long now = System.currentTimeMillis();
 			for (final SelectionKey key : set) {
@@ -406,43 +404,10 @@ public class NioLongConnectionServer {
 				final ConnectionState state = (ConnectionState) key.attachment();
 
 				if ((state != null) && ((now - state.lastActiveTime) > (keepAliveTimeout * 1000))) {
-
 //					LOG.debug("keepAliveTimeoutJOB.sKey超时,sKey={}", key);
 					closeSocketChannelAndKeyCancel(key);
 				}
 			}
-
-//			LOG.debug("keepAliveTimeoutJOB之行结束.selector.keys().size={}", set.size());
-
-
-			// 1
-
-//			if (SOCKET_CHANNEL_MAP.isEmpty()) {
-//				return;
-//			}
-//
-//			final Set<Long> keySet = SOCKET_CHANNEL_MAP.keySet();
-//
-//			final List<Long> delete = new ArrayList<>(10);
-//
-//			final long now = System.currentTimeMillis();
-//			for (final long key : keySet) {
-//				if ((now - key) >= (keepAliveTimeout * 1000)) {
-//					delete.add(key);
-//				}
-//			}
-//
-//			for (final Long k : delete) {
-//				final SS ss = SOCKET_CHANNEL_MAP.remove(k);
-//				try {
-//					SK.closeSocketChannelAndSelectionKeyCancel(ss.getSelectionKey());
-//					// LOG.debug("长连接超时({}秒)已关闭.当前剩余长连接数[{}]个", keepAliveTimeout,
-//					// SOCKET_CHANNEL_MAP.size());
-//
-//				} catch (final Exception e) {
-//					continue;
-//				}
-//			}
 
 		}, 1, 1, TimeUnit.SECONDS);
 	}
