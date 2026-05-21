@@ -10,6 +10,7 @@ import java.nio.channels.SocketChannel;
 import java.nio.channels.spi.SelectorProvider;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -104,7 +105,7 @@ public class NioLongConnectionServer {
 
 		ZContext.addBean(this.requestHandler.getClass(), this.requestHandler);
 
-		keepAliveTimeoutJOB();
+		this.keepAliveTimeoutJOB();
 
 		this.start(serverPort);
 
@@ -180,6 +181,11 @@ public class NioLongConnectionServer {
 	}
 
 	private void handleRead(final SelectionKey selectionKey) {
+
+		if (!selectionKey.isValid()) {
+			return;
+		}
+
 		final SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
 		if (!socketChannel.isConnected() || !socketChannel.isOpen()) {
 			closeSocketChannelAndKeyCancel(selectionKey);
@@ -189,11 +195,20 @@ public class NioLongConnectionServer {
 		boolean shouldProcess = false;
 		synchronized (selectionKey) {
 			final Object att = selectionKey.attachment();
-			if (att != SKStatusEnum.READING) {
-				selectionKey.attach(SKStatusEnum.READING);
-				shouldProcess = true;
-			}
 
+			if (att == null) {
+				final ConnectionState state = new ConnectionState();
+				state.setLastActiveTime(System.currentTimeMillis());
+				state.setStatusEnum(SKStatusEnum.READING);
+				selectionKey.attach(state);
+				shouldProcess = true;
+			} else {
+				final ConnectionState state = (ConnectionState) att;
+				if (state.getStatusEnum() == SKStatusEnum.IDLE) {
+					state.setStatusEnum(SKStatusEnum.READING);
+					shouldProcess = true;
+				}
+			}
 		}
 
 		if (shouldProcess) {
@@ -253,6 +268,8 @@ public class NioLongConnectionServer {
 			array = HTTPProcessor.process(selectionKey);
 		} catch (final Exception e) {
 
+			SK.setSelectionKeyIDLE(selectionKey);
+
 			final ZControllerAdviceActuator a = ZContext.getBean(ZControllerAdviceActuator.class);
 			final Object r = a.execute(e);
 
@@ -271,6 +288,8 @@ public class NioLongConnectionServer {
 				closeSocketChannelAndKeyCancel(selectionKey);
 			}
 
+		} finally {
+			SK.setSelectionKeyIDLE(selectionKey);
 		}
 
 		if (array == null) {
@@ -295,6 +314,8 @@ public class NioLongConnectionServer {
 				this.response(selectionKey, array);
 			} catch (final Exception e) {
 
+				SK.setSelectionKeyIDLE(selectionKey);
+
 				final ZControllerAdviceActuator a = ZContext.getBean(ZControllerAdviceActuator.class);
 				final Object r = a.execute(e);
 
@@ -313,6 +334,8 @@ public class NioLongConnectionServer {
 					closeSocketChannelAndKeyCancel(selectionKey);
 				}
 
+			} finally {
+				SK.setSelectionKeyIDLE(selectionKey);
 			}
 		}
 	}
@@ -353,32 +376,26 @@ public class NioLongConnectionServer {
 		.write();
 	}
 
-	private static void keepAliveTimeoutJOB() {
+	private void keepAliveTimeoutJOB() {
 
 		final int keepAliveTimeout = SERVER_CONFIGURATIONPROPERTIES.getKeepAliveTimeout();
-		LOG.info("长连接超时任务启动,keepAliveTimeout=[{}]秒", keepAliveTimeout);
+		LOG.debug("长连接超时任务启动,keepAliveTimeout=[{}]秒", keepAliveTimeout);
 
 		TIMEOUT_ZE.scheduleAtFixedRate(() -> {
 
-			if (SOCKET_CHANNEL_MAP.isEmpty()) {
-				return;
-			}
-
-			final Set<Long> keySet = SOCKET_CHANNEL_MAP.keySet();
-
-			final List<Long> delete = new ArrayList<>(10);
+			final Set<SelectionKey> set = new HashSet<>(this.selector.keys());
 
 			final long now = System.currentTimeMillis();
-			for (final long key : keySet) {
-				if ((now - key) >= (keepAliveTimeout * 1000)) {
-					delete.add(key);
+			for (final SelectionKey key : set) {
+				if (!key.isValid()) {
+					continue;
 				}
-			}
+				final ConnectionState state = (ConnectionState) key.attachment();
 
-			for (final Long k : delete) {
-				final SS ss = SOCKET_CHANNEL_MAP.remove(k);
-				closeSocketChannelAndKeyCancel(ss.getSelectionKey());
-				//	LOG.info("长连接超时({}秒)已关闭.当前剩余长连接数[{}]个", keepAliveTimeout, SOCKET_CHANNEL_MAP.size());
+				if ((state != null) && ((now - state.lastActiveTime) > (keepAliveTimeout * 1000))) {
+//					LOG.debug("keepAliveTimeoutJOB.sKey超时,sKey={}", key);
+					closeSocketChannelAndKeyCancel(key);
+				}
 			}
 
 		}, 1, 1, TimeUnit.SECONDS);

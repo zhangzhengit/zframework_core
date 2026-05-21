@@ -2,6 +2,7 @@ package com.vo.zframework.core;
 
 import java.io.IOException;
 import java.nio.channels.SelectionKey;
+import java.nio.channels.SocketChannel;
 
 /**
  * SelectionKey统一处理
@@ -13,12 +14,23 @@ public class SK {
 
 	public static void closeSocketChannelAndSelectionKeyCancel(final SelectionKey selectionKey) {
 
+		if (selectionKey == null) {
+			return;
+		}
+
 		synchronized (selectionKey) {
-			try {
+			if (selectionKey.isValid()) {
 				selectionKey.cancel();
-				selectionKey.channel().close();
-			} catch (final IOException e) {
-				e.printStackTrace();
+				selectionKey.selector().wakeup();
+			}
+
+			final SocketChannel channel = (SocketChannel) selectionKey.channel();
+			try {
+				if ((channel != null) && channel.isOpen()) {
+					channel.close();
+				}
+			} catch (final IOException ignored) {
+
 			}
 		}
 
@@ -26,10 +38,11 @@ public class SK {
 
 	public static void setSelectionKeyIDLE(final SelectionKey selectionKey) {
 
-		if (selectionKey.isValid()) {
-			synchronized (selectionKey) {
-				selectionKey.attach(SKStatusEnum.IDLE);
-			}
+		synchronized (selectionKey) {
+			final Object attachment = selectionKey.attachment();
+			final ConnectionState state = (ConnectionState) attachment;
+			state.setLastActiveTime(System.currentTimeMillis());
+			state.setStatusEnum(SKStatusEnum.IDLE);
 		}
 
 	}
