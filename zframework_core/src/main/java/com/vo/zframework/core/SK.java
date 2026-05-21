@@ -36,15 +36,4 @@ public class SK {
 
 	}
 
-	public static void setSelectionKeyIDLE(final SelectionKey selectionKey) {
-
-		synchronized (selectionKey) {
-			final Object attachment = selectionKey.attachment();
-			final ConnectionState state = (ConnectionState) attachment;
-			state.setLastActiveTime(System.currentTimeMillis());
-			state.setStatusEnum(SKStatusEnum.IDLE);
-		}
-
-	}
-
 }

@@ -35,6 +35,7 @@ import com.vo.zframework.http.HttpStatusEnum;
 import com.vo.zframework.http.ZCacheControl;
 import com.vo.zframework.http.ZCookie;
 import com.vo.zframework.http.ZLastModified;
+import com.vo.zframework.validator.IllegalSKAttachmentException;
 
 /**
  * NIO长连接server
@@ -83,6 +84,9 @@ public class NioLongConnectionServer {
 	int zc = 0;
 
 	public void startNIOServer(final int serverPort) {
+
+		ZContext.addBean(this.requestHandler.getClass(), this.requestHandler);
+
 		final ThreadGroup group = new ThreadGroup("nio");
 		final Thread thread = new Thread(group, () -> NioLongConnectionServer.this.startNIOServer0(serverPort));
 		thread.setName("nioT");
@@ -100,24 +104,36 @@ public class NioLongConnectionServer {
 
 	private void startNIOServer0(final int serverPort) {
 
-		ZContext.addBean(this.requestHandler.getClass(), this.requestHandler);
-
 		this.keepAliveTimeoutJOB();
 
 		this.start(serverPort);
 
 		while (true) {
+			final int select = this.select();
+			if (select == 0) {
+				continue;
+			}
+
+			final Set<SelectionKey> selectedKeys = this.selector.selectedKeys();
 			try {
-				final int select = this.selector.select();
-				if (printNioSelect) {
-					LOG.debug("select={}", select);
-				}
-				if (select == 0) {
-					this.zc++;
-					continue;
-				}
-			} catch (final IOException e) {
-				e.printStackTrace();
+				this.handleSelectedKeys(selectedKeys);
+			} finally {
+				selectedKeys.clear();
+			}
+
+		}
+	}
+
+	private int select() {
+		try {
+			final int select = this.selector.select();
+			// FIXME 2026年5月22日 05:08:16 zhangzhen : 这个开关和相关log记得都删掉。
+			// FIXME 2026年5月22日 05:08:32 zhangzhen : 要不要改为bio+虚拟线程？或者新增一个bioserver？
+			if (printNioSelect) {
+				LOG.debug("select={}", select);
+			}
+			if (select == 0) {
+				this.zc++;
 			}
 
 			if (this.zc >= ZC_THRESHOLD) {
@@ -125,40 +141,42 @@ public class NioLongConnectionServer {
 				this.zc = 0;
 			}
 
-			final Set<SelectionKey> selectedKeys = this.selector.selectedKeys();
-			final Iterator<SelectionKey> iterator = selectedKeys.iterator();
+			return select;
+		} catch (final IOException e) {
+			e.printStackTrace();
+		}
+
+		return 0;
+	}
+
+	private void handleSelectedKeys(final Set<SelectionKey> selectedKeys) {
+		final Iterator<SelectionKey> iterator = selectedKeys.iterator();
+
+		while (iterator.hasNext()) {
+			final SelectionKey selectionKey = iterator.next();
+			iterator.remove();
 
 			try {
-				while (iterator.hasNext()) {
-					final SelectionKey selectionKey = iterator.next();
-					iterator.remove();
-
-					try {
-						synchronized (selectionKey) {
-							if (!selectionKey.isValid()) {
-								continue;
-							}
-						}
-						// FIXME 2026年5月19日 10:05:59 zhangzhen : 下面两个sk.XX方法报CancelledKeyException也没关系
-						// 这个try里的就不加 sync(sKey)了
-
-						if (selectionKey.isAcceptable()) {
-							handleAccept(selectionKey, this.selector);
-						} else if (selectionKey.isReadable()) {
-							this.handleRead(selectionKey);
-						}
-
-					} catch (final Exception e) {
-						closeSocketChannelAndKeyCancel(selectionKey);
-						final String message = Task.gExceptionMessage(e);
-						LOG.error("foreachSelector_selectedKeys异常,message={}", message);
+				synchronized (selectionKey) {
+					if (!selectionKey.isValid()) {
 						continue;
 					}
 				}
-			} finally {
-				selectedKeys.clear();
-			}
+				// FIXME 2026年5月19日 10:05:59 zhangzhen : 下面两个sk.XX方法报CancelledKeyException也没关系
+				// 这个try里的就不加 sync(sKey)了
 
+				if (selectionKey.isAcceptable()) {
+					handleAccept(selectionKey, this.selector);
+				} else if (selectionKey.isReadable()) {
+					this.handleRead(selectionKey);
+				}
+
+			} catch (final Exception e) {
+				closeSocketChannelAndKeyCancel(selectionKey);
+				final String message = Task.gExceptionMessage(e);
+				LOG.error("foreachSelector_selectedKeys异常,message={}", message);
+				continue;
+			}
 		}
 	}
 
@@ -195,33 +213,40 @@ public class NioLongConnectionServer {
 
 		boolean shouldProcess = false;
 		synchronized (selectionKey) {
-			final Object att = selectionKey.attachment();
 
+			final Object att = selectionKey.attachment();
 			if (att == null) {
 				final ConnectionState state = new ConnectionState();
-				state.setLastActiveTime(System.currentTimeMillis());
-				state.setStatusEnum(SKStatusEnum.READING);
+				state.startReading();
 				selectionKey.attach(state);
 				shouldProcess = true;
-			} else {
-				final ConnectionState state = (ConnectionState) att;
-				if (state.getStatusEnum() == SKStatusEnum.IDLE) {
-					state.setStatusEnum(SKStatusEnum.READING);
+			} else if ((att instanceof final ConnectionState state)) {
+				if (state.isIdle()) {
+					state.startReading();
 					shouldProcess = true;
 				}
+			} else {
+				throw new IllegalSKAttachmentException(att.getClass().getCanonicalName());
 			}
+
 		}
 
 		if (shouldProcess) {
 			this.ves.execute(() -> {
-				Thread.currentThread().setName(THREAD_NAME + VT_N.incrementAndGet());
+				Thread.currentThread().setName(gTName());
 				try {
 					this.action(selectionKey);
 				} finally {
-					SK.setSelectionKeyIDLE(selectionKey);
+					synchronized (selectionKey) {
+						((ConnectionState) selectionKey.attachment()).finishReading();
+					}
 				}
 			});
 		}
+	}
+
+	private static String gTName() {
+		return THREAD_NAME + VT_N.incrementAndGet();
 	}
 
 	private void rebuildSelector() {
@@ -270,7 +295,6 @@ public class NioLongConnectionServer {
 		try {
 			array = HTTPProcessor.process(selectionKey);
 		} catch (final Exception e) {
-			SK.setSelectionKeyIDLE(selectionKey);
 
 			final ZControllerAdviceActuator a = ZContext.getBean(ZControllerAdviceActuator.class);
 			final Object r = a.execute(e);
@@ -295,12 +319,9 @@ public class NioLongConnectionServer {
 			}
 
 			return;
-		} finally {
-			SK.setSelectionKeyIDLE(selectionKey);
 		}
 
 		if (array == null) {
-//			LOG.error("arrayNull");
 			return;
 		}
 
@@ -321,7 +342,6 @@ public class NioLongConnectionServer {
 			try {
 				this.response(selectionKey, array);
 			} catch (final Exception e) {
-				SK.setSelectionKeyIDLE(selectionKey);
 
 				final ZControllerAdviceActuator a = ZContext.getBean(ZControllerAdviceActuator.class);
 				final Object r = a.execute(e);
@@ -345,8 +365,6 @@ public class NioLongConnectionServer {
 					closeSocketChannelAndKeyCancel(selectionKey);
 				}
 
-			} finally {
-				SK.setSelectionKeyIDLE(selectionKey);
 			}
 		}
 	}
