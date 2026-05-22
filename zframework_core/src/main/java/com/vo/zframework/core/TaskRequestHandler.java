@@ -60,7 +60,12 @@ public final class TaskRequestHandler {
 	public void handle(final TaskRequest taskRequest) {
 
 		try {
+			// 2
+//			final Object attachment = taskRequest.getSelectionKey().attachment();
+//			final ConnectionState state = (ConnectionState) attachment;
+//			final ZRequest request =state.getRequest();
 
+			// 1
 			final ZRequest request = BodyReader.parseHeader(taskRequest);
 
 			if (showHttpHeader) {

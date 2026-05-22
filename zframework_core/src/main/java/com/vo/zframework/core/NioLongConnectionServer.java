@@ -239,6 +239,9 @@ public class NioLongConnectionServer {
 				} finally {
 					synchronized (selectionKey) {
 						((ConnectionState) selectionKey.attachment()).finishReading();
+						if (selectionKey.isValid()) {
+							selectionKey.attach(null);
+						}
 					}
 				}
 			});

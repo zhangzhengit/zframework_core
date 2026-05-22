@@ -12,6 +12,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.security.SecureRandom;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -61,11 +62,14 @@ import com.vo.zframework.http.HttpStatusEnum;
 @ZComponent
 public class DefaultHttpReader {
 
+	static ZLog2 LOG = ZLog2.getInstance();
+
+	private static final int SOCKET_CHANNEL_CLOSED = -1;
+
 	private static final int OPTIONS_LENGTH = MethodEnum.OPTIONS.name().length();
 
 	private static final int GET_LENGTH = MethodEnum.GET.name().length();
 
-	static ZLog2 LOG = ZLog2.getInstance();
 
 	private static final int _1024 = 1024;
 
@@ -77,7 +81,8 @@ public class DefaultHttpReader {
 
 		final ZArray array = ar.getArray();
 
-		final int cLIndex = BodyReader.search(array.get(), HeaderEnum.CONTENT_LENGTH.getName(), 1, 0);
+		final byte[] arrarGET = array.get();
+		final int cLIndex = BodyReader.search(arrarGET, HeaderEnum.CONTENT_LENGTH.getName(), 1, 0);
 		if (cLIndex <= -1) {
 			return array;
 		}
@@ -85,11 +90,11 @@ public class DefaultHttpReader {
 		// 读header时读到的字节数比header截止符号(\r\n\r\n)的index还大，说明读到的不只有header还有下面的body部分
 		if (ar.getArray().length() > ar.getHeaderEndIndex()) {
 
-			final int cLIndexRN = BodyReader.search(array.get(), STU.CRLF, 1, cLIndex);
+			final int cLIndexRN = BodyReader.search(arrarGET, STU.CRLF, 1, cLIndex);
 			if (cLIndexRN > cLIndex) {
-				final byte[] copyOfRange = Arrays.copyOfRange(array.get(), cLIndex, cLIndexRN);
-				final String contentTypeLine = new String(copyOfRange);
-				final int contentLength = checkContentLength(contentTypeLine);
+				final byte[] copyOfRangeCL = Arrays.copyOfRange(arrarGET, cLIndex, cLIndexRN);
+				final String contentLengthLine = new String(copyOfRangeCL);
+				final int contentLength = checkContentLength(contentLengthLine);
 				if (contentLength <= 0) {
 					return array;
 				}
@@ -119,27 +124,41 @@ public class DefaultHttpReader {
 					return array;
 				}
 
+
+				// 到此header都读完了，不判断是否包含Content-Type了，除非是恶意制造的非法请求才可能没有CT
+				final int cTIndex = BodyReader.search(arrarGET, HeaderEnum.CONTENT_TYPE.getName(), 1, 0);
+				final int cTRNIndex = BodyReader.search(arrarGET, STU.CRLF, 1, cTIndex);
+
+				final byte[] copyOfRangeCT = Arrays.copyOfRange(arrarGET,
+						cTIndex, cTRNIndex);
+				final String contentTypeLine = new String(copyOfRangeCT);
+				final String ct = checkContentType(contentTypeLine);
+				System.out.println("ContentType = " + ct);
+				if (!ContentTypeEnum.MULTIPART_FORM_DATA.getType().equals(ct)) {
+					// 非 MULTIPART_FORM_DATA的都读入内存，MULTIPART_FORM_DATA的再判断配置大小，选择读入内存还是临时文件
+					readBodyToMemory(selectionKey, array, newNeedReadBodyLength);
+					return array;
+				}
+
 //				final int uploadFileToTempSize = SERVER_CONFIGURATIONPROPERTIES.getUploadFileToTempSize();
 				// 文件写入临时文件之前，把读header时多读出的超出header的部分删掉
 				final int writeArrayLength = array.length() - ar.getHeaderEndIndex() - BodyReader.RN_BYTES_LENGTH
 						- BodyReader.RN_BYTES_LENGTH;
 
 				// 2 直接全部写入临时文件
-				final TF tf = readBodyToTempFile(selectionKey, array, newNeedReadBodyLength, writeArrayLength);
-				array.setTf(tf);
+//				final TF tf = readBodyToTempFile(selectionKey, array, newNeedReadBodyLength, writeArrayLength);
+//				array.setTf(tf);
 
 				// 1 根据配置写入内存或文件
-//				if (newNeedReadBodyLength > uploadFileToTempSize * _1024) {
-//					// 文件写入临时文件之前，把读header时多读出的超出header的部分删掉
-//					final int writeArrayLength = array.length() - ar.getHeaderEndIndex() - BodyReader.RN_BYTES_LENGTH
-//							- BodyReader.RN_BYTES_LENGTH;
-//
-//					final TF tf = readBodyToTempFile(key, socketChannel, array, newNeedReadBodyLength,
-//							writeArrayLength);
-//					array.setTf(tf);
-//				} else {
-//					readBodyToMemory(key, socketChannel, array, newNeedReadBodyLength);
-//				}
+				// FIXME 2026年5月22日 09:33:34 zhangzhen : 恢复此配置项：uploadFileToTempSize
+				final int uploadFileToTempSize = 1;
+//				if (newNeedReadBodyLength > (uploadFileToTempSize * 1)) {
+				if (newNeedReadBodyLength > (uploadFileToTempSize * _1024)) {
+					final TF tf = readBodyToTempFile(selectionKey, array, newNeedReadBodyLength, writeArrayLength);
+					array.setTf(tf);
+				} else {
+					readBodyToMemory(selectionKey, array, newNeedReadBodyLength);
+				}
 			}
 		}
 		return array;
@@ -148,14 +167,187 @@ public class DefaultHttpReader {
 
 	// FIXME 2025年11月28日 13:47:33 zhangzhen :  这个header要判断是否数值类型，
 	// 其他的也要加入各种校验
-	private static int checkContentLength(final String contentTypeLine) {
-		final long cl = Long.parseLong(contentTypeLine.split(STU.COLON)[1].trim());
+	private static int checkContentLength(final String contentLengthLine) {
+		final long cl = Long.parseLong(contentLengthLine.split(STU.COLON)[1].trim());
 		if (cl > Integer.MAX_VALUE) {
 			throw new IllegalArgumentException("Content-Length 大于 " + Integer.MAX_VALUE);
 		}
 
 		return (int) cl;
 	}
+
+	private static String checkContentType(final String contentTypeLine) {
+	return	contentTypeLine.split(STU.COLON)[1].trim();
+	}
+
+	public static void r22222Body(final SelectionKey selectionKey) {
+		System.out.println(LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t"
+				+ "DefaultHttpReader.r22222Body()");
+
+		final ConnectionState state = (ConnectionState) selectionKey.attachment();
+		final ZArray array = state.getZArray();
+
+		final boolean containsContentLength = state.containsContentLength();
+		if (!containsContentLength) {
+			// header不含Content-Length，无body
+			return;
+		}
+
+		// 读header时读到的字节数比header截止符号(\r\n\r\n)的index还大，说明读到的不只有header还有下面的body部分
+		if (array.length() > state.getHeaderEndIndex()) {
+
+			final int cLIndexRN = BodyReader.search(array.get(), STU.CRLF, 1, state.getContentLengthIndex());
+			if (cLIndexRN > state.getContentLengthIndex()) {
+				final byte[] copyOfRange = Arrays.copyOfRange(array.get(), state.getContentLengthIndex(), cLIndexRN);
+				final String contentTypeLine = new String(copyOfRange);
+				final int contentLength = checkContentLength(contentTypeLine);
+				if (contentLength <= 0) {
+					return;
+				}
+
+				final int uploadFileSize = SERVER_CONFIGURATIONPROPERTIES.getUploadFileSize();
+				if (contentLength >= (uploadFileSize * _1024)) {
+					// FIXME 2025年1月20日 下午9:12:49 zhangzhen : 又遇到问题：
+					// 比如 /upload 限制zsessiond.qps=1，则到此throw了就走不到限制qps的逻辑了，
+					// 导致可以恶意刷接口，故意上传特别大的文件来浪费服务器性能
+					// 要不要readHeader后就解析request然后去 QC.allow(API) ?
+					throw new BodyTooLargeException(HttpStatusEnum.HTTP_413.getMessage(),
+							HttpStatusEnum.HTTP_413.getCode());
+				}
+
+				// 根据Content-Length和读header多出的部分，重新计算出body需要读的字节数
+				final int bodyReadC = contentLength - (array.length() - state.getHeaderEndIndex()
+						- BodyReader.RN_BYTES_LENGTH - BodyReader.RN_BYTES_LENGTH);
+
+				// 无需再次读body了，读header时一起读出来了
+				if (bodyReadC <= 0) {
+					return;
+				}
+
+				final int newNeedReadBodyLength = bodyReadC;
+				// final int newNeedReadBodyLength = bodyReadC - BodyReader.RN_BYTES_LENGTH;
+				if (newNeedReadBodyLength <= 0) {
+					return;
+				}
+
+//				final int uploadFileToTempSize = SERVER_CONFIGURATIONPROPERTIES.getUploadFileToTempSize();
+				// 文件写入临时文件之前，把读header时多读出的超出header的部分删掉
+				final int writeArrayLength = array.length() - state.getHeaderEndIndex() - BodyReader.RN_BYTES_LENGTH
+						- BodyReader.RN_BYTES_LENGTH;
+
+				// 直接全部写入临时文件
+				final TF tf = readBodyToTempFile(selectionKey, array, newNeedReadBodyLength, writeArrayLength);
+				array.setTf(tf);
+			}
+		}
+
+	}
+
+
+
+	public static void r222222MethodAndHeaderAndBody(final SelectionKey selectionKey) {
+		synchronized (selectionKey) {
+
+			System.out.println(LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t"
+					+ "DefaultHttpReader.r222222MethodAndHeaderAndBody()");
+
+			if (!selectionKey.isValid() || !selectionKey.isReadable()) {
+				return;
+			}
+
+			final SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
+			if (!socketChannel.isOpen()) {
+				return;
+			}
+
+			final int byteBufferSize = SERVER_CONFIGURATIONPROPERTIES.getByteBufferSize();
+			final ByteBuffer byteBuffer = ByteBuffer.allocate(byteBufferSize);
+
+			final ConnectionState state = (ConnectionState) selectionKey.attachment();
+			final ZArray array = state.getZArray();
+
+			System.out.println("byteBufferSize = " + byteBufferSize);
+
+			int rC = 0;
+			while (true) {
+
+				int tR = 0;
+				try {
+					tR = socketChannel.read(byteBuffer);
+					System.out.println("tR = socketChannel.read(byteBuffer); = " + tR);
+				} catch (final IOException e1) {
+					final String message = Task.gExceptionMessage(e1);
+					LOG.error("socketChannel.read异常,message={}", message);
+					NioLongConnectionServer.closeSocketChannelAndKeyCancel(selectionKey);
+					break;
+				}
+				System.out.println("tR = " + tR);
+				if ((tR == SOCKET_CHANNEL_CLOSED) || (tR == 0)) {
+					// 连接已关闭或无数据就绪，直接return
+					NioLongConnectionServer.closeSocketChannelAndKeyCancel(selectionKey);
+					return;
+				}
+				rC++;
+
+				// 读到数据了，继续处理
+				System.out.println("array.hashCode = " + array.hashCode());
+				final ZArray za = DefaultHttpReader.addZA(byteBuffer, array);
+				state.setZArray(za);
+				System.out.println("rC = " + rC + "本次读到 = ");
+//				System.out.println(new String(a));
+
+				final boolean checkHeaderEnd = state.checkHeaderEnd();
+				if (checkHeaderEnd) {
+					System.out.println("读完了header部分，headerEndIndex = " + state.getHeaderEndIndex());
+
+					// 不break,继续读body部分
+//				break;
+					final boolean containsContentLength = state.containsContentLength();
+					if (!containsContentLength) {
+						System.out.println("无 Content-Length . 读取完了http请求了");
+						state.endHttpReading();
+						break;
+					}
+					System.out.println("有 Content-Length . Content-Length = " + state.getRequest().getContentLength());
+
+
+					if (state.checkHttpEnd()) {
+						// 读完了完整的http请求
+						final byte[] bodyBA = Arrays.copyOfRange(array.get(),
+								state.getHeaderEndIndex() + STU.CRLFCRLF.getBytes().length, array.get().length);
+						System.out.println("bodyBA.length = " + bodyBA.length);
+						System.out.println("有 Content-Length . 读取完了http请求了");
+						final String bodyS = new String(bodyBA);
+						System.out.println("bodyS = ");
+						System.out.println(bodyS);
+
+						state.endHttpReading();
+						break;
+					}
+
+				}
+
+			}
+		}
+
+	}
+
+
+//	private static int read0(final SelectionKey selectionKey, final SocketChannel socketChannel,
+//			final ByteBuffer byteBuffer) {
+//		int tR = 0;
+//		try {
+//			tR = socketChannel.read(byteBuffer);
+//			System.out.println("tR = socketChannel.read(byteBuffer); = " + tR);
+//		} catch (final IOException e1) {
+//			final String message = Task.gExceptionMessage(e1);
+//			LOG.error("socketChannel.read异常,message={}", message);
+//			NioLongConnectionServer.closeSocketChannelAndKeyCancel(selectionKey);
+//			return SOCKET_CHANNEL_CLOSED;
+//		}
+//
+//		return tR;
+//	}
 
 	private static MR readMethod(final SelectionKey selectionKey) {
 
@@ -306,6 +498,19 @@ public class DefaultHttpReader {
 		return new AR(array, headerEndIndex, socketChannel);
 	}
 
+	private static ZArray addZA(final ByteBuffer byteBuffer, final ZArray array) {
+		byteBuffer.flip();
+		if (byteBuffer.remaining() <= 0) {
+			return null;
+		}
+
+		final byte[] tempA = new byte[byteBuffer.remaining()];
+		byteBuffer.get(tempA);
+		array.add(tempA);
+		byteBuffer.clear();
+
+		return array;
+	}
 	private static byte[] add(final ByteBuffer byteBuffer, final ZArray array) {
 		byteBuffer.flip();
 		if (byteBuffer.remaining() <= 0) {
@@ -558,8 +763,7 @@ public class DefaultHttpReader {
 
 	}
 
-	private static void readBodyToMemory(final SelectionKey key, final SocketChannel socketChannel, final ZArray array,
-			final int newNeedReadBodyLength) {
+	private static void readBodyToMemory(final SelectionKey key, final ZArray array, final int newNeedReadBodyLength) {
 
 		if (newNeedReadBodyLength <= 0) {
 			return;
@@ -568,6 +772,8 @@ public class DefaultHttpReader {
 		// allocate 为需要读出的字节数，反正最终读出的都是放在内存的
 		// 不如一次读出来算了
 		final ByteBuffer bbBody = ByteBuffer.allocate(newNeedReadBodyLength);
+
+		final SocketChannel socketChannel = (SocketChannel) key.channel();
 
 		final int nioReadTimeout = SERVER_CONFIGURATIONPROPERTIES.getNioReadTimeout();
 		final long startTime = System.currentTimeMillis();
