@@ -18,6 +18,7 @@ import java.util.concurrent.ConcurrentMap;
 import com.google.common.collect.HashBasedTable;
 import com.vo.log.core.ZLog2;
 import com.vo.zframework.anno.ZComponent;
+import com.vo.zframework.anno.ZController;
 import com.vo.zframework.anno.ZRestController;
 import com.vo.zframework.anno.ZService;
 import com.vo.zframework.anno.ZValue;
@@ -49,11 +50,13 @@ public class ZValueScanner {
 		final Set<Class<?>> zcSet = ClassMap.scanPackageByAnnotation(ZComponent.class, packageName);
 		final Set<Class<?>> zc2Set = ClassMap.scanPackageByAnnotation(ZRestController.class, packageName);
 		final Set<Class<?>> zc3Set = ClassMap.scanPackageByAnnotation(ZService.class, packageName);
+		final Set<Class<?>> zc4Set = ClassMap.scanPackageByAnnotation(ZController.class, packageName);
 
-		final List<Class<?>> clist = new ArrayList<>(zcSet.size() + zc2Set.size());
+		final List<Class<?>> clist = new ArrayList<>(zcSet.size() + zc2Set.size() + zc3Set.size() + zc4Set.size());
 		clist.addAll(zcSet);
 		clist.addAll(zc2Set);
 		clist.addAll(zc3Set);
+		clist.addAll(zc4Set);
 
 		if (clist.isEmpty()) {
 			return;
@@ -65,7 +68,7 @@ public class ZValueScanner {
 				continue;
 			}
 
-			final Field[] fields = bean.getClass().getFields();
+			final Field[] fields = bean.getClass().getDeclaredFields();
 			for (final Field field : fields) {
 				inject(cls, field);
 			}

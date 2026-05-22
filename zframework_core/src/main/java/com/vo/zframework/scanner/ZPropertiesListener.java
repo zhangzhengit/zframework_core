@@ -16,6 +16,8 @@ import java.util.Enumeration;
 import java.util.Properties;
 
 import com.vo.log.core.ZLog2;
+import com.vo.zframework.configuration.AppH;
+import com.vo.zframework.configuration.EE;
 import com.vo.zframework.configuration.ZProperties;
 
 /**
@@ -83,30 +85,7 @@ public class ZPropertiesListener {
 						final String fileName = event.context().toString();
 
 						if (fileName.equals(new File(filePath).getName())) {
-							try {
-								final Properties properties = new Properties();
-
-								final FileInputStream fileInputStream = new FileInputStream(new File(filePath));
-								final InputStreamReader isr = new InputStreamReader(fileInputStream,
-										Charset.defaultCharset().displayName());
-								properties.load(isr);
-								final Enumeration<Object> keys = properties.keys();
-								while (keys.hasMoreElements()) {
-									final Object k = keys.nextElement();
-
-									final Object v = properties.get(k);
-
-									try {
-										ZValueScanner.updateValueAndValidate(String.valueOf(k), v);
-									} catch (final Exception e) {
-										e.printStackTrace();
-										continue;
-									}
-								}
-
-							} catch (final IOException e) {
-								e.printStackTrace();
-							}
+							readPAndUpdateNewValue(filePath);
 						}
 					}
 				}
@@ -119,6 +98,46 @@ public class ZPropertiesListener {
 			}
 		};
 
+	}
+
+	private static void readPAndUpdateNewValue(final String filePath) {
+
+		LOG.debug("配置文件修改了,开始更新");
+
+		final Properties properties = loadProperties(filePath);
+
+		final Enumeration<Object> keys = properties.keys();
+		while (keys.hasMoreElements()) {
+			final Object k = keys.nextElement();
+
+			final Object v = properties.get(k);
+
+			final String vS = String.valueOf(v);
+			final Object newValue = AppH.isExpression(vS) ? EE.execute(AppH.gExpression(vS)) : v;
+
+			try {
+				ZValueScanner.updateValueAndValidate(String.valueOf(k), newValue);
+			} catch (final Exception e) {
+				e.printStackTrace();
+				continue;
+			}
+		}
+	}
+
+	private static Properties loadProperties(final String filePath) {
+		// XXX 2026年5月22日 13:06:14 zhangzhen : 下面这段read的逻辑，想复用ZProperties类
+		// 但是怕又改出bug，先就这样吧
+
+		final Properties properties = new Properties();
+
+		try (final FileInputStream fileInputStream = new FileInputStream(new File(filePath));
+				InputStreamReader isr = new InputStreamReader(fileInputStream,
+						Charset.defaultCharset().displayName())) {
+			properties.load(isr);
+		} catch (final IOException e1) {
+			e1.printStackTrace();
+		}
+		return properties;
 	}
 
 }
