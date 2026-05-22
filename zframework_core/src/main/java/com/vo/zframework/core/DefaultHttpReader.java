@@ -459,9 +459,9 @@ public class DefaultHttpReader {
 
 				if (tR > 0) {
 					final byte[] a = DefaultHttpReader.add(byteBuffer, array);
-					System.out.println("rC = " + rC + "\t" + "totalBytesRead = " + totalBytesRead
-							+ "\t" + "array.length = " + array.get().length
-							);
+//					System.out.println("rC = " + rC + "\t" + "totalBytesRead = " + totalBytesRead
+//							+ "\t" + "array.length = " + array.get().length
+//							);
 					headerEndIndex = BodyReader.search(rC == 1 ? a : array.get(), STU.CRLFCRLF, 1, 4);
 					if (headerEndIndex > -1) {
 						break;
