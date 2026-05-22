@@ -126,19 +126,19 @@ public class DefaultHttpReader {
 
 
 				// 到此header都读完了，不判断是否包含Content-Type了，除非是恶意制造的非法请求才可能没有CT
-				final int cTIndex = BodyReader.search(arrarGET, HeaderEnum.CONTENT_TYPE.getName(), 1, 0);
-				final int cTRNIndex = BodyReader.search(arrarGET, STU.CRLF, 1, cTIndex);
-
-				final byte[] copyOfRangeCT = Arrays.copyOfRange(arrarGET,
-						cTIndex, cTRNIndex);
-				final String contentTypeLine = new String(copyOfRangeCT);
-				final String ct = checkContentType(contentTypeLine);
-				System.out.println("ContentType = " + ct);
-				if (!ContentTypeEnum.MULTIPART_FORM_DATA.getType().equals(ct)) {
-					// 非 MULTIPART_FORM_DATA的都读入内存，MULTIPART_FORM_DATA的再判断配置大小，选择读入内存还是临时文件
-					readBodyToMemory(selectionKey, array, newNeedReadBodyLength);
-					return array;
-				}
+//				final int cTIndex = BodyReader.search(arrarGET, HeaderEnum.CONTENT_TYPE.getName(), 1, 0);
+//				final int cTRNIndex = BodyReader.search(arrarGET, STU.CRLF, 1, cTIndex);
+//
+//				final byte[] copyOfRangeCT = Arrays.copyOfRange(arrarGET,
+//						cTIndex, cTRNIndex);
+//				final String contentTypeLine = new String(copyOfRangeCT);
+//				final String ct = checkContentType(contentTypeLine);
+//				System.out.println("ContentType = " + ct);
+//				if (!ContentTypeEnum.MULTIPART_FORM_DATA.getType().equals(ct)) {
+//					// 非 MULTIPART_FORM_DATA的都读入内存，MULTIPART_FORM_DATA的再判断配置大小，选择读入内存还是临时文件
+//					readBodyToMemory(selectionKey, array, newNeedReadBodyLength);
+//					return array;
+//				}
 
 //				final int uploadFileToTempSize = SERVER_CONFIGURATIONPROPERTIES.getUploadFileToTempSize();
 				// 文件写入临时文件之前，把读header时多读出的超出header的部分删掉
@@ -146,19 +146,19 @@ public class DefaultHttpReader {
 						- BodyReader.RN_BYTES_LENGTH;
 
 				// 2 直接全部写入临时文件
-//				final TF tf = readBodyToTempFile(selectionKey, array, newNeedReadBodyLength, writeArrayLength);
-//				array.setTf(tf);
+				final TF tf = readBodyToTempFile(selectionKey, array, newNeedReadBodyLength, writeArrayLength);
+				array.setTf(tf);
 
 				// 1 根据配置写入内存或文件
 				// FIXME 2026年5月22日 09:33:34 zhangzhen : 恢复此配置项：uploadFileToTempSize
-				final int uploadFileToTempSize = 1;
-//				if (newNeedReadBodyLength > (uploadFileToTempSize * 1)) {
-				if (newNeedReadBodyLength > (uploadFileToTempSize * _1024)) {
-					final TF tf = readBodyToTempFile(selectionKey, array, newNeedReadBodyLength, writeArrayLength);
-					array.setTf(tf);
-				} else {
-					readBodyToMemory(selectionKey, array, newNeedReadBodyLength);
-				}
+//				final int uploadFileToTempSize = 1;
+////				if (newNeedReadBodyLength > (uploadFileToTempSize * 1)) {
+//				if (newNeedReadBodyLength > (uploadFileToTempSize * _1024)) {
+//					final TF tf = readBodyToTempFile(selectionKey, array, newNeedReadBodyLength, writeArrayLength);
+//					array.setTf(tf);
+//				} else {
+//					readBodyToMemory(selectionKey, array, newNeedReadBodyLength);
+//				}
 			}
 		}
 		return array;
