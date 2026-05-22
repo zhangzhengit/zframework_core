@@ -58,9 +58,9 @@ public class ServerConfigurationProperties {
 	 * 读取http请求的header的ByteBuffer的容量大小
 	 */
 	@ZNotNull
-	@ZMin(min = 100)
-	@ZMax(max = 10240)
-	private int byteBufferSize = 1024 * 1;
+	@ZMin(min = 1024)
+	@ZMax(max = 1024 * 10)
+	private int byteBufferSize = 1024 * 4;
 
 	/**
 	 * nio 读取http请求的body时
