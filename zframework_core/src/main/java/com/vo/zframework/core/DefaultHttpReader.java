@@ -351,15 +351,11 @@ public class DefaultHttpReader {
 
 	private static MR readMethod(final SelectionKey selectionKey) {
 
-		if (!selectionKey.isValid() || !selectionKey.isReadable()) {
+		if (!SK.isValidAndReadable(selectionKey)) {
 			return null;
 		}
 
 		final SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
-		if (!socketChannel.isOpen()) {
-			return null;
-		}
-
 
 		// FIXME 2025年11月28日 15:51:33 zhangzhen :  发现问题
 		// 1 小问题，+10无意义，忘了当时怎么想的了，如果只是为了为了METHOD后面的空格给区分开，没必要+10
@@ -391,6 +387,8 @@ public class DefaultHttpReader {
 			return null;
 		}
 
+		// FIXME 2026年5月22日 10:38:59 zhangzhen : 下面两个return null的分支应该会有bug，因为把当前读出的数据给丢了
+		// 导致包含此数据的一整个http请求都没法正确解析了
 		if (tR < GET_LENGTH) {
 			return null;
 		}
@@ -424,10 +422,6 @@ public class DefaultHttpReader {
 
 	public static AR readHeader(final SelectionKey selectionKey) {
 
-		// FIXME 2026年1月28日 11:12:40 zhangzhen : 现在改了 带body的不读1了，记得把本方法和readMethod也改为一个
-
-		final SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
-
 		final MR mr = readMethod(selectionKey);
 		if (mr == null) {
 			return null;
@@ -446,6 +440,8 @@ public class DefaultHttpReader {
 		final long startTime = System.currentTimeMillis();
 		int totalBytesRead = 0;
 		int rC = 0;
+
+		final SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
 		while (true) {
 			try {
 				if (!socketChannel.isOpen()) {
@@ -463,6 +459,9 @@ public class DefaultHttpReader {
 
 				if (tR > 0) {
 					final byte[] a = DefaultHttpReader.add(byteBuffer, array);
+					System.out.println("rC = " + rC + "\t" + "totalBytesRead = " + totalBytesRead
+							+ "\t" + "array.length = " + array.get().length
+							);
 					headerEndIndex = BodyReader.search(rC == 1 ? a : array.get(), STU.CRLFCRLF, 1, 4);
 					if (headerEndIndex > -1) {
 						break;
@@ -474,13 +473,25 @@ public class DefaultHttpReader {
 //					if (tR < byteBufferSizeREAD) {
 //						throw new IllegalArgumentException("header截止错误");
 //					}
-				} else // 如果读取返回 0，则检查超时
-				if (((totalBytesRead == 0) || (tR == 0))
-						&& ((System.currentTimeMillis() - startTime) > SERVER_CONFIGURATIONPROPERTIES
-								.getNioReadTimeout())) {
+				} else
+					// 1 不应该带超时，因为会导致，循环，违背了nio的原则
+					// 如果读取返回 0，则检查超时
+//				if (((totalBytesRead == 0) || (tR == 0))
+//						&& ((System.currentTimeMillis() - startTime) > SERVER_CONFIGURATIONPROPERTIES
+//								.getNioReadTimeout())) {
+//
+//					LOG.error("readHeader超时[{}]", SERVER_CONFIGURATIONPROPERTIES.getNioReadTimeout());
+//					NioLongConnectionServer.closeSocketChannelAndKeyCancel(selectionKey);
+//					return null;
+//				}
 
-					LOG.error("readHeader超时[{}]", SERVER_CONFIGURATIONPROPERTIES.getNioReadTimeout());
-					NioLongConnectionServer.closeSocketChannelAndKeyCancel(selectionKey);
+					// 2 tR==0直接return 等待下次可读事件
+					// FIXME 2026年5月22日 11:34:10 zhangzhen : 如果这个改动改好了，要不要删除
+					// SERVER_CONFIGURATIONPROPERTIES.getNioReadTimeout 配置项?
+
+				if (tR == 0) {
+					LOG.error("readHeaderTR==0,return");
+//					NioLongConnectionServer.closeSocketChannelAndKeyCancel(selectionKey);
 					return null;
 				}
 

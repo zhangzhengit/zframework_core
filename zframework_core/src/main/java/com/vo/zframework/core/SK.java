@@ -12,6 +12,19 @@ import java.nio.channels.SocketChannel;
  */
 public class SK {
 
+	public static boolean isValidAndReadable(final SelectionKey selectionKey) {
+		if (!selectionKey.isValid() || !selectionKey.isReadable()) {
+			return false;
+		}
+
+		final SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
+		if (!socketChannel.isOpen()) {
+			return false;
+		}
+
+		return true;
+	}
+
 	public static void closeSocketChannelAndSelectionKeyCancel(final SelectionKey selectionKey) {
 
 		if (selectionKey == null) {
