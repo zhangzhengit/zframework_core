@@ -157,13 +157,9 @@ public class NioLongConnectionServer {
 			iterator.remove();
 
 			try {
-				synchronized (selectionKey) {
-					if (!selectionKey.isValid()) {
-						continue;
-					}
+				if (!selectionKey.isValid()) {
+					continue;
 				}
-				// FIXME 2026年5月19日 10:05:59 zhangzhen : 下面两个sk.XX方法报CancelledKeyException也没关系
-				// 这个try里的就不加 sync(sKey)了
 
 				if (selectionKey.isAcceptable()) {
 					handleAccept(selectionKey, this.selector);
@@ -200,10 +196,6 @@ public class NioLongConnectionServer {
 	}
 
 	private void handleRead(final SelectionKey selectionKey) {
-
-		if (!selectionKey.isValid()) {
-			return;
-		}
 
 		final SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
 		if (!socketChannel.isConnected() || !socketChannel.isOpen()) {
