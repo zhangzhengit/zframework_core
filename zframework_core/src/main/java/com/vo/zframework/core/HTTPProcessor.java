@@ -15,8 +15,8 @@ public class HTTPProcessor {
 	private final static DefaultHttpReader httpReader = ZContext.getBean(DefaultHttpReader.class);
 
 	public static ZArray process(final SelectionKey selectionKey) {
-		System.out.println(
-				LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t" + "HTTPProcessor.process()");
+//		System.out.println(
+//				LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t" + "HTTPProcessor.process()");
 
 		// 2
 //		return two(selectionKey);
