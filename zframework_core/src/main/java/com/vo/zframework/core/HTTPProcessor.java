@@ -22,6 +22,8 @@ public class HTTPProcessor {
 //		return two(selectionKey);
 
 		// 1
+		// FIXME 2026年5月23日 13:17:14 zhangzhen : 这个one的read逻辑一定有问题，只是现在没重现出来，
+		// 需要改为事件驱动read，每次read的累积放到attachment，每次read后解析。要不先写一个bio+虚拟线程的版本？
 		return one(selectionKey);
 	}
 
