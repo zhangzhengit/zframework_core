@@ -1,9 +1,12 @@
 package com.vo.zframework.core;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.SelectionKey;
@@ -131,6 +134,9 @@ public class ZResponse {
 
 	private final SocketChannel socketChannel;
 	private final SelectionKey selectionKey;
+	private final Socket socket;
+	private OutputStream outputStream;
+	private BufferedOutputStream bufferedOutputStream;
 
 	private List<ZHeader> headerList;
 
@@ -640,15 +646,30 @@ public class ZResponse {
 
 	private void write(final ByteBuffer byteBuffer) {
 
-		try {
-			while ((byteBuffer.remaining() > 0) && this.socketChannel.isOpen()) {
-				this.socketChannel.write(byteBuffer);
+		if (this.socketChannel != null) {
+			try {
+				while ((byteBuffer.remaining() > 0) && this.socketChannel.isOpen()) {
+					this.socketChannel.write(byteBuffer);
+				}
+			} catch (final IOException e) {
+				final String message = Task.gExceptionMessage(e);
+				LOG.error("ZResponseWRITE异常,message={}", message);
+				NioLongConnectionServer.closeSocketChannelAndKeyCancel(this.selectionKey);
 			}
-		} catch (final IOException e) {
-			final String message = Task.gExceptionMessage(e);
-			LOG.error("ZResponseWRITE异常,message={}", message);
-			NioLongConnectionServer.closeSocketChannelAndKeyCancel(this.selectionKey);
+		} else {
+			try {
+				final int length = byteBuffer.remaining();
+				if (length > 0) {
+					final byte[] data = new byte[length];
+					byteBuffer.get(data);
+					this.bufferedOutputStream.write(data);
+					this.bufferedOutputStream.flush();
+				}
+			} catch (final IOException e) {
+				e.printStackTrace();
+			}
 		}
+
 	}
 
 	private void writeSocketChannel() {
@@ -715,9 +736,28 @@ public class ZResponse {
 		return bbbb;
 	}
 
-	public ZResponse(final SelectionKey selectionKey) {
-		this.selectionKey = selectionKey;
-		this.socketChannel = (SocketChannel) selectionKey.channel();
+	public ZResponse(final SelectionKey selectionKey, final Socket socket) {
+		if (selectionKey == null) {
+			this.selectionKey = null;
+			this.socketChannel = null;
+		} else {
+			this.selectionKey = selectionKey;
+			this.socketChannel = (SocketChannel) selectionKey.channel();
+		}
+
+		this.socket = socket;
+		if (socket != null) {
+			try {
+				this.outputStream = this.socket.getOutputStream();
+				this.bufferedOutputStream = new BufferedOutputStream(this.outputStream);
+			} catch (final IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	public ZResponse(final Socket socket) {
+		this(null,socket);
 	}
 
 	public AtomicBoolean getSetContentType() {

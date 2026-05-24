@@ -8,19 +8,17 @@ package com.vo.zframework.core;
  *
  */
 public class ZArray {
-	
-	private static final int capacityIncrement = 100;
 
 	/**
 	 * 初始化的容量
 	 */
-	public static final int INIT_C = 16;
+	public static final int INIT_C = 1024 * 8;
 
 	/**
 	 * 存储
 	 */
 	private byte[] ar;
-	
+
 	/**
 	 * 	当前已存储的byte个数
 	 */
@@ -29,13 +27,12 @@ public class ZArray {
 	private TF tf;
 
 	public ZArray() {
-		// FIXME 2025年11月27日 01:45:25 zhangzhen :  暂时给个初始容量看
-		//
 		this.ar = new byte[INIT_C] ;
 	}
 
 	public ZArray(final int initialCapacity) {
 		this.ar = new byte[initialCapacity] ;
+		this.size = 0;
 	}
 
 	public boolean isEmpty() {
@@ -43,12 +40,11 @@ public class ZArray {
 	}
 
 	public ZArray(final byte[] ba, final int from, final int to) {
-		this.ar = new byte[ba.length];
+		this.ar = new byte[to - from];
 		for (int i = from; i < to; i++) {
 			this.ar[i] = ba[i];
 			this.size++;
 		}
-		
 	}
 
 	public ZArray(final byte[] ba) {
@@ -56,22 +52,24 @@ public class ZArray {
 	}
 
 	public void add(final byte[] ba, final int from, final int to) {
-		
-		if (to - from + this.size > this.ar.length) {
-			final byte[] n = new byte[to - from + this.size + capacityIncrement];
+
+		if (((to - from) + this.size) > this.ar.length) {
+			final int newC = (((to - from) + this.size) * 4) / 3;
+			final byte[] n = new byte[newC];
 			System.arraycopy(this.ar, 0, n, 0, this.size);
 			this.ar = n;
 		}
-			
+
 		for (int i = from; i < to; i++) {
 			this.ar[this.size++] = ba[i];
 		}
+
 	}
 
 	public byte remove(final int index) {
 		final byte r = this.ar[index];
 		this.ar[index] = 0;
-		for (int i = index; i < this.size-1; i++) {
+		for (int i = index; i < (this.size-1); i++) {
 			this.ar[i] = this.ar[i + 1];
 		}
 		this.ar[this.size - 1] = 0;
@@ -93,15 +91,21 @@ public class ZArray {
 		if (this.size == this.ar.length) {
 			return this.ar;
 		}
-		
+
 		final byte[] g = new byte[this.size];
 		System.arraycopy(this.ar, 0, g, 0, this.size);
 		return g;
 	}
 
+	public void reset(final int capacity) {
+		this.ar = new byte[capacity];
+		this.size = 0;
+	}
+
 	public TF getTf() {
 		return this.tf;
 	}
+
 
 	public void setTf(final TF tf) {
 		this.tf = tf;

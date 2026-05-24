@@ -2,6 +2,7 @@ package com.vo.zframework.core;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.io.OutputStream;
 
 /**
@@ -24,7 +25,7 @@ public class TF {
 
 	public TF(final File file, final String tempFilePath, final String name, final String fileName, final OutputStream outputStream,
 			final BufferedOutputStream bufferedOutputStream) {
-		setFile(file);
+		this.setFile(file);
 		this.tempFilePath = tempFilePath;
 		this.name = name;
 		this.fileName = fileName;
@@ -32,19 +33,32 @@ public class TF {
 		this.bufferedOutputStream = bufferedOutputStream;
 	}
 
+	public void write(final byte[] ba, final int off, final int len) {
+		try {
+			this.getBufferedOutputStream().write(ba, off, len);
+			this.getBufferedOutputStream().flush();
+		} catch (final IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void write(final byte[] ba) {
+		this.write(ba, 0, ba.length);
+	}
+
 	public String getContentType() {
 		return this.contentType;
 	}
 
-	public void setName(String name) {
+	public void setName(final String name) {
 		this.name = name;
 	}
 
-	public void setFileName(String fileName) {
+	public void setFileName(final String fileName) {
 		this.fileName = fileName;
 	}
 
-	public void setContentType(String contentType) {
+	public void setContentType(final String contentType) {
 		this.contentType = contentType;
 	}
 
@@ -72,9 +86,9 @@ public class TF {
 		return this.bufferedOutputStream;
 	}
 
-	public TF(File file, String tempFilePath, String name, String fileName, String contentType,
-			OutputStream outputStream, BufferedOutputStream bufferedOutputStream) {
-		setFile(file);
+	public TF(final File file, final String tempFilePath, final String name, final String fileName, final String contentType,
+			final OutputStream outputStream, final BufferedOutputStream bufferedOutputStream) {
+		this.setFile(file);
 		this.tempFilePath = tempFilePath;
 		this.name = name;
 		this.fileName = fileName;
@@ -83,7 +97,7 @@ public class TF {
 		this.bufferedOutputStream = bufferedOutputStream;
 	}
 
-	public void setFile(File file) {
+	public void setFile(final File file) {
 		this.file = file;
 	}
 

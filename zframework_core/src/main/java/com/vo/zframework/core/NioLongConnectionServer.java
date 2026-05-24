@@ -2,6 +2,7 @@ package com.vo.zframework.core;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -295,7 +296,7 @@ public class NioLongConnectionServer {
 			final Object r = a.execute(e);
 
 			final Integer httpStatus = ZControllerAdviceThrowable.findHttpStatus(e);
-			final ZResponse response = new ZResponse(selectionKey)
+			final ZResponse response = new ZResponse(selectionKey, null)
 					.httpStatus(httpStatus != null ? httpStatus : HttpStatusEnum.HTTP_500.getCode())
 					.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 					.body(J.toJSONString(r));
@@ -323,7 +324,7 @@ public class NioLongConnectionServer {
 		if (!NioLongConnectionServer.allow()) {
 			try {
 				NioLongConnectionServer.response429Async(selectionKey,
-						SERVER_CONFIGURATIONPROPERTIES.getQpsExceedMessage());
+						null, SERVER_CONFIGURATIONPROPERTIES.getQpsExceedMessage());
 			} catch (final Exception e) {
 				final String message = Task.gExceptionMessage(e);
 
@@ -342,7 +343,7 @@ public class NioLongConnectionServer {
 				final Object r = a.execute(e);
 
 				final Integer httpStatus = ZControllerAdviceThrowable.findHttpStatus(e);
-				final ZResponse response = new ZResponse(selectionKey)
+				final ZResponse response = new ZResponse(selectionKey, null)
 						.httpStatus(httpStatus != null ? httpStatus : HttpStatusEnum.HTTP_500.getCode())
 						.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 						.body(J.toJSONString(r));
@@ -365,7 +366,7 @@ public class NioLongConnectionServer {
 	}
 
 	public static void r500AndCloseSocketChannel(final SelectionKey selectionKey, final String errorMessage) {
-		new ZResponse(selectionKey)
+		new ZResponse(selectionKey, null)
 		.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 		.httpStatus(HttpStatusEnum.HTTP_500.getCode())
 		.header(HeaderEnum.CONNECTION.getName(), ConnectionEnum.CLOSE.getValue())
@@ -375,25 +376,32 @@ public class NioLongConnectionServer {
 		closeSocketChannelAndKeyCancel(selectionKey);
 	}
 
-	private void response(final SelectionKey selectionKey, final ZArray array) {
+	private  void response(final SelectionKey selectionKey, final ZArray array) {
 		final TaskRequest taskRequest = new TaskRequest(selectionKey, array.get(),
 				array.getTf(), new Date());
 
 		NioLongConnectionServer.this.requestHandler.handle(taskRequest);
 	}
 
-	private static boolean allow() {
+	static boolean allow() {
 		return ENABLE_SERVER_QPS_LIMITED && QC.allow(QCTimeEnum.SECOND, NioLongConnectionServer.Z_SERVER_QPS,
 				SERVER_CONFIGURATIONPROPERTIES.getQps(), QPSHandlingEnum.SMOOTH);
 	}
 
-	public static void response429Async(final SelectionKey selectionKey, final String message) {
+	public static void response429Async(final SelectionKey selectionKey, final Socket socket, final String message) {
 		Thread.ofVirtual().name("response429AsyncT")
-				.start(() -> NioLongConnectionServer.response429(selectionKey, message));
+				.start(() -> NioLongConnectionServer.response429(selectionKey, message, socket));
 	}
 
-	public static void response429(final SelectionKey selectionKey, final String message) {
-		new ZResponse(selectionKey)
+	public static void response429BIO(final String message, final Socket socket) {
+		new ZResponse(socket)
+		.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
+		.httpStatus(HttpStatusEnum.HTTP_429.getCode())
+		.body(J.toJSONString(CR.error(message), Include.NON_NULL))
+		.write();
+	}
+	public static void response429(final SelectionKey selectionKey, final String message, final Socket socket) {
+		new ZResponse(selectionKey, socket)
 		.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 		.httpStatus(HttpStatusEnum.HTTP_429.getCode())
 		.body(J.toJSONString(CR.error(message), Include.NON_NULL))
@@ -477,11 +485,59 @@ public class NioLongConnectionServer {
 
 	}
 
-	public static void response(final ZRequest request, final TaskRequest taskRequest) {
+	public static void responseBIO(final ZRequest request, final TaskRequest taskRequest, final Socket socket) {
 
 		try {
 			ReqeustInfo.set(request);
-			final Task task = new Task(taskRequest.getSelectionKey());
+			final Task task = new Task(null, socket);
+			final String contentType = request.getContentType();
+			if (STU.isNotEmpty(contentType)
+					&& contentType.toLowerCase().startsWith(ContentTypeEnum.MULTIPART_FORM_DATA.getType().toLowerCase())) {
+				// setOriginalRequestBytes方法会导致qps降低，FORM_DATA 才set
+				// 后续解析需要，或是不需要，再看.
+				request.setOriginalRequestBytes(taskRequest.getRequestData());
+			}
+
+			NioLongConnectionServer.responseBIO(request, task);
+
+		} catch (final Exception e) {
+
+			// 这个catch里 真正处理 response里的异常，用统一配置的异常处理器来处理
+			final ZControllerAdviceActuator a = ZContext.getBean(ZControllerAdviceActuator.class);
+			final Object r = a.execute(e);
+
+			final Integer httpStatus = ZControllerAdviceThrowable.findHttpStatus(e);
+			final ZResponse response =
+					new ZResponse(socket)
+					.httpStatus(httpStatus != null ? httpStatus : HttpStatusEnum.HTTP_500.getCode())
+					.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
+					.body(J.toJSONString(r));
+
+			if (SERVER_CONFIGURATIONPROPERTIES.isResponseZSessionId()) {
+				NioLongConnectionServer.setZSessionId(request, response);
+			}
+
+			response.write();
+
+			if (e instanceof IOException) {
+				final String message = Task.gExceptionMessage(e);
+				LOG.error("responseIOException异常,message={}", message);
+				BIO.closeSocket(socket);
+			} else {
+				final String message = Task.gExceptionMessage(e);
+//				LOG.error("response业务异常,message={}", message);
+			}
+
+		} finally {
+			ReqeustInfo.remove();
+		}
+
+	}
+	public static void response(final ZRequest request, final TaskRequest taskRequest, final Socket socket) {
+
+		try {
+			ReqeustInfo.set(request);
+			final Task task = new Task(taskRequest.getSelectionKey(), socket);
 			final String contentType = request.getContentType();
 			if (STU.isNotEmpty(contentType)
 					&& contentType.toLowerCase().startsWith(ContentTypeEnum.MULTIPART_FORM_DATA.getType().toLowerCase())) {
@@ -502,7 +558,7 @@ public class NioLongConnectionServer {
 
 			final Integer httpStatus = ZControllerAdviceThrowable.findHttpStatus(e);
 			final ZResponse response =
-					new ZResponse(taskRequest.getSelectionKey())
+					new ZResponse(taskRequest.getSelectionKey(), null)
 					.httpStatus(httpStatus != null ? httpStatus : HttpStatusEnum.HTTP_500.getCode())
 					.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 					.body(J.toJSONString(r));
@@ -567,6 +623,40 @@ public class NioLongConnectionServer {
 
 			if (!keepAlive) {
 				closeSocketChannelAndKeyCancel(selectionKey);
+			}
+
+		} catch (final Exception e) {
+			// 这里不能关闭，因为外面的异常处理器类还要write，继续抛
+			throw e;
+		}
+
+	}
+	private static void responseBIO(final ZRequest request, final Task task) throws Exception {
+
+		try {
+			final ZResponse response = task.invokeBIO(request);
+
+			if ((response == null) || response.isWritten()) {
+				return;
+			}
+
+			final boolean keepAlive = request.isKeepAlive();
+//			addConnectionToKAMap(keepAlive, selectionKey);
+
+			final Integer httpStatus = response.getHttpStatus();
+			if (httpStatus == HttpStatusEnum.HTTP_200.getCode()) {
+				response.setETag(request, response.getBody(), ETagEnum.STRONG);
+			}
+
+			// FIXME 2025年1月3日 上午3:22:26 zhangzhen : Last-Modified
+			// FIXME 2025年1月3日 上午3:28:22 zhangzhen : last-modified头貌似不好写
+			// 因为只有在业务代码中才容易判断资源的修改时间
+			//			setLastModified(request, response);
+
+			response.write();
+
+			if (!keepAlive) {
+				BIO.closeSocket(task.getSocket());
 			}
 
 		} catch (final Exception e) {

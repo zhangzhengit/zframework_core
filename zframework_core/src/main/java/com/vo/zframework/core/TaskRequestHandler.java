@@ -1,6 +1,7 @@
 package com.vo.zframework.core;
 
 import java.io.IOException;
+import java.net.Socket;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -57,6 +58,38 @@ public final class TaskRequestHandler {
 
 	}
 
+	public void handleBIO(final TaskRequest taskRequest, final Socket socket, final ZRequest request) {
+
+		try {
+			// 1
+//			final ZRequest request = BodyReader.parseHeader(taskRequest);
+
+			// FIXME 2026年5月24日 09:10:24 zhangzhen : 上传这个要打开
+			request.setTf(taskRequest.getTf());
+
+			this.requestValidator.handleBIO(request, taskRequest, socket);
+
+		} catch (final Exception e) {
+			e.printStackTrace();
+
+			final String message = ZControllerAdviceThrowable.findCausedby(e);
+			final Integer httpStatus = ZControllerAdviceThrowable.findHttpStatus(e);
+
+			final String error = J.toJSONString(CR.error(message));
+			new ZResponse(null, socket)
+			.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
+			.httpStatus(httpStatus != null ? httpStatus : HttpStatusEnum.HTTP_500.getCode())
+			.header(HeaderEnum.CONNECTION.getName(), ConnectionEnum.CLOSE.getValue())
+			.body(error)
+			.write();
+
+			if (e instanceof IOException) {
+				BIO.closeSocket(socket);
+			}
+
+			return;
+		}
+	}
 	public void handle(final TaskRequest taskRequest) {
 
 		try {
@@ -76,7 +109,7 @@ public final class TaskRequestHandler {
 
 			request.setTf(taskRequest.getTf());
 
-			this.requestValidator.handle(request, taskRequest);
+			this.requestValidator.handle(request, taskRequest, null);
 
 		} catch (final Exception e) {
 			e.printStackTrace();
@@ -85,7 +118,7 @@ public final class TaskRequestHandler {
 			final Integer httpStatus = ZControllerAdviceThrowable.findHttpStatus(e);
 
 			final String error = J.toJSONString(CR.error(message));
-			new ZResponse(taskRequest.getSelectionKey())
+			new ZResponse(taskRequest.getSelectionKey(), null)
 				.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 				.httpStatus(httpStatus != null ? httpStatus : HttpStatusEnum.HTTP_500.getCode())
 				.header(HeaderEnum.CONNECTION.getName(), ConnectionEnum.CLOSE.getValue())

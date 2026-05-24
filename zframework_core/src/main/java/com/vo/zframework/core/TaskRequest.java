@@ -43,8 +43,13 @@ public class TaskRequest {
 	}
 
 	public TaskRequest(final SelectionKey selectionKey, final byte[] requestData, final TF tf, final Date requestTime) {
-		this.selectionKey = selectionKey;
-		this.socketChannel = (SocketChannel) selectionKey.channel();
+		if (selectionKey != null) {
+			this.selectionKey = selectionKey;
+			this.socketChannel = (SocketChannel) selectionKey.channel();
+		} else {
+			this.selectionKey = null;
+			this.socketChannel = null;
+		}
 		this.requestData = requestData;
 		this.tf = tf;
 		this.requestTime = requestTime;

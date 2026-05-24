@@ -1,5 +1,7 @@
 package com.vo.zframework.core;
 
+import java.net.Socket;
+
 import com.vo.zframework.configuration.ServerConfigurationProperties;
 import com.vo.zframework.http.AccessDeniedCodeEnum;
 
@@ -29,12 +31,20 @@ abstract class AbstractRequestValidator {
 
 	private static final RequestVerificationResult ALLOW = new RequestVerificationResult(true);
 
-	public void handle(final ZRequest request, final TaskRequest taskRequest) {
+	public void handleBIO(final ZRequest request, final TaskRequest taskRequest, final Socket socket) {
 		final RequestVerificationResult r = this.validated(request, taskRequest);
 		if (r.isPassed()) {
-			this.passed(request, taskRequest);
+			this.passedBIO(request, taskRequest, socket);
 		} else {
-			this.failed(request, taskRequest, r);
+			AbstractRequestValidator.failedBIO(socket, r);
+		}
+	}
+	public void handle(final ZRequest request, final TaskRequest taskRequest, final Socket socket) {
+		final RequestVerificationResult r = this.validated(request, taskRequest);
+		if (r.isPassed()) {
+			this.passed(request, taskRequest, socket);
+		} else {
+			this.failed(request, taskRequest, r, socket);
 		}
 	}
 
@@ -113,19 +123,28 @@ abstract class AbstractRequestValidator {
 	 * @param request
 	 * @param taskRequest
 	 * @param requestVerificationResult
+	 * @param socket TODO
 	 */
-	public void failed(final ZRequest request, final TaskRequest taskRequest, final RequestVerificationResult requestVerificationResult) {
-		NioLongConnectionServer.response429(taskRequest.getSelectionKey(), requestVerificationResult.getMessage());
+	public void failed(final ZRequest request, final TaskRequest taskRequest, final RequestVerificationResult requestVerificationResult, final Socket socket) {
+		NioLongConnectionServer.response429(taskRequest.getSelectionKey(), requestVerificationResult.getMessage(), socket);
+	}
+
+	public static void failedBIO(final Socket socket, final RequestVerificationResult requestVerificationResult) {
+		NioLongConnectionServer.response429BIO(requestVerificationResult.getMessage(), socket);
 	}
 
 	/**
 	 * 放行怎么处理，默认实现为继续走后面的流程
 	 *
 	 * @param request
+	 * @param socket TODO
 	 *
 	 */
-	public void passed(final ZRequest request, final TaskRequest taskRequest) {
-		NioLongConnectionServer.response(request, taskRequest);
+	public void passed(final ZRequest request, final TaskRequest taskRequest, final Socket socket) {
+		NioLongConnectionServer.response(request, taskRequest, socket);
+	}
+	public void passedBIO(final ZRequest request, final TaskRequest taskRequest, final Socket socket) {
+		NioLongConnectionServer.responseBIO(request, taskRequest, socket);
 	}
 
 }

@@ -21,6 +21,7 @@ import java.util.Map;
 
 import com.vo.log.core.ZLog2;
 import com.vo.zframework.anno.ZComponent;
+import com.vo.zframework.aop.ArgR;
 import com.vo.zframework.cache.STU;
 import com.vo.zframework.configuration.ServerConfigurationProperties;
 import com.vo.zframework.configuration.TempDir;
@@ -615,9 +616,9 @@ public class DefaultHttpReader {
 		return tf;
 	}
 
-	private static void removeNB(final TF tf, final String boundary, final ZArray array) {
+	public static void removeNB(final TF tf, final String boundary, final ZArray array) {
 
-		final int bsC = 1024 * 64;
+		final int bsC = 1024 * 100;
 		final byte[] ba = new byte[bsC];
 		boolean findBody = false;
 		long tR = 0;
@@ -648,25 +649,72 @@ public class DefaultHttpReader {
 					}
 				}
 
-				if (findBody) {
+				if (!findBody) {
+					throw new IllegalArgumentException("body没找到!!!!");
+				}
+				final int bendI = BodyReader.search(ba, "--" + boundary, 1, readCount == 1 ? bodyStartI : 0);
+				if (bendI > -1) {
+					final int bGGendI = BodyReader.search(ba, STU.CRLF + "--" + boundary, 1,
+							readCount == 1 ? bodyStartI : 0);
+					if (bGGendI < bendI) {
 
-					final int bendI = BodyReader.search(ba, "--" + boundary, 1, readCount == 1 ? bodyStartI : 0);
-					if (bendI > -1) {
-						final int bGGendI = BodyReader.search(ba, STU.CRLF + "--" + boundary, 1,
-								readCount == 1 ? bodyStartI : 0);
-						if (bGGendI < bendI) {
+						final byte[] cc2 = Arrays.copyOfRange(ba, bGGendI, read);
+						array.add(cc2);
 
-							final byte[] cc2 = Arrays.copyOfRange(ba, bGGendI, read);
-							array.add(cc2);
+						try (RandomAccessFile raf = new RandomAccessFile(tf.getFile().getAbsolutePath(), "rw")) {
+							// 删除body后的CRLF的部分
+							raf.setLength(tR - (read - bGGendI));
+						}
+						// 然后删除前面的开头的0到body开始的部分
+						deleteFileBytes(tf.getFile().getAbsolutePath(), 0, bodyStartI + STU.CRLFCRLF.length());
 
-							try (RandomAccessFile raf = new RandomAccessFile(tf.getFile().getAbsolutePath(), "rw")) {
-								// 删除body后的CRLF的部分
-								raf.setLength(tR - (read - bGGendI));
+						break;
+					}
+				}
+			}
+
+		} catch (final IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static void readChuleBody(final TF tf, final String boundary) {
+
+		try (FileInputStream in = new FileInputStream(tf.getFile());
+				final BufferedInputStream bufferedInputStream = new BufferedInputStream(in)) {
+
+			final List<Byte> nl = new ArrayList<>();
+
+
+			final byte[] ba = new byte[1024 * 64];
+			final int fI = 0;
+			int readCount = 0;
+			while (true) {
+				final int read = bufferedInputStream.read(ba);
+				if (read <= -1) {
+					break;
+				}
+				readCount+= read;
+
+				final byte[] temp = Arrays.copyOfRange(ba, 0, read);
+
+				final int cdI = BodyReader.search(temp, HeaderEnum.CONTENT_DISPOSITION.getName(), 1, 0);
+				if (cdI > -1) {
+					final int cdEI = BodyReader.search(temp, STU.CRLF, 1, cdI);
+					if (cdEI > cdI) {
+						final byte[] cdLIne = Arrays.copyOfRange(temp, cdI, cdEI);
+						final String contentDS = new String(cdLIne);
+						System.out.println("contentDS = " + contentDS);
+						if(contentDS.toLowerCase().contains("filename")) {
+							// 找到了filename的行,再往下找一行Content-Type行，然后从下一行到下一个boundary之间的就是body
+							// 除此之外的就是本方法需要返回的
+							final int ctI = BodyReader.search(temp, HeaderEnum.CONTENT_TYPE.getName(), 1, cdEI);
+							if(ctI > -1) {
+								final int ctRNI = BodyReader.search(temp, STU.CRLF, 1, ctI);
+								if(ctRNI > ctI) {
+									final int bI = BodyReader.search(temp, boundary, 1, ctRNI);
+								}
 							}
-							// 然后删除前面的开头的0到body开始的部分
-							deleteFileBytes(tf.getFile().getAbsolutePath(), 0, bodyStartI + STU.CRLFCRLF.length());
-
-							break;
 						}
 					}
 				}
@@ -677,7 +725,8 @@ public class DefaultHttpReader {
 		}
 	}
 
-	private static void readFileNameAndContentType(final TF tf) {
+
+	public static void readFileNameAndContentType(final TF tf) {
 
 		try (FileInputStream in = new FileInputStream(tf.getFile());
 				final BufferedInputStream bufferedInputStream = new BufferedInputStream(in)) {
@@ -873,7 +922,7 @@ public class DefaultHttpReader {
 
 
 	// FIXME 2024年12月20日 上午1:09:51 zhangzhen : 文件名重新考虑下
-	private static TF saveToTempFile(final String fileNameRandom, final String name, final String fileName) {
+	public static TF saveToTempFile(final String fileNameRandom, final String name, final String fileName) {
 
 		final String tempDirPath = mkdir();
 		final String tempFilePath = tempDirPath + File.separator + fileNameRandom + ".temp";
@@ -928,7 +977,7 @@ public class DefaultHttpReader {
 
 	}
 
-	private static Fm hFM(final ZArray array) {
+	public static Fm hFM(final ZArray array) {
 		final int boundaryStartIndex = BodyReader.search(array.get(), ZRequest.BOUNDARY, 1, 1);
 		if (boundaryStartIndex <= -1) {
 			return new Fm(false, "");

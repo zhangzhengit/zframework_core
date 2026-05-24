@@ -46,6 +46,36 @@ public class BodyReader {
 	}
 
 	/**
+	 * 从一个完整的http请求报文中解析出所有内容
+	 *
+	 * @param ba
+	 * @return
+	 */
+	public static ZRequest parse(final byte[] fullBA) {
+
+		final int headerEndIndex = search(fullBA, STU.CRLFCRLF, 1, 0);
+
+		if(headerEndIndex <= -1) {
+			final int debug = 0;
+		}
+
+		final byte[] headerBA = Arrays.copyOfRange(fullBA, 0, headerEndIndex);
+		final String[] headerKVString = new String(headerBA).split(STU.CRLF);
+
+		final ZRequest request= new ZRequest(headerKVString);
+
+		if ((headerEndIndex + STU.CRLFCRLF.length()) < fullBA.length) {
+			final byte[] bodyBA = Arrays.copyOfRange(fullBA, headerEndIndex + STU.CRLFCRLF.length(), fullBA.length);
+//			System.out.println("bodyBA.length = " + bodyBA.length);
+			request.setBody(bodyBA);
+		} else {
+			request.setBody(new byte[] {});
+		}
+
+		return request;
+	}
+
+	/**
 	 * 从http请求报文中解析出header，是只解析header，不解析header下面的部分
 	 *
 	 * @param ba
@@ -131,25 +161,33 @@ public class BodyReader {
 
 		final List<FD2> fd2l = new ArrayList<>();
 
-		final int bodySI = search(ba, STU.CRLFCRLF + BOUNDARY_PREFIX + boundary, 1,0);
+		final int bodySI = search(ba, BOUNDARY_PREFIX + boundary, 1,0);
 
 		if (bodySI <= -1) {
 			throw new ZFException("上传文件不存在", HttpStatusEnum.HTTP_400.getCode());
 		}
 
-		final String bas = new String(Arrays.copyOfRange(ba, bodySI, ba.length));
-		final String[] baa = bas.split(BOUNDARY_PREFIX + boundary);
-		for (final String b1 : baa) {
-			if (b1 == null || b1.isEmpty()) {
-				continue;
-			}
+		final List<Integer> r = new ArrayList<>();
 
-			final String b1Trim = b1.trim();
-			if (b1Trim.startsWith(HeaderEnum.CONTENT_DISPOSITION.getName())) {
-				final FD2 one = handleOneItem(b1Trim.getBytes());
-				fd2l.add(one);
+		int i = 1;
+		int fromIndex = 1;
+		while (true) {
+			final int search = BodyReader.search(ba, BOUNDARY_PREFIX + boundary, i, fromIndex);
+			if (search <= -1) {
+				break;
 			}
+			i++;
+			fromIndex = i + (BOUNDARY_PREFIX + boundary).length();
+			r.add(search);
 		}
+
+		final ZArray formDataArray = new ZArray();
+		for (int from = 0, to = 1; from < (r.size() - 1); from++, to++) {
+			final byte[] x = Arrays.copyOfRange(ba, r.get(from),  r.get(to));
+			final FD2 one = handleOneItemBIO(x);
+			fd2l.add(one);
+		}
+		formDataArray.add((BOUNDARY_PREFIX + boundary).getBytes());
 
 		return fd2l;
 	}
@@ -170,7 +208,7 @@ public class BodyReader {
 		final int ctIndex = search(oneBA, HeaderEnum.CONTENT_TYPE.getName(), 1, 0);
 		for (int i = 0; i < ba.length; i++) {
 			if (ba[i] == '\r') {
-				if (i < ba.length - 1 && ba[i + 1] == '\n') {
+				if ((i < (ba.length - 1)) && (ba[i + 1] == '\n')) {
 					final byte[] lineBA = listToArray(bl);
 					final String line = new String(lineBA);
 
@@ -203,6 +241,52 @@ public class BodyReader {
 				bl.clear();
 			} else if (ba[i] != '\n') {
 				bl.add(ba[i]);
+			}
+		}
+
+		return fd2;
+	}
+
+	public static FD2 handleOneItemBIO(final byte[] oneBA) {
+
+		final FD2 fd2 = new FD2();
+		final int ctIndex = search(oneBA, HeaderEnum.CONTENT_TYPE.getName(), 1, 0);
+		if (ctIndex > -1) {
+			final int ctRNIndex = search(oneBA, STU.CRLF, 1, ctIndex);
+			if (ctRNIndex > -1) {
+				final byte[] ctBA = Arrays.copyOfRange(oneBA, ctIndex, ctRNIndex + STU.CRLF.length());
+				final String ctX = new String(ctBA).split(STU.COLON)[1].trim();
+				fd2.setContentType(ctX);
+
+				final int bodyStartIndexX = search(oneBA, STU.CRLFCRLF, 1, 0);
+				if (bodyStartIndexX > -1) {
+					// XXX 注意：截止要减去一个CRLF的长度，因为参数byte[] 包含了body后面的一个空行
+					final byte[] bodyBA = Arrays.copyOfRange(oneBA, bodyStartIndexX + STU.CRLFCRLF.length(),
+							oneBA.length - STU.CRLF.length());
+					final String body = new String(bodyBA);
+					fd2.setBody(bodyBA);
+				}
+
+			}
+		} else {
+			final int bodyStartIndexX = search(oneBA, STU.CRLFCRLF, 1, 0);
+			if (bodyStartIndexX > -1) {
+				final byte[] valueBA = Arrays.copyOfRange(oneBA, bodyStartIndexX + STU.CRLFCRLF.length(), oneBA.length);
+				final String value = new String(valueBA);
+				fd2.setValue(value);
+			}
+		}
+
+		final int cdIndex = search(oneBA, HeaderEnum.CONTENT_DISPOSITION.getName(), 1, 0);
+
+		if (cdIndex > -1) {
+			final int cdRNIndex = search(oneBA, STU.CRLF, 1, cdIndex);
+			if (cdRNIndex > -1) {
+				final byte[] cdBA = Arrays.copyOfRange(oneBA, cdIndex, cdRNIndex + STU.CRLF.length());
+				final String line = new String(cdBA);
+				final Map<String, String> vMap = handleBodyContentDisposition(line);
+				fd2.setName(vMap.get(NAME));
+				fd2.setFileName(vMap.get(FILENAME));
 			}
 		}
 
@@ -246,7 +330,7 @@ public class BodyReader {
 	 * @return
 	 */
 	public static int search(final byte[] ba,final String keyword, final int iN, final int fromBAIndex) {
-		if (keyword == null || keyword.isEmpty()) {
+		if ((keyword == null) || keyword.isEmpty()) {
 			return -1;
 		}
 		final byte[] kb = keyword.getBytes();
@@ -254,7 +338,7 @@ public class BodyReader {
 		int findN = 0;
 		for (int i = fromBAIndex; i < ba.length; i++) {
 			boolean find = true;
-			if (i >= ba.length - kb.length + 1) {
+			if (i >= ((ba.length - kb.length) + 1)) {
 				find = false;
 				break;
 			}

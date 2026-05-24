@@ -10,9 +10,11 @@ import com.vo.zframework.anno.ZValue;
 import com.vo.zframework.core.ContentTypeEnum;
 import com.vo.zframework.core.PortChecker;
 import com.vo.zframework.core.QPSEnum;
+import com.vo.zframework.enums.MethodEnum;
 import com.vo.zframework.enums.ZSessionStorageTypeEnum;
 import com.vo.zframework.validator.ZClientQPSValidator;
 import com.vo.zframework.validator.ZCustom;
+import com.vo.zframework.validator.ZHttpMethodValidator;
 import com.vo.zframework.validator.ZMax;
 import com.vo.zframework.validator.ZMin;
 import com.vo.zframework.validator.ZNotEmtpy;
@@ -171,6 +173,13 @@ public class ServerConfigurationProperties {
 	private int sessionIdQps = QPSEnum.Z_SESSION_ID.getDefaultValue();
 
 	/**
+	 * 支持的METHOD
+	 */
+	@ZNotEmtpy
+	@ZCustom(cls = ZHttpMethodValidator.class)
+	private String method = MethodEnum.toVString();
+
+	/**
 	 * 是否启用内置的 StaticController,
 	 * 注意：如果设为false不启用，则需要手动添加Controller处理 StaticController 类里的
 	 * 静态资源
@@ -225,9 +234,9 @@ public class ServerConfigurationProperties {
 	 */
 	@ZNotNull
 	@ZMin(min = 1)
-	@ZMax(max = 86400)
+	@ZMax(max = 60 * 2)
 	// FIXME 2023年7月4日 下午6:57:06 zhanghen: TODO 改为：从连接最后一次活动开始计时，超过此值再关闭
-	private int keepAliveTimeout = 60 * 10;
+	private int keepAliveTimeout = 10;
 
 	/**
 	 * session 存储类型
@@ -734,6 +743,14 @@ public class ServerConfigurationProperties {
 
 
 		return ctm;
+	}
+
+	public String getMethod() {
+		return this.method;
+	}
+
+	public void setMethod(final String method) {
+		this.method = method;
 	}
 
 }
