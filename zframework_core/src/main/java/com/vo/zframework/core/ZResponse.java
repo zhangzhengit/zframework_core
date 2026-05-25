@@ -563,6 +563,7 @@ public class ZResponse {
 			}
 		} catch (final IOException e) {
 			e.printStackTrace();
+			ZServer.closeSocket(this.socket);
 		}
 	}
 
