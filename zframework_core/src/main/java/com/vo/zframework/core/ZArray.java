@@ -10,28 +10,23 @@ package com.vo.zframework.core;
 public class ZArray {
 
 	/**
-	 * 初始化的容量
-	 */
-	public static final int INIT_C = 1024 * 8;
-
-	/**
 	 * 存储
 	 */
 	private byte[] ar;
 
 	/**
-	 * 	当前已存储的byte个数
+	 * 当前已存储的byte个数
 	 */
 	private int size;
 
 	private TF tf;
 
-	public ZArray() {
-		this.ar = new byte[INIT_C] ;
-	}
-
 	public ZArray(final int initialCapacity) {
-		this.ar = new byte[initialCapacity] ;
+		if (initialCapacity <= 0) {
+			throw new IllegalArgumentException("initialCapacity必须大于0,当前initialCapacity = " + initialCapacity);
+		}
+
+		this.ar = new byte[initialCapacity];
 		this.size = 0;
 	}
 
@@ -69,7 +64,7 @@ public class ZArray {
 	public byte remove(final int index) {
 		final byte r = this.ar[index];
 		this.ar[index] = 0;
-		for (int i = index; i < (this.size-1); i++) {
+		for (int i = index; i < (this.size - 1); i++) {
 			this.ar[i] = this.ar[i + 1];
 		}
 		this.ar[this.size - 1] = 0;
@@ -98,6 +93,10 @@ public class ZArray {
 	}
 
 	public void reset(final int capacity) {
+		if (capacity <= 0) {
+			throw new IllegalArgumentException("capacity必须大于0,当前capacity = " + capacity);
+		}
+
 		this.ar = new byte[capacity];
 		this.size = 0;
 	}
@@ -105,7 +104,6 @@ public class ZArray {
 	public TF getTf() {
 		return this.tf;
 	}
-
 
 	public void setTf(final TF tf) {
 		this.tf = tf;

@@ -165,13 +165,11 @@ public class BodyReader {
 			r.add(search);
 		}
 
-		final ZArray formDataArray = new ZArray();
 		for (int from = 0, to = 1; from < (r.size() - 1); from++, to++) {
 			final byte[] x = Arrays.copyOfRange(ba, r.get(from),  r.get(to));
 			final FD2 one = handleOneItem(x);
 			fd2l.add(one);
 		}
-		formDataArray.add((BOUNDARY_PREFIX + boundary).getBytes());
 
 		return fd2l;
 	}
