@@ -466,7 +466,7 @@ public class BIO {
 			return null;
 		}
 
-		final ZRequest request = BodyReader.parse(fullBA);
+		final ZRequest request = BodyReader.parse(fullBA, socket);
 		if (!BIO.checkMethod(request)) {
 			ReU.response405Socket(socket, request.getMethodEnum().getMethod());
 			return null;
@@ -483,8 +483,7 @@ public class BIO {
 
 	private void response429(final Socket socket) {
 		try {
-			NioLongConnectionServer.response429Async(null, socket,
-					SERVER_CONFIGURATIONPROPERTIES.getQpsExceedMessage());
+			NioLongConnectionServer.response429AsyncBIO(socket, SERVER_CONFIGURATIONPROPERTIES.getQpsExceedMessage());
 		} catch (final Exception e) {
 			final String message = Task.gExceptionMessage(e);
 			LOG.error("NioLongConnectionServer.response429Async异常,message={}", message);
@@ -523,8 +522,8 @@ public class BIO {
 
 
 	private void responseBIO(final ZRequest request, final Socket socket, final ZArray array) {
-		final TaskRequest taskRequest = new TaskRequest(null, array.get(),
-				array.getTf(), new Date());
+		final TaskRequest taskRequest = new TaskRequest(array.get(), array.getTf(),
+				new Date());
 		this.requestHandler.handleBIO(taskRequest,socket, request);
 	}
 

@@ -4,7 +4,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -41,8 +40,6 @@ public class ZRequest {
 			.getBean(ServerConfigurationProperties.class);
 	public static final int requestHeaderSizeLimit = SERVERCONFIGURATIONPROPERTIES.getRequestHeaderSizeLimit();
 	public static final String MULTIPART_FORM_DATA = "multipart/form-data";
-
-	 SocketChannel socketChannel;
 
 	// -------------------------------------------------------------------------------------------------
 	private final List<String> lineList;
@@ -101,6 +98,8 @@ public class ZRequest {
 	 */
 	private String clientIp;
 
+
+	final Socket socket;
 
 	public boolean isSupportZSTD() {
 		return this.supportCompression(AcceptEncodingEnum.ZSTD);
@@ -359,8 +358,10 @@ public class ZRequest {
 		return this.lineList;
 	}
 
-	public ZRequest(final String[] lineArray) {
+	public ZRequest(final String[] lineArray, final Socket socket) {
 		this.lineList = new ArrayList<>(lineArray.length);
+		this.socket = socket;
+
 		Collections.addAll(this.lineList, lineArray);
 
 		parseRequest(this);
@@ -425,17 +426,12 @@ public class ZRequest {
 			return xForwardedFor;
 		}
 
-		if (this.socketChannel == null) {
-			return null;
-		}
-
 		// FIXME 2023年11月16日 下午2:47:38 zhanghen: ab 测试这里可能取不到,修复掉
-		final Socket socket = this.socketChannel.socket();
-		if (socket == null) {
+		if (this.socket == null) {
 			return null;
 		}
 
-		final InetSocketAddress inetSocketAddress = (InetSocketAddress) socket.getRemoteSocketAddress();
+		final InetSocketAddress inetSocketAddress = (InetSocketAddress) this.socket.getRemoteSocketAddress();
 		if (inetSocketAddress == null) {
 			return null;
 		}
@@ -667,14 +663,6 @@ public class ZRequest {
 			return "ZHeader [name=" + this.name + ", value=" + this.value + "]";
 		}
 
-	}
-
-	void setSocketChannel(final SocketChannel socketChannel) {
-		this.socketChannel = socketChannel;
-	}
-
-	public SocketChannel getSocketChannel() {
-		return this.socketChannel;
 	}
 
 	@Override

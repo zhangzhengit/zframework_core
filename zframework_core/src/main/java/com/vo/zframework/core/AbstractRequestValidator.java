@@ -34,20 +34,11 @@ abstract class AbstractRequestValidator {
 	public void handleBIO(final ZRequest request, final TaskRequest taskRequest, final Socket socket) {
 		final RequestVerificationResult r = this.validated(request, taskRequest);
 		if (r.isPassed()) {
-			this.passedBIO(request, taskRequest, socket);
+			AbstractRequestValidator.passedBIO(request, taskRequest, socket);
 		} else {
 			AbstractRequestValidator.failedBIO(socket, r);
 		}
 	}
-	public void handle(final ZRequest request, final TaskRequest taskRequest, final Socket socket) {
-		final RequestVerificationResult r = this.validated(request, taskRequest);
-		if (r.isPassed()) {
-			this.passed(request, taskRequest, socket);
-		} else {
-			this.failed(request, taskRequest, r, socket);
-		}
-	}
-
 
 	public static int getSessionIdQps() {
 		return ZContext.getBean(ServerConfigurationProperties.class).getSessionIdQps();
@@ -125,10 +116,6 @@ abstract class AbstractRequestValidator {
 	 * @param requestVerificationResult
 	 * @param socket TODO
 	 */
-	public void failed(final ZRequest request, final TaskRequest taskRequest, final RequestVerificationResult requestVerificationResult, final Socket socket) {
-		NioLongConnectionServer.response429(taskRequest.getSelectionKey(), requestVerificationResult.getMessage(), socket);
-	}
-
 	public static void failedBIO(final Socket socket, final RequestVerificationResult requestVerificationResult) {
 		NioLongConnectionServer.response429BIO(requestVerificationResult.getMessage(), socket);
 	}
@@ -140,10 +127,7 @@ abstract class AbstractRequestValidator {
 	 * @param socket TODO
 	 *
 	 */
-	public void passed(final ZRequest request, final TaskRequest taskRequest, final Socket socket) {
-		NioLongConnectionServer.response(request, taskRequest, socket);
-	}
-	public void passedBIO(final ZRequest request, final TaskRequest taskRequest, final Socket socket) {
+	public static void passedBIO(final ZRequest request, final TaskRequest taskRequest, final Socket socket) {
 		NioLongConnectionServer.responseBIO(request, taskRequest, socket);
 	}
 

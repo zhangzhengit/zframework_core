@@ -61,10 +61,6 @@ public final class TaskRequestHandler {
 	public void handleBIO(final TaskRequest taskRequest, final Socket socket, final ZRequest request) {
 
 		try {
-			// 1
-//			final ZRequest request = BodyReader.parseHeader(taskRequest);
-
-			// FIXME 2026年5月24日 09:10:24 zhangzhen : 上传这个要打开
 			request.setTf(taskRequest.getTf());
 
 			this.requestValidator.handleBIO(request, taskRequest, socket);
@@ -77,48 +73,6 @@ public final class TaskRequestHandler {
 
 			final String error = J.toJSONString(CR.error(message));
 			new ZResponse(socket)
-			.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
-			.httpStatus(httpStatus != null ? httpStatus : HttpStatusEnum.HTTP_500.getCode())
-			.header(HeaderEnum.CONNECTION.getName(), ConnectionEnum.CLOSE.getValue())
-			.body(error)
-			.write();
-
-			if (e instanceof IOException) {
-				BIO.closeSocket(socket);
-			}
-
-			return;
-		}
-	}
-	public void handle(final TaskRequest taskRequest) {
-
-		try {
-			// 2
-//			final Object attachment = taskRequest.getSelectionKey().attachment();
-//			final ConnectionState state = (ConnectionState) attachment;
-//			final ZRequest request =state.getRequest();
-
-			// 1
-			final ZRequest request = BodyReader.parseHeader(taskRequest);
-
-			if (showHttpHeader) {
-				final String clientIp = request.getClientIp();
-				final String h = new String(taskRequest.getRequestData());
-				LOG.debug("\r\n新请求:\r\nclientIp={}\r\n{}", clientIp,h);
-			}
-
-			request.setTf(taskRequest.getTf());
-
-			this.requestValidator.handle(request, taskRequest, null);
-
-		} catch (final Exception e) {
-			e.printStackTrace();
-
-			final String message = ZControllerAdviceThrowable.findCausedby(e);
-			final Integer httpStatus = ZControllerAdviceThrowable.findHttpStatus(e);
-
-			final String error = J.toJSONString(CR.error(message));
-			new ZResponse(null)
 				.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 				.httpStatus(httpStatus != null ? httpStatus : HttpStatusEnum.HTTP_500.getCode())
 				.header(HeaderEnum.CONNECTION.getName(), ConnectionEnum.CLOSE.getValue())
@@ -126,7 +80,7 @@ public final class TaskRequestHandler {
 				.write();
 
 			if (e instanceof IOException) {
-				NioLongConnectionServer.closeSocketChannelAndKeyCancel(taskRequest.getSelectionKey());
+				BIO.closeSocket(socket);
 			}
 
 			return;

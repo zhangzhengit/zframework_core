@@ -1,5 +1,6 @@
 package com.vo.zframework.core;
 
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -28,30 +29,13 @@ public class BodyReader {
 	public static final int RN_BYTES_LENGTH = STU.CRLF.getBytes().length;
 
 	/**
-	 * 从http请求报文中解析出header，是只解析header，不解析header下面的部分
-	 *
-	 * @param taskRequest
-	 * @return
-	 */
-	public static ZRequest parseHeader(final TaskRequest taskRequest) {
-		final ZRequest r = parseHeader(taskRequest.getRequestData());
-		r.setSocketChannel(taskRequest.getSocketChannel());
-		return r;
-	}
-
-	public static ZRequest parseHeader(final AR ar) {
-		final ZRequest r = parseHeader(ar.getArray().get());
-		r.setSocketChannel(ar.getSocketChannel());
-		return r;
-	}
-
-	/**
 	 * 从一个完整的http请求报文中解析出所有内容
-	 *
+	 * @param socket TODO
 	 * @param ba
+	 *
 	 * @return
 	 */
-	public static ZRequest parse(final byte[] fullBA) {
+	public static ZRequest parse(final byte[] fullBA, final Socket socket) {
 
 		final int headerEndIndex = search(fullBA, STU.CRLFCRLF, 1, 0);
 
@@ -62,7 +46,7 @@ public class BodyReader {
 		final byte[] headerBA = Arrays.copyOfRange(fullBA, 0, headerEndIndex);
 		final String[] headerKVString = new String(headerBA).split(STU.CRLF);
 
-		final ZRequest request= new ZRequest(headerKVString);
+		final ZRequest request= new ZRequest(headerKVString, socket);
 
 		if ((headerEndIndex + STU.CRLFCRLF.length()) < fullBA.length) {
 			final byte[] bodyBA = Arrays.copyOfRange(fullBA, headerEndIndex + STU.CRLFCRLF.length(), fullBA.length);
@@ -88,7 +72,7 @@ public class BodyReader {
 		final byte[] headerBA = Arrays.copyOfRange(ba, 0, headerEndIndex);
 		final String[] headerKVString = new String(headerBA).split(STU.CRLF);
 
-		final ZRequest request= new ZRequest(headerKVString);
+		final ZRequest request= new ZRequest(headerKVString, null);
 
 		final byte[] readFullBody = readFullBody(ba, request.getContentType(), headerEndIndex, request.getBoundary());
 		request.setBody(readFullBody);

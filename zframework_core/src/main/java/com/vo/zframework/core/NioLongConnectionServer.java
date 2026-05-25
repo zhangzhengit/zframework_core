@@ -1,27 +1,9 @@
 package com.vo.zframework.core;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.nio.channels.ClosedChannelException;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
-import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
-import java.nio.channels.spi.SelectorProvider;
 import java.util.Date;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
 import java.util.StringJoiner;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.vo.log.core.ZLog2;
@@ -29,14 +11,12 @@ import com.vo.zframework.cache.J;
 import com.vo.zframework.cache.STU;
 import com.vo.zframework.common.CR;
 import com.vo.zframework.configuration.ServerConfigurationProperties;
-import com.vo.zframework.enums.ConnectionEnum;
 import com.vo.zframework.exception.ZControllerAdviceActuator;
 import com.vo.zframework.exception.ZControllerAdviceThrowable;
 import com.vo.zframework.http.HttpStatusEnum;
 import com.vo.zframework.http.ZCacheControl;
 import com.vo.zframework.http.ZCookie;
 import com.vo.zframework.http.ZLastModified;
-import com.vo.zframework.validator.IllegalSKAttachmentException;
 
 /**
  * NIO长连接server
@@ -53,344 +33,19 @@ public class NioLongConnectionServer {
 
 	public static final String Z_SERVER_QPS = "zsq";
 
-	private static final AtomicLong VT_N = new AtomicLong(0L);
 	private static final ServerConfigurationProperties SERVER_CONFIGURATIONPROPERTIES= ZContext.getBean(ServerConfigurationProperties.class);
 
-	private static final String THREAD_NAME = SERVER_CONFIGURATIONPROPERTIES.getThreadName();
 
 	private static final boolean ENABLE_SERVER_QPS_LIMITED = SERVER_CONFIGURATIONPROPERTIES.getQpsLimitEnabled();
-
-	private static final boolean printNioSelect = SERVER_CONFIGURATIONPROPERTIES.getPrintNioSelect();
-	private final AtomicBoolean serverStarted = new AtomicBoolean(false);
-	private final ExecutorService ves = Executors.newVirtualThreadPerTaskExecutor();
-
-
-	/**
-	 * 执行长连接超时任务的线程池
-	 */
-	private final static ScheduledExecutorService TIMEOUT_ZE = Executors.newScheduledThreadPool(1);
-
-	/**
-	 *	存放长连接的SocketChannel对象
-	 *
-	 */
-	// FIXME 2023年7月5日 上午6:56:44 zhanghen: 改为自最后一次活动后开始计时，超时后关闭
-	private final static Map<Long, SS> SOCKET_CHANNEL_MAP = new ConcurrentHashMap<>(16, 1F);
-
-	private final TaskRequestHandler requestHandler = new TaskRequestHandler();
-
-	private static int ZC_THRESHOLD = 500;
-	ServerSocketChannel serverSocketChannel;
-	Selector selector = null;
-	int zc = 0;
-
-	public void startNIOServer(final int serverPort) {
-
-		ZContext.addBean(this.requestHandler.getClass(), this.requestHandler);
-
-		final ThreadGroup group = new ThreadGroup("nio");
-		final Thread thread = new Thread(group, () -> NioLongConnectionServer.this.startNIOServer0(serverPort));
-		thread.setName("nioT");
-		thread.setPriority(Thread.MAX_PRIORITY);
-		thread.start();
-
-		while (!this.serverStarted.get()) {
-			try {
-				Thread.sleep(1);
-			} catch (final InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
-	}
-
-	private void startNIOServer0(final int serverPort) {
-
-		this.keepAliveTimeoutJOB();
-
-		this.start(serverPort);
-
-		while (true) {
-			final int select = this.select();
-			if (select == 0) {
-				continue;
-			}
-
-			final Set<SelectionKey> selectedKeys = this.selector.selectedKeys();
-			try {
-				this.handleSelectedKeys(selectedKeys);
-			} finally {
-				selectedKeys.clear();
-			}
-
-		}
-	}
-
-	private int select() {
-		try {
-			final int select = this.selector.select();
-			// FIXME 2026年5月22日 05:08:16 zhangzhen : 这个开关和相关log记得都删掉。
-			// FIXME 2026年5月22日 05:08:32 zhangzhen : 要不要改为bio+虚拟线程？或者新增一个bioserver？
-			if (printNioSelect) {
-				LOG.debug("select={}", select);
-			}
-			if (select == 0) {
-				this.zc++;
-			}
-
-			if (this.zc >= ZC_THRESHOLD) {
-				this.rebuildSelector();
-				this.zc = 0;
-			}
-
-			return select;
-		} catch (final IOException e) {
-			e.printStackTrace();
-		}
-
-		return 0;
-	}
-
-	private void handleSelectedKeys(final Set<SelectionKey> selectedKeys) {
-		final Iterator<SelectionKey> iterator = selectedKeys.iterator();
-
-		while (iterator.hasNext()) {
-			final SelectionKey selectionKey = iterator.next();
-			iterator.remove();
-
-			try {
-				if (!selectionKey.isValid()) {
-					continue;
-				}
-
-				if (selectionKey.isAcceptable()) {
-					handleAccept(selectionKey, this.selector);
-				} else if (selectionKey.isReadable()) {
-					this.handleRead(selectionKey);
-				}
-
-			} catch (final Exception e) {
-				closeSocketChannelAndKeyCancel(selectionKey);
-				final String message = Task.gExceptionMessage(e);
-				LOG.error("foreachSelector_selectedKeys异常,message={}", message);
-				continue;
-			}
-		}
-	}
-
-	private void start(final int serverPort) {
-		try {
-			this.serverSocketChannel = ServerSocketChannel.open();
-			this.serverSocketChannel.configureBlocking(false);
-			this.serverSocketChannel.bind(new InetSocketAddress(serverPort));
-
-			// 创建Selector
-			this.selector = Selector.open();
-			this.serverSocketChannel.register(this.selector, SelectionKey.OP_ACCEPT);
-		} catch (final IOException e) {
-			e.printStackTrace();
-			final String mess = Task.gExceptionMessage(e);
-			LOG.error("启动失败,程序即将退出,serverPort={},mess={}", serverPort,mess);
-			System.exit(0);
-		}
-		LOG.info("httpServer启动成功,等待连接,serverPort={}", serverPort);
-		this.serverStarted.set(true);
-	}
-
-	private void handleRead(final SelectionKey selectionKey) {
-
-		final SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
-		if (!socketChannel.isConnected() || !socketChannel.isOpen()) {
-			closeSocketChannelAndKeyCancel(selectionKey);
-			return;
-		}
-
-		boolean shouldProcess = false;
-		synchronized (selectionKey) {
-
-			final Object att = selectionKey.attachment();
-			if (att == null) {
-				final ConnectionState state = new ConnectionState();
-				state.startReading();
-				selectionKey.attach(state);
-				shouldProcess = true;
-			} else if ((att instanceof final ConnectionState state)) {
-				if (state.isIdle()) {
-					state.startReading();
-					shouldProcess = true;
-				}
-			} else {
-				throw new IllegalSKAttachmentException(att.getClass().getCanonicalName());
-			}
-
-		}
-
-		if (shouldProcess) {
-			this.ves.execute(() -> {
-				Thread.currentThread().setName(gTName());
-				try {
-					this.action(selectionKey);
-				} finally {
-					synchronized (selectionKey) {
-						((ConnectionState) selectionKey.attachment()).finishReading();
-						if (selectionKey.isValid()) {
-							selectionKey.attach(null);
-						}
-					}
-				}
-			});
-		}
-	}
-
-	private static String gTName() {
-		return THREAD_NAME + VT_N.incrementAndGet();
-	}
-
-	private void rebuildSelector() {
-		LOG.warn("selector重建,zc={}", this.zc);
-		final Selector oldSelector = this.selector;
-		Selector newSelector = null;
-		try {
-			newSelector = SelectorProvider.provider().openSelector();
-		} catch (final IOException e) {
-			e.printStackTrace();
-		}
-
-		for (final SelectionKey oldSelectionKey : oldSelector.keys()) {
-			synchronized (oldSelectionKey) {
-				if (!oldSelectionKey.isValid()) {
-					continue;
-				}
-
-				try {
-					final int oldInterestOps = oldSelectionKey.interestOps();
-					final Object attachment = oldSelectionKey.attachment();
-					oldSelectionKey.cancel();
-					oldSelectionKey.channel().register(newSelector, oldInterestOps, attachment);
-				} catch (final ClosedChannelException e) {
-					e.printStackTrace();
-					continue;
-				}
-			}
-		}
-		try {
-			oldSelector.close();
-		} catch (final IOException e) {
-			e.printStackTrace();
-		}
-		this.selector = newSelector;
-		try {
-			this.serverSocketChannel.register(this.selector, SelectionKey.OP_ACCEPT);
-		} catch (final ClosedChannelException e) {
-			e.printStackTrace();
-		}
-	}
-
-	private void action(final SelectionKey selectionKey) {
-
-		ZArray array = null;
-		try {
-			array = HTTPProcessor.process(selectionKey);
-		} catch (final Exception e) {
-
-			final ZControllerAdviceActuator a = ZContext.getBean(ZControllerAdviceActuator.class);
-			final Object r = a.execute(e);
-
-			final Integer httpStatus = ZControllerAdviceThrowable.findHttpStatus(e);
-			final ZResponse response = new ZResponse(null)
-					.httpStatus(httpStatus != null ? httpStatus : HttpStatusEnum.HTTP_500.getCode())
-					.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
-					.body(J.toJSONString(r));
-
-			final String message = Task.gExceptionMessage(e);
-			LOG.error("HTTPProcessor.process(selectionKey)异常,e.class={},httpStatus={},r={},message={}",
-					e.getClass().getCanonicalName(),
-					httpStatus,
-					r,
-					message);
-
-			response.write();
-
-			if (e instanceof IOException) {
-				closeSocketChannelAndKeyCancel(selectionKey);
-			}
-
-			return;
-		}
-
-		if (array == null) {
-			return;
-		}
-
-		if (!NioLongConnectionServer.allow()) {
-			try {
-				NioLongConnectionServer.response429Async(selectionKey,
-						null, SERVER_CONFIGURATIONPROPERTIES.getQpsExceedMessage());
-			} catch (final Exception e) {
-				final String message = Task.gExceptionMessage(e);
-
-				LOG.error("NioLongConnectionServer.response429Async异常,message={}", message);
-				// 响应429不需要关闭连接
-				// closeSocketChannelAndKeyCancel(selectionKey);
-			}
-
-		} else {
-
-			try {
-				this.response(selectionKey, array);
-			} catch (final Exception e) {
-
-				final ZControllerAdviceActuator a = ZContext.getBean(ZControllerAdviceActuator.class);
-				final Object r = a.execute(e);
-
-				final Integer httpStatus = ZControllerAdviceThrowable.findHttpStatus(e);
-				final ZResponse response = new ZResponse(null)
-						.httpStatus(httpStatus != null ? httpStatus : HttpStatusEnum.HTTP_500.getCode())
-						.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
-						.body(J.toJSONString(r));
-
-				final String message = Task.gExceptionMessage(e);
-				LOG.error("this.response(selectionKey, array)异常,e.class={},httpStatus={},r={},message={}",
-						e.getClass().getCanonicalName(),
-						httpStatus,
-						r,
-						message);
-
-				response.write();
-
-				if (e instanceof IOException) {
-					closeSocketChannelAndKeyCancel(selectionKey);
-				}
-
-			}
-		}
-	}
-
-	public static void r500AndCloseSocketChannel(final SelectionKey selectionKey, final String errorMessage) {
-		new ZResponse(null)
-		.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
-		.httpStatus(HttpStatusEnum.HTTP_500.getCode())
-		.header(HeaderEnum.CONNECTION.getName(), ConnectionEnum.CLOSE.getValue())
-		.body(errorMessage)
-		.write();
-
-		closeSocketChannelAndKeyCancel(selectionKey);
-	}
-
-	private  void response(final SelectionKey selectionKey, final ZArray array) {
-		final TaskRequest taskRequest = new TaskRequest(selectionKey, array.get(),
-				array.getTf(), new Date());
-
-		NioLongConnectionServer.this.requestHandler.handle(taskRequest);
-	}
 
 	static boolean allow() {
 		return ENABLE_SERVER_QPS_LIMITED && QC.allow(QCTimeEnum.SECOND, NioLongConnectionServer.Z_SERVER_QPS,
 				SERVER_CONFIGURATIONPROPERTIES.getQps(), QPSHandlingEnum.SMOOTH);
 	}
 
-	public static void response429Async(final SelectionKey selectionKey, final Socket socket, final String message) {
+	public static void response429AsyncBIO(final Socket socket, final String message) {
 		Thread.ofVirtual().name("response429AsyncT")
-				.start(() -> NioLongConnectionServer.response429(selectionKey, message, socket));
+				.start(() -> NioLongConnectionServer.response429BIO(message, socket));
 	}
 
 	public static void response429BIO(final String message, final Socket socket) {
@@ -400,96 +55,12 @@ public class NioLongConnectionServer {
 		.body(J.toJSONString(CR.error(message), Include.NON_NULL))
 		.write();
 	}
-	public static void response429(final SelectionKey selectionKey, final String message, final Socket socket) {
-		new ZResponse(socket)
-		.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
-		.httpStatus(HttpStatusEnum.HTTP_429.getCode())
-		.body(J.toJSONString(CR.error(message), Include.NON_NULL))
-		.write();
-	}
-
-	private  void keepAliveTimeoutJOB() {
-
-		final int keepAliveTimeout = SERVER_CONFIGURATIONPROPERTIES.getKeepAliveTimeout();
-		LOG.debug("长连接超时任务启动,keepAliveTimeout=[{}]秒", keepAliveTimeout);
-
-		TIMEOUT_ZE.scheduleAtFixedRate(() -> {
-
-			final Set<SelectionKey> set = new HashSet<>(this.selector.keys());
-
-			final long now = System.currentTimeMillis();
-			for (final SelectionKey key : set) {
-				if (!key.isValid()) {
-					continue;
-				}
-				final ConnectionState state = (ConnectionState) key.attachment();
-
-				if ((state != null) && ((now - state.lastActiveTime) > (keepAliveTimeout * 1000))) {
-//					LOG.debug("keepAliveTimeoutJOB.sKey超时,sKey={}", key);
-					closeSocketChannelAndKeyCancel(key);
-				}
-			}
-
-		}, 1, 1, TimeUnit.SECONDS);
-	}
-
-	private static void handleAccept(final SelectionKey selectionKey, final Selector selector) {
-		final ServerSocketChannel serverSocketChannel = (ServerSocketChannel) selectionKey.channel();
-		SocketChannel socketChannel = null;
-		try {
-			socketChannel = serverSocketChannel.accept();
-		} catch (final IOException e) {
-			e.printStackTrace();
-
-			closeSocketChannelAndKeyCancel(selectionKey);
-			final String message = Task.gExceptionMessage(e);
-			LOG.error("serverSocketChannel.accept异常,message={}", message);
-		}
-
-		if (socketChannel == null) {
-			return;
-		}
-
-		try {
-			socketChannel.configureBlocking(false);
-		} catch (final IOException e) {
-			e.printStackTrace();
-
-			closeSocketChannelAndKeyCancel(selectionKey);
-
-			final String message = Task.gExceptionMessage(e);
-			LOG.error("socketChannel.configureBlocking(false)异常,message={}", message);
-		}
-
-		try {
-			socketChannel.register(selector, SelectionKey.OP_READ);
-		} catch (final ClosedChannelException e) {
-			e.printStackTrace();
-
-			closeSocketChannelAndKeyCancel(selectionKey);
-
-			final String message = Task.gExceptionMessage(e);
-			LOG.error("socketChannel.register异常,message={}", message);
-
-		}
-
-//		final Object att = selectionKey.attachment();
-//		if (att != SKStatusEnum.READING) {
-//			selectionKey.attach(SKStatusEnum.READING);
-//		}
-//
-//		final ConnectionState state= new ConnectionState();
-//		state.setLastActiveTime(System.currentTimeMillis());
-//		state.setStatusEnum(SKStatusEnum.IDLE);
-//		selectionKey.attach(state);
-
-	}
 
 	public static void responseBIO(final ZRequest request, final TaskRequest taskRequest, final Socket socket) {
 
 		try {
 			ReqeustInfo.set(request);
-			final Task task = new Task(null, socket);
+			final Task task = new Task(socket);
 			final String contentType = request.getContentType();
 			if (STU.isNotEmpty(contentType)
 					&& contentType.toLowerCase().startsWith(ContentTypeEnum.MULTIPART_FORM_DATA.getType().toLowerCase())) {
@@ -533,104 +104,7 @@ public class NioLongConnectionServer {
 		}
 
 	}
-	public static void response(final ZRequest request, final TaskRequest taskRequest, final Socket socket) {
 
-		try {
-			ReqeustInfo.set(request);
-			final Task task = new Task(taskRequest.getSelectionKey(), socket);
-			final String contentType = request.getContentType();
-			if (STU.isNotEmpty(contentType)
-					&& contentType.toLowerCase().startsWith(ContentTypeEnum.MULTIPART_FORM_DATA.getType().toLowerCase())) {
-				// setOriginalRequestBytes方法会导致qps降低，FORM_DATA 才set
-				// 后续解析需要，或是不需要，再看.
-				request.setOriginalRequestBytes(taskRequest.getRequestData());
-			}
-
-			if (taskRequest.getSocketChannel().isOpen()) {
-				NioLongConnectionServer.response(taskRequest.getSelectionKey(), request, task);
-			}
-
-		} catch (final Exception e) {
-
-			// 这个catch里 真正处理 response里的异常，用统一配置的异常处理器来处理
-			final ZControllerAdviceActuator a = ZContext.getBean(ZControllerAdviceActuator.class);
-			final Object r = a.execute(e);
-
-			final Integer httpStatus = ZControllerAdviceThrowable.findHttpStatus(e);
-			final ZResponse response =
-					new ZResponse(null)
-					.httpStatus(httpStatus != null ? httpStatus : HttpStatusEnum.HTTP_500.getCode())
-					.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
-					.body(J.toJSONString(r));
-
-			if (SERVER_CONFIGURATIONPROPERTIES.isResponseZSessionId()) {
-				NioLongConnectionServer.setZSessionId(request, response);
-			}
-
-			response.write();
-
-			if (e instanceof IOException) {
-				final String message = Task.gExceptionMessage(e);
-				LOG.error("responseIOException异常,message={}", message);
-				NioLongConnectionServer.closeSocketChannelAndKeyCancel(taskRequest.getSelectionKey());
-			} else {
-				final String message = Task.gExceptionMessage(e);
-//				LOG.error("response业务异常,message={}", message);
-			}
-
-		} finally {
-			ReqeustInfo.remove();
-		}
-
-	}
-
-	public static void closeSocketChannelAndKeyCancel(final SelectionKey selectionKey) {
-		SK.closeSocketChannelAndSelectionKeyCancel(selectionKey);
-	}
-
-	/**
-	 * 最终真正响应的方法，所有的响应(当前实现为非异常的响应)都在此方法中执行，以便于统一处理一些逻辑
-	 *
-	 * @param selectionKey
-	 * @param request
-	 * @param task
-	 * @param socketChannel
-	 * @throws Exception
-	 */
-	private static void response(final SelectionKey selectionKey, final ZRequest request, final Task task) throws Exception {
-
-		try {
-			final ZResponse response = task.invoke(request, selectionKey);
-
-			if ((response == null) || response.isWritten()) {
-				return;
-			}
-
-			final boolean keepAlive = request.isKeepAlive();
-			addConnectionToKAMap(keepAlive, selectionKey);
-
-			final Integer httpStatus = response.getHttpStatus();
-			if (httpStatus == HttpStatusEnum.HTTP_200.getCode()) {
-				response.setETag(request, response.getBody(), ETagEnum.STRONG);
-			}
-
-			// FIXME 2025年1月3日 上午3:22:26 zhangzhen : Last-Modified
-			// FIXME 2025年1月3日 上午3:28:22 zhangzhen : last-modified头貌似不好写
-			// 因为只有在业务代码中才容易判断资源的修改时间
-			//			setLastModified(request, response);
-
-			response.write();
-
-			if (!keepAlive) {
-				closeSocketChannelAndKeyCancel(selectionKey);
-			}
-
-		} catch (final Exception e) {
-			// 这里不能关闭，因为外面的异常处理器类还要write，继续抛
-			throw e;
-		}
-
-	}
 	private static void responseBIO(final ZRequest request, final Task task) throws Exception {
 
 		try {
@@ -681,13 +155,6 @@ public class NioLongConnectionServer {
 		response.header("Last-Modified", ZDateUtil.gmt(new Date()));
 	}
 
-	private static void addConnectionToKAMap(final boolean keepAlive, final SelectionKey selectionKey) {
-		if (keepAlive) {
-			final SS ss = new SS(selectionKey);
-			SOCKET_CHANNEL_MAP.put((System.currentTimeMillis() / 1000) * 1000, ss);
-		}
-	}
-
 	static void setZSessionId(final ZRequest request, final ZResponse response) {
 		if ((request == null) || (response == null)) {
 			return;
@@ -734,27 +201,6 @@ public class NioLongConnectionServer {
 		}
 
 		response.header(HeaderEnum.CACHE_CONTROL.getName(), joiner.toString());
-	}
-
-
-	public static class SS {
-
-		private final SelectionKey selectionKey;
-		private final SocketChannel socketChannel;
-
-		public SS(final SelectionKey selectionKey) {
-			this.socketChannel = (SocketChannel) selectionKey.channel();
-			this.selectionKey = selectionKey;
-		}
-
-		public SocketChannel getSocketChannel() {
-			return this.socketChannel;
-		}
-
-		public SelectionKey getSelectionKey() {
-			return this.selectionKey;
-		}
-
 	}
 
 

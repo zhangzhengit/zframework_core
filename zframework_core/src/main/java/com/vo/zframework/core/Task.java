@@ -14,8 +14,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.net.Socket;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -89,11 +87,9 @@ public class Task {
 	public static final int HTTP_STATUS_500 = 500;
 	public static final String INTERNAL_SERVER_ERROR = "Internal Server Error";
 	public static final ContentTypeEnum DEFAULT_CONTENT_TYPE = ContentTypeEnum.APPLICATION_JSON;
-	private final SelectionKey selectionKey;
 	private final Socket socket;
 
-	public Task(final SelectionKey selectionKey, final Socket socket) {
-		this.selectionKey = selectionKey;
+	public Task(final Socket socket) {
 		this.socket = socket;
 	}
 
@@ -148,63 +144,6 @@ public class Task {
 	 * @throws Exception
 	 *
 	 */
-	public ZResponse invoke(final ZRequest request, final SelectionKey selectionKey) throws Exception {
-
-		final String path = request.getPath();
-		ZRMethod zrMethod = ZControllerMap.getMethodByMethodEnumAndPath(request.getMethodEnum(), path);
-
-		// 查找对应的控制器来处理
-		if (zrMethod == null) {
-
-			// 用非请求的METHOD看是否有，有则响应405
-			final ZRMethod noRequestMethodMethod = ZRC.singleton().computeIfAbsent("MethodEnum.values-" + path, () -> {
-				final MethodEnum[] es = MethodEnum.values();
-				for (final MethodEnum methodEnum : es) {
-					if (methodEnum != request.getMethodEnum()) {
-						final ZRMethod methodT = ZControllerMap.getMethodByMethodEnumAndPath(methodEnum, path);
-						if (methodT != null) {
-							return methodT;
-						}
-					}
-				}
-				return null;
-			}, true);
-
-			if (noRequestMethodMethod != null) {
-				return ReU.response405(selectionKey, this.getSocket(), request.getMethodEnum().getMethod());
-			}
-
-			// 用正则依然匹配不到，响应404
-			final ZRMethod matcheZRMethod = Task.getMatcheMethod(request, path);
-			if (matcheZRMethod == null) {
-				return ReU.response404(selectionKey, this.getSocket(), path);
-			}
-
-			zrMethod = matcheZRMethod;
-		}
-
-		try {
-			if (zrMethod.isVoid()) {
-				ZRSC.set((SocketChannel) selectionKey.channel());
-			}
-
-			// 找到目标方法了，开始生成参数了
-			final Object[] parameterArray = this.generateParameters(zrMethod.getMethod(), request, path);
-			if (parameterArray == null) {
-				return null;
-			}
-
-			final Object zController = ZControllerMap.getObjectByMethod(zrMethod.getMethod());
-			final ZResponse re = this.invokeAndResponse(zrMethod, parameterArray, zController, request);
-			return re;
-
-		} catch (final Exception e) {
-			//			e.printStackTrace();
-			// 这里不处理，抛出去
-			throw e;
-		}
-
-	}
 	public ZResponse invokeBIO(final ZRequest request) throws Exception {
 
 		final String path = request.getPath();
@@ -252,7 +191,7 @@ public class Task {
 			}
 
 			final Object zController = ZControllerMap.getObjectByMethod(zrMethod.getMethod());
-			final ZResponse re = this.invokeAndResponse(zrMethod, parameterArray, zController, request);
+			final ZResponse re = this.invokeAndResponseBIO(zrMethod, parameterArray, zController, request);
 			return re;
 
 		} catch (final Exception e) {
@@ -321,7 +260,7 @@ public class Task {
 	}
 
 	@SuppressWarnings("boxing")
-	private ZResponse invokeAndResponse(final ZRMethod zrMethod, final Object[] parametersArray, final Object zControllerObject, final ZRequest request)
+	private ZResponse invokeAndResponseBIO(final ZRMethod zrMethod, final Object[] parametersArray, final Object zControllerObject, final ZRequest request)
 			throws IllegalAccessException, InvocationTargetException {
 
 		final String controllerName = zControllerObject.getClass().getName();
