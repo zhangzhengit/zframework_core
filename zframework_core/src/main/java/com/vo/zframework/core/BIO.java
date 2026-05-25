@@ -24,6 +24,8 @@ public class BIO {
 
 	private static final ServerConfigurationProperties SERVER_CONFIGURATIONPROPERTIES= ZContext.getBean(ServerConfigurationProperties.class);
 
+	private static final int UPLOAD_FILE_TO_TEMP_SIZE = SERVER_CONFIGURATIONPROPERTIES.getUploadFileToTempSize();
+
 	private final TaskRequestHandler requestHandler = new TaskRequestHandler();
 
 	public void startServer(final int serverPort) {
@@ -66,7 +68,7 @@ public class BIO {
 	 * @param socket
 	 */
 	void handle(final Socket socket) {
-		System.out.println("New connection from: " + socket.getRemoteSocketAddress());
+//		System.out.println("New connection from: " + socket.getRemoteSocketAddress());
 
 		final int capacity = SERVER_CONFIGURATIONPROPERTIES.getByteBufferSize();
 
@@ -118,11 +120,7 @@ public class BIO {
 					break;
 
 				case PARSE_BODY:
-					// FIXME 2026年5月25日 05:28:14 zhangzhen : 写入临时文件的阈值
-//					final int threshold = 1024 * 1;
-					final int threshold = Integer.MAX_VALUE;
-					parseStatusEnum = this.parseBody(socket, capacity, bufferedInputStream, array, pd, threshold);
-
+					parseStatusEnum = this.parseBody(socket, capacity, bufferedInputStream, array, pd);
 					break;
 
 				case PARSE_END:
@@ -142,91 +140,103 @@ public class BIO {
 	}
 
 	private HttpParseStatusEnum parseBody(final Socket socket, final int capacity,
-			final BufferedInputStream bufferedInputStream, final ZArray array, final PD pd, final int threshold) {
-		HttpParseStatusEnum parseStatusEnum;
+			final BufferedInputStream bufferedInputStream, final ZArray array,
+			final PD pd) {
 
-		// FIXME 2026年5月25日 05:51:46 zhangzhen : 这个if还有问题，
-		if (pd.getContentLength() >= threshold) {
+		if (pd.getContentLength() >= (UPLOAD_FILE_TO_TEMP_SIZE * 1024)) {
+			return this.writeToTempFile(socket, capacity, bufferedInputStream, array, pd);
+		}
 
-			final String randomFileName = "file_" + System.nanoTime();
-			final TF tf = DefaultHttpReader.saveToTempFile(randomFileName, randomFileName, randomFileName);
-
-			final byte[] bodyOne = Arrays.copyOfRange(array.get(),
-					pd.getHeaderEndIndex() + STU.CRLF.length(), array.length());
-			tf.write(bodyOne);
-
-			// 不再放入array,而是写入文件
-			final int fbc = 1024 * 8 * 4;
-			final byte[] buffer = new byte[fbc];
-			while (true) {
-				final int r1 = BIO.read0(bufferedInputStream, buffer);
-
-//							System.out.println("r1 = " + r1);
-
-				if (r1 <= -1) {
-					break;
-				}
-				tf.write(buffer, 0, r1);
-				if (r1 < fbc) {
-					break;
-				}
-			}
-
-			final Fm fm = DefaultHttpReader.hFM(array);
-			final String boundary = fm.getBoundary();
-
-			// array 只保留header
-			final int headerEndIndex2 = pd.getHeaderEndIndex();
-			final byte[] aT = Arrays.copyOfRange(array.get(), 0, headerEndIndex2 + STU.CRLFCRLF.length());
+		if ((pd.getHeaderEndIndex() + STU.CRLFCRLF.length() + pd.getContentLength()) == array.length()) {
+			final ZRequest request = this.parse(array, socket);
+			this.responseBIO(request, socket, array);
 			array.reset(capacity);
-			array.add(aT);
-//						final int contentLengthIndex = BodyReader.search(array.get(),
-//								HeaderEnum.CONTENT_LENGTH.getName(), 1, pd.getRequestLineIndex() + STU.CRLF.length());
 
-			DefaultHttpReader.readFileNameAndContentType(tf);
-//						DefaultHttpReader.readChuleBody(tf, null);
+			return HttpParseStatusEnum.PARSE_REQUEST_LINE;
+		}
 
-			DefaultHttpReader.removeNB(tf, boundary, array);
-			array.setTf(tf);
+		return HttpParseStatusEnum.PARSE_BODY;
+	}
 
-			System.out.println("randomFileName = " + randomFileName);
-			final int x = 10;
+	private HttpParseStatusEnum writeToTempFile(final Socket socket, final int capacity,
+			final BufferedInputStream bufferedInputStream, final ZArray array, final PD pd) {
 
-			// FIXME 2026年5月24日 14:22:21 zhangzhen : array在此只保留body之前的
-			// 再从临时文件中读出file之外的合在一起作为array
+		final String randomFileName = "file_" + System.nanoTime();
+		final TF tf = DefaultHttpReader.saveToTempFile(randomFileName, randomFileName, randomFileName);
+
+		final byte[] bodyOne = Arrays.copyOfRange(array.get(), pd.getHeaderEndIndex() + STU.CRLF.length(),
+				array.length());
+		tf.write(bodyOne);
+
+		// 先判断一下 bodyOne 是否已包含了完整的请求
+		if ((pd.getHeaderEndIndex() + STU.CRLFCRLF.length() + pd.getContentLength()) == array.get().length) {
 
 			final ZRequest request = this.parse(array, socket);
 			this.responseBIO(request, socket, array);
 			array.reset(capacity);
-			parseStatusEnum = HttpParseStatusEnum.PARSE_REQUEST_LINE;
 
-		} else {
-
-			final int baLength = array.length();
-//						System.out.println("PARSE_BODY_baLength = " + baLength);
-			if ((pd.getHeaderEndIndex() + STU.CRLFCRLF.length() + pd.getContentLength()) == baLength) {
-//							System.out.println("PARSE_BODY-contentLength，读完了整个http请求");
-
-//							final byte[] bodyBA = Arrays.copyOfRange(array.get(),
-//									pd.getHeaderEndIndex() + STU.CRLFCRLF.length(), baLength);
-//							final String body = new String(bodyBA);
-//						System.out.println("body = ");
-//						System.out.println(body);
-
-				final ZRequest request = this.parse(array, socket);
-//							final long t1 = System.currentTimeMillis();
-				this.responseBIO(request, socket, array);
-//							final long t2 = System.currentTimeMillis();
-//							System.out.println("responseBIO-ms = " + (t2-t1));
-				array.reset(capacity);
-				parseStatusEnum = HttpParseStatusEnum.PARSE_REQUEST_LINE;
-
-			} else {
-				parseStatusEnum = HttpParseStatusEnum.PARSE_BODY;
-			}
+			return HttpParseStatusEnum.PARSE_REQUEST_LINE;
 		}
 
-		return parseStatusEnum;
+		// 不再放入array,而是写入文件
+		final int fbc = 1024 * 8;
+		final byte[] buffer = new byte[fbc];
+		int fRC = 0;
+		while (true) {
+			final int r1 = BIO.read0(bufferedInputStream, buffer);
+
+//							System.out.println("r1 = " + r1);
+
+			if (r1 <= -1) {
+				break;
+			}
+			fRC += r1;
+			tf.write(buffer, 0, r1);
+
+			// FIXME 2026年5月25日 09:09:20 zhangzhen : debug 用暂时放入array，记得删掉
+//				array.add(buffer, 0, r1);
+
+			if ((pd.getHeaderEndIndex() + STU.CRLFCRLF.length() + pd.getContentLength())
+					== (array.length() + fRC)) {
+//						== (array.length())) {
+
+				final Fm fm = DefaultHttpReader.hFM(array);
+				final String boundary = fm.getBoundary();
+
+				DefaultHttpReader.readFileNameAndContentType(tf);
+				DefaultHttpReader.removeNB(tf, boundary, array);
+
+				array.setTf(tf);
+
+				final ZRequest request = this.parse(array, socket);
+				this.responseBIO(request, socket, array);
+				array.reset(capacity);
+
+				return HttpParseStatusEnum.PARSE_REQUEST_LINE;
+			}
+
+		}
+
+		final Fm fm = DefaultHttpReader.hFM(array);
+		final String boundary = fm.getBoundary();
+
+		// array 只保留header
+		final int headerEndIndex2 = pd.getHeaderEndIndex();
+		final byte[] aT = Arrays.copyOfRange(array.get(), 0, headerEndIndex2 + STU.CRLFCRLF.length());
+		array.reset(capacity);
+		array.add(aT);
+
+		DefaultHttpReader.readFileNameAndContentType(tf);
+
+		DefaultHttpReader.removeNB(tf, boundary, array);
+		array.setTf(tf);
+
+		System.out.println("randomFileName = " + randomFileName);
+
+		final ZRequest request = this.parse(array, socket);
+		this.responseBIO(request, socket, array);
+		array.reset(capacity);
+		return HttpParseStatusEnum.PARSE_REQUEST_LINE;
 	}
 
 	private HttpParseStatusEnum parseHeader(final Socket socket, final int capacity, final ZArray array, final PD pd,
@@ -490,7 +500,7 @@ public class BIO {
 		try {
 			return bufferedInputStream.read(buffer);
 		} catch (final IOException e) {
-			e.printStackTrace();
+//			e.printStackTrace();
 //			if(e instanceof SocketTimeoutException) {
 //			}
 			return -1;

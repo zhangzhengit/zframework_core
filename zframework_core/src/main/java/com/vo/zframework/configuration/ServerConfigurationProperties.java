@@ -84,6 +84,14 @@ public class ServerConfigurationProperties {
 	private int uploadFileSize = 1024 * 50;
 
 	/**
+	 * 上传文件时从[一次性读取内存]改为[边读边写入到临时文件]的阈值,单位：KB
+	 */
+	@ZMin(min = 1024 * 50)
+	@ZMax(max = 1024 * 1024 * 100)
+	@ZNotNull
+	private int uploadFileToTempSize;
+
+	/**
 	 * 上传文件时存放临时文件的目录，
 	 * 默认为[user.dir]下的temp目录
 	 *
@@ -751,6 +759,14 @@ public class ServerConfigurationProperties {
 
 	public void setMethod(final String method) {
 		this.method = method;
+	}
+
+	public int getUploadFileToTempSize() {
+		return this.uploadFileToTempSize;
+	}
+
+	public void setUploadFileToTempSize(final int uploadFileToTempSize) {
+		this.uploadFileToTempSize = uploadFileToTempSize;
 	}
 
 }
