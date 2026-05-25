@@ -806,7 +806,7 @@ public class DefaultHttpReader {
 	}
 
 
-	private static void closeTFStream(final TF tf) {
+	public static void closeTFStream(final TF tf) {
 		if (tf == null) {
 			return;
 		}

@@ -813,7 +813,8 @@ public class Task {
 		return parametersArray;
 	}
 
-	private static int tf(final Object[] parametersArray, final ZRequest request, final String path, int pI,
+	private static int tf(final Object[] parametersArray, final ZRequest request,
+			final String path, final int pI,
 			final Parameter p) {
 		if ((request.getTf() == null) || !p.getName().equals(request.getTf().getName())) {
 			throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在", HttpStatusEnum.HTTP_400.getCode());
@@ -835,8 +836,9 @@ public class Task {
 				null, true,
 				contentType, inputStream);
 
-		pI = Task.setValue(parametersArray, pI, p, file);
-		return pI;
+		final int nI = pI;
+		final int newPI = Task.setValue(parametersArray, nI, p, file);
+		return newPI;
 	}
 
 	/**

@@ -203,10 +203,13 @@ public class BIO {
 				final Fm fm = DefaultHttpReader.hFM(array);
 				final String boundary = fm.getBoundary();
 
-				DefaultHttpReader.readFileNameAndContentType(tf);
-				DefaultHttpReader.removeNB(tf, boundary, array);
-
-				array.setTf(tf);
+				try {
+					DefaultHttpReader.readFileNameAndContentType(tf);
+					DefaultHttpReader.removeNB(tf, boundary, array);
+					array.setTf(tf);
+				} finally {
+					DefaultHttpReader.closeTFStream(tf);
+				}
 
 				final ZRequest request = this.parse(array, socket);
 				this.responseBIO(request, socket, array);
@@ -217,26 +220,35 @@ public class BIO {
 
 		}
 
-		final Fm fm = DefaultHttpReader.hFM(array);
-		final String boundary = fm.getBoundary();
-
-		// array 只保留header
-		final int headerEndIndex2 = pd.getHeaderEndIndex();
-		final byte[] aT = Arrays.copyOfRange(array.get(), 0, headerEndIndex2 + STU.CRLFCRLF.length());
-		array.reset(capacity);
-		array.add(aT);
-
-		DefaultHttpReader.readFileNameAndContentType(tf);
-
-		DefaultHttpReader.removeNB(tf, boundary, array);
-		array.setTf(tf);
-
-		System.out.println("randomFileName = " + randomFileName);
-
-		final ZRequest request = this.parse(array, socket);
-		this.responseBIO(request, socket, array);
-		array.reset(capacity);
+		// FIXME 2026年5月25日 10:43:46 zhangzhen : 正常逻辑不会走到这里，
+		// 为了编译通过，返回PARSE_REQUEST_LINE
 		return HttpParseStatusEnum.PARSE_REQUEST_LINE;
+
+//		// FIXME 2026年5月25日 10:42:21 zhangzhen : 和上面代码重复了，抽成一个
+//
+//		final Fm fm = DefaultHttpReader.hFM(array);
+//		final String boundary = fm.getBoundary();
+//
+//		// array 只保留header
+//		final int headerEndIndex2 = pd.getHeaderEndIndex();
+//		final byte[] aT = Arrays.copyOfRange(array.get(), 0, headerEndIndex2 + STU.CRLFCRLF.length());
+//		array.reset(capacity);
+//		array.add(aT);
+//
+//		try {
+//			DefaultHttpReader.readFileNameAndContentType(tf);
+//			DefaultHttpReader.removeNB(tf, boundary, array);
+//			array.setTf(tf);
+//		} finally {
+//			DefaultHttpReader.closeTFStream(tf);
+//		}
+//
+//		System.out.println("randomFileName = " + randomFileName);
+//
+//		final ZRequest request = this.parse(array, socket);
+//		this.responseBIO(request, socket, array);
+//		array.reset(capacity);
+//		return HttpParseStatusEnum.PARSE_REQUEST_LINE;
 	}
 
 	private HttpParseStatusEnum parseHeader(final Socket socket, final int capacity, final ZArray array, final PD pd,
