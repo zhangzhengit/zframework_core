@@ -1,5 +1,6 @@
 package com.vo.zframework.core;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -45,10 +46,10 @@ public class ZSingleton {
 
 		synchronized (cls.getName()) {
 			try {
-				final Object newInstance = cls.newInstance();
+				final Object newInstance = cls.getDeclaredConstructor().newInstance();
 				SINGLETON_MAP.put(cls.getName(), newInstance);
 				return (T) newInstance;
-			} catch (InstantiationException | IllegalAccessException e) {
+			} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException e) {
 				e.printStackTrace();
 			}
 			return null;
