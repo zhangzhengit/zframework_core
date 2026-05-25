@@ -17,7 +17,7 @@ import com.vo.zframework.http.HttpStatusEnum;
 public class ReU {
 
 	public static void response405Socket(final Socket socket, final String message) {
-		 new ZResponse(null, socket)
+		 new ZResponse(socket)
 				.httpStatus(HttpStatusEnum.HTTP_405.getCode())
 				.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 				.body(J.toJSONString(CR.error("请求Method不支持：[" + message + "]")))
@@ -33,7 +33,7 @@ public class ReU {
 		return r;
 	}
 	public static ZResponse response405(final SelectionKey selectionKey, final Socket socket, final String message) {
-		final ZResponse r = new ZResponse(selectionKey, socket)
+		final ZResponse r = new ZResponse(socket)
 				.httpStatus(HttpStatusEnum.HTTP_405.getCode())
 				.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 				.body(J.toJSONString(CR.error("请求Method不支持：[" + message + "]")))
@@ -49,7 +49,7 @@ public class ReU {
 		return r;
 	}
 	public static ZResponse response404(final SelectionKey selectionKey, final Socket socket, final String message) {
-		final ZResponse r = new ZResponse(selectionKey, socket)
+		final ZResponse r = new ZResponse(socket)
 				.httpStatus(HttpStatusEnum.HTTP_404.getCode())
 				.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 				.body(J.toJSONString(CR.error("请求路径不存在[" + message + "]")));

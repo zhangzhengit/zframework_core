@@ -11,7 +11,7 @@ public class AU {
 
 	/**
 	 * 取一个数组的特征
-	 * 
+	 *
 	 * @param ba
 	 * @return
 	 */
@@ -43,13 +43,17 @@ public class AU {
 
 		return "T-" + ba.length + '-' + sum + '-' + difference + '-' + sumJi + '-' + sumOu + '-' + zeroC + '-' + oneC;
 	}
-	
+
 	public static <T> boolean isNotEmpty(final T[] array) {
 		return (array != null) && (array.length > 0);
 	}
 
 	public static boolean isEmpty(final byte[] array) {
 		return (array == null) || (array.length == 0);
+	}
+
+	public static boolean isNotEmpty(final byte[] array) {
+		return !isEmpty(array);
 	}
 
 	public static <T> boolean isEmpty(final T[] array) {

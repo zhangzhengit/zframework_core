@@ -2,17 +2,13 @@ package com.vo.zframework.core;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +19,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import com.vo.log.core.ZLog2;
+import com.vo.zframework.cache.AU;
 import com.vo.zframework.cache.CU;
 import com.vo.zframework.cache.STU;
 import com.vo.zframework.compression.Deflater;
@@ -132,8 +129,6 @@ public class ZResponse {
 	private final AtomicReference<Integer> httpStatus = new AtomicReference<>(HttpStatusEnum.HTTP_200.getCode());
 	private final AtomicReference<String> contentTypeAR = new AtomicReference<>(Task.DEFAULT_CONTENT_TYPE.getValue());
 
-	private final SocketChannel socketChannel;
-	private final SelectionKey selectionKey;
 	private final Socket socket;
 	private OutputStream outputStream;
 	private BufferedOutputStream bufferedOutputStream;
@@ -143,8 +138,6 @@ public class ZResponse {
 	private byte[] body;
 
 	private int bIC = 0;
-
-	FileChannel fileChannel;
 
 	/**
 	 * write()方法是否执行过了
@@ -262,7 +255,8 @@ public class ZResponse {
 		this.header(HeaderEnum.TRANSFER_ENCODING.getName(), "chunked");
 
 		// body部分
-		final byte[] b = new byte[DEFAULT_BUFFER_SIZE];
+		final int bufferCapacity = DEFAULT_BUFFER_SIZE;
+		final byte[] buffer = new byte[bufferCapacity];
 
 		final BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream, BIS_DEFAULT_BUFFER_SIZE);
 
@@ -271,7 +265,7 @@ public class ZResponse {
 		boolean readFirst = true;
 		while (true) {
 			try {
-				final int read = bufferedInputStream.read(b);
+				final int read = bufferedInputStream.read(buffer);
 				if (read == -1) {
 					break;
 				}
@@ -283,19 +277,19 @@ public class ZResponse {
 				if (readFirst) {
 					// FIXME 2025年12月13日 00:14:31 zhangzhen :  这里逻辑不对，304了，就不应该继续读写body了
 					// 要不先读一次，和if-none-match比较，否再读写body，是则直接304？
-					this.setETag(request, b, ETagEnum.WEAK);
+					this.setETag(request, buffer, ETagEnum.WEAK);
 					this.setContentEncoding(request, exceedsCompressionMinLength);
 					this.write(this.headerArray());
 				}
 
 				readFirst = false;
 
-				final ByteBuffer bbB = ByteBuffer.wrap(b, 0, read);
-				this.compressBodyAndWrite(request, bbB, read, exceedsCompressionMinLength);
+				final byte[] bx = read >= bufferCapacity ? buffer :Arrays.copyOfRange(buffer, 0, read);
+				this.compressBodyAndWrite(request, read, exceedsCompressionMinLength, bx);
 
-				this.write(ByteBuffer.wrap(CRLF_BYTES));
+				this.write(CRLF_BYTES);
 
-				if (read < DEFAULT_BUFFER_SIZE) {
+				if (read < bufferCapacity) {
 					break;
 				}
 			} catch (final IOException e) {
@@ -303,7 +297,7 @@ public class ZResponse {
 			}
 		}
 
-		this.write(ByteBuffer.wrap(ZERO_RNRN_BYTES));
+		this.write(ZERO_RNRN_BYTES);
 
 		this.write.set(true);
 
@@ -315,82 +309,9 @@ public class ZResponse {
 		}
 
 		if (!ReqeustInfo.get().isKeepAlive()) {
-			NioLongConnectionServer.closeSocketChannelAndKeyCancel(this.selectionKey);
+			BIO.closeSocket(this.socket);
 		}
 
-	}
-
-	/**
-	 * 从文件流中读取内容并写入响应中去，并在最后关闭流。
-	 *
-	 * 文件大小达到配置的压缩阈值则用Stream边读取边压缩写入，
-	 * 未达到则零拷贝transferTo
-	 *
-	 *
-	 * @param fileInputStream
-	 */
-	public synchronized void body(final FileInputStream fileInputStream) {
-
-		if (fileInputStream == null) {
-			throw new IllegalArgumentException("fileInputStream 不能为null");
-		}
-
-		this.checkBIC();
-
-		if (this.write.get()) {
-			return;
-		}
-
-		this.checkContentType();
-		this.fileChannel = fileInputStream.getChannel();
-		final long fs = ZResponse.getSiezFromFC(this.fileChannel);
-
-		final boolean exceedsCompressionMinLength = this.compress(fs >= (SERVER_CONFIGURATIONPROPERTIES.getCompressionMinLength() * 1024));
-		// 需要压缩，仍用Stream边读边压缩写入
-		if (exceedsCompressionMinLength) {
-			this.clearBody();
-			this.body((InputStream)fileInputStream);
-			return;
-		}
-
-		// 已经确定的header部分
-		this.beforeWrite();
-		this.header(HeaderEnum.CONTENT_LENGTH.getName(), String.valueOf(fs));
-		this.write(this.headerArray());
-
-		try {
-			long position = 0;
-			while ((position < fs) && this.socketChannel.isOpen()) {
-				final long transferred = this.fileChannel.transferTo(position, fs - position, this.socketChannel);
-				position += transferred;
-			}
-		} catch (final IOException e) {
-			e.printStackTrace();
-		}
-
-		try {
-			fileInputStream.close();
-		} catch (final IOException e) {
-			e.printStackTrace();
-		}
-
-		this.write(ByteBuffer.wrap(ZERO_RNRN_BYTES));
-
-		this.write.set(true);
-
-		if (!ReqeustInfo.get().isKeepAlive()) {
-			NioLongConnectionServer.closeSocketChannelAndKeyCancel(this.selectionKey);
-		}
-	}
-
-	private static long getSiezFromFC(final FileChannel fileChannel) {
-		long fs = 0;
-		try {
-			fs = fileChannel.size();
-		} catch (final IOException e) {
-			e.printStackTrace();
-		}
-		return fs;
 	}
 
 	/**
@@ -426,56 +347,46 @@ public class ZResponse {
 		}
 	}
 
-	private void compressBodyAndWrite(final ZRequest request, final ByteBuffer bbB, final int read, final boolean exceedsCompressionMinLength) {
+	private void compressBodyAndWrite(final ZRequest request, final int read,
+			final boolean exceedsCompressionMinLength, final byte[] ba) {
 
 		if (!this.compress(exceedsCompressionMinLength)) {
 			final String chunkHeader = Integer.toHexString(read) + STU.CRLF;
-			final ByteBuffer chunkHeaderBuffer = ByteBuffer.wrap(chunkHeader.getBytes());
-			this.write(chunkHeaderBuffer);
-			this.write(bbB);
+			this.write(chunkHeader.getBytes());
+			this.write(ba);
 
 			return;
 		}
 
 		if (request.isSupportZSTD()) {
 
-			final byte[] bfZSTD = new byte[bbB.remaining()];
-			bbB.get(bfZSTD);
+			final byte[] bfZSTD =ba;
 			final byte[] compress = ZSTD.compress(bfZSTD);
 			final String chunkHeader = Integer.toHexString(compress.length) + STU.CRLF;
-			final ByteBuffer chunkHeaderBuffer = ByteBuffer.wrap(chunkHeader.getBytes());
-			this.write(chunkHeaderBuffer);
+			this.write(chunkHeader.getBytes());
+			this.write(compress);
 
-			this.write(ByteBuffer.wrap(compress));
 		} else if (request.isSupportGZIP()) {
 			// FIXME 2025年1月20日 下午5:34:10 zhangzhen : qq浏览器和360极速浏览器 gzip 解码 2MB的.css文件不完整？后面有一部分不显示？
 			// 而上面的支持zstd的Edge和Firefox 解码zstd是正常的。
 
-			final byte[] bfGZIP = new byte[bbB.remaining()];
-			bbB.get(bfGZIP);
+			final byte[] bfGZIP = ba;
 			final byte[] compress = ZGzip.compress(bfGZIP);
 			final String chunkHeader = Integer.toHexString(compress.length) + STU.CRLF;
-			final ByteBuffer chunkHeaderBuffer = ByteBuffer.wrap(chunkHeader.getBytes());
-			this.write(chunkHeaderBuffer);
-
-			this.write(ByteBuffer.wrap(compress));
+			this.write(chunkHeader.getBytes());
+			this.write(compress);
 		} else if (request.isSupportDEFLATE()) {
-			final byte[] bfDEFLATE = new byte[bbB.remaining()];
-			bbB.get(bfDEFLATE);
+			final byte[] bfDEFLATE = ba;
 			final byte[] compress = Deflater.compress(bfDEFLATE);
 			final String chunkHeader = Integer.toHexString(compress.length) + STU.CRLF;
-			final ByteBuffer chunkHeaderBuffer = ByteBuffer.wrap(chunkHeader.getBytes());
-			this.write(chunkHeaderBuffer);
-
-			this.write(ByteBuffer.wrap(compress));
+			this.write(chunkHeader.getBytes());
+			this.write(compress);
 		} else {
 			final String chunkHeader = Integer.toHexString(read) + STU.CRLF;
-			final ByteBuffer chunkHeaderBuffer = ByteBuffer.wrap(chunkHeader.getBytes());
-			this.write(chunkHeaderBuffer);
-			this.write(bbB);
+			this.write(chunkHeader.getBytes());
+			this.write(ba);
 		}
 	}
-
 
 	private boolean compress(final boolean exceedsCompressionMinLength) {
 		return exceedsCompressionMinLength
@@ -507,7 +418,7 @@ public class ZResponse {
 		}
 	}
 
-	private ByteBuffer headerArray() {
+	private byte[] headerArray() {
 		// FIXME 2025年12月24日 14:10:54 zhangzhen :  给个默认值，避免扩容,具体给多少待会再算，可以从header算出来
 		final ZArray headerArray = new ZArray(800);
 		headerArray.add((ZResponse.HTTP_1_1).getBytes()).add(String.valueOf(this.getHttpStatus()).getBytes());
@@ -523,8 +434,9 @@ public class ZResponse {
 		}
 		headerArray.add(CRLF_BYTES);
 
-		return ByteBuffer.wrap(headerArray.get());
+		return headerArray.get();
 	}
+
 
 	public synchronized ZResponse body(final byte[] body) {
 		this.checkBIC();
@@ -594,8 +506,6 @@ public class ZResponse {
 
 		ZResponseStatus.written();
 
-		this.close();
-
 	}
 
 	/**
@@ -644,41 +554,24 @@ public class ZResponse {
 		}
 	}
 
-	private void write(final ByteBuffer byteBuffer) {
+	private void write(final byte[] data) {
 
-		if (this.socketChannel != null) {
-			try {
-				while ((byteBuffer.remaining() > 0) && this.socketChannel.isOpen()) {
-					this.socketChannel.write(byteBuffer);
-				}
-			} catch (final IOException e) {
-				final String message = Task.gExceptionMessage(e);
-				LOG.error("ZResponseWRITE异常,message={}", message);
-				NioLongConnectionServer.closeSocketChannelAndKeyCancel(this.selectionKey);
+		try {
+			if (AU.isNotEmpty(data)) {
+				this.bufferedOutputStream.write(data);
+				this.bufferedOutputStream.flush();
 			}
-		} else {
-			try {
-				final int length = byteBuffer.remaining();
-				if (length > 0) {
-					final byte[] data = new byte[length];
-					byteBuffer.get(data);
-					this.bufferedOutputStream.write(data);
-					this.bufferedOutputStream.flush();
-				}
-			} catch (final IOException e) {
-				e.printStackTrace();
-			}
+		} catch (final IOException e) {
+			e.printStackTrace();
 		}
-
 	}
 
 	private void writeSocketChannel() {
-		final ByteBuffer buffer = this.fillByteBuffer();
-		buffer.flip();
-		this.write(buffer);
+		final byte[] ba = this.fillBA();
+		this.write(ba);
 	}
 
-	private ByteBuffer fillByteBuffer()  {
+	private byte[] fillBA()  {
 
 		this.checkContentType();
 
@@ -698,53 +591,46 @@ public class ZResponse {
 		}
 
 		final int capacity
-			= ZResponse.HTTP_1_1.length() + 4 // 4 httpStatus的字节数
-				+ STU.CRLF_LENGTH
-				+ CONTENT_LENGTH_BYTES_LENGTH + STU.COLON_LENGTH + this.getBodyLength()
-				// FIXME 2025年12月24日 13:50:33 zhangzhen :  对于ZCtest/接口，试了+6才可以正常。待会查看为什么，现在先这样写
-				+ 6
-				+ STU.CRLF_LENGTH
-				+ this.contentTypeAR.get().length()
-				+ STU.CRLF_LENGTH
-				+ headerBytesLength
-				+ STU.CRLF_LENGTH
-				+ STU.CRLF_LENGTH
-				;
+		= ZResponse.HTTP_1_1.length() + 4 // 4 httpStatus的字节数
+		+ STU.CRLF_LENGTH
+		+ CONTENT_LENGTH_BYTES_LENGTH + STU.COLON_LENGTH + this.getBodyLength()
+		// FIXME 2025年12月24日 13:50:33 zhangzhen :  对于ZCtest/接口，试了+6才可以正常。待会查看为什么，现在先这样写
+		+ 6
+		+ STU.CRLF_LENGTH
+		+ this.contentTypeAR.get().length()
+		+ STU.CRLF_LENGTH
+		+ headerBytesLength
+		+ STU.CRLF_LENGTH
+		+ STU.CRLF_LENGTH
+		;
 
-		final ByteBuffer bbbb = ByteBuffer.allocate(capacity);
-		bbbb.put(HTTP_11_BYTES).put(String.valueOf(this.getHttpStatus()).getBytes());
-		bbbb.put(CRLF_BYTES);
-		bbbb.put(CONTENT_LENGTH_BYTES)
-			.put(COLON_BYTES).put(String.valueOf(this.getBodyLength()).getBytes());
-		bbbb.put(CRLF_BYTES);
-		bbbb.put(this.contentTypeAR.get().getBytes());
-		bbbb.put(CRLF_BYTES);
+		final ZArray array = new ZArray(capacity);
+
+		array.add(HTTP_11_BYTES).add(String.valueOf(this.getHttpStatus()).getBytes());
+		array.add(CRLF_BYTES);
+		array.add(CONTENT_LENGTH_BYTES)
+		.add(COLON_BYTES).add(String.valueOf(this.getBodyLength()).getBytes());
+		array.add(CRLF_BYTES);
+		array.add(this.contentTypeAR.get().getBytes());
+		array.add(CRLF_BYTES);
 
 		if (CU.isNotEmpty(this.headerList)) {
 			for (int i = 0; i < this.headerList.size(); i++) {
 				final ZHeader h = this.headerList.get(i);
-				bbbb.put(h.getName().getBytes()).put(COLON_BYTES).put(h.getValue().getBytes());
-				bbbb.put(CRLF_BYTES);
+				array.add(h.getName().getBytes()).add(COLON_BYTES).add(h.getValue().getBytes());
+				array.add(CRLF_BYTES);
 			}
 		}
-		bbbb.put(CRLF_BYTES);
+		array.add(CRLF_BYTES);
 		if (this.body != null) {
-			bbbb.put(this.body);
-			bbbb.put(CRLF_BYTES);
+			array.add(this.body);
+			array.add(CRLF_BYTES);
 		}
 
-		return bbbb;
+		return array.get();
 	}
 
-	public ZResponse(final SelectionKey selectionKey, final Socket socket) {
-		if (selectionKey == null) {
-			this.selectionKey = null;
-			this.socketChannel = null;
-		} else {
-			this.selectionKey = selectionKey;
-			this.socketChannel = (SocketChannel) selectionKey.channel();
-		}
-
+	public ZResponse(final Socket socket) {
 		this.socket = socket;
 		if (socket != null) {
 			try {
@@ -754,10 +640,6 @@ public class ZResponse {
 				e.printStackTrace();
 			}
 		}
-	}
-
-	public ZResponse(final Socket socket) {
-		this(null,socket);
 	}
 
 	public AtomicBoolean getSetContentType() {
@@ -772,15 +654,4 @@ public class ZResponse {
 		this.contentType = contentType;
 	}
 
-	private void close() {
-		// 因为这个类几个地方不能用try with resources，在此提供一个close方法，在本对象彻底用完了以后
-		// 调用本方法来关闭那几个 AutoCloseable 对象
-		if (this.fileChannel != null) {
-			try {
-				this.fileChannel.close();
-			} catch (final IOException e) {
-				e.printStackTrace();
-			}
-		}
-	}
 }

@@ -296,7 +296,7 @@ public class NioLongConnectionServer {
 			final Object r = a.execute(e);
 
 			final Integer httpStatus = ZControllerAdviceThrowable.findHttpStatus(e);
-			final ZResponse response = new ZResponse(selectionKey, null)
+			final ZResponse response = new ZResponse(null)
 					.httpStatus(httpStatus != null ? httpStatus : HttpStatusEnum.HTTP_500.getCode())
 					.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 					.body(J.toJSONString(r));
@@ -343,7 +343,7 @@ public class NioLongConnectionServer {
 				final Object r = a.execute(e);
 
 				final Integer httpStatus = ZControllerAdviceThrowable.findHttpStatus(e);
-				final ZResponse response = new ZResponse(selectionKey, null)
+				final ZResponse response = new ZResponse(null)
 						.httpStatus(httpStatus != null ? httpStatus : HttpStatusEnum.HTTP_500.getCode())
 						.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 						.body(J.toJSONString(r));
@@ -366,7 +366,7 @@ public class NioLongConnectionServer {
 	}
 
 	public static void r500AndCloseSocketChannel(final SelectionKey selectionKey, final String errorMessage) {
-		new ZResponse(selectionKey, null)
+		new ZResponse(null)
 		.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 		.httpStatus(HttpStatusEnum.HTTP_500.getCode())
 		.header(HeaderEnum.CONNECTION.getName(), ConnectionEnum.CLOSE.getValue())
@@ -401,7 +401,7 @@ public class NioLongConnectionServer {
 		.write();
 	}
 	public static void response429(final SelectionKey selectionKey, final String message, final Socket socket) {
-		new ZResponse(selectionKey, socket)
+		new ZResponse(socket)
 		.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 		.httpStatus(HttpStatusEnum.HTTP_429.getCode())
 		.body(J.toJSONString(CR.error(message), Include.NON_NULL))
@@ -558,7 +558,7 @@ public class NioLongConnectionServer {
 
 			final Integer httpStatus = ZControllerAdviceThrowable.findHttpStatus(e);
 			final ZResponse response =
-					new ZResponse(taskRequest.getSelectionKey(), null)
+					new ZResponse(null)
 					.httpStatus(httpStatus != null ? httpStatus : HttpStatusEnum.HTTP_500.getCode())
 					.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 					.body(J.toJSONString(r));

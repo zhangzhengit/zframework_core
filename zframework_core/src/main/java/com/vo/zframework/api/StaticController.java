@@ -82,12 +82,7 @@ public class StaticController {
 		response.contentType(ct);
 
 		final InputStream inputStream = ResourcesLoader.loadStaticResourceAsInputStream(resourceName);
-		if (inputStream instanceof FileInputStream) {
-			response.body((FileInputStream) inputStream);
-		} else {
-			response.body(inputStream);
-		}
-
+		response.body(inputStream);
 	}
 
 	private static boolean checkReferer(final ZRequest request) {

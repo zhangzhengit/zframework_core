@@ -345,7 +345,7 @@ public class Task {
 			final CR<Object> error = CR.error(AccessDeniedCodeEnum.API.getCode(),
 					AccessDeniedCodeEnum.API.getInternalMessage());
 
-			final ZResponse response = new ZResponse(this.selectionKey, this.getSocket());
+			final ZResponse response = new ZResponse(this.getSocket());
 			response.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 			.httpStatus(HttpStatusEnum.HTTP_429.getCode())
 			.body(J.toJSONString(error, Include.NON_NULL));
@@ -375,7 +375,7 @@ public class Task {
 					//				if (!QC.allow(QCTimeEnum.SECOND, keyword, zqpsLimitation.count(), handlingEnum)) {
 
 					final CR<Object> error = CR.error(AccessDeniedCodeEnum.ZSESSIONID.getCode(), AccessDeniedCodeEnum.ZSESSIONID.getMessageToClient());
-					final ZResponse response = new ZResponse(this.selectionKey, this.getSocket());
+					final ZResponse response = new ZResponse(this.getSocket());
 					response.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 					.httpStatus(HttpStatusEnum.HTTP_429.getCode())
 					.body(J.toJSONString(error, Include.NON_NULL));
@@ -403,7 +403,7 @@ public class Task {
 		if (CU.isEmpty(zhiList)) {
 			r = invoke0(zrMethod.getMethod(), parametersArray, zControllerObject);
 		} else {
-			final ZResponse response = new ZResponse(this.selectionKey, this.getSocket());
+			final ZResponse response = new ZResponse(this.getSocket());
 			final ArrayList<Object> pa = new ArrayList<>();
 			Collections.addAll(pa, parametersArray);
 			final InterceptorParameter interceptorParameter = new InterceptorParameter(zrMethod.getMethod().getName(), zrMethod.getMethod(),
@@ -464,7 +464,7 @@ public class Task {
 			final ZResponse response = ZHttpContext.getZResponseAndRemove();
 			// 无ZR参数，直接给一个默认的json 200
 			if (response == null) {
-				return new ZResponse(this.selectionKey, this.getSocket())
+				return new ZResponse(this.getSocket())
 						.contentType(ContentTypeEnum.APPLICATION_JSON.getType());
 			}
 
@@ -603,18 +603,18 @@ public class Task {
 	}
 
 	private ZResponse responseCT(final Object r, final String contentType, final ContentTypeEnum cte) {
-		final ZResponse rx = new ZResponse(this.selectionKey, this.getSocket()).contentType(contentType);
+		final ZResponse rx = new ZResponse(this.getSocket()).contentType(contentType);
 		cte.body(r, rx);
 		return rx;
 	}
 
 	private ZResponse responseTextPlain(final Object r) {
-		return new ZResponse(this.selectionKey, this.getSocket()).contentType(ContentTypeEnum.TEXT_PLAIN.getType()).body(r instanceof String ? (String) r : String.valueOf(r));
+		return new ZResponse(this.getSocket()).contentType(ContentTypeEnum.TEXT_PLAIN.getType()).body(r instanceof String ? (String) r : String.valueOf(r));
 	}
 
 	private ZResponse responseAppJSON(final Object r) {
 		final String json = J.toJSONString(r, Include.NON_NULL);
-		return new ZResponse(this.selectionKey, this.getSocket()).contentType(DEFAULT_CONTENT_TYPE.getType()).body(json);
+		return new ZResponse(this.getSocket()).contentType(DEFAULT_CONTENT_TYPE.getType()).body(json);
 	}
 
 	private ZResponse responseHtml(final Object r) {
@@ -625,7 +625,7 @@ public class Task {
 			final String html = ZTemplate.freemarker(r instanceof String ? (String)r : String.valueOf(r), htmlContent);
 			ZModel.clear();
 
-			return new ZResponse(this.selectionKey, this.getSocket()).contentType(ContentTypeEnum.TEXT_HTML.getType()).body(html);
+			return new ZResponse(this.getSocket()).contentType(ContentTypeEnum.TEXT_HTML.getType()).body(html);
 
 		} catch (final Exception e) {
 			e.printStackTrace();
@@ -633,13 +633,13 @@ public class Task {
 
 			if (e instanceof ResourceNotExistException) {
 				final ResourceNotExistException ex = (ResourceNotExistException) e;
-				return new ZResponse(this.selectionKey, this.getSocket())
+				return new ZResponse(this.getSocket())
 						.httpStatus(ex.getHttpStatus())
 						.contentType(DEFAULT_CONTENT_TYPE.getType())
 						.body(J.toJSONString(CR.error(ex.getMessagezf()),Include.NON_NULL));
 			}
 
-			return new ZResponse(this.selectionKey, this.getSocket())
+			return new ZResponse(this.getSocket())
 					.httpStatus(HttpStatusEnum.HTTP_500.getCode())
 					.contentType(DEFAULT_CONTENT_TYPE.getType())
 					.body(J.toJSONString(CR.error(em),Include.NON_NULL));
@@ -711,7 +711,7 @@ public class Task {
 					parametersArray[pI] = request;
 					pI++;
 				} else if (pType == ZResponse.class) {
-					final ZResponse response = new ZResponse(this.selectionKey, this.getSocket());
+					final ZResponse response = new ZResponse(this.getSocket());
 					parametersArray[pI] = response;
 					pI++;
 				} else if (pType == ZModel.class) {
@@ -1072,7 +1072,7 @@ public class Task {
 		}
 
 		if (!sR) {
-			ZHttpContext.setZResponse(new ZResponse(this.selectionKey, this.getSocket()));
+			ZHttpContext.setZResponse(new ZResponse(this.getSocket()));
 		}
 	}
 

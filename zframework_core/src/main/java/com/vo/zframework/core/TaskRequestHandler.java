@@ -76,7 +76,7 @@ public final class TaskRequestHandler {
 			final Integer httpStatus = ZControllerAdviceThrowable.findHttpStatus(e);
 
 			final String error = J.toJSONString(CR.error(message));
-			new ZResponse(null, socket)
+			new ZResponse(socket)
 			.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 			.httpStatus(httpStatus != null ? httpStatus : HttpStatusEnum.HTTP_500.getCode())
 			.header(HeaderEnum.CONNECTION.getName(), ConnectionEnum.CLOSE.getValue())
@@ -118,7 +118,7 @@ public final class TaskRequestHandler {
 			final Integer httpStatus = ZControllerAdviceThrowable.findHttpStatus(e);
 
 			final String error = J.toJSONString(CR.error(message));
-			new ZResponse(taskRequest.getSelectionKey(), null)
+			new ZResponse(null)
 				.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 				.httpStatus(httpStatus != null ? httpStatus : HttpStatusEnum.HTTP_500.getCode())
 				.header(HeaderEnum.CONNECTION.getName(), ConnectionEnum.CLOSE.getValue())
