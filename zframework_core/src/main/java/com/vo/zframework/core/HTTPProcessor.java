@@ -15,54 +15,7 @@ public class HTTPProcessor {
 	private final static DefaultHttpReader httpReader = ZContext.getBean(DefaultHttpReader.class);
 
 	public static ZArray process(final SelectionKey selectionKey) {
-//		System.out.println(
-//				LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t" + "HTTPProcessor.process()");
-
-		// 2
-//		return two(selectionKey);
-
-		// 1
-		// FIXME 2026年5月23日 13:17:14 zhangzhen : 这个one的read逻辑一定有问题，只是现在没重现出来，
-		// 需要改为事件驱动read，每次read的累积放到attachment，每次read后解析。要不先写一个bio+虚拟线程的版本？
 		return one(selectionKey);
-	}
-
-	private static ZArray two(final SelectionKey selectionKey) {
-		DefaultHttpReader.r222222MethodAndHeaderAndBody(selectionKey);
-		final ConnectionState state = (ConnectionState) selectionKey.attachment();
-		if (!state.isHttpEnd()) {
-			return null;
-		}
-		final byte[] bs = state.getZArray().get();
-		System.out.println("two-bs.length = " + bs.length);
-		return state.getZArray();
-
-//		final Object attachment = selectionKey.attachment();
-//		final ConnectionState state =(ConnectionState) attachment;
-//		System.out.println("state = " + state.getHsEnum());
-//
-//		switch (state.getHsEnum()) {
-//		case READING_HEADER:
-//			DefaultHttpReader.r222222MethodAndHeader(selectionKey);
-//
-//			break;
-//
-//		case HEADER_END:
-//			DefaultHttpReader.r22222Body(selectionKey);
-//
-//			break;
-//
-//		case READING_BODY:
-//
-//			break;
-//
-//		case HTTP_END:
-//
-//			break;
-//
-//		default:
-//			throw new IllegalArgumentException("Unexpected value: " + state.getHsEnum());
-//		}
 	}
 
 	private static ZArray one(final SelectionKey selectionKey) {

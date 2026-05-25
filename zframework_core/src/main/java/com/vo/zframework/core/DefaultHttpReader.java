@@ -12,7 +12,6 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.security.SecureRandom;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -21,7 +20,6 @@ import java.util.Map;
 
 import com.vo.log.core.ZLog2;
 import com.vo.zframework.anno.ZComponent;
-import com.vo.zframework.aop.ArgR;
 import com.vo.zframework.cache.STU;
 import com.vo.zframework.configuration.ServerConfigurationProperties;
 import com.vo.zframework.configuration.TempDir;
@@ -64,8 +62,6 @@ import com.vo.zframework.http.HttpStatusEnum;
 public class DefaultHttpReader {
 
 	static ZLog2 LOG = ZLog2.getInstance();
-
-	private static final int SOCKET_CHANNEL_CLOSED = -1;
 
 	private static final int OPTIONS_LENGTH = MethodEnum.OPTIONS.name().length();
 
@@ -176,179 +172,6 @@ public class DefaultHttpReader {
 
 		return (int) cl;
 	}
-
-	private static String checkContentType(final String contentTypeLine) {
-	return	contentTypeLine.split(STU.COLON)[1].trim();
-	}
-
-	public static void r22222Body(final SelectionKey selectionKey) {
-		System.out.println(LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t"
-				+ "DefaultHttpReader.r22222Body()");
-
-		final ConnectionState state = (ConnectionState) selectionKey.attachment();
-		final ZArray array = state.getZArray();
-
-		final boolean containsContentLength = state.containsContentLength();
-		if (!containsContentLength) {
-			// header不含Content-Length，无body
-			return;
-		}
-
-		// 读header时读到的字节数比header截止符号(\r\n\r\n)的index还大，说明读到的不只有header还有下面的body部分
-		if (array.length() > state.getHeaderEndIndex()) {
-
-			final int cLIndexRN = BodyReader.search(array.get(), STU.CRLF, 1, state.getContentLengthIndex());
-			if (cLIndexRN > state.getContentLengthIndex()) {
-				final byte[] copyOfRange = Arrays.copyOfRange(array.get(), state.getContentLengthIndex(), cLIndexRN);
-				final String contentTypeLine = new String(copyOfRange);
-				final int contentLength = checkContentLength(contentTypeLine);
-				if (contentLength <= 0) {
-					return;
-				}
-
-				final int uploadFileSize = SERVER_CONFIGURATIONPROPERTIES.getUploadFileSize();
-				if (contentLength >= (uploadFileSize * _1024)) {
-					// FIXME 2025年1月20日 下午9:12:49 zhangzhen : 又遇到问题：
-					// 比如 /upload 限制zsessiond.qps=1，则到此throw了就走不到限制qps的逻辑了，
-					// 导致可以恶意刷接口，故意上传特别大的文件来浪费服务器性能
-					// 要不要readHeader后就解析request然后去 QC.allow(API) ?
-					throw new BodyTooLargeException(HttpStatusEnum.HTTP_413.getMessage(),
-							HttpStatusEnum.HTTP_413.getCode());
-				}
-
-				// 根据Content-Length和读header多出的部分，重新计算出body需要读的字节数
-				final int bodyReadC = contentLength - (array.length() - state.getHeaderEndIndex()
-						- BodyReader.RN_BYTES_LENGTH - BodyReader.RN_BYTES_LENGTH);
-
-				// 无需再次读body了，读header时一起读出来了
-				if (bodyReadC <= 0) {
-					return;
-				}
-
-				final int newNeedReadBodyLength = bodyReadC;
-				// final int newNeedReadBodyLength = bodyReadC - BodyReader.RN_BYTES_LENGTH;
-				if (newNeedReadBodyLength <= 0) {
-					return;
-				}
-
-//				final int uploadFileToTempSize = SERVER_CONFIGURATIONPROPERTIES.getUploadFileToTempSize();
-				// 文件写入临时文件之前，把读header时多读出的超出header的部分删掉
-				final int writeArrayLength = array.length() - state.getHeaderEndIndex() - BodyReader.RN_BYTES_LENGTH
-						- BodyReader.RN_BYTES_LENGTH;
-
-				// 直接全部写入临时文件
-				final TF tf = readBodyToTempFile(selectionKey, array, newNeedReadBodyLength, writeArrayLength);
-				array.setTf(tf);
-			}
-		}
-
-	}
-
-
-
-	public static void r222222MethodAndHeaderAndBody(final SelectionKey selectionKey) {
-		synchronized (selectionKey) {
-
-			System.out.println(LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t"
-					+ "DefaultHttpReader.r222222MethodAndHeaderAndBody()");
-
-			if (!selectionKey.isValid() || !selectionKey.isReadable()) {
-				return;
-			}
-
-			final SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
-			if (!socketChannel.isOpen()) {
-				return;
-			}
-
-			final int byteBufferSize = SERVER_CONFIGURATIONPROPERTIES.getByteBufferSize();
-			final ByteBuffer byteBuffer = ByteBuffer.allocate(byteBufferSize);
-
-			final ConnectionState state = (ConnectionState) selectionKey.attachment();
-			final ZArray array = state.getZArray();
-
-			System.out.println("byteBufferSize = " + byteBufferSize);
-
-			int rC = 0;
-			while (true) {
-
-				int tR = 0;
-				try {
-					tR = socketChannel.read(byteBuffer);
-					System.out.println("tR = socketChannel.read(byteBuffer); = " + tR);
-				} catch (final IOException e1) {
-					final String message = Task.gExceptionMessage(e1);
-					LOG.error("socketChannel.read异常,message={}", message);
-					NioLongConnectionServer.closeSocketChannelAndKeyCancel(selectionKey);
-					break;
-				}
-				System.out.println("tR = " + tR);
-				if ((tR == SOCKET_CHANNEL_CLOSED) || (tR == 0)) {
-					// 连接已关闭或无数据就绪，直接return
-					NioLongConnectionServer.closeSocketChannelAndKeyCancel(selectionKey);
-					return;
-				}
-				rC++;
-
-				// 读到数据了，继续处理
-				System.out.println("array.hashCode = " + array.hashCode());
-				final ZArray za = DefaultHttpReader.addZA(byteBuffer, array);
-				state.setZArray(za);
-				System.out.println("rC = " + rC + "本次读到 = ");
-//				System.out.println(new String(a));
-
-				final boolean checkHeaderEnd = state.checkHeaderEnd();
-				if (checkHeaderEnd) {
-					System.out.println("读完了header部分，headerEndIndex = " + state.getHeaderEndIndex());
-
-					// 不break,继续读body部分
-//				break;
-					final boolean containsContentLength = state.containsContentLength();
-					if (!containsContentLength) {
-						System.out.println("无 Content-Length . 读取完了http请求了");
-						state.endHttpReading();
-						break;
-					}
-					System.out.println("有 Content-Length . Content-Length = " + state.getRequest().getContentLength());
-
-
-					if (state.checkHttpEnd()) {
-						// 读完了完整的http请求
-						final byte[] bodyBA = Arrays.copyOfRange(array.get(),
-								state.getHeaderEndIndex() + STU.CRLFCRLF.getBytes().length, array.get().length);
-						System.out.println("bodyBA.length = " + bodyBA.length);
-						System.out.println("有 Content-Length . 读取完了http请求了");
-						final String bodyS = new String(bodyBA);
-						System.out.println("bodyS = ");
-						System.out.println(bodyS);
-
-						state.endHttpReading();
-						break;
-					}
-
-				}
-
-			}
-		}
-
-	}
-
-
-//	private static int read0(final SelectionKey selectionKey, final SocketChannel socketChannel,
-//			final ByteBuffer byteBuffer) {
-//		int tR = 0;
-//		try {
-//			tR = socketChannel.read(byteBuffer);
-//			System.out.println("tR = socketChannel.read(byteBuffer); = " + tR);
-//		} catch (final IOException e1) {
-//			final String message = Task.gExceptionMessage(e1);
-//			LOG.error("socketChannel.read异常,message={}", message);
-//			NioLongConnectionServer.closeSocketChannelAndKeyCancel(selectionKey);
-//			return SOCKET_CHANNEL_CLOSED;
-//		}
-//
-//		return tR;
-//	}
 
 	private static MR readMethod(final SelectionKey selectionKey) {
 
