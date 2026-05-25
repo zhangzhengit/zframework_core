@@ -32,9 +32,9 @@ public final class TaskRequestHandler {
 
 	public TaskRequestHandler() {
 
-		final Collection<Object> beanConnection = ZContext.all().values();
+		final Collection<Object> beanCollection = ZContext.all().values();
 
-		final List<RequestValidatorAdapter> childList = beanConnection.stream()
+		final List<RequestValidatorAdapter> childList = beanCollection.stream()
 				.filter(bean -> bean.getClass().getSuperclass().getCanonicalName()
 						.equals(RequestValidatorAdapter.class.getCanonicalName()))
 				.map(bean -> (RequestValidatorAdapter) bean).collect(Collectors.toList());
