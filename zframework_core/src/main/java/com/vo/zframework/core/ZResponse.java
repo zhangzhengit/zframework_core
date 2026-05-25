@@ -394,8 +394,6 @@ public class ZResponse {
 				&& SERVER_CONFIGURATIONPROPERTIES.compressionContains(this.getContentType());
 	}
 
-
-
 	private void setContentEncoding(final ZRequest request, final boolean exceedsCompressionMinLength) {
 
 		if (!this.compress(exceedsCompressionMinLength)) {
@@ -500,7 +498,7 @@ public class ZResponse {
 
 		this.beforeWrite();
 
-		this.writeSocketChannel();
+		this.writeResponse();
 
 		this.write.set(true);
 
@@ -567,7 +565,7 @@ public class ZResponse {
 		}
 	}
 
-	private void writeSocketChannel() {
+	private void writeResponse() {
 		final byte[] ba = this.fillBA();
 		this.write(ba);
 	}
@@ -609,8 +607,7 @@ public class ZResponse {
 
 		array.add(HTTP_11_BYTES).add(String.valueOf(this.getHttpStatus()).getBytes());
 		array.add(CRLF_BYTES);
-		array.add(CONTENT_LENGTH_BYTES)
-		.add(COLON_BYTES).add(String.valueOf(this.getBodyLength()).getBytes());
+		array.add(CONTENT_LENGTH_BYTES).add(COLON_BYTES).add(String.valueOf(this.getBodyLength()).getBytes());
 		array.add(CRLF_BYTES);
 		array.add(this.contentTypeAR.get().getBytes());
 		array.add(CRLF_BYTES);
