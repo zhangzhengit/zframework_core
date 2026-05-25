@@ -22,11 +22,23 @@ public class BIO {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
-	private static final TaskRequestHandler handler = new TaskRequestHandler();
-
 	private static final ServerConfigurationProperties SERVER_CONFIGURATIONPROPERTIES= ZContext.getBean(ServerConfigurationProperties.class);
 
-	public void start(final int serverPort) {
+	private final TaskRequestHandler requestHandler = new TaskRequestHandler();
+
+	public void startServer(final int serverPort) {
+
+		ZContext.addBean(this.requestHandler.getClass(), this.requestHandler);
+
+		final ThreadGroup group = new ThreadGroup("io");
+		final Thread thread = new Thread(group, () -> this.start(serverPort));
+		thread.setName("ioT");
+		thread.setPriority(Thread.MAX_PRIORITY);
+		thread.start();
+
+	}
+
+	private void start(final int serverPort) {
 		System.out.println(LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t" + "BIO.start()");
 		try {
 			// FIXME 2026年5月24日 11:45:54 zhangzhen : 改为虚拟线程池
@@ -184,7 +196,7 @@ public class BIO {
 			// 再从临时文件中读出file之外的合在一起作为array
 
 			final ZRequest request = this.parse(array, socket);
-			responseBIO(request, socket, array);
+			this.responseBIO(request, socket, array);
 			array.reset(capacity);
 			parseStatusEnum = HttpParseStatusEnum.PARSE_REQUEST_LINE;
 
@@ -203,7 +215,7 @@ public class BIO {
 
 				final ZRequest request = this.parse(array, socket);
 //							final long t1 = System.currentTimeMillis();
-				responseBIO(request, socket, array);
+				this.responseBIO(request, socket, array);
 //							final long t2 = System.currentTimeMillis();
 //							System.out.println("responseBIO-ms = " + (t2-t1));
 				array.reset(capacity);
@@ -251,7 +263,7 @@ public class BIO {
 //										System.out.println(body);
 
 							final ZRequest request = this.parse(array, socket);
-							responseBIO(request, socket, array);
+							this.responseBIO(request, socket, array);
 							array.reset(capacity);
 							x = HttpParseStatusEnum.PARSE_REQUEST_LINE;
 						} else {
@@ -268,7 +280,7 @@ public class BIO {
 				// FIXME 2026年5月25日 05:46:58 zhangzhen : read < capacity 判断极有可能有问题，应该是正确解析\r\n\r\n
 //							parseStatusEnum = HttpParseStatusEnum.PARSE_END;
 				final ZRequest request = this.parse(array, socket);
-				responseBIO(request, socket, array);
+				this.responseBIO(request, socket, array);
 				array.reset(capacity);
 				System.out.println("read < capacity PARSE_REQUEST_LINE");
 				x = HttpParseStatusEnum.PARSE_REQUEST_LINE;
@@ -291,7 +303,10 @@ public class BIO {
 				xEnum = BIO.afterHeader(socket, array, pd);
 				if (xEnum == HttpParseStatusEnum.PARSE_END) {
 					final ZRequest request = this.parse(array, socket);
-					responseBIO(request, socket, array);
+//					final String xx = new String(array.get());
+//					System.out.println("xx = ");
+//					System.out.println(xx);
+					this.responseBIO(request, socket, array);
 					array.reset(capacity);
 					xEnum = HttpParseStatusEnum.PARSE_REQUEST_LINE;
 //								break;
@@ -454,10 +469,10 @@ public class BIO {
 	}
 
 
-	private static void responseBIO(final ZRequest request, final Socket socket, final ZArray array) {
+	private void responseBIO(final ZRequest request, final Socket socket, final ZArray array) {
 		final TaskRequest taskRequest = new TaskRequest(null, array.get(),
 				array.getTf(), new Date());
-		handler.handleBIO(taskRequest,socket, request);
+		this.requestHandler.handleBIO(taskRequest,socket, request);
 	}
 
 	public static void closeSocket(final Socket socket) {
@@ -475,7 +490,7 @@ public class BIO {
 		try {
 			return bufferedInputStream.read(buffer);
 		} catch (final IOException e) {
-//			e.printStackTrace();
+			e.printStackTrace();
 //			if(e instanceof SocketTimeoutException) {
 //			}
 			return -1;
