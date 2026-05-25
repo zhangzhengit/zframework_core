@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.vo.log.core.ZLog2;
@@ -27,6 +28,9 @@ public class BIO {
 	private static final int UPLOAD_FILE_TO_TEMP_SIZE = SERVER_CONFIGURATIONPROPERTIES.getUploadFileToTempSize();
 
 	private final TaskRequestHandler requestHandler = new TaskRequestHandler();
+	private final ExecutorService e = Executors.newVirtualThreadPerTaskExecutor();
+
+	private final AtomicBoolean serverStarted = new AtomicBoolean(false);
 
 	public void startServer(final int serverPort) {
 
@@ -38,30 +42,57 @@ public class BIO {
 		thread.setPriority(Thread.MAX_PRIORITY);
 		thread.start();
 
+		while (!this.serverStarted.get()) {
+			try {
+				Thread.sleep(1);
+			} catch (final InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+
 	}
 
 	private void start(final int serverPort) {
-		System.out.println(LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t" + "BIO.start()");
+
+		ServerSocket serverSocket = null;
 		try {
-			// FIXME 2026年5月24日 11:45:54 zhangzhen : 改为虚拟线程池
-			final ExecutorService e = Executors.newVirtualThreadPerTaskExecutor();
-			final ServerSocket serverSocket = new ServerSocket(serverPort);
-			while(true) {
-				final Socket socket = serverSocket.accept();
-				e.execute(() -> {
-					Thread.currentThread().setName(gTName());
-					try {
-						final int keepAliveTimeout = SERVER_CONFIGURATIONPROPERTIES.getKeepAliveTimeout();
-						socket.setSoTimeout(keepAliveTimeout * 1000);
-					} catch (final SocketException e1) {
-						e1.printStackTrace();
-					}
-					this.handle(socket);
-				});
-			}
+			serverSocket = new ServerSocket(serverPort);
+		} catch (final IOException e) {
+			e.printStackTrace();
+			final String mess = Task.gExceptionMessage(e);
+			LOG.error("启动失败,程序即将退出,serverPort={},mess={}", serverPort, mess);
+			System.exit(0);
+		}
+
+		LOG.info("httpServer启动成功,等待连接,serverPort={}", serverPort);
+		this.serverStarted.set(true);
+
+		while (true) {
+
+			final Socket socket = BIO.accept(serverSocket);
+
+			this.e.execute(() -> {
+				Thread.currentThread().setName(gTName());
+				try {
+					final int keepAliveTimeout = SERVER_CONFIGURATIONPROPERTIES.getKeepAliveTimeout();
+					socket.setSoTimeout(keepAliveTimeout * 1000);
+				} catch (final SocketException e1) {
+					e1.printStackTrace();
+				}
+				this.handle(socket);
+			});
+		}
+	}
+
+	private static Socket accept(final ServerSocket serverSocket) {
+		Socket socket = null;
+		try {
+			socket = serverSocket.accept();
 		} catch (final IOException e) {
 			e.printStackTrace();
 		}
+
+		return socket;
 	}
 
 	/**
