@@ -86,10 +86,10 @@ public class ServerConfigurationProperties {
 	/**
 	 * 上传文件时从[一次性读取内存]改为[边读边写入到临时文件]的阈值,单位：KB
 	 */
-	@ZMin(min = 1024 * 50)
-	@ZMax(max = 1024 * 1024 * 100)
+	@ZMin(min = 100)
+	@ZMax(max = 1024 * 100)
 	@ZNotNull
-	private int uploadFileToTempSize;
+	private int uploadFileToTempSize = 1024;
 
 	/**
 	 * 上传文件时存放临时文件的目录，

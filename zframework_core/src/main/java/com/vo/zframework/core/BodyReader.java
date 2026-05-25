@@ -263,7 +263,6 @@ public class BodyReader {
 					// XXX 注意：截止要减去一个CRLF的长度，因为参数byte[] 包含了body后面的一个空行
 					final byte[] bodyBA = Arrays.copyOfRange(oneBA, bodyStartIndexX + STU.CRLFCRLF.length(),
 							oneBA.length - STU.CRLF.length());
-					final String body = new String(bodyBA);
 					fd2.setBody(bodyBA);
 				}
 
