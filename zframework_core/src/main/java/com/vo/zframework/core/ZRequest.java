@@ -151,7 +151,7 @@ public class ZRequest {
 			return Integer.parseInt(port);
 		}
 
-		return NioLongConnectionServer.DEFAULT_HTTP_PORT;
+		return ZServer.DEFAULT_HTTP_PORT;
 	}
 
 	public String getRequestURL() {

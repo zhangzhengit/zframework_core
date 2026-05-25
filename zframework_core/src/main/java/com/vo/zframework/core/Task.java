@@ -144,7 +144,7 @@ public class Task {
 	 * @throws Exception
 	 *
 	 */
-	public ZResponse invokeBIO(final ZRequest request) throws Exception {
+	public ZResponse invoke(final ZRequest request) throws Exception {
 
 		final String path = request.getPath();
 		ZRMethod zrMethod = ZControllerMap.getMethodByMethodEnumAndPath(request.getMethodEnum(), path);
@@ -167,13 +167,13 @@ public class Task {
 			}, true);
 
 			if (noRequestMethodMethod != null) {
-				return ReU.response405BIO(this.getSocket(), request.getMethodEnum().getMethod());
+				return ReU.response405(this.getSocket(), request.getMethodEnum().getMethod());
 			}
 
 			// 用正则依然匹配不到，响应404
 			final ZRMethod matcheZRMethod = Task.getMatcheMethod(request, path);
 			if (matcheZRMethod == null) {
-				return ReU.response404BIO(this.getSocket(), path);
+				return ReU.response404(this.getSocket(), path);
 			}
 
 			zrMethod = matcheZRMethod;
@@ -191,7 +191,7 @@ public class Task {
 			}
 
 			final Object zController = ZControllerMap.getObjectByMethod(zrMethod.getMethod());
-			final ZResponse re = this.invokeAndResponseBIO(zrMethod, parameterArray, zController, request);
+			final ZResponse re = this.invokeAndResponse(zrMethod, parameterArray, zController, request);
 			return re;
 
 		} catch (final Exception e) {
@@ -260,7 +260,7 @@ public class Task {
 	}
 
 	@SuppressWarnings("boxing")
-	private ZResponse invokeAndResponseBIO(final ZRMethod zrMethod, final Object[] parametersArray, final Object zControllerObject, final ZRequest request)
+	private ZResponse invokeAndResponse(final ZRMethod zrMethod, final Object[] parametersArray, final Object zControllerObject, final ZRequest request)
 			throws IllegalAccessException, InvocationTargetException {
 
 		final String controllerName = zControllerObject.getClass().getName();
@@ -320,7 +320,7 @@ public class Task {
 					.body(J.toJSONString(error, Include.NON_NULL));
 
 					if (SERVER_CONFIGURATIONPROPERTIES.isResponseZSessionId()) {
-						NioLongConnectionServer.setZSessionId(request, response);
+						ZServer.setZSessionId(request, response);
 					}
 
 					return response;

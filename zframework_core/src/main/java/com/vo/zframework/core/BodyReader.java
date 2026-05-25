@@ -168,7 +168,7 @@ public class BodyReader {
 		final ZArray formDataArray = new ZArray();
 		for (int from = 0, to = 1; from < (r.size() - 1); from++, to++) {
 			final byte[] x = Arrays.copyOfRange(ba, r.get(from),  r.get(to));
-			final FD2 one = handleOneItemBIO(x);
+			final FD2 one = handleOneItem(x);
 			fd2l.add(one);
 		}
 		formDataArray.add((BOUNDARY_PREFIX + boundary).getBytes());
@@ -183,55 +183,6 @@ public class BodyReader {
 	 * @return
 	 */
 	public static FD2 handleOneItem(final byte[] oneBA) {
-
-		final FD2 fd2 = new FD2();
-
-		final byte[] ba = oneBA;
-		final List<Byte> bl = new ArrayList<>();
-		// FIXME 2024年12月17日 下午4:05:16 zhangzhen : 这个方法要改进，不要for循环了，直接search CD CT RNRN等等
-		final int ctIndex = search(oneBA, HeaderEnum.CONTENT_TYPE.getName(), 1, 0);
-		for (int i = 0; i < ba.length; i++) {
-			if (ba[i] == '\r') {
-				if ((i < (ba.length - 1)) && (ba[i + 1] == '\n')) {
-					final byte[] lineBA = listToArray(bl);
-					final String line = new String(lineBA);
-
-					if (line.startsWith(HeaderEnum.CONTENT_DISPOSITION.getName())) {
-						fd2.setContentDisposition(line);
-						final Map<String, String> vMap = handleBodyContentDisposition(line);
-						fd2.setName(vMap.get(NAME));
-						fd2.setFileName(vMap.get(FILENAME));
-					}
-					if (ctIndex <= -1) {
-						final int bodyStartIndex = search(oneBA, STU.CRLFCRLF, 1, i);
-						final byte[] bodyV = Arrays.copyOfRange(ba, bodyStartIndex + STU.CRLFCRLF.getBytes().length, ba.length);
-						final String bV = new String(bodyV);
-						fd2.setValue(bV);
-						break;
-					}
-					if (line.startsWith(HeaderEnum.CONTENT_TYPE.getName())) {
-						final String[] ctA = line.split(STU.COLON);
-						final String ct = ctA[1].trim();
-						fd2.setContentType(ct);
-
-						final byte[] bodyFullBA = Arrays.copyOfRange(oneBA,
-								ctIndex + STU.CRLFCRLF.length() + line.getBytes().length, oneBA.length);
-						fd2.setBody(bodyFullBA
-								);
-						break;
-					}
-				}
-
-				bl.clear();
-			} else if (ba[i] != '\n') {
-				bl.add(ba[i]);
-			}
-		}
-
-		return fd2;
-	}
-
-	public static FD2 handleOneItemBIO(final byte[] oneBA) {
 
 		final FD2 fd2 = new FD2();
 		final int ctIndex = search(oneBA, HeaderEnum.CONTENT_TYPE.getName(), 1, 0);

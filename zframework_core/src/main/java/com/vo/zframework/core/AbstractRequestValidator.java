@@ -22,21 +22,17 @@ abstract class AbstractRequestValidator {
 	private static final boolean RESPONSE_Z_SESSION_ID = ZContext.getBean(ServerConfigurationProperties.class)
 			.isResponseZSessionId();
 
-	private static final ServerConfigurationProperties SERVER_CONFIGURATIONPROPERTIES= ZContext.getBean(ServerConfigurationProperties.class);
-
-	private static final String T_NAME = SERVER_CONFIGURATIONPROPERTIES.getThreadName();
-
 	private final RequestValidatorConfigurationProperties requestValidatorConfigurationProperties = ZContext
 			.getBean(RequestValidatorConfigurationProperties.class);
 
 	private static final RequestVerificationResult ALLOW = new RequestVerificationResult(true);
 
-	public void handleBIO(final ZRequest request, final TaskRequest taskRequest, final Socket socket) {
+	public void handle(final ZRequest request, final TaskRequest taskRequest, final Socket socket) {
 		final RequestVerificationResult r = this.validated(request, taskRequest);
 		if (r.isPassed()) {
-			AbstractRequestValidator.passedBIO(request, taskRequest, socket);
+			AbstractRequestValidator.passed(request, taskRequest, socket);
 		} else {
-			AbstractRequestValidator.failedBIO(socket, r);
+			AbstractRequestValidator.failed(socket, r);
 		}
 	}
 
@@ -116,8 +112,8 @@ abstract class AbstractRequestValidator {
 	 * @param requestVerificationResult
 	 * @param socket TODO
 	 */
-	public static void failedBIO(final Socket socket, final RequestVerificationResult requestVerificationResult) {
-		NioLongConnectionServer.response429BIO(requestVerificationResult.getMessage(), socket);
+	public static void failed(final Socket socket, final RequestVerificationResult requestVerificationResult) {
+		ReU.response429(requestVerificationResult.getMessage(), socket);
 	}
 
 	/**
@@ -127,8 +123,8 @@ abstract class AbstractRequestValidator {
 	 * @param socket TODO
 	 *
 	 */
-	public static void passedBIO(final ZRequest request, final TaskRequest taskRequest, final Socket socket) {
-		NioLongConnectionServer.responseBIO(request, taskRequest, socket);
+	public static void passed(final ZRequest request, final TaskRequest taskRequest, final Socket socket) {
+		ZServer.response(request, taskRequest, socket);
 	}
 
 }

@@ -6,29 +6,42 @@ import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
-import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.StringJoiner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.vo.log.core.ZLog2;
+import com.vo.zframework.cache.J;
 import com.vo.zframework.cache.STU;
 import com.vo.zframework.configuration.ServerConfigurationProperties;
+import com.vo.zframework.exception.ZControllerAdviceActuator;
+import com.vo.zframework.exception.ZControllerAdviceThrowable;
+import com.vo.zframework.http.HttpStatusEnum;
+import com.vo.zframework.http.ZCacheControl;
+import com.vo.zframework.http.ZCookie;
+import com.vo.zframework.http.ZLastModified;
 
-public class BIO {
-
+public class ZServer {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
 	private static final ServerConfigurationProperties SERVER_CONFIGURATIONPROPERTIES= ZContext.getBean(ServerConfigurationProperties.class);
 
+	private static final boolean ENABLE_SERVER_QPS_LIMITED = SERVER_CONFIGURATIONPROPERTIES.getQpsLimitEnabled();
+
 	private static final int UPLOAD_FILE_TO_TEMP_SIZE = SERVER_CONFIGURATIONPROPERTIES.getUploadFileToTempSize();
 
+	public static final int DEFAULT_HTTP_PORT = 80;
+
+	public static final String Z_SERVER_QPS = "zsq";
+
 	private final TaskRequestHandler requestHandler = new TaskRequestHandler();
-	private final ExecutorService e = Executors.newVirtualThreadPerTaskExecutor();
+
+	private final ExecutorService ves = Executors.newVirtualThreadPerTaskExecutor();
 
 	private final AtomicBoolean serverStarted = new AtomicBoolean(false);
 
@@ -36,8 +49,7 @@ public class BIO {
 
 		ZContext.addBean(this.requestHandler.getClass(), this.requestHandler);
 
-		final ThreadGroup group = new ThreadGroup("io");
-		final Thread thread = new Thread(group, () -> this.start(serverPort));
+		final Thread thread = new Thread(() -> this.start(serverPort));
 		thread.setName("ioT");
 		thread.setPriority(Thread.MAX_PRIORITY);
 		thread.start();
@@ -69,9 +81,9 @@ public class BIO {
 
 		while (true) {
 
-			final Socket socket = BIO.accept(serverSocket);
+			final Socket socket = ZServer.accept(serverSocket);
 
-			this.e.execute(() -> {
+			this.ves.execute(() -> {
 				Thread.currentThread().setName(gTName());
 				try {
 					final int keepAliveTimeout = SERVER_CONFIGURATIONPROPERTIES.getKeepAliveTimeout();
@@ -123,7 +135,7 @@ public class BIO {
 //					readCount = 0;
 //				}
 
-				final int read = BIO.read0(bufferedInputStream, buffer);
+				final int read = ZServer.read0(bufferedInputStream, buffer);
 				if (read == -1) {
 					closed = true;
 					closeSocket(socket);
@@ -163,7 +175,7 @@ public class BIO {
 			}
 
 			if (closed) {
-				BIO.closeSocket(socket);
+				ZServer.closeSocket(socket);
 				break;
 			}
 		}
@@ -180,7 +192,7 @@ public class BIO {
 
 		if ((pd.getHeaderEndIndex() + STU.CRLFCRLF.length() + pd.getContentLength()) == array.length()) {
 			final ZRequest request = this.parse(array, socket);
-			this.responseBIO(request, socket, array);
+			this.response(request, socket, array);
 			array.reset(capacity);
 
 			return HttpParseStatusEnum.PARSE_REQUEST_LINE;
@@ -203,7 +215,7 @@ public class BIO {
 		if ((pd.getHeaderEndIndex() + STU.CRLFCRLF.length() + pd.getContentLength()) == array.get().length) {
 
 			final ZRequest request = this.parse(array, socket);
-			this.responseBIO(request, socket, array);
+			this.response(request, socket, array);
 			array.reset(capacity);
 
 			return HttpParseStatusEnum.PARSE_REQUEST_LINE;
@@ -214,7 +226,7 @@ public class BIO {
 		final byte[] buffer = new byte[fbc];
 		int fRC = 0;
 		while (true) {
-			final int r1 = BIO.read0(bufferedInputStream, buffer);
+			final int r1 = ZServer.read0(bufferedInputStream, buffer);
 
 //							System.out.println("r1 = " + r1);
 
@@ -243,7 +255,7 @@ public class BIO {
 				}
 
 				final ZRequest request = this.parse(array, socket);
-				this.responseBIO(request, socket, array);
+				this.response(request, socket, array);
 				array.reset(capacity);
 
 				return HttpParseStatusEnum.PARSE_REQUEST_LINE;
@@ -316,7 +328,7 @@ public class BIO {
 //										System.out.println(body);
 
 							final ZRequest request = this.parse(array, socket);
-							this.responseBIO(request, socket, array);
+							this.response(request, socket, array);
 							array.reset(capacity);
 							x = HttpParseStatusEnum.PARSE_REQUEST_LINE;
 						} else {
@@ -333,7 +345,7 @@ public class BIO {
 				// FIXME 2026年5月25日 05:46:58 zhangzhen : read < capacity 判断极有可能有问题，应该是正确解析\r\n\r\n
 //							parseStatusEnum = HttpParseStatusEnum.PARSE_END;
 				final ZRequest request = this.parse(array, socket);
-				this.responseBIO(request, socket, array);
+				this.response(request, socket, array);
 				array.reset(capacity);
 				System.out.println("read < capacity PARSE_REQUEST_LINE");
 				x = HttpParseStatusEnum.PARSE_REQUEST_LINE;
@@ -347,19 +359,19 @@ public class BIO {
 	private HttpParseStatusEnum parseRequestLine(final Socket socket, final int capacity, final ZArray array,
 			final PD pd, final HttpParseStatusEnum parseStatusEnum) {
 		HttpParseStatusEnum xEnum = parseStatusEnum;
-		BIO.parseRequestLine(array, pd);
+		ZServer.parseRequestLine(array, pd);
 		// RequestLine读完了，进行下一步，解析header
 		if (pd.getRequestLineIndex() > -1) {
 			// 读完了header部分，则继续下一步，看是否存在Content-Length
 			final int headerEndIndex = getHeaderEndIndex(array, pd);
 			if (headerEndIndex > -1) {
-				xEnum = BIO.afterHeader(socket, array, pd);
+				xEnum = ZServer.afterHeader(socket, array, pd);
 				if (xEnum == HttpParseStatusEnum.PARSE_END) {
 					final ZRequest request = this.parse(array, socket);
 //					final String xx = new String(array.get());
 //					System.out.println("xx = ");
 //					System.out.println(xx);
-					this.responseBIO(request, socket, array);
+					this.response(request, socket, array);
 					array.reset(capacity);
 					xEnum = HttpParseStatusEnum.PARSE_REQUEST_LINE;
 //								break;
@@ -376,7 +388,7 @@ public class BIO {
 	private static HttpParseStatusEnum afterHeader(final Socket socket, final ZArray array, final PD pd) {
 		// parseStatusEnum = HttpParseStatusEnum.PARSE_CONTENT_LENGTH;
 		// header中存在Content-Length，说明带有body，继续read和解析body部分
-		final long contentLength = BIO.parseContentLength(array, pd);
+		final long contentLength = ZServer.parseContentLength(array, pd);
 		if (contentLength <= -1) {
 			// 无Content-Length，说明读完了，直接response
 			return HttpParseStatusEnum.PARSE_END;
@@ -461,14 +473,14 @@ public class BIO {
 
 	private ZRequest parse(final byte[] fullBA, final Socket socket) {
 
-		if (!BIO.checkServerQPS()) {
-			this.response429(socket);
+		if (!ZServer.checkServerQPS()) {
+			ZServer.response429(socket);
 			return null;
 		}
 
 		final ZRequest request = BodyReader.parse(fullBA, socket);
-		if (!BIO.checkMethod(request)) {
-			ReU.response405Socket(socket, request.getMethodEnum().getMethod());
+		if (!ZServer.checkMethod(request)) {
+			ReU.response405(socket, request.getMethodEnum().getMethod());
 			return null;
 		}
 
@@ -481,19 +493,17 @@ public class BIO {
 		return request;
 	}
 
-	private void response429(final Socket socket) {
-		try {
-			NioLongConnectionServer.response429AsyncBIO(socket, SERVER_CONFIGURATIONPROPERTIES.getQpsExceedMessage());
-		} catch (final Exception e) {
-			final String message = Task.gExceptionMessage(e);
-			LOG.error("NioLongConnectionServer.response429Async异常,message={}", message);
-//				return null;
-		}
+	private static void response429(final Socket socket) {
+		ReU.response429Async(socket, SERVER_CONFIGURATIONPROPERTIES.getQpsExceedMessage());
 	}
 
 	private static boolean checkServerQPS() {
-		final boolean allow = NioLongConnectionServer.allow();
-		return allow;
+		return allow();
+	}
+
+	private static boolean allow() {
+		return ENABLE_SERVER_QPS_LIMITED && QC.allow(QCTimeEnum.SECOND, Z_SERVER_QPS,
+				SERVER_CONFIGURATIONPROPERTIES.getQps(), QPSHandlingEnum.SMOOTH);
 	}
 
 	// FIXME 2026年5月23日 15:04:59 zhangzhen : checkHeader抽成一个方法
@@ -516,15 +526,14 @@ public class BIO {
 		return false;
 	}
 
-	private static boolean readInOneShot(final int readCount, final int read, final int bufferCapacity) {
-		return (readCount == 1) && (read < bufferCapacity);
-	}
-
-
-	private void responseBIO(final ZRequest request, final Socket socket, final ZArray array) {
+	private void response(final ZRequest request, final Socket socket, final ZArray array) {
 		final TaskRequest taskRequest = new TaskRequest(array.get(), array.getTf(),
 				new Date());
-		this.requestHandler.handleBIO(taskRequest,socket, request);
+
+		request.setTf(array.getTf());
+		request.setOriginalRequestBytes(array.get());
+
+		this.requestHandler.handle(taskRequest,socket, request);
 	}
 
 	public static void closeSocket(final Socket socket) {
@@ -561,6 +570,153 @@ public class BIO {
 	private static final AtomicLong VT_N = new AtomicLong(0L);
 	private static String gTName() {
 		return "vht-" + VT_N.incrementAndGet();
+	}
+
+
+	public static void response(final ZRequest request, final TaskRequest taskRequest, final Socket socket) {
+
+		try {
+			ReqeustInfo.set(request);
+			final Task task = new Task(socket);
+//			final String contentType = request.getContentType();
+
+			// FIXME 2026年5月25日 14:36:10 zhangzhen : 前面 request.setOriginalRequestBytes 执行过了
+//			if (STU.isNotEmpty(contentType)
+//					&& contentType.toLowerCase().startsWith(ContentTypeEnum.MULTIPART_FORM_DATA.getType().toLowerCase())) {
+//				// setOriginalRequestBytes方法会导致qps降低，FORM_DATA 才set
+//				// 后续解析需要，或是不需要，再看.
+//				request.setOriginalRequestBytes(taskRequest.getRequestData());
+//			}
+
+			response(request, task);
+
+		} catch (final Exception e) {
+
+			// 这个catch里 真正处理 response里的异常，用统一配置的异常处理器来处理
+			final ZControllerAdviceActuator a = ZContext.getBean(ZControllerAdviceActuator.class);
+			final Object r = a.execute(e);
+
+			final Integer httpStatus = ZControllerAdviceThrowable.findHttpStatus(e);
+			final ZResponse response =
+					new ZResponse(socket)
+					.httpStatus(httpStatus != null ? httpStatus : HttpStatusEnum.HTTP_500.getCode())
+					.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
+					.body(J.toJSONString(r));
+
+			if (SERVER_CONFIGURATIONPROPERTIES.isResponseZSessionId()) {
+				setZSessionId(request, response);
+			}
+
+			response.write();
+
+			if (e instanceof IOException) {
+				ZServer.closeSocket(socket);
+			}
+
+		} finally {
+			ReqeustInfo.remove();
+		}
+
+	}
+
+	private static void response(final ZRequest request, final Task task) throws Exception {
+
+		try {
+			final ZResponse response = task.invoke(request);
+
+			if ((response == null) || response.isWritten()) {
+				return;
+			}
+
+			final boolean keepAlive = request.isKeepAlive();
+//			addConnectionToKAMap(keepAlive, selectionKey);
+
+			final Integer httpStatus = response.getHttpStatus();
+			if (httpStatus == HttpStatusEnum.HTTP_200.getCode()) {
+				response.setETag(request, response.getBody(), ETagEnum.STRONG);
+			}
+
+			// FIXME 2025年1月3日 上午3:22:26 zhangzhen : Last-Modified
+			// FIXME 2025年1月3日 上午3:28:22 zhangzhen : last-modified头貌似不好写
+			// 因为只有在业务代码中才容易判断资源的修改时间
+			//			setLastModified(request, response);
+
+			response.write();
+
+			if (!keepAlive) {
+				ZServer.closeSocket(task.getSocket());
+			}
+
+		} catch (final Exception e) {
+			// 这里不能关闭，因为外面的异常处理器类还要write，继续抛
+			throw e;
+		}
+
+	}
+
+	// FIXME 2026年5月25日 14:42:26 zhangzhen : 注意：这个不要删，黄了也不删，这是以前打算过的功能，
+	// 以后再看要不要做
+	private static void setLastModified(final ZRequest request,final ZResponse response) {
+
+		final ZLastModified lastModified = Task.getMethodAnnotation(request, ZLastModified.class);
+		if (lastModified == null) {
+			return;
+		}
+
+		final String ifModifiedSince = request.getHeader(HeaderEnum.IF_MODIFIED_SINCE.getName());
+		if (STU.isNullOrEmptyOrBlank(ifModifiedSince)) {
+			return;
+		}
+
+		response.header("Last-Modified", ZDateUtil.gmt(new Date()));
+	}
+
+	static void setZSessionId(final ZRequest request, final ZResponse response) {
+		if ((request == null) || (response == null)) {
+			return;
+		}
+
+		final ZSession sessionFALSE = request.getSession(false);
+		if (sessionFALSE != null) {
+			sessionFALSE.setLastAccessedTime(new Date());
+			return;
+		}
+
+		final ZSession sessionTRUE = request.getSession(true);
+		sessionTRUE.setLastAccessedTime(new Date());
+		final ZCookie cookie = new ZCookie(HeaderEnum.Z_SESSION_ID.getName(), sessionTRUE.getId()).path("/").httpOnly(true);
+		response.cookie(cookie);
+	}
+
+	public static void setCacheControl(final ZRequest request, final ZResponse response) {
+
+		if (request == null) {
+			return;
+		}
+
+		final String key = request.getRequestURI() + '@' + ZCacheControl.class.getName() + '-'
+				+ ZCacheControl.class.hashCode();
+
+		final ZCacheControl cacheControl = ZRC.singleton().computeIfAbsent("cc" + '-' + key,
+				() -> Task.getMethodAnnotation0(request, ZCacheControl.class));
+
+		if (cacheControl == null) {
+			return;
+		}
+
+		final StringJoiner joiner = new StringJoiner(",");
+
+		final CacheControlEnum[] vs = cacheControl.value();
+		for (final CacheControlEnum v : vs) {
+			joiner.add(v.getValue());
+		}
+
+		final int maxAge = cacheControl.maxAge();
+		if (maxAge != ZCacheControl.IGNORE_MAX_AGE) {
+			joiner.add(CacheControlEnum.MAX_AGE.getValue().toLowerCase() + STU.EQUALS + maxAge);
+		}
+
+		response.header(HeaderEnum.CACHE_CONTROL.getName(), joiner.toString());
 	}
 
 }

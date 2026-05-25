@@ -58,12 +58,13 @@ public final class TaskRequestHandler {
 
 	}
 
-	public void handleBIO(final TaskRequest taskRequest, final Socket socket, final ZRequest request) {
+	public void handle(final TaskRequest taskRequest, final Socket socket, final ZRequest request) {
 
 		try {
-			request.setTf(taskRequest.getTf());
+			// FIXME 2026年5月25日 14:35:35 zhangzhen : 前面set过了
+//			request.setTf(taskRequest.getTf());
 
-			this.requestValidator.handleBIO(request, taskRequest, socket);
+			this.requestValidator.handle(request, taskRequest, socket);
 
 		} catch (final Exception e) {
 			e.printStackTrace();
@@ -80,7 +81,7 @@ public final class TaskRequestHandler {
 				.write();
 
 			if (e instanceof IOException) {
-				BIO.closeSocket(socket);
+				ZServer.closeSocket(socket);
 			}
 
 			return;

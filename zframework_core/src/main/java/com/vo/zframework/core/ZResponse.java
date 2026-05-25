@@ -309,7 +309,7 @@ public class ZResponse {
 		}
 
 		if (!ReqeustInfo.get().isKeepAlive()) {
-			BIO.closeSocket(this.socket);
+			ZServer.closeSocket(this.socket);
 		}
 
 	}
@@ -524,11 +524,11 @@ public class ZResponse {
 		this.setDate(new Date());
 
 		if (SERVER_CONFIGURATIONPROPERTIES.isResponseZSessionId()) {
-			NioLongConnectionServer.setZSessionId(request, this);
+			ZServer.setZSessionId(request, this);
 		}
 
 		if (this.getHttpStatus() == HttpStatusEnum.HTTP_200.getCode()) {
-			NioLongConnectionServer.setCacheControl(request, this);
+			ZServer.setCacheControl(request, this);
 		}
 
 	}

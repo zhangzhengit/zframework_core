@@ -2,6 +2,7 @@ package com.vo.zframework.core;
 
 import java.net.Socket;
 
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.vo.zframework.cache.J;
 import com.vo.zframework.common.CR;
 import com.vo.zframework.http.HttpStatusEnum;
@@ -15,15 +16,20 @@ import com.vo.zframework.http.HttpStatusEnum;
  */
 public class ReU {
 
-	public static void response405Socket(final Socket socket, final String message) {
-		 new ZResponse(socket)
-				.httpStatus(HttpStatusEnum.HTTP_405.getCode())
-				.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
-				.body(J.toJSONString(CR.error("请求Method不支持：[" + message + "]")))
-				.write();
+	public static void response429Async(final Socket socket, final String message) {
+		Thread.ofVirtual().name("response429AsyncT")
+				.start(() -> response429(message, socket));
 	}
 
-	public static ZResponse response405BIO(final Socket socket, final String message) {
+	public static void response429(final String message, final Socket socket) {
+		new ZResponse(socket)
+		.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
+		.httpStatus(HttpStatusEnum.HTTP_429.getCode())
+		.body(J.toJSONString(CR.error(message), Include.NON_NULL))
+		.write();
+	}
+
+	public static ZResponse response405(final Socket socket, final String message) {
 		final ZResponse r = new ZResponse(socket)
 				.httpStatus(HttpStatusEnum.HTTP_405.getCode())
 				.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
@@ -32,7 +38,7 @@ public class ReU {
 		return r;
 	}
 
-	public static ZResponse response404BIO(final Socket socket, final String message) {
+	public static ZResponse response404(final Socket socket, final String message) {
 		final ZResponse r = new ZResponse(socket)
 				.httpStatus(HttpStatusEnum.HTTP_404.getCode())
 				.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
