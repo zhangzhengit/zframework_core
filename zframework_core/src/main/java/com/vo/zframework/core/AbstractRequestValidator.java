@@ -27,10 +27,10 @@ abstract class AbstractRequestValidator {
 
 	private static final RequestVerificationResult ALLOW = new RequestVerificationResult(true);
 
-	public void handle(final ZRequest request, final TaskRequest taskRequest, final Socket socket) {
-		final RequestVerificationResult r = this.validated(request, taskRequest);
+	public void handle(final ZRequest request, final Socket socket) {
+		final RequestVerificationResult r = this.validated(request);
 		if (r.isPassed()) {
-			AbstractRequestValidator.passed(request, taskRequest, socket);
+			AbstractRequestValidator.passed(request, socket);
 		} else {
 			AbstractRequestValidator.failed(socket, r);
 		}
@@ -53,11 +53,10 @@ abstract class AbstractRequestValidator {
 	 * 判断QPS不能超过 配置的值
 	 *
 	 * @param request
-	 * @param taskRequest
 	 * @return
 	 *
 	 */
-	public RequestVerificationResult validated(final ZRequest request, final TaskRequest taskRequest) {
+	public RequestVerificationResult validated(final ZRequest request) {
 
 		final boolean enableClientQps = ZContext.getBean(ServerConfigurationProperties.class).getEnableClientQps();
 		if (!enableClientQps) {
@@ -123,8 +122,8 @@ abstract class AbstractRequestValidator {
 	 * @param socket TODO
 	 *
 	 */
-	public static void passed(final ZRequest request, final TaskRequest taskRequest, final Socket socket) {
-		ZServer.response(request, taskRequest, socket);
+	public static void passed(final ZRequest request, final Socket socket) {
+		ZServer.response(request, socket);
 	}
 
 }

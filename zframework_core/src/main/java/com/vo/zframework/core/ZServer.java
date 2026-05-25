@@ -35,6 +35,8 @@ public class ZServer {
 
 	private static final int UPLOAD_FILE_TO_TEMP_SIZE = SERVER_CONFIGURATIONPROPERTIES.getUploadFileToTempSize();
 
+	private static final AtomicLong VT_N = new AtomicLong(0L);
+
 	public static final int DEFAULT_HTTP_PORT = 80;
 
 	public static final String Z_SERVER_QPS = "zsq";
@@ -115,7 +117,7 @@ public class ZServer {
 
 		final int capacity = SERVER_CONFIGURATIONPROPERTIES.getByteBufferSize();
 
-		final InputStream inputStream = this.getInputStream(socket);
+		final InputStream inputStream = ZServer.getInputStream(socket);
 		final BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
 
 		boolean closed = false;
@@ -527,13 +529,11 @@ public class ZServer {
 	}
 
 	private void response(final ZRequest request, final Socket socket, final ZArray array) {
-		final TaskRequest taskRequest = new TaskRequest(array.get(), array.getTf(),
-				new Date());
 
 		request.setTf(array.getTf());
 		request.setOriginalRequestBytes(array.get());
 
-		this.requestHandler.handle(taskRequest,socket, request);
+		this.requestHandler.handle(socket,request);
 	}
 
 	public static void closeSocket(final Socket socket) {
@@ -558,35 +558,26 @@ public class ZServer {
 		}
 	}
 
-	private InputStream getInputStream(final Socket socket) {
+	private static InputStream getInputStream(final Socket socket) {
 		try {
-			final InputStream is = socket.getInputStream();
-			return is;
+			return socket.getInputStream();
 		} catch (final IOException e) {
 			e.printStackTrace();
 		}
 		return null;
 	}
-	private static final AtomicLong VT_N = new AtomicLong(0L);
+
+
 	private static String gTName() {
 		return "vht-" + VT_N.incrementAndGet();
 	}
 
 
-	public static void response(final ZRequest request, final TaskRequest taskRequest, final Socket socket) {
+	public static void response(final ZRequest request, final Socket socket) {
 
 		try {
 			ReqeustInfo.set(request);
 			final Task task = new Task(socket);
-//			final String contentType = request.getContentType();
-
-			// FIXME 2026年5月25日 14:36:10 zhangzhen : 前面 request.setOriginalRequestBytes 执行过了
-//			if (STU.isNotEmpty(contentType)
-//					&& contentType.toLowerCase().startsWith(ContentTypeEnum.MULTIPART_FORM_DATA.getType().toLowerCase())) {
-//				// setOriginalRequestBytes方法会导致qps降低，FORM_DATA 才set
-//				// 后续解析需要，或是不需要，再看.
-//				request.setOriginalRequestBytes(taskRequest.getRequestData());
-//			}
 
 			response(request, task);
 
