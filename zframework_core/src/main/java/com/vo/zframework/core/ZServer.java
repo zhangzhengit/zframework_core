@@ -126,7 +126,7 @@ public class ZServer {
 
 			final byte[] buffer = new byte[capacity];
 			final ZArray array = new ZArray(buffer.length);
-			final PD pd = new PD();
+			final PD pd = new PD(socket);
 
 //			int readCount = 0;
 			HttpParseStatusEnum parseStatusEnum = HttpParseStatusEnum.PARSE_REQUEST_LINE;
@@ -453,11 +453,15 @@ public class ZServer {
 	}
 
 	private static String parseRequestLine(final ZArray array, final PD pd) {
-		final int requestLineIndex = BodyReader.search(array.get(), STU.CRLF, 1, 0);
+		return parseRequestLine(array.get(), pd);
+	}
+
+	public static String parseRequestLine(final byte[] buffer, final PD pd) {
+		final int requestLineIndex = BodyReader.search(buffer, STU.CRLF, 1, 0);
 		pd.setRequestLineIndex(requestLineIndex);
 		// 从0开始找到了第一个CRLF，说明有请求行
 		if (requestLineIndex > -1) {
-			final byte[] lineBA = Arrays.copyOfRange(array.get(), 0, requestLineIndex);
+			final byte[] lineBA = Arrays.copyOfRange(buffer, 0, requestLineIndex);
 			// FIXME 2026年5月23日 14:35:41 zhangzhen : 解析请求行，看是否不支持的METHOD，不存在的接口等等
 			final String requestLine = new String(lineBA);
 //			System.out.println("requestLine = ");
@@ -503,7 +507,7 @@ public class ZServer {
 		return allow();
 	}
 
-	private static boolean allow() {
+	public static boolean allow() {
 		return ENABLE_SERVER_QPS_LIMITED && QC.allow(QCTimeEnum.SECOND, Z_SERVER_QPS,
 				SERVER_CONFIGURATIONPROPERTIES.getQps(), QPSHandlingEnum.SMOOTH);
 	}

@@ -1,5 +1,7 @@
 package com.vo.zframework.core;
 
+import java.net.Socket;
+
 /**
  * 解析http请求的中间状态
  *
@@ -11,6 +13,14 @@ public class PD {
 	private int requestLineIndex = -1;
 	private int headerEndIndex = -1;
 	private long contentLength = -1;
+
+	private final Socket socket;
+
+	private HttpParseStatusEnum parseStatusEnum;
+
+	public PD(final Socket socket) {
+		this.socket = socket;
+	}
 
 	public int getRequestLineIndex() {
 		return this.requestLineIndex;
@@ -34,6 +44,18 @@ public class PD {
 
 	public void setContentLength(final long contentLength) {
 		this.contentLength = contentLength;
+	}
+
+	public HttpParseStatusEnum getParseStatusEnum() {
+		return this.parseStatusEnum;
+	}
+
+	public void setParseStatusEnum(final HttpParseStatusEnum parseStatusEnum) {
+		this.parseStatusEnum = parseStatusEnum;
+	}
+
+	public Socket getSocket() {
+		return socket;
 	}
 
 }
