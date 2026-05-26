@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.net.http.HttpResponse;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -522,11 +523,11 @@ public class ZResponse {
 		this.setDate(new Date());
 
 		if (SERVER_CONFIGURATIONPROPERTIES.isResponseZSessionId()) {
-			ZServer.setZSessionId(request, this);
+			HTTPResponseProcessor.setZSessionId(request, this);
 		}
 
 		if (this.getHttpStatus() == HttpStatusEnum.HTTP_200.getCode()) {
-			ZServer.setCacheControl(request, this);
+			HTTPResponseProcessor.setCacheControl(request, this);
 		}
 
 	}

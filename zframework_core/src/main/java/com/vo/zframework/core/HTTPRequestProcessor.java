@@ -1,5 +1,8 @@
 package com.vo.zframework.core;
 
+import java.io.BufferedInputStream;
+import java.net.Socket;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 
 import com.vo.zframework.cache.STU;
@@ -29,6 +32,9 @@ public class HTTPRequestProcessor {
 
 	private static final ServerConfigurationProperties SERVER_CONFIGURATIONPROPERTIES= ZContext.getBean(ServerConfigurationProperties.class);
 
+	private static final int UPLOAD_FILE_TO_TEMP_SIZE = SERVER_CONFIGURATIONPROPERTIES.getUploadFileToTempSize();
+
+
 	/**
 	 * 用于在一次http请求读取解析之前初始化和校验一些服务器限制等等
 	 * 本类默认为校验 server.qps
@@ -57,15 +63,15 @@ public class HTTPRequestProcessor {
 	 * @param array TODO
 	 */
 	public HttpParseStatusEnum parseRquestLine(final PD pd, final byte[] buffer, final ZArray array) {
-		final String requestLine = ZServer.parseRequestLine(buffer, pd);
+		final String requestLine = parseRequestLine(buffer, pd);
 		if (pd.getRequestLineIndex() <= -1) {
-			// FIXME 2026年5月26日 09:32:24 zhangzhen : 没找到，继续读(buffer容量太小)？还是抛异常(恶意制造的不合法请求)？
+			// FIXME 2026Ln : 没找到，继续读(buffer容量太小)？还是抛异常(恶意制造的不合法请求)？
 			return HttpParseStatusEnum.PARSE_REQUEST_LINE;
 		}
 		pd.setRequestLine(requestLine);
 
-		return HttpParseStatusEnum.CHECK_METHOD;
 		// FIXME 2026年5月26日 09:56:12 zhangzhen : 除了METHOD，还看版本，不支持响应505
+		return HttpParseStatusEnum.CHECK_METHOD;
 	}
 
 	/**
@@ -156,13 +162,13 @@ public class HTTPRequestProcessor {
 		// 以后再制造不合法的请求来测试本方法
 
 
-		final int headerEndIndex = ZServer.getHeaderEndIndex(array, pd);
+		final int headerEndIndex = getHeaderEndIndex(array, pd);
 		if (headerEndIndex <= -1) {
 			// header 没结束，继续读
 			return HttpParseStatusEnum.PARSE_END;
 		}
 
-		final String contentLength = ZServer.gContentLength(array, pd);
+		final String contentLength = gContentLength(array, pd);
 		if(STU.isEmpty(contentLength)) {
 			// 无Content-Length，直接跳到结束
 			return HttpParseStatusEnum.PARSE_END;
@@ -187,7 +193,7 @@ public class HTTPRequestProcessor {
 
 		// FIXME 2026年5月26日 09:34:11 zhangzhen : 这个相当复杂，先写外面的调用者，根据此类每个方法的返回值来跳转到不同状态
 
-		final HttpParseStatusEnum body = ZServer.parseBody(pd.getSocket(), pd.getBufferCapacity(), pd.getBufferedInputStream(), array, pd);
+		final HttpParseStatusEnum body = parseBody(pd.getSocket(), pd.getBufferCapacity(), pd.getBufferedInputStream(), array, pd);
 
 		return body;
 //		return HttpParseStatusEnum.PARSE_END;
@@ -203,13 +209,149 @@ public class HTTPRequestProcessor {
 		// FIXME 2026年5月26日 09:30:41 zhangzhen : 这里应该写：重置ZArray readCount
 		// 等等所有资源，等待下一个请求到来
 
-		final ZRequest request = ZServer.parse(buffer, pd.getSocket());
+		final ZRequest request = BodyReader.parse(buffer, pd.getSocket());
 //		System.out.println("request = ");
 //		System.out.println(request);
 
 		pd.setRequest(request);
 
 		return HttpParseStatusEnum.START;
+	}
+
+	public static int getHeaderEndIndex(final ZArray array, final PD pd) {
+		final int headerEndIndex = BodyReader.search(array.get(), STU.CRLFCRLF, 1, pd.getRequestLineIndex());
+
+		pd.setHeaderEndIndex(headerEndIndex);
+
+		if (headerEndIndex > -1) {
+//			final byte[] headerBA = Arrays.copyOfRange(array.get(), pd.getRequestLineIndex()
+//					+ STU.CRLF.length()
+//					, headerEndIndex);
+//			final String header = new String(headerBA);
+//			System.out.println("header = ");
+//			System.out.println(header);
+
+		}
+
+		return headerEndIndex;
+	}
+
+	public static String parseRequestLine(final byte[] buffer, final PD pd) {
+		final int requestLineIndex = BodyReader.search(buffer, STU.CRLF, 1, 0);
+		pd.setRequestLineIndex(requestLineIndex);
+		// 从0开始找到了第一个CRLF，说明有请求行
+		if (requestLineIndex > -1) {
+			final byte[] lineBA = Arrays.copyOfRange(buffer, 0, requestLineIndex);
+			// FIXME 2026年5月23日 14:35:41 zhangzhen : 解析请求行，看是否不支持的METHOD，不存在的接口等等
+			final String requestLine = new String(lineBA);
+//			System.out.println("requestLine = ");
+//			System.out.println(requestLine);
+
+			return requestLine;
+		}
+
+		return null;
+	}
+
+	public static String gContentLength(final ZArray array, final PD pd) {
+		final int clIndex = BodyReader.search(array.get(),
+				HeaderEnum.CONTENT_LENGTH.getName(), 1, pd.getRequestLineIndex() + STU.CRLF.length());
+		if (clIndex > -1) {
+			final int clEIndex = BodyReader.search(array.get(), STU.CRLF, 1, clIndex);
+			if (clEIndex > clIndex) {
+
+				final byte[] clBA = Arrays.copyOfRange(array.get(), clIndex, clEIndex);
+				final String contentLengthS = new String(clBA);
+//				System.out.println("parseContentLength-content-Length = ");
+//				System.out.println(contentLengthS);
+
+				final long contentLength = Long.parseLong(contentLengthS.split(":")[1].trim());
+				pd.setContentLength(contentLength);
+				return contentLengthS;
+			}
+		}
+
+		return null;
+	}
+
+	public static HttpParseStatusEnum parseBody(final Socket socket, final int capacity,
+			final BufferedInputStream bufferedInputStream, final ZArray array,
+			final PD pd) {
+
+		System.out
+				.println(LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t" + "ZServer.parseBody()");
+
+		if (pd.getContentLength() >= (UPLOAD_FILE_TO_TEMP_SIZE * 1024)) {
+			return writeToTempFile(socket, capacity, bufferedInputStream, array, pd);
+		}
+
+		if ((pd.getHeaderEndIndex() + STU.CRLFCRLF.length() + pd.getContentLength()) == array.length()) {
+//			final ZRequest request = ZServer.parse(array, socket);
+//			response(request, socket, array);
+//			array.reset(capacity);
+
+			return HttpParseStatusEnum.PARSE_END;
+		}
+
+		return HttpParseStatusEnum.PARSE_BODY;
+	}
+
+
+	public static HttpParseStatusEnum writeToTempFile(final Socket socket, final int capacity,
+			final BufferedInputStream bufferedInputStream, final ZArray array, final PD pd) {
+
+		final String randomFileName = "file_" + System.nanoTime();
+		final TF tf = DefaultHttpReader.saveToTempFile(randomFileName, randomFileName, randomFileName);
+
+		final byte[] bodyOne = Arrays.copyOfRange(array.get(), pd.getHeaderEndIndex() + STU.CRLF.length(),
+				array.length());
+		tf.write(bodyOne);
+
+		// 先判断一下 bodyOne 是否已包含了完整的请求
+		if ((pd.getHeaderEndIndex() + STU.CRLFCRLF.length() + pd.getContentLength()) == array.get().length) {
+			return HttpParseStatusEnum.PARSE_END;
+		}
+
+		// 不再放入array,而是写入文件
+		final int fbc = 1024 * 8;
+		final byte[] buffer = new byte[fbc];
+		int fRC = 0;
+
+		while (true) {
+			final int r1 = ZServer.read0(bufferedInputStream, buffer);
+
+			if (r1 <= -1) {
+				break;
+			}
+
+			fRC += r1;
+			tf.write(buffer, 0, r1);
+
+			// FIXME 2026年5月25日 09:09:20 zhangzhen : debug 用暂时放入array，记得删掉
+//				array.add(buffer, 0, r1);
+
+			if ((pd.getHeaderEndIndex() + STU.CRLFCRLF.length() + pd.getContentLength())
+					== (array.length() + fRC)) {
+//						== (array.length())) {
+
+				final Fm fm = DefaultHttpReader.hFM(array);
+				final String boundary = fm.getBoundary();
+
+				try {
+					DefaultHttpReader.readFileNameAndContentType(tf);
+					DefaultHttpReader.removeNB(tf, boundary, array);
+					array.setTf(tf);
+				} finally {
+					DefaultHttpReader.closeTFStream(tf);
+				}
+
+				return HttpParseStatusEnum.PARSE_END;
+			}
+
+		}
+
+		// 为了编译通过，返回PARSE_END
+		return HttpParseStatusEnum.PARSE_END;
 	}
 
 }

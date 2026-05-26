@@ -321,7 +321,7 @@ public class Task {
 					.body(J.toJSONString(error, Include.NON_NULL));
 
 					if (SERVER_CONFIGURATIONPROPERTIES.isResponseZSessionId()) {
-						ZServer.setZSessionId(request, response);
+						HTTPResponseProcessor.setZSessionId(request, response);
 					}
 
 					return response;

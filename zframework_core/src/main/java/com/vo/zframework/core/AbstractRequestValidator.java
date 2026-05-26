@@ -112,7 +112,8 @@ abstract class AbstractRequestValidator {
 	 * @param socket TODO
 	 */
 	public static void failed(final Socket socket, final RequestVerificationResult requestVerificationResult) {
-		ReU.response429(socket, requestVerificationResult.getMessage(), true);
+		final ZResponse response429 = ReU.response429(socket, requestVerificationResult.getMessage(), true);
+		response429.write();
 	}
 
 	/**
@@ -123,7 +124,7 @@ abstract class AbstractRequestValidator {
 	 *
 	 */
 	public static void passed(final ZRequest request, final Socket socket) {
-		ZServer.responseR(request, socket);
+		HTTPResponseProcessor.response(request, socket);
 	}
 
 }

@@ -116,10 +116,10 @@ public class PD {
 	}
 
 	public BufferedInputStream getBufferedInputStream() {
-		return bufferedInputStream;
+		return this.bufferedInputStream;
 	}
 
-	public void setBufferedInputStream(BufferedInputStream bufferedInputStream) {
+	public void setBufferedInputStream(final BufferedInputStream bufferedInputStream) {
 		this.bufferedInputStream = bufferedInputStream;
 	}
 
