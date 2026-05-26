@@ -10,6 +10,13 @@ import java.time.LocalDateTime;
  */
 public class HTTPRequestScheduler {
 
+	private static final HttpParseStatusEnum START = HttpParseStatusEnum.START;
+
+	private static final HttpParseStatusEnum EXCEPTION = HttpParseStatusEnum.EXCEPTION;
+
+	/**
+	 * 支持结束的最终状态，是【正常】结束，不是异常结束
+	 */
 	private static final HttpParseStatusEnum END = HttpParseStatusEnum.PARSE_END;
 
 	HTTPRequestProcessor processor = new HTTPRequestProcessor();
@@ -42,8 +49,8 @@ public class HTTPRequestScheduler {
 			return this.parseBody(pd, buffer);
 
 		case HttpParseStatusEnum.START:
-			this.start(pd, buffer);
-			break;
+			final HttpParseStatusEnum start2 = this.start(pd, buffer);
+			return start2;
 
 		default:
 			break;
@@ -54,13 +61,23 @@ public class HTTPRequestScheduler {
 	}
 
 	private HttpParseStatusEnum start(final PD pd, final byte[] buffer) {
-		final HttpParseStatusEnum startStatus = this.processor.start();
+		final HttpParseStatusEnum startStatus = this.processor.start(pd);
 		if (startStatus == END) {
 			return this.processor.end(pd, buffer);
 		}
 
 		if (startStatus == HttpParseStatusEnum.PARSE_REQUEST_LINE) {
 			return this.parseRL(pd, buffer);
+		}
+
+		if (startStatus == START) {
+			// FIXME 2026年5月26日 11:50:20 zhangzhen : START ，暂时这么写，防止save
+			// action自己把这个if给删了，待会再改saveaction设置
+			return startStatus;
+		}
+
+		if (startStatus == EXCEPTION) {
+			return EXCEPTION;
 		}
 
 		return startStatus;

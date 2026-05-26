@@ -137,7 +137,7 @@ public class ZServer {
 //				if (parseStatusEnum == HttpParseStatusEnum.PARSE_REQUEST_LINE) {
 //					readCount = 0;
 //				}
-				if (parseStatusEnum == HttpParseStatusEnum.START) {
+				if ((parseStatusEnum == HttpParseStatusEnum.START) ||(parseStatusEnum == HttpParseStatusEnum.EXCEPTION)) {
 					array.reset(capacity);
 				}
 
@@ -162,10 +162,15 @@ public class ZServer {
 				// 2 调度器
 //				final byte[] bufferT = array.get();
 //				final HttpParseStatusEnum process = this.sssss.process(parseStatusEnum, pd, bufferT);
-////				System.out.println("process = " + process);
+//				System.out.println("process = " + process);
 //				if (process == HttpParseStatusEnum.START) {
-////					System.out.println("开始执行目标方法...");
+//					System.out.println("开始执行目标方法...");
 //					response(pd.getRequest(), socket);
+//				} else if (process == HttpParseStatusEnum.EXCEPTION) {
+//					System.out.println("EXCEPTION，开始closeSocket...");
+//					closeSocket(socket);
+//					closed = true;
+//					break;
 //				}
 //				parseStatusEnum = process;
 
@@ -190,6 +195,7 @@ public class ZServer {
 				default:
 					break;
 				}
+
 			}
 
 			if (closed) {

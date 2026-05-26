@@ -20,6 +20,11 @@ public class PD {
 
 	private ZRequest request;
 
+	/**
+	 * 解析过程中异常状态时，给客户端的响应
+	 */
+	private ZResponse exception;
+
 	private HttpParseStatusEnum parseStatusEnum;
 
 	public PD(final Socket socket) {
@@ -76,6 +81,14 @@ public class PD {
 
 	public void setRequest(final ZRequest request) {
 		this.request = request;
+	}
+
+	public ZResponse getException() {
+		return this.exception;
+	}
+
+	public void setException(final ZResponse exception) {
+		this.exception = exception;
 	}
 
 }

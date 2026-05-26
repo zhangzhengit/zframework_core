@@ -8,6 +8,7 @@ package com.vo.zframework.core;
  */
 public enum HttpParseStatusEnum {
 
+	EXCEPTION,
 	START,
 
 	PARSE_REQUEST_LINE,

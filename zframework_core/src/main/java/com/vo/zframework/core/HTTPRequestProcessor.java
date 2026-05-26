@@ -27,19 +27,23 @@ public class HTTPRequestProcessor {
 	private static final ServerConfigurationProperties SERVER_CONFIGURATIONPROPERTIES= ZContext.getBean(ServerConfigurationProperties.class);
 
 	/**
-	 * 无参，用于在一次http请求读取解析之前初始化和校验一些服务器限制等等
+	 * 用于在一次http请求读取解析之前初始化和校验一些服务器限制等等
 	 * 本类默认为校验 server.qps
+	 * @param pd TODO
 	 *
 	 * @return
 	 */
 	// FIXME 2026年5月26日 09:09:55 zhangzhen : 校验server.qps 不该放在此类？应该写成固定的代码不该给用户实现？
-	public HttpParseStatusEnum start() {
+	public HttpParseStatusEnum start(final PD pd) {
 		if (ZServer.allow()) {
 			return HttpParseStatusEnum.PARSE_REQUEST_LINE;
 		}
 
 		// FIXME 2026年5月26日 10:58:54 zhangzhen : 抛异常
-		return HttpParseStatusEnum.PARSE_END;
+		// FIXME 2026年5月26日 12:19:02 zhangzhen : 不应该在此类中响应，此类应该只负责解析，
+		// 把ZResponse放在pd中，在外面根据状态EXCEPTION来响应异常信息
+		ReU.response429(pd.getSocket(), SERVER_CONFIGURATIONPROPERTIES.getQpsExceedMessage(), false);
+		return HttpParseStatusEnum.EXCEPTION;
 	}
 
 
