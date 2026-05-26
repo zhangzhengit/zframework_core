@@ -89,6 +89,23 @@ public class ZMultipartFile {
 	}
 
 	/**
+	 * 返回文件的的全部byte[],比 @see getContent 方法多了同时返回临时文件中的全部byte[]
+	 * 本方法用于不管是读入内存还是写入临时文件都用一次性读入文件全部内容的情况
+	 *
+	 * @return
+	 */
+	public byte[] toByteArray() {
+		if (!this.isTempFile()) {
+			return this.getContent();
+		}
+		final byte[] buffer =new byte[1028 * 8];
+		// FIXME 2026年5月26日 19:00:31 zhangzhen : 这个还不好写、数组容量受int.maxvalue限制，
+		// 还不能限制上传文件最大2GB，考虑好怎么写
+
+		return null;
+	}
+
+	/**
 	 * 获取上传的文件的输入流，适用于比较大的文件分批读取。
 	 * 如果接收到的文件比较小(由 @see ServerConfigurationProperties.uploadFileToTempSize 控制)
 	 * 用 getContent 来读取更方便
