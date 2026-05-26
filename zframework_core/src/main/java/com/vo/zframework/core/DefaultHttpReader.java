@@ -231,6 +231,10 @@ public class DefaultHttpReader {
 
 	public static AR readHeader(final SelectionKey selectionKey) {
 
+		if(!selectionKey.isValid()) {
+			return null;
+		}
+
 		// FIXME 2026年1月28日 11:12:40 zhangzhen : 现在改了 带body的不读1了，记得把本方法和readMethod也改为一个
 
 		final SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
