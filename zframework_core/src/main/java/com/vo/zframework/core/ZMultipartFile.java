@@ -31,6 +31,7 @@ public class ZMultipartFile {
 	private final String tempFilePath;
 	private final String originalFilenameString;
 	private final byte[] content;
+	private final long fileSize;
 	private final boolean isTempFile;
 	private final String contentType;
 	private final InputStream inputStream;
@@ -72,7 +73,7 @@ public class ZMultipartFile {
 	 *
 	 */
 	public long getSize() {
-		return this.content.length;
+		return this.fileSize;
 	}
 
 	/**
@@ -125,11 +126,12 @@ public class ZMultipartFile {
 	}
 
 	public ZMultipartFile(final String name, final String tempFilePath, final String originalFilenameString, final byte[] content,
-			final boolean isTempFile, final String contentType, final InputStream inputStream) {
+			final boolean isTempFile, final String contentType, final InputStream inputStream, final long fileSize) {
 		this.name = name;
 		this.tempFilePath = tempFilePath;
 		this.originalFilenameString = originalFilenameString;
 		this.content = content;
+		this.fileSize = fileSize;
 		this.isTempFile = isTempFile;
 		this.contentType = contentType;
 		this.inputStream = inputStream;
@@ -163,6 +165,10 @@ public class ZMultipartFile {
 			fileOutputStream.flush();
 		}
 
+	}
+
+	public long getFileSize() {
+		return this.fileSize;
 	}
 
 }

@@ -740,7 +740,7 @@ public class Task {
 								null,
 								findAny.get().getFileName(),
 								findAny.get().getBody(), false,
-								findAny.get().getContentType(), inputStream);
+								findAny.get().getContentType(), inputStream, findAny.get().getBody().length);
 
 						pI = Task.setValue(parametersArray, pI, p, file);
 					}
@@ -760,24 +760,25 @@ public class Task {
 			throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在", HttpStatusEnum.HTTP_400.getCode());
 		}
 
+		final File file = request.getTf().getFile();
 		// 走到这，说明是读到临时文件的的，所以从临时文件读
 		InputStream inputStream = null;
 		try {
-			inputStream = new FileInputStream(request.getTf().getFile());
+			inputStream = new FileInputStream(file);
 		} catch (final FileNotFoundException e) {
 			e.printStackTrace();
 		}
 
 		final String contentType = request.getTf().getContentType();
 
-		final ZMultipartFile file = new ZMultipartFile(request.getTf().getName(),
+		final ZMultipartFile zmFile = new ZMultipartFile(request.getTf().getName(),
 				request.getTf().getTempFilePath(),
 				request.getTf().getFileName(),
 				null, true,
-				contentType, inputStream);
+				contentType, inputStream, file.length());
 
 		final int nI = pI;
-		final int newPI = Task.setValue(parametersArray, nI, p, file);
+		final int newPI = Task.setValue(parametersArray, nI, p, zmFile);
 		return newPI;
 	}
 
