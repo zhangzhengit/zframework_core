@@ -167,13 +167,13 @@ public class Task {
 			}, true);
 
 			if (noRequestMethodMethod != null) {
-				return ReU.response405(this.getSocket(), request.getMethodEnum().getMethod());
+				return ReU.response405(this.getSocket(), request.getMethodEnum().getMethod(), true);
 			}
 
 			// 用正则依然匹配不到，响应404
-			final ZRMethod matcheZRMethod = Task.getMatcheMethod(request, path);
+			final ZRMethod matcheZRMethod = Task.getMatcheMethod(request.getMethodEnum(), path);
 			if (matcheZRMethod == null) {
-				return ReU.response404(this.getSocket(), path);
+				return ReU.response404(this.getSocket(), path, true);
 			}
 
 			zrMethod = matcheZRMethod;
@@ -202,15 +202,16 @@ public class Task {
 
 	}
 
-	private static ZRMethod getMatcheMethod(final ZRequest request,  final String path) throws Exception {
+	public static ZRMethod getMatcheMethod(final MethodEnum methodEnum, final String path) {
 
 		final Supplier<ZRMethod> supplier = () -> {
-			final Map<String, ZRMethod> rowMap = ZControllerMap.getByMethodEnum(request.getMethodEnum());
+			final Map<String, ZRMethod> rowMap = ZControllerMap.getByMethodEnum(methodEnum);
 			final Set<Entry<String, ZRMethod>> entrySet = rowMap.entrySet();
 			for (final Entry<String, ZRMethod> entry : entrySet) {
 				final ZRMethod methodTarget = entry.getValue();
 				final String requestMapping = entry.getKey();
-				if (Boolean.TRUE.equals(ZControllerMap.getIsregexByMethodEnumAndPath(methodTarget.getMethod(), requestMapping))
+				if (Boolean.TRUE
+						.equals(ZControllerMap.getIsregexByMethodEnumAndPath(methodTarget.getMethod(), requestMapping))
 						&& path.matches(requestMapping)) {
 
 					return methodTarget;

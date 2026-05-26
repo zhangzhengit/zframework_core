@@ -23,7 +23,7 @@ public class HTTPRequestScheduler {
 
 	// FIXME 2026年5月26日 10:55:55 zhangzhen : 在read的while中调用本方法，
 
-	HttpParseStatusEnum process(final HttpParseStatusEnum parseStatusEnum, final PD pd, final byte[] buffer) {
+	HttpParseStatusEnum process(final HttpParseStatusEnum parseStatusEnum, final PD pd, final byte[] buffer, final ZArray array) {
 //		System.out.println(LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t"
 //				+ "HTTPRequestScheduler.process()");
 
@@ -31,25 +31,23 @@ public class HTTPRequestScheduler {
 		switch (parseStatusEnum) {
 
 		case HttpParseStatusEnum.PARSE_END:
-			return this.processor.end(pd, buffer);
+			return this.processor.end(pd, buffer, array);
 
 		case HttpParseStatusEnum.PARSE_REQUEST_LINE:
-			final HttpParseStatusEnum rl = this.parseRL(pd, buffer);
+			final HttpParseStatusEnum rl = this.parseRL(pd, buffer, array);
 			return rl;
 
 		case HttpParseStatusEnum.CHECK_METHOD:
-			return this.checkMethod(pd, buffer);
+			return this.checkMethod(pd, buffer, array);
 
 		case HttpParseStatusEnum.PARSE_HEADER:
-			return this.parseHeader(pd, buffer);
-
-			// FIXME 2026年5月26日 11:16:00 zhangzhen : 加入 PARSE_CONTENT_LENGTH
+			return this.parseHeader(pd, buffer, array);
 
 		case HttpParseStatusEnum.PARSE_BODY:
-			return this.parseBody(pd, buffer);
+			return this.parseBody(pd, buffer, array);
 
 		case HttpParseStatusEnum.START:
-			final HttpParseStatusEnum start2 = this.start(pd, buffer);
+			final HttpParseStatusEnum start2 = this.start(pd, buffer, array);
 			return start2;
 
 		default:
@@ -60,14 +58,14 @@ public class HTTPRequestScheduler {
 		return parseStatusEnum;
 	}
 
-	private HttpParseStatusEnum start(final PD pd, final byte[] buffer) {
+	private HttpParseStatusEnum start(final PD pd, final byte[] buffer, final ZArray array) {
 		final HttpParseStatusEnum startStatus = this.processor.start(pd);
 		if (startStatus == END) {
-			return this.processor.end(pd, buffer);
+			return this.processor.end(pd, buffer, null);
 		}
 
 		if (startStatus == HttpParseStatusEnum.PARSE_REQUEST_LINE) {
-			return this.parseRL(pd, buffer);
+			return this.parseRL(pd, buffer, array);
 		}
 
 		if (startStatus == START) {
@@ -83,47 +81,65 @@ public class HTTPRequestScheduler {
 		return startStatus;
 	}
 
-	private HttpParseStatusEnum parseRL(final PD pd, final byte[] buffer) {
-		final HttpParseStatusEnum rquestLineStatus = this.processor.parseRquestLine(pd, buffer);
+	private HttpParseStatusEnum parseRL(final PD pd, final byte[] buffer, final ZArray array) {
+		final HttpParseStatusEnum rquestLineStatus = this.processor.parseRquestLine(pd, buffer, array);
 		if (rquestLineStatus == HttpParseStatusEnum.PARSE_REQUEST_LINE) {
 			return HttpParseStatusEnum.PARSE_REQUEST_LINE;
 		}
 
 		if (rquestLineStatus == HttpParseStatusEnum.CHECK_METHOD) {
-			return this.checkMethod(pd, buffer);
+			return this.checkMethod(pd, buffer, array);
 		}
 
 		return rquestLineStatus;
 	}
 
-	private HttpParseStatusEnum checkMethod(final PD pd, final byte[] buffer) {
+	private HttpParseStatusEnum checkMethod(final PD pd, final byte[] buffer, final ZArray array) {
 		final HttpParseStatusEnum checkMethodStatus = this.processor.checkMethod(pd, pd.getRequestLine());
 		if (checkMethodStatus == END) {
-			return this.processor.end(pd, buffer);
+			return this.processor.end(pd, buffer, array);
 		}
 
 		if (checkMethodStatus == HttpParseStatusEnum.PARSE_HEADER) {
-			return this.parseHeader(pd, buffer);
+			return this.parseHeader(pd, buffer, array);
+		}
+		if (checkMethodStatus == HttpParseStatusEnum.CHECK_URI) {
+			return this.checkURI(pd, buffer, array);
 		}
 
 		return checkMethodStatus;
 	}
 
-	private HttpParseStatusEnum parseHeader(final PD pd, final byte[] buffer) {
-		final HttpParseStatusEnum parseHeaderStatus = this.processor.parseHeader(pd, buffer);
-		if (parseHeaderStatus == HttpParseStatusEnum.PARSE_BODY) {
-			return this.parseBody(pd, buffer);
+	private HttpParseStatusEnum checkURI(final PD pd, final byte[] buffer, final ZArray array) {
+		final HttpParseStatusEnum parseHeaderStatus = this.processor.checkURI(pd, pd.getRequestLine());
+		if (parseHeaderStatus == HttpParseStatusEnum.PARSE_HEADER) {
+			return this.parseHeader(pd, buffer, array);
 		}
 
 		return parseHeaderStatus;
 	}
 
-	private HttpParseStatusEnum parseBody(final PD pd, final byte[] buffer) {
-		final HttpParseStatusEnum parseBodyStatus = this.processor.parseBody(pd, buffer);
+	private HttpParseStatusEnum parseHeader(final PD pd, final byte[] buffer, final ZArray array) {
+		final HttpParseStatusEnum parseHeaderStatus = this.processor.parseHeader(pd, buffer, array);
+		if (parseHeaderStatus == HttpParseStatusEnum.PARSE_BODY) {
+			return this.parseBody(pd, buffer, array);
+		}
+
+		if (parseHeaderStatus == HttpParseStatusEnum.PARSE_END) {
+			return this.processor.end(pd, buffer, array);
+		}
+
+		return parseHeaderStatus;
+	}
+
+	private HttpParseStatusEnum parseBody(final PD pd, final byte[] buffer, final ZArray array) {
+		final HttpParseStatusEnum parseBodyStatus = this.processor.parseBody(pd, buffer, array);
 		if (parseBodyStatus == END) {
-			return this.processor.end(pd, buffer);
+			return this.processor.end(pd, buffer, array);
 		}
 
 		return parseBodyStatus;
 	}
+
+
 }

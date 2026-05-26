@@ -1,6 +1,9 @@
 package com.vo.zframework.core;
 
+import java.io.BufferedInputStream;
 import java.net.Socket;
+
+import com.vo.zframework.enums.MethodEnum;
 
 /**
  * 解析http请求的中间状态
@@ -13,10 +16,15 @@ public class PD {
 	private int requestLineIndex = -1;
 	private int headerEndIndex = -1;
 	private long contentLength = -1;
+	private int bufferCapacity;
+
+	private BufferedInputStream bufferedInputStream;
 
 	private String requestLine;
 
 	private final Socket socket;
+
+	private MethodEnum methodEnum;
 
 	private ZRequest request;
 
@@ -89,6 +97,30 @@ public class PD {
 
 	public void setException(final ZResponse exception) {
 		this.exception = exception;
+	}
+
+	public MethodEnum getMethodEnum() {
+		return this.methodEnum;
+	}
+
+	public void setMethodEnum(final MethodEnum methodEnum) {
+		this.methodEnum = methodEnum;
+	}
+
+	public int getBufferCapacity() {
+		return this.bufferCapacity;
+	}
+
+	public void setBufferCapacity(final int bufferCapacity) {
+		this.bufferCapacity = bufferCapacity;
+	}
+
+	public BufferedInputStream getBufferedInputStream() {
+		return bufferedInputStream;
+	}
+
+	public void setBufferedInputStream(BufferedInputStream bufferedInputStream) {
+		this.bufferedInputStream = bufferedInputStream;
 	}
 
 }

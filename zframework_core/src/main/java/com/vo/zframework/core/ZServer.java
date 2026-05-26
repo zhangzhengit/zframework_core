@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.StringJoiner;
@@ -41,7 +42,9 @@ public class ZServer {
 
 	public static final String Z_SERVER_QPS = "zsq";
 
-	private final TaskRequestHandler requestHandler = new TaskRequestHandler();
+	private static final TaskRequestHandler requestHandler = new TaskRequestHandler();
+
+	private final HTTPRequestScheduler requestScheduler = new HTTPRequestScheduler();
 
 	private final ExecutorService ves = Executors.newVirtualThreadPerTaskExecutor();
 
@@ -49,7 +52,7 @@ public class ZServer {
 
 	public void startServer(final int serverPort) {
 
-		ZContext.addBean(this.requestHandler.getClass(), this.requestHandler);
+		ZContext.addBean(ZServer.requestHandler.getClass(), ZServer.requestHandler);
 
 		final Thread thread = new Thread(() -> this.start(serverPort));
 		thread.setName("ioT");
@@ -109,7 +112,6 @@ public class ZServer {
 		return socket;
 	}
 
-	HTTPRequestScheduler sssss = new HTTPRequestScheduler();
 	/**
 	 * @param socket
 	 */
@@ -128,6 +130,9 @@ public class ZServer {
 			final byte[] buffer = new byte[capacity];
 			final ZArray array = new ZArray(buffer.length);
 			final PD pd = new PD(socket);
+			pd.setBufferCapacity(capacity);
+			pd.setBufferedInputStream(bufferedInputStream);
+
 
 //			int readCount = 0;
 			HttpParseStatusEnum parseStatusEnum = HttpParseStatusEnum.PARSE_REQUEST_LINE;
@@ -160,41 +165,46 @@ public class ZServer {
 
 
 				// 2 调度器
-//				final byte[] bufferT = array.get();
-//				final HttpParseStatusEnum process = this.sssss.process(parseStatusEnum, pd, bufferT);
-//				System.out.println("process = " + process);
-//				if (process == HttpParseStatusEnum.START) {
-//					System.out.println("开始执行目标方法...");
-//					response(pd.getRequest(), socket);
-//				} else if (process == HttpParseStatusEnum.EXCEPTION) {
-//					System.out.println("EXCEPTION，开始closeSocket...");
+				final byte[] bufferT = array.get();
+				final HttpParseStatusEnum process = this.requestScheduler.process(parseStatusEnum, pd, bufferT, array);
+//				System.out.println( Thread.currentThread().getName() + "\t" +"process = " + process);
+				if (process == HttpParseStatusEnum.START) {
+//					System.out.println( Thread.currentThread().getName() + "\t" +"开始执行目标方法...");
+
+					response(pd.getRequest(), socket, array);
+
+				} else if (process == HttpParseStatusEnum.EXCEPTION) {
+					System.out.println( Thread.currentThread().getName() + "\t" +"EXCEPTION，开始closeSocket...");
+					final ZResponse exception = pd.getException();
+					if (exception != null) {
+						exception.write();
+					}
 //					closeSocket(socket);
 //					closed = true;
-//					break;
-//				}
-//				parseStatusEnum = process;
+				}
+				parseStatusEnum = process;
 
 				// 1 switch
-				switch (parseStatusEnum) {
-
-				case PARSE_REQUEST_LINE:
-					parseStatusEnum = this.parseRequestLine(socket, capacity, array, pd, parseStatusEnum);
-					break;
-
-				case PARSE_HEADER:
-					parseStatusEnum = this.parseHeader(socket, capacity, array, pd, parseStatusEnum, read);
-					break;
-
-				case PARSE_BODY:
-					parseStatusEnum = this.parseBody(socket, capacity, bufferedInputStream, array, pd);
-					break;
-
-				case PARSE_END:
-					break;
-
-				default:
-					break;
-				}
+//				switch (parseStatusEnum) {
+//
+//				case PARSE_REQUEST_LINE:
+//					parseStatusEnum = this.parseRequestLine(socket, capacity, array, pd, parseStatusEnum);
+//					break;
+//
+//				case PARSE_HEADER:
+//					parseStatusEnum = this.parseHeader(socket, capacity, array, pd, parseStatusEnum, read);
+//					break;
+//
+//				case PARSE_BODY:
+//					parseStatusEnum = this.parseBody(socket, capacity, bufferedInputStream, array, pd);
+//					break;
+//
+//				case PARSE_END:
+//					break;
+//
+//				default:
+//					break;
+//				}
 
 			}
 
@@ -206,26 +216,29 @@ public class ZServer {
 
 	}
 
-	private HttpParseStatusEnum parseBody(final Socket socket, final int capacity,
+	public static HttpParseStatusEnum parseBody(final Socket socket, final int capacity,
 			final BufferedInputStream bufferedInputStream, final ZArray array,
 			final PD pd) {
 
+		System.out
+				.println(LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t" + "ZServer.parseBody()");
+
 		if (pd.getContentLength() >= (UPLOAD_FILE_TO_TEMP_SIZE * 1024)) {
-			return this.writeToTempFile(socket, capacity, bufferedInputStream, array, pd);
+			return writeToTempFile(socket, capacity, bufferedInputStream, array, pd);
 		}
 
 		if ((pd.getHeaderEndIndex() + STU.CRLFCRLF.length() + pd.getContentLength()) == array.length()) {
-			final ZRequest request = ZServer.parse(array, socket);
-			this.response(request, socket, array);
-			array.reset(capacity);
+//			final ZRequest request = ZServer.parse(array, socket);
+//			response(request, socket, array);
+//			array.reset(capacity);
 
-			return HttpParseStatusEnum.PARSE_REQUEST_LINE;
+			return HttpParseStatusEnum.PARSE_END;
 		}
 
 		return HttpParseStatusEnum.PARSE_BODY;
 	}
 
-	private HttpParseStatusEnum writeToTempFile(final Socket socket, final int capacity,
+	public static HttpParseStatusEnum writeToTempFile(final Socket socket, final int capacity,
 			final BufferedInputStream bufferedInputStream, final ZArray array, final PD pd) {
 
 		final String randomFileName = "file_" + System.nanoTime();
@@ -238,11 +251,11 @@ public class ZServer {
 		// 先判断一下 bodyOne 是否已包含了完整的请求
 		if ((pd.getHeaderEndIndex() + STU.CRLFCRLF.length() + pd.getContentLength()) == array.get().length) {
 
-			final ZRequest request = ZServer.parse(array, socket);
-			this.response(request, socket, array);
-			array.reset(capacity);
+//			final ZRequest request = ZServer.parse(array, socket);
+//			response(request, socket, array);
+//			array.reset(capacity);
 
-			return HttpParseStatusEnum.PARSE_REQUEST_LINE;
+			return HttpParseStatusEnum.PARSE_END;
 		}
 
 		// 不再放入array,而是写入文件
@@ -278,18 +291,18 @@ public class ZServer {
 					DefaultHttpReader.closeTFStream(tf);
 				}
 
-				final ZRequest request = ZServer.parse(array, socket);
-				this.response(request, socket, array);
-				array.reset(capacity);
+//				final ZRequest request = ZServer.parse(array, socket);
+//				response(request, socket, array);
+//				array.reset(capacity);
 
-				return HttpParseStatusEnum.PARSE_REQUEST_LINE;
+				return HttpParseStatusEnum.PARSE_END;
 			}
 
 		}
 
 		// FIXME 2026年5月25日 10:43:46 zhangzhen : 正常逻辑不会走到这里，
 		// 为了编译通过，返回PARSE_REQUEST_LINE
-		return HttpParseStatusEnum.PARSE_REQUEST_LINE;
+		return HttpParseStatusEnum.PARSE_END;
 
 //		// FIXME 2026年5月25日 10:42:21 zhangzhen : 和上面代码重复了，抽成一个
 //
@@ -352,7 +365,7 @@ public class ZServer {
 //										System.out.println(body);
 
 							final ZRequest request = ZServer.parse(array, socket);
-							this.response(request, socket, array);
+							ZServer.response(request, socket, array);
 							array.reset(capacity);
 							x = HttpParseStatusEnum.PARSE_REQUEST_LINE;
 						} else {
@@ -369,7 +382,7 @@ public class ZServer {
 				// FIXME 2026年5月25日 05:46:58 zhangzhen : read < capacity 判断极有可能有问题，应该是正确解析\r\n\r\n
 //							parseStatusEnum = HttpParseStatusEnum.PARSE_END;
 				final ZRequest request = ZServer.parse(array, socket);
-				this.response(request, socket, array);
+				ZServer.response(request, socket, array);
 				array.reset(capacity);
 				System.out.println("read < capacity PARSE_REQUEST_LINE");
 				x = HttpParseStatusEnum.PARSE_REQUEST_LINE;
@@ -395,7 +408,7 @@ public class ZServer {
 //					final String xx = new String(array.get());
 //					System.out.println("xx = ");
 //					System.out.println(xx);
-					this.response(request, socket, array);
+					ZServer.response(request, socket, array);
 					array.reset(capacity);
 					xEnum = HttpParseStatusEnum.PARSE_REQUEST_LINE;
 //								break;
@@ -435,7 +448,28 @@ public class ZServer {
 		return HttpParseStatusEnum.PARSE_BODY;
 	}
 
-	private static long parseContentLength(final ZArray array, final PD pd) {
+	public static String gContentLength(final ZArray array, final PD pd) {
+		final int clIndex = BodyReader.search(array.get(),
+				HeaderEnum.CONTENT_LENGTH.getName(), 1, pd.getRequestLineIndex() + STU.CRLF.length());
+		if (clIndex > -1) {
+			final int clEIndex = BodyReader.search(array.get(), STU.CRLF, 1, clIndex);
+			if (clEIndex > clIndex) {
+
+				final byte[] clBA = Arrays.copyOfRange(array.get(), clIndex, clEIndex);
+				final String contentLengthS = new String(clBA);
+//				System.out.println("parseContentLength-content-Length = ");
+//				System.out.println(contentLengthS);
+
+				final long contentLength = Long.parseLong(contentLengthS.split(":")[1].trim());
+				pd.setContentLength(contentLength);
+				return contentLengthS;
+			}
+		}
+
+		return null;
+	}
+
+	public static long parseContentLength(final ZArray array, final PD pd) {
 		final int clIndex = BodyReader.search(array.get(),
 				HeaderEnum.CONTENT_LENGTH.getName(), 1, pd.getRequestLineIndex() + STU.CRLF.length());
 		if (clIndex > -1) {
@@ -456,7 +490,7 @@ public class ZServer {
 		return -1;
 	}
 
-	private static int getHeaderEndIndex(final ZArray array, final PD pd) {
+	public static int getHeaderEndIndex(final ZArray array, final PD pd) {
 		final int headerEndIndex = BodyReader.search(array.get(), STU.CRLFCRLF, 1, pd.getRequestLineIndex());
 
 		pd.setHeaderEndIndex(headerEndIndex);
@@ -501,20 +535,20 @@ public class ZServer {
 
 	public  static ZRequest parse(final byte[] fullBA, final Socket socket) {
 
-		if (!ZServer.checkServerQPS()) {
-			ZServer.response429(socket);
-			return null;
-		}
+//		if (!ZServer.checkServerQPS()) {
+//			ZServer.response429(socket);
+//			return null;
+//		}
 
 		final ZRequest request = BodyReader.parse(fullBA, socket);
-		if (!ZServer.checkMethod(request)) {
-			ReU.response405(socket, request.getMethodEnum().getMethod());
-			return null;
-		}
-
-		if (!checkHeader(request)) {
-			// FIXME 2026年5月23日 15:07:27 zhangzhen : 响应业务代码，提取接口给用户自己实现
-		}
+//		if (!ZServer.checkMethod(request)) {
+//			ReU.response405(socket, request.getMethodEnum().getMethod(),true);
+//			return null;
+//		}
+//
+//		if (!checkHeader(request)) {
+//			// FIXME 2026年5月23日 15:07:27 zhangzhen : 响应业务代码，提取接口给用户自己实现
+//		}
 //		System.out.println("body = ");
 //		System.out.println(new String(request.getBody()));
 
@@ -554,12 +588,12 @@ public class ZServer {
 		return false;
 	}
 
-	private void response(final ZRequest request, final Socket socket, final ZArray array) {
+	private static void response(final ZRequest request, final Socket socket, final ZArray array) {
 
 		request.setTf(array.getTf());
 		request.setOriginalRequestBytes(array.get());
 
-		this.requestHandler.handle(socket,request);
+		requestHandler.handle(socket,request);
 	}
 
 	public static void closeSocket(final Socket socket) {
@@ -599,7 +633,7 @@ public class ZServer {
 	}
 
 
-	public static void response(final ZRequest request, final Socket socket) {
+	public static void responseR(final ZRequest request, final Socket socket) {
 
 		try {
 			ReqeustInfo.set(request);

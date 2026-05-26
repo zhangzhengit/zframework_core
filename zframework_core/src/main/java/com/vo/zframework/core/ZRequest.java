@@ -442,6 +442,36 @@ public class ZRequest {
 
 
 	private static void parsePath(final String s, final ZRequest request, final int methodIndex) {
+		final String requestURI = parseURI(s, request, methodIndex);
+
+		try {
+			request.requestURI = java.net.URLDecoder.decode(requestURI, Task.DEFAULT_CHARSET_NAME);
+		} catch (final UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static String parsePATH(final String requestLine) {
+		final int si = requestLine.indexOf(STU.SAPCE);
+		if (si > -1) {
+			final int s2i = requestLine.indexOf(STU.SAPCE, si + 1);
+			if (s2i > -1) {
+				final String uri = requestLine.substring(si + 1, s2i);
+				if (STU.isNotEmpty(uri)) {
+					final int wenI = uri.indexOf("?");
+					if (wenI > -1) {
+						final String path = uri.substring(0, wenI);
+						return path;
+					}
+					return uri;
+				}
+			}
+		}
+
+		return null;
+	}
+
+	private static String parseURI(final String s, final ZRequest request, final int methodIndex) {
 		final int pathI = s.indexOf(STU.SAPCE, methodIndex + 1);
 		if (pathI <= -1) {
 			throw new IllegalArgumentException("请求行错误：找不到path");
@@ -491,12 +521,7 @@ public class ZRequest {
 				e.printStackTrace();
 			}
 		}
-
-		try {
-			request.requestURI = java.net.URLDecoder.decode(requestURI, Task.DEFAULT_CHARSET_NAME);
-		} catch (final UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}
+		return requestURI;
 	}
 
 	private static void parseHost(final String line, final ZRequest request) {

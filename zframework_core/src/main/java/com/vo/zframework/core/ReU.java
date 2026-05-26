@@ -32,20 +32,44 @@ public class ReU {
 		.write();
 	}
 
-	public static ZResponse response405(final Socket socket, final String message) {
+	public static ZResponse gResponse429(final Socket socket, final String message, final boolean keepAlive) {
+		return	new ZResponse(socket)
+		.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
+		.header(HeaderEnum.CONNECTION.getName(),
+				keepAlive ? ConnectionEnum.KEEP_ALIVE.getValue() : ConnectionEnum.CLOSE.getValue())
+		.httpStatus(HttpStatusEnum.HTTP_429.getCode())
+		.body(J.toJSONString(CR.error(message), Include.NON_NULL));
+
+	}
+
+	public static ZResponse response405(final Socket socket, final String message, final boolean keepAlive) {
 		final ZResponse r = new ZResponse(socket)
 				.httpStatus(HttpStatusEnum.HTTP_405.getCode())
+				.header(HeaderEnum.CONNECTION.getName(),
+						keepAlive ? ConnectionEnum.KEEP_ALIVE.getValue() : ConnectionEnum.CLOSE.getValue())
 				.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 				.body(J.toJSONString(CR.error("请求Method不支持：[" + message + "]")))
 				;
 		return r;
 	}
 
-	public static ZResponse response404(final Socket socket, final String message) {
+	public static ZResponse response404(final Socket socket, final String message, final boolean keepAlive) {
 		final ZResponse r = new ZResponse(socket)
 				.httpStatus(HttpStatusEnum.HTTP_404.getCode())
 				.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
+				.header(HeaderEnum.CONNECTION.getName(),
+						keepAlive ? ConnectionEnum.KEEP_ALIVE.getValue() : ConnectionEnum.CLOSE.getValue())
 				.body(J.toJSONString(CR.error("请求路径不存在[" + message + "]")));
+		return r;
+	}
+
+	public static ZResponse response400(final Socket socket, final String message, final boolean keepAlive) {
+		final ZResponse r = new ZResponse(socket)
+				.header(HeaderEnum.CONNECTION.getName(),
+						keepAlive ? ConnectionEnum.KEEP_ALIVE.getValue() : ConnectionEnum.CLOSE.getValue())
+				.httpStatus(HttpStatusEnum.HTTP_400.getCode())
+				.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
+				.body(J.toJSONString(CR.error(HttpStatusEnum.HTTP_400.getMessage() + "[" + message + "]")));
 		return r;
 	}
 

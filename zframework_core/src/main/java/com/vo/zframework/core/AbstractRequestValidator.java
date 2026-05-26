@@ -123,7 +123,7 @@ abstract class AbstractRequestValidator {
 	 *
 	 */
 	public static void passed(final ZRequest request, final Socket socket) {
-		ZServer.response(request, socket);
+		ZServer.responseR(request, socket);
 	}
 
 }
