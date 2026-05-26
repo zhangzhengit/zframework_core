@@ -28,6 +28,8 @@ import com.vo.zframework.http.ZRMethod;
 // FIXME 2026年5月26日 10:46:28 zhangzhen : 要不要简单一点，本类任何方法不通过，都是响应后直接close，
 // 免得处理不好脏数据导致一堆bug出力不讨好，尤其是解析body尤其是上传文件这种低频大数据量的操作，新建一个tcp连接
 // 的开销相对来说完全可忽略
+
+// FIXME 2026年5月26日 17:01:06 zhangzhen : 提供一个类似RequestValidatorAdapter的类，给用户自定义实现自定义的http请求解析
 public class HTTPRequestProcessor {
 
 	private static final ServerConfigurationProperties SERVER_CONFIGURATIONPROPERTIES= ZContext.getBean(ServerConfigurationProperties.class);
