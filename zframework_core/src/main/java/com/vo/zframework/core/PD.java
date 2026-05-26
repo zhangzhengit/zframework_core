@@ -35,8 +35,9 @@ public class PD {
 
 	private HttpParseStatusEnum parseStatusEnum;
 
-	public PD(final Socket socket) {
-		this.socket = socket;
+	public PD() {
+		final Socket socket2 = SocketTL.get();
+		this.socket = socket2;
 	}
 
 	public int getRequestLineIndex() {

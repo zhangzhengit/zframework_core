@@ -1,7 +1,5 @@
 package com.vo.zframework.core;
 
-import java.net.Socket;
-
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.vo.zframework.cache.J;
 import com.vo.zframework.common.CR;
@@ -17,8 +15,8 @@ import com.vo.zframework.http.HttpStatusEnum;
  */
 public class ReU {
 
-	public static ZResponse response429(final Socket socket, final String message, final boolean keepAlive) {
-		 return	new ZResponse(socket)
+	public static ZResponse response429(final String message, final boolean keepAlive) {
+		 return	new ZResponse()
 			.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 			.header(HeaderEnum.CONNECTION.getName(),
 					keepAlive ? ConnectionEnum.KEEP_ALIVE.getValue() : ConnectionEnum.CLOSE.getValue())
@@ -27,8 +25,8 @@ public class ReU {
 			;
 	}
 
-	public static ZResponse gResponse429(final Socket socket, final String message, final boolean keepAlive) {
-		return	new ZResponse(socket)
+	public static ZResponse gResponse429(final String message, final boolean keepAlive) {
+		return	new ZResponse()
 		.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 		.header(HeaderEnum.CONNECTION.getName(),
 				keepAlive ? ConnectionEnum.KEEP_ALIVE.getValue() : ConnectionEnum.CLOSE.getValue())
@@ -37,8 +35,8 @@ public class ReU {
 
 	}
 
-	public static ZResponse response405(final Socket socket, final String message, final boolean keepAlive) {
-		final ZResponse r = new ZResponse(socket)
+	public static ZResponse response405(final String message, final boolean keepAlive) {
+		final ZResponse r = new ZResponse()
 				.httpStatus(HttpStatusEnum.HTTP_405.getCode())
 				.header(HeaderEnum.CONNECTION.getName(),
 						keepAlive ? ConnectionEnum.KEEP_ALIVE.getValue() : ConnectionEnum.CLOSE.getValue())
@@ -48,8 +46,8 @@ public class ReU {
 		return r;
 	}
 
-	public static ZResponse response404(final Socket socket, final String message, final boolean keepAlive) {
-		final ZResponse r = new ZResponse(socket)
+	public static ZResponse response404(final String message, final boolean keepAlive) {
+		final ZResponse r = new ZResponse()
 				.httpStatus(HttpStatusEnum.HTTP_404.getCode())
 				.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 				.header(HeaderEnum.CONNECTION.getName(),
@@ -58,8 +56,8 @@ public class ReU {
 		return r;
 	}
 
-	public static ZResponse response400(final Socket socket, final String message, final boolean keepAlive) {
-		final ZResponse r = new ZResponse(socket)
+	public static ZResponse response400(final String message, final boolean keepAlive) {
+		final ZResponse r = new ZResponse()
 				.header(HeaderEnum.CONNECTION.getName(),
 						keepAlive ? ConnectionEnum.KEEP_ALIVE.getValue() : ConnectionEnum.CLOSE.getValue())
 				.httpStatus(HttpStatusEnum.HTTP_400.getCode())

@@ -1,7 +1,6 @@
 package com.vo.zframework.core;
 
 import java.io.IOException;
-import java.net.Socket;
 import java.util.Date;
 import java.util.StringJoiner;
 
@@ -26,11 +25,11 @@ public class HTTPResponseProcessor {
 	private static final boolean RESPONSE_Z_SESSION_ID = ZContext
 			.getBean(ServerConfigurationProperties.class).isResponseZSessionId();
 
-	public static void response(final ZRequest request, final Socket socket) {
+	public static void response(final ZRequest request) {
 
 		try {
 			ReqeustInfo.set(request);
-			final Task task = new Task(socket);
+			final Task task = new Task();
 
 			response(request, task);
 
@@ -42,7 +41,7 @@ public class HTTPResponseProcessor {
 
 			final Integer httpStatus = ZControllerAdviceThrowable.findHttpStatus(e);
 			final ZResponse response =
-					new ZResponse(socket)
+					new ZResponse()
 					.httpStatus(httpStatus != null ? httpStatus : HttpStatusEnum.HTTP_500.getCode())
 					.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 					.body(J.toJSONString(r));
@@ -54,7 +53,7 @@ public class HTTPResponseProcessor {
 			response.write();
 
 			if (e instanceof IOException) {
-				ZServer.closeSocket(socket);
+				ZServer.closeSocket();
 			}
 
 		} finally {

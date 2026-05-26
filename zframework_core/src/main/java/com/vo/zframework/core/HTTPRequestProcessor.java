@@ -51,7 +51,7 @@ public class HTTPRequestProcessor {
 		// FIXME 2026年5月26日 10:58:54 zhangzhen : 抛异常
 		// FIXME 2026年5月26日 12:19:02 zhangzhen : 不应该在此类中响应，此类应该只负责解析，
 		// 把ZResponse放在pd中，在外面根据状态EXCEPTION来响应异常信息
-		final ZResponse response = ReU.gResponse429(pd.getSocket(), SERVER_CONFIGURATIONPROPERTIES.getQpsExceedMessage(), false);
+		final ZResponse response = ReU.gResponse429(SERVER_CONFIGURATIONPROPERTIES.getQpsExceedMessage(), false);
 		pd.setException(response);
 		return HttpParseStatusEnum.EXCEPTION;
 	}
@@ -87,7 +87,7 @@ public class HTTPRequestProcessor {
 		final int i = requestLine.indexOf(STU.SAPCE);
 		if (i <= -1) {
 			// 到此，requestLine 里连一个空格都没有
-			final ZResponse response = ReU.response400(pd.getSocket(), "requestLine错误", false);
+			final ZResponse response = ReU.response400("requestLine错误", false);
 			pd.setException(response);
 			return HttpParseStatusEnum.EXCEPTION;
 		}
@@ -105,7 +105,7 @@ public class HTTPRequestProcessor {
 		}
 
 		// 到此，METHOD 不支持
-		final ZResponse response = ReU.response405(pd.getSocket(), method, false);
+		final ZResponse response = ReU.response405(method, false);
 		pd.setException(response);
 
 		// FIXME 2026年5月26日 09:23:02 zhangzhen : END后，本次请求的请求行之后的数据怎么处理？
@@ -134,7 +134,7 @@ public class HTTPRequestProcessor {
 		final ZRMethod matcheZRMethod = Task.getMatcheMethod(pd.getMethodEnum(), path);
 		// 继续正则匹配，依然没匹配到，响应404
 		if (matcheZRMethod == null) {
-			final ZResponse response404 = ReU.response404(pd.getSocket(), path, false);
+			final ZResponse response404 = ReU.response404(path, false);
 			pd.setException(response404);
 			return HttpParseStatusEnum.EXCEPTION;
 		}
@@ -176,7 +176,7 @@ public class HTTPRequestProcessor {
 
 		if (pd.getContentLength() <= -1) {
 			// Content-Length 不合法，异常结束
-			final ZResponse response = ReU.response400(pd.getSocket(), "Content-Length错误", false);
+			final ZResponse response = ReU.response400("Content-Length错误", false);
 //			final ZResponse response = ReU.response400(pd.getSocket(), HeaderEnum.CONTENT_LENGTH.getName() + "错误", false);
 			pd.setException(response);
 			return HttpParseStatusEnum.EXCEPTION;

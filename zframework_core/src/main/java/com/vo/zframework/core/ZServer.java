@@ -121,13 +121,15 @@ public class ZServer {
 
 		boolean closed = false;
 
+		SocketTL.set(socket);
+
 		while (!closed) {
 
 			final byte[] buffer = new byte[capacity];
 			final ZArray array = new ZArray(buffer.length);
 
 			// FIXME 2026年5月26日 16:41:16 zhangzhen : 有 socket传参的地方都改掉，不要到处传来传去，只应该出现在本类中
-			final PD pd = new PD(socket);
+			final PD pd = new PD();
 			pd.setBufferCapacity(capacity);
 			pd.setBufferedInputStream(bufferedInputStream);
 
@@ -155,7 +157,7 @@ public class ZServer {
 				if (process == HttpParseStatusEnum.START) {
 //					System.out.println( Thread.currentThread().getName() + "\t" +"开始执行目标方法...");
 
-					response(pd.getRequest(), socket, array);
+					response(pd.getRequest(), array);
 
 				} else if (process == HttpParseStatusEnum.EXCEPTION) {
 					System.out.println( Thread.currentThread().getName() + "\t" +"EXCEPTION，开始closeSocket...");
@@ -185,12 +187,16 @@ public class ZServer {
 				SERVER_CONFIGURATIONPROPERTIES.getQps(), QPSHandlingEnum.SMOOTH);
 	}
 
-	private static void response(final ZRequest request, final Socket socket, final ZArray array) {
+	private static void response(final ZRequest request, final ZArray array) {
 
 		request.setTf(array.getTf());
 		request.setOriginalRequestBytes(array.get());
 
-		requestHandler.handle(socket,request);
+		requestHandler.handle(request);
+	}
+
+	public static void closeSocket() {
+		closeSocket(SocketTL.get());
 	}
 
 	public static void closeSocket(final Socket socket) {

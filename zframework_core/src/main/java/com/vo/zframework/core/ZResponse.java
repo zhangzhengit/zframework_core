@@ -629,15 +629,14 @@ public class ZResponse {
 		return array.get();
 	}
 
-	public ZResponse(final Socket socket) {
-		this.socket = socket;
-		if (socket != null) {
-			try {
-				this.outputStream = this.socket.getOutputStream();
-				this.bufferedOutputStream = new BufferedOutputStream(this.outputStream);
-			} catch (final IOException e) {
-				e.printStackTrace();
-			}
+	public ZResponse() {
+		this.socket = SocketTL.get();
+
+		try {
+			this.outputStream = this.socket.getOutputStream();
+			this.bufferedOutputStream = new BufferedOutputStream(this.outputStream);
+		} catch (final IOException e) {
+			e.printStackTrace();
 		}
 	}
 

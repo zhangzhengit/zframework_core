@@ -1,7 +1,5 @@
 package com.vo.zframework.core;
 
-import java.net.Socket;
-
 import com.vo.zframework.configuration.ServerConfigurationProperties;
 import com.vo.zframework.http.AccessDeniedCodeEnum;
 
@@ -27,12 +25,12 @@ abstract class AbstractRequestValidator {
 
 	private static final RequestVerificationResult ALLOW = new RequestVerificationResult(true);
 
-	public void handle(final ZRequest request, final Socket socket) {
+	public void handle(final ZRequest request) {
 		final RequestVerificationResult r = this.validated(request);
 		if (r.isPassed()) {
-			AbstractRequestValidator.passed(request, socket);
+			AbstractRequestValidator.passed(request);
 		} else {
-			AbstractRequestValidator.failed(socket, r);
+			AbstractRequestValidator.failed(r);
 		}
 	}
 
@@ -105,14 +103,12 @@ abstract class AbstractRequestValidator {
 
 	/**
 	 * 不放行怎么处理，默认实现为返回 429
-	 *
+	 * @param requestVerificationResult
 	 * @param request
 	 * @param taskRequest
-	 * @param requestVerificationResult
-	 * @param socket TODO
 	 */
-	public static void failed(final Socket socket, final RequestVerificationResult requestVerificationResult) {
-		final ZResponse response429 = ReU.response429(socket, requestVerificationResult.getMessage(), true);
+	public static void failed(final RequestVerificationResult requestVerificationResult) {
+		final ZResponse response429 = ReU.response429(requestVerificationResult.getMessage(), true);
 		response429.write();
 	}
 
@@ -120,11 +116,10 @@ abstract class AbstractRequestValidator {
 	 * 放行怎么处理，默认实现为继续走后面的流程
 	 *
 	 * @param request
-	 * @param socket TODO
 	 *
 	 */
-	public static void passed(final ZRequest request, final Socket socket) {
-		HTTPResponseProcessor.response(request, socket);
+	public static void passed(final ZRequest request) {
+		HTTPResponseProcessor.response(request);
 	}
 
 }

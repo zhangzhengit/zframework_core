@@ -1,7 +1,6 @@
 package com.vo.zframework.core;
 
 import java.io.IOException;
-import java.net.Socket;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -58,10 +57,10 @@ public final class TaskRequestHandler {
 
 	}
 
-	public void handle(final Socket socket, final ZRequest request) {
+	public void handle(final ZRequest request) {
 
 		try {
-			this.requestValidator.handle(request, socket);
+			this.requestValidator.handle(request);
 		} catch (final Exception e) {
 			e.printStackTrace();
 
@@ -69,7 +68,7 @@ public final class TaskRequestHandler {
 			final Integer httpStatus = ZControllerAdviceThrowable.findHttpStatus(e);
 
 			final String error = J.toJSONString(CR.error(message));
-			new ZResponse(socket)
+			new ZResponse()
 				.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 				.httpStatus(httpStatus != null ? httpStatus : HttpStatusEnum.HTTP_500.getCode())
 				.header(HeaderEnum.CONNECTION.getName(), ConnectionEnum.CLOSE.getValue())
@@ -77,7 +76,7 @@ public final class TaskRequestHandler {
 				.write();
 
 			if (e instanceof IOException) {
-				ZServer.closeSocket(socket);
+				ZServer.closeSocket();
 			}
 
 			return;
