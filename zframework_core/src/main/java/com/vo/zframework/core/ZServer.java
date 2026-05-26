@@ -109,6 +109,7 @@ public class ZServer {
 		return socket;
 	}
 
+	HTTPRequestScheduler sssss = new HTTPRequestScheduler();
 	/**
 	 * @param socket
 	 */
@@ -136,6 +137,9 @@ public class ZServer {
 //				if (parseStatusEnum == HttpParseStatusEnum.PARSE_REQUEST_LINE) {
 //					readCount = 0;
 //				}
+				if (parseStatusEnum == HttpParseStatusEnum.START) {
+					array.reset(capacity);
+				}
 
 				final int read = ZServer.read0(bufferedInputStream, buffer);
 				if (read == -1) {
@@ -154,6 +158,18 @@ public class ZServer {
 
 				array.add(buffer, 0, read);
 
+
+				// 2 调度器
+//				final byte[] bufferT = array.get();
+//				final HttpParseStatusEnum process = this.sssss.process(parseStatusEnum, pd, bufferT);
+////				System.out.println("process = " + process);
+//				if (process == HttpParseStatusEnum.START) {
+////					System.out.println("开始执行目标方法...");
+//					response(pd.getRequest(), socket);
+//				}
+//				parseStatusEnum = process;
+
+				// 1 switch
 				switch (parseStatusEnum) {
 
 				case PARSE_REQUEST_LINE:
@@ -193,7 +209,7 @@ public class ZServer {
 		}
 
 		if ((pd.getHeaderEndIndex() + STU.CRLFCRLF.length() + pd.getContentLength()) == array.length()) {
-			final ZRequest request = this.parse(array, socket);
+			final ZRequest request = ZServer.parse(array, socket);
 			this.response(request, socket, array);
 			array.reset(capacity);
 
@@ -216,7 +232,7 @@ public class ZServer {
 		// 先判断一下 bodyOne 是否已包含了完整的请求
 		if ((pd.getHeaderEndIndex() + STU.CRLFCRLF.length() + pd.getContentLength()) == array.get().length) {
 
-			final ZRequest request = this.parse(array, socket);
+			final ZRequest request = ZServer.parse(array, socket);
 			this.response(request, socket, array);
 			array.reset(capacity);
 
@@ -256,7 +272,7 @@ public class ZServer {
 					DefaultHttpReader.closeTFStream(tf);
 				}
 
-				final ZRequest request = this.parse(array, socket);
+				final ZRequest request = ZServer.parse(array, socket);
 				this.response(request, socket, array);
 				array.reset(capacity);
 
@@ -329,7 +345,7 @@ public class ZServer {
 //										System.out.println("body = ");
 //										System.out.println(body);
 
-							final ZRequest request = this.parse(array, socket);
+							final ZRequest request = ZServer.parse(array, socket);
 							this.response(request, socket, array);
 							array.reset(capacity);
 							x = HttpParseStatusEnum.PARSE_REQUEST_LINE;
@@ -346,7 +362,7 @@ public class ZServer {
 			if (read < capacity) {
 				// FIXME 2026年5月25日 05:46:58 zhangzhen : read < capacity 判断极有可能有问题，应该是正确解析\r\n\r\n
 //							parseStatusEnum = HttpParseStatusEnum.PARSE_END;
-				final ZRequest request = this.parse(array, socket);
+				final ZRequest request = ZServer.parse(array, socket);
 				this.response(request, socket, array);
 				array.reset(capacity);
 				System.out.println("read < capacity PARSE_REQUEST_LINE");
@@ -369,7 +385,7 @@ public class ZServer {
 			if (headerEndIndex > -1) {
 				xEnum = ZServer.afterHeader(socket, array, pd);
 				if (xEnum == HttpParseStatusEnum.PARSE_END) {
-					final ZRequest request = this.parse(array, socket);
+					final ZRequest request = ZServer.parse(array, socket);
 //					final String xx = new String(array.get());
 //					System.out.println("xx = ");
 //					System.out.println(xx);
@@ -473,11 +489,11 @@ public class ZServer {
 		return null;
 	}
 
-	private ZRequest parse(final ZArray array, final Socket socket) {
-		return this.parse(array.get(), socket);
+	private static ZRequest parse(final ZArray array, final Socket socket) {
+		return ZServer.parse(array.get(), socket);
 	}
 
-	private ZRequest parse(final byte[] fullBA, final Socket socket) {
+	public  static ZRequest parse(final byte[] fullBA, final Socket socket) {
 
 		if (!ZServer.checkServerQPS()) {
 			ZServer.response429(socket);
@@ -490,7 +506,7 @@ public class ZServer {
 			return null;
 		}
 
-		if (!this.checkHeader(request)) {
+		if (!checkHeader(request)) {
 			// FIXME 2026年5月23日 15:07:27 zhangzhen : 响应业务代码，提取接口给用户自己实现
 		}
 //		System.out.println("body = ");
@@ -513,7 +529,7 @@ public class ZServer {
 	}
 
 	// FIXME 2026年5月23日 15:04:59 zhangzhen : checkHeader抽成一个方法
-	private boolean checkHeader(final ZRequest request) {
+	private static boolean checkHeader(final ZRequest request) {
 		return true;
 	}
 

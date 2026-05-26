@@ -1,5 +1,7 @@
 package com.vo.zframework.core;
 
+import java.time.LocalDateTime;
+
 import com.vo.zframework.cache.STU;
 import com.vo.zframework.configuration.ServerConfigurationProperties;
 
@@ -25,7 +27,7 @@ public class HTTPRequestProcessor {
 	private static final ServerConfigurationProperties SERVER_CONFIGURATIONPROPERTIES= ZContext.getBean(ServerConfigurationProperties.class);
 
 	/**
-	 * 无参，用于在一次http请求读取解析之前初始化,
+	 * 无参，用于在一次http请求读取解析之前初始化和校验一些服务器限制等等
 	 * 本类默认为校验 server.qps
 	 *
 	 * @return
@@ -36,6 +38,7 @@ public class HTTPRequestProcessor {
 			return HttpParseStatusEnum.PARSE_REQUEST_LINE;
 		}
 
+		// FIXME 2026年5月26日 10:58:54 zhangzhen : 抛异常
 		return HttpParseStatusEnum.PARSE_END;
 	}
 
@@ -44,12 +47,13 @@ public class HTTPRequestProcessor {
 	 * 从read出的buffer中解析请求行
 	 * @param buffer
 	 */
-	public HttpParseStatusEnum parseRquestLIne(final PD pd, final byte[] buffer) {
+	public HttpParseStatusEnum parseRquestLine(final PD pd, final byte[] buffer) {
 		final String requestLine = ZServer.parseRequestLine(buffer, pd);
 		if (pd.getRequestLineIndex() <= -1) {
 			// FIXME 2026年5月26日 09:32:24 zhangzhen : 没找到，继续读(buffer容量太小)？还是抛异常(恶意制造的不合法请求)？
 			return HttpParseStatusEnum.PARSE_REQUEST_LINE;
 		}
+		pd.setRequestLine(requestLine);
 
 		return HttpParseStatusEnum.CHECK_METHOD;
 		// FIXME 2026年5月26日 09:56:12 zhangzhen : 除了METHOD，还看版本，不支持响应505
@@ -108,19 +112,27 @@ public class HTTPRequestProcessor {
 
 	// FIXME 2026年5月26日 10:52:08 zhangzhen : 要不要加一个content-type判断？是否上传文件？
 
-	public HttpParseStatusEnum  parseBody(final PD pd, final byte[] buffer) {
+	public HttpParseStatusEnum parseBody(final PD pd, final byte[] buffer) {
 
 		// FIXME 2026年5月26日 09:34:11 zhangzhen : 这个相当复杂，先写外面的调用者，根据此类每个方法的返回值来跳转到不同状态
 
 		return HttpParseStatusEnum.PARSE_END;
 	}
 
-
 	/**
-	 * 无参，用于在一次http请求-响应之后初始化
+	 * 解析成功完成后的最后状态
 	 */
-	public HttpParseStatusEnum  end() {
-		// FIXME 2026年5月26日 09:30:41 zhangzhen : 这里应该写：重置ZArray readCount 等等所有资源，等待下一个请求到来
+	public HttpParseStatusEnum end(final PD pd, final byte[] buffer) {
+//		System.out.println(
+//				LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t" + "HTTPRequestProcessor.end()");
+		// FIXME 2026年5月26日 09:30:41 zhangzhen : 这里应该写：重置ZArray readCount
+		// 等等所有资源，等待下一个请求到来
+
+		final ZRequest request = ZServer.parse(buffer, pd.getSocket());
+//		System.out.println("request = ");
+//		System.out.println(request);
+
+		pd.setRequest(request);
 
 		return HttpParseStatusEnum.START;
 	}

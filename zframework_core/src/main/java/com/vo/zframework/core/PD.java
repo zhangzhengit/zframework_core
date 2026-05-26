@@ -14,7 +14,11 @@ public class PD {
 	private int headerEndIndex = -1;
 	private long contentLength = -1;
 
+	private String requestLine;
+
 	private final Socket socket;
+
+	private ZRequest request;
 
 	private HttpParseStatusEnum parseStatusEnum;
 
@@ -55,7 +59,23 @@ public class PD {
 	}
 
 	public Socket getSocket() {
-		return socket;
+		return this.socket;
+	}
+
+	public String getRequestLine() {
+		return this.requestLine;
+	}
+
+	public void setRequestLine(final String requestLine) {
+		this.requestLine = requestLine;
+	}
+
+	public ZRequest getRequest() {
+		return this.request;
+	}
+
+	public void setRequest(final ZRequest request) {
+		this.request = request;
 	}
 
 }
