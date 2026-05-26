@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.net.http.HttpResponse;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -417,7 +416,7 @@ public class ZResponse {
 		}
 	}
 
-	private byte[] headerArray() {
+	private ZArray headerArray() {
 		// FIXME 2025年12月24日 14:10:54 zhangzhen :  给个默认值，避免扩容,具体给多少待会再算，可以从header算出来
 		final ZArray headerArray = new ZArray(800);
 		headerArray.add((ZResponse.HTTP_1_1).getBytes()).add(String.valueOf(this.getHttpStatus()).getBytes());
@@ -433,7 +432,7 @@ public class ZResponse {
 		}
 		headerArray.add(CRLF_BYTES);
 
-		return headerArray.get();
+		return headerArray;
 	}
 
 
@@ -553,6 +552,20 @@ public class ZResponse {
 		}
 	}
 
+	private void write(final ZArray array) {
+
+		try {
+			final byte[] data = array.getRawArray();
+			if (array.length() > 0) {
+				this.bufferedOutputStream.write(data, 0, array.length());
+				this.bufferedOutputStream.flush();
+			}
+		} catch (final IOException e) {
+			e.printStackTrace();
+			ZServer.closeSocket(this.socket);
+		}
+	}
+
 	private void write(final byte[] data) {
 
 		try {
@@ -567,11 +580,10 @@ public class ZResponse {
 	}
 
 	private void writeResponse() {
-		final byte[] ba = this.fillBA();
-		this.write(ba);
+		this.write(this.fillBA());
 	}
 
-	private byte[] fillBA()  {
+	private ZArray fillBA()  {
 
 		this.checkContentType();
 
@@ -626,7 +638,7 @@ public class ZResponse {
 			array.add(CRLF_BYTES);
 		}
 
-		return array.get();
+		return array;
 	}
 
 	public ZResponse() {

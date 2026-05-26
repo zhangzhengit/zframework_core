@@ -61,11 +61,11 @@ public class HTTPRequestProcessor {
 
 	/**
 	 * 从read出的buffer中解析请求行
-	 * @param buffer
 	 * @param array TODO
 	 */
-	public HttpParseStatusEnum parseRquestLine(final PD pd, final byte[] buffer, final ZArray array) {
-		final String requestLine = parseRequestLine(buffer, pd);
+	public HttpParseStatusEnum parseRquestLine(final PD pd, final ZArray array) {
+		final String requestLine = parseRequestLine(pd, array);
+//		final String requestLine = parseRequestLine(buffer, pd);
 		if (pd.getRequestLineIndex() <= -1) {
 			// FIXME 2026Ln : 没找到，继续读(buffer容量太小)？还是抛异常(恶意制造的不合法请求)？
 			return HttpParseStatusEnum.PARSE_REQUEST_LINE;
@@ -154,11 +154,10 @@ public class HTTPRequestProcessor {
 	 * 3、单个header大小 HTTP_431
 	 *
 	 * @param pd
-	 * @param buffer
 	 * @param array TODO
 	 * @return
 	 */
-	public HttpParseStatusEnum parseHeader(final PD pd, final byte[] buffer, final ZArray array) {
+	public HttpParseStatusEnum parseHeader(final PD pd, final ZArray array) {
 		// FIXME 2026年5月26日 09:28:58 zhangzhen : 这个方法要校验的太多了，先忽略掉,默认返回 PARSE_BODY
 		// 用正确的http工具来请求测试
 		// 以后再制造不合法的请求来测试本方法
@@ -191,7 +190,7 @@ public class HTTPRequestProcessor {
 
 	// FIXME 2026年5月26日 10:52:08 zhangzhen : 要不要加一个content-type判断？是否上传文件？
 
-	public HttpParseStatusEnum parseBody(final PD pd, final byte[] buffer, final ZArray array) {
+	public HttpParseStatusEnum parseBody(final PD pd, final ZArray array) {
 
 		// FIXME 2026年5月26日 09:34:11 zhangzhen : 这个相当复杂，先写外面的调用者，根据此类每个方法的返回值来跳转到不同状态
 
@@ -205,13 +204,15 @@ public class HTTPRequestProcessor {
 	 * 解析成功完成后的最后状态
 	 * @param array TODO
 	 */
-	public HttpParseStatusEnum end(final PD pd, final byte[] buffer, final ZArray array) {
+	public HttpParseStatusEnum end(final PD pd, final ZArray array) {
 //		System.out.println(
 //				LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t" + "HTTPRequestProcessor.end()");
 		// FIXME 2026年5月26日 09:30:41 zhangzhen : 这里应该写：重置ZArray readCount
 		// 等等所有资源，等待下一个请求到来
 
-		final ZRequest request = BodyReader.parse(buffer, pd.getSocket());
+
+		final ZRequest request = BodyReader.parse(array.getRawArray(), pd.getSocket());
+//		final ZRequest request = BodyReader.parse(buffer, pd.getSocket());
 //		System.out.println("request = ");
 //		System.out.println(request);
 
@@ -221,7 +222,8 @@ public class HTTPRequestProcessor {
 	}
 
 	public static int getHeaderEndIndex(final ZArray array, final PD pd) {
-		final int headerEndIndex = BodyReader.search(array.get(), STU.CRLFCRLF, 1, pd.getRequestLineIndex());
+		final int headerEndIndex = BodyReader.search(array.getRawArray(), STU.CRLFCRLF, 1, pd.getRequestLineIndex());
+//		final int headerEndIndex = BodyReader.search(array.toByteArray(), STU.CRLFCRLF, 1, pd.getRequestLineIndex());
 
 		pd.setHeaderEndIndex(headerEndIndex);
 
@@ -238,12 +240,13 @@ public class HTTPRequestProcessor {
 		return headerEndIndex;
 	}
 
-	public static String parseRequestLine(final byte[] buffer, final PD pd) {
-		final int requestLineIndex = BodyReader.search(buffer, STU.CRLF, 1, 0);
+	public static String parseRequestLine(final PD pd, final ZArray array) {
+		final int requestLineIndex = BodyReader.search(array.getRawArray(), STU.CRLF, 1, 0);
+//		final int requestLineIndex = BodyReader.search(buffer, STU.CRLF, 1, 0);
 		pd.setRequestLineIndex(requestLineIndex);
 		// 从0开始找到了第一个CRLF，说明有请求行
 		if (requestLineIndex > -1) {
-			final byte[] lineBA = Arrays.copyOfRange(buffer, 0, requestLineIndex);
+			final byte[] lineBA = Arrays.copyOfRange(array.getRawArray(), 0, requestLineIndex);
 			// FIXME 2026年5月23日 14:35:41 zhangzhen : 解析请求行，看是否不支持的METHOD，不存在的接口等等
 			final String requestLine = new String(lineBA);
 //			System.out.println("requestLine = ");
@@ -256,13 +259,13 @@ public class HTTPRequestProcessor {
 	}
 
 	public static String gContentLength(final ZArray array, final PD pd) {
-		final int clIndex = BodyReader.search(array.get(),
+		final int clIndex = BodyReader.search(array.getRawArray(),
 				HeaderEnum.CONTENT_LENGTH.getName(), 1, pd.getRequestLineIndex() + STU.CRLF.length());
 		if (clIndex > -1) {
-			final int clEIndex = BodyReader.search(array.get(), STU.CRLF, 1, clIndex);
+			final int clEIndex = BodyReader.search(array.getRawArray(), STU.CRLF, 1, clIndex);
 			if (clEIndex > clIndex) {
 
-				final byte[] clBA = Arrays.copyOfRange(array.get(), clIndex, clEIndex);
+				final byte[] clBA = Arrays.copyOfRange(array.getRawArray(), clIndex, clEIndex);
 				final String contentLengthS = new String(clBA);
 //				System.out.println("parseContentLength-content-Length = ");
 //				System.out.println(contentLengthS);
@@ -305,12 +308,12 @@ public class HTTPRequestProcessor {
 		final String randomFileName = "file_" + System.nanoTime();
 		final TF tf = DefaultHttpReader.saveToTempFile(randomFileName, randomFileName, randomFileName);
 
-		final byte[] bodyOne = Arrays.copyOfRange(array.get(), pd.getHeaderEndIndex() + STU.CRLF.length(),
+		final byte[] bodyOne = Arrays.copyOfRange(array.getRawArray(), pd.getHeaderEndIndex() + STU.CRLF.length(),
 				array.length());
 		tf.write(bodyOne);
 
 		// 先判断一下 bodyOne 是否已包含了完整的请求
-		if ((pd.getHeaderEndIndex() + STU.CRLFCRLF.length() + pd.getContentLength()) == array.get().length) {
+		if ((pd.getHeaderEndIndex() + STU.CRLFCRLF.length() + pd.getContentLength()) == array.length()) {
 			return HttpParseStatusEnum.PARSE_END;
 		}
 

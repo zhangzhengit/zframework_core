@@ -151,8 +151,7 @@ public class ZServer {
 
 				array.add(buffer, 0, read);
 
-				final byte[] bufferT = array.get();
-				final HttpParseStatusEnum process = this.requestScheduler.process(parseStatusEnum, pd, bufferT, array);
+				final HttpParseStatusEnum process = this.requestScheduler.process(parseStatusEnum, pd, array);
 //				System.out.println( Thread.currentThread().getName() + "\t" +"process = " + process);
 				if (process == HttpParseStatusEnum.START) {
 //					System.out.println( Thread.currentThread().getName() + "\t" +"开始执行目标方法...");
@@ -190,7 +189,7 @@ public class ZServer {
 	private static void response(final ZRequest request, final ZArray array) {
 
 		request.setTf(array.getTf());
-		request.setOriginalRequestBytes(array.get());
+		request.setOriginalRequestBytes(array.toByteArray());
 
 		requestHandler.handle(request);
 	}

@@ -35,11 +35,13 @@ public class ZArray {
 	}
 
 	public ZArray(final byte[] ba, final int from, final int to) {
-		this.ar = new byte[to - from];
-		for (int i = from; i < to; i++) {
-			this.ar[i] = ba[i];
-			this.size++;
-		}
+	    if ((from < 0) || (to > ba.length) || (from > to)) {
+	        throw new IndexOutOfBoundsException();
+	    }
+	    final int len = to - from;
+	    this.ar = new byte[len];
+	    System.arraycopy(ba, from, this.ar, 0, len);
+	    this.size = len;
 	}
 
 	public ZArray(final byte[] ba) {
@@ -47,17 +49,19 @@ public class ZArray {
 	}
 
 	public void add(final byte[] ba, final int from, final int to) {
-
-		if (((to - from) + this.size) > this.ar.length) {
-			final int newC = (((to - from) + this.size) * 4) / 3;
-			final byte[] n = new byte[newC];
-			System.arraycopy(this.ar, 0, n, 0, this.size);
-			this.ar = n;
+		final int addLen = to - from;
+		if (addLen < 0) {
+			throw new IndexOutOfBoundsException();
 		}
-
-		for (int i = from; i < to; i++) {
-			this.ar[this.size++] = ba[i];
+		final int newSize = this.size + addLen;
+		if (newSize > this.ar.length) {
+			final int newCap = Math.max(this.ar.length + (this.ar.length >> 1), newSize);
+			final byte[] newAr = new byte[newCap];
+			System.arraycopy(this.ar, 0, newAr, 0, this.size);
+			this.ar = newAr;
 		}
+		System.arraycopy(ba, from, this.ar, this.size, addLen);
+		this.size = newSize;
 
 	}
 
@@ -82,7 +86,16 @@ public class ZArray {
 		return this.size;
 	}
 
-	public byte[] get() {
+	/**
+	 * 返回当前实际存储的内容byte[]
+	 *
+	 * @return
+	 */
+	public byte[] toByteArray() {
+		if (this.size <= 0) {
+			return new byte[0];
+		}
+
 		if (this.size == this.ar.length) {
 			return this.ar;
 		}
@@ -90,6 +103,15 @@ public class ZArray {
 		final byte[] g = new byte[this.size];
 		System.arraycopy(this.ar, 0, g, 0, this.size);
 		return g;
+	}
+
+	/**
+	 * 返回当前数组，不要修改
+	 *
+	 * @return
+	 */
+	public byte[] getRawArray() {
+		return this.ar;
 	}
 
 	public void reset(final int capacity) {

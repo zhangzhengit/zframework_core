@@ -316,16 +316,16 @@ public class DefaultHttpReader {
 	}
 
 	public static Fm hFM(final ZArray array) {
-		final int boundaryStartIndex = BodyReader.search(array.get(), ZRequest.BOUNDARY, 1, 1);
+		final int boundaryStartIndex = BodyReader.search(array.getRawArray(), ZRequest.BOUNDARY, 1, 1);
 		if (boundaryStartIndex <= -1) {
 			return new Fm(false, "");
 		}
 
-		final int boundaryEndIndex = BodyReader.search(array.get(), STU.CRLF, 1,
+		final int boundaryEndIndex = BodyReader.search(array.getRawArray(), STU.CRLF, 1,
 				boundaryStartIndex + ZRequest.BOUNDARY.getBytes().length);
 		if (boundaryEndIndex > boundaryStartIndex) {
 
-			final byte[] copyOfRange = Arrays.copyOfRange(array.get(),
+			final byte[] copyOfRange = Arrays.copyOfRange(array.getRawArray(),
 					boundaryStartIndex + ZRequest.BOUNDARY.getBytes().length, boundaryEndIndex);
 			final String boundary = new String(copyOfRange);
 			return new Fm(true, boundary);
