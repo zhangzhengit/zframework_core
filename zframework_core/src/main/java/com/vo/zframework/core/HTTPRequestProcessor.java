@@ -211,7 +211,7 @@ public class HTTPRequestProcessor {
 		// 等等所有资源，等待下一个请求到来
 
 
-		final ZRequest request = BodyReader.parse(array.getRawArray(), pd.getSocket());
+		final ZRequest request = BodyReader.parse(array.toByteArray(), pd.getSocket());
 //		final ZRequest request = BodyReader.parse(buffer, pd.getSocket());
 //		System.out.println("request = ");
 //		System.out.println(request);
