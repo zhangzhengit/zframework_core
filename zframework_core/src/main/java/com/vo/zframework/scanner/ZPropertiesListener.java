@@ -36,7 +36,7 @@ public class ZPropertiesListener {
 //		LOG.debug("配置热更新监听器启动,filePath={}", filePath);
 
 		final Thread thread = new Thread(task(filePath));
-		thread.setName(ZProperties.PROPERTIES_NAME + "-Thread");
+		thread.setName(ZProperties.DEFALUT_PROPERTIES_NAME + "-Thread");
 		thread.start();
 
 	}

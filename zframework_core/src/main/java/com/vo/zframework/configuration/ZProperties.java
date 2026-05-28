@@ -10,7 +10,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -34,16 +33,24 @@ import com.vo.zframework.scanner.ZPropertiesListener;
  */
 public class ZProperties {
 
-	private static final Charset UTF8 = StandardCharsets.UTF_8;
+	private static final String MAIN = "main";
 
-	public static final String PROPERTIES_1 = "config" + File.separator + "application.properties";
+	private static final String SRC = "src";
 
-	public static final String PROPERTIES_2 = "application.properties";
-	public static final String PROPERTIES_NAME = PROPERTIES_2;
-	public static final String PROPERTIES_3 = "src" + File.separator + "main" + File.separator + "resources"
-			+ File.separator + "application.properties";
-	public static final String PROPERTIES_4 = "src" + File.separator + "main" + File.separator + "resources"
-			+ File.separator + "config" + File.separator + "application.properties";
+	private static final String CONFIG = "config";
+
+	public static final String DEFALUT_PROPERTIES_NAME = "application.properties";
+
+	public static final String CONFIG_PROPERTIES_NAME = CONFIG + File.separator + "application.properties";
+
+
+	public static final String SRC_MAIN_RESOURCES_PROPERTIES_NAME =
+			SRC + File.separator + MAIN + File.separator + "resources"
+			+ File.separator + DEFALUT_PROPERTIES_NAME;
+
+	public static final String SRC_MAIN_RESOURCES_CONFIG_PROPERTIES_NAME =
+			SRC + File.separator + MAIN + File.separator + "resources"
+			+ File.separator + CONFIG + File.separator + DEFALUT_PROPERTIES_NAME;
 
 	private static final String[] EMPTY_STRING_ARRAY = {};
 
@@ -66,7 +73,7 @@ public class ZProperties {
 			final Object r = EE.execute(AppH.gExpression(v));
 			return Byte.parseByte(String.valueOf(r));
 		}
-		
+
 		return Byte.parseByte(v);
 	}
 
@@ -80,7 +87,7 @@ public class ZProperties {
 			final Object r = EE.execute(AppH.gExpression(v));
 			return Short.parseShort(String.valueOf(r));
 		}
-		
+
 		return Short.parseShort(v);
 	}
 
@@ -89,7 +96,7 @@ public class ZProperties {
 		if (!STU.hasContent(v)) {
 			return defaultValue;
 		}
-		
+
 		if (AppH.isExpression(v)) {
 			final Object r = EE.execute(AppH.gExpression(v));
 			return Integer.parseInt(String.valueOf(r));
@@ -103,7 +110,7 @@ public class ZProperties {
 		if (!STU.hasContent(v)) {
 			return null;
 		}
-		
+
 		// FIXME 2025年12月26日 18:30:18 zhangzhen :  继续支持其他的
 		if (AppH.isExpression(v)) {
 			final Object r = EE.execute(AppH.gExpression(v));
@@ -118,7 +125,7 @@ public class ZProperties {
 		if (!STU.hasContent(v)) {
 			return null;
 		}
-		
+
 		if (AppH.isExpression(v)) {
 			final Object r = EE.execute(AppH.gExpression(v));
 			return Long.parseLong(String.valueOf(r));
@@ -132,7 +139,7 @@ public class ZProperties {
 		if (!STU.hasContent(v)) {
 			return null;
 		}
-		
+
 		if (AppH.isExpression(v)) {
 			final Object r = EE.execute(AppH.gExpression(v));
 			return new BigInteger(String.valueOf(r));
@@ -146,7 +153,7 @@ public class ZProperties {
 		if (!STU.hasContent(v)) {
 			return null;
 		}
-		
+
 		if (AppH.isExpression(v)) {
 			final Object r = EE.execute(AppH.gExpression(v));
 			return new BigDecimal(String.valueOf(r));
@@ -160,7 +167,7 @@ public class ZProperties {
 		if (!STU.hasContent(v)) {
 			return null;
 		}
-		
+
 		if (AppH.isExpression(v)) {
 			final Object r = EE.execute(AppH.gExpression(v));
 			return Float.parseFloat(String.valueOf(r));
@@ -178,7 +185,7 @@ public class ZProperties {
 			final Object r = EE.execute(AppH.gExpression(v));
 			return Double.parseDouble(String.valueOf(r));
 		}
-		
+
 		return Double.parseDouble(v);
 	}
 
@@ -192,7 +199,7 @@ public class ZProperties {
 			final Object r = EE.execute(AppH.gExpression(v));
 			return Boolean.parseBoolean(String.valueOf(r));
 		}
-		
+
 		return Boolean.parseBoolean(v);
 	}
 
@@ -229,13 +236,13 @@ public class ZProperties {
 		if (v == null) {
 			return EMPTY_STRING_ARRAY;
 		}
-		
+
 		if (AppH.isExpression(String.valueOf(v))) {
 			final Object r = EE.execute(AppH.gExpression(String.valueOf(v)));
 			final String s1 = String.valueOf(r);
 			return s1.split(",");
 		}
-		
+
 		final String s1 = String.valueOf(v);
 		final String[] a = s1.split(",");
 		return a;
@@ -247,97 +254,131 @@ public class ZProperties {
 	public static Properties getInstance() {
 		return properties;
 	}
-	
+
 	public static List<ArgR> arL = new ArrayList<>();
 	private static AtomicBoolean load = new AtomicBoolean(false);
 
 	public synchronized static void load() {
-		
+
 		if (load.get()) {
 			return;
 		}
-		
+
 		// jar方式运行时，如果不存在config/a.p和当前目录下的a.p，则读取jar中的配置文件，写入到到config/a.p
 		// 如果这4种方式都不存在a.p，则什么也不做
+		copyAPToConfigWhenRunningJar();
+
+		String filePath = getUseDir() + File.separator + ZProperties.CONFIG_PROPERTIES_NAME;
+
+		Properties p1 = null;
 		if (isRunningFromJar()) {
-			final String userDir = getUseDir();
-
-			final File fileCAP = new File(userDir + File.separator + "config" + File.separator + PROPERTIES_NAME);
-			if (!fileCAP.exists()) {
-				final File fileAP = new File(userDir + File.separator + PROPERTIES_NAME);
-				if (!fileAP.exists()) {
-					final StringJoiner contentCAPP = loadAP("config" + File.separator + PROPERTIES_NAME);
-					if (contentCAPP != null) {
-						writeToAp(contentCAPP.toString());
-					} else {
-						final StringJoiner contentAP = loadAP(PROPERTIES_NAME);
-						if (contentAP != null) {
-							writeToAp(contentAP.toString());
-						} else {
-
-						}
-					}
-				}
-			}
-		}
-		
-		String filePath = getUseDir() + File.separator + ZProperties.PROPERTIES_1;
-
-		Properties p1 = loadDirConfig(File.separator + ZProperties.PROPERTIES_1);
-		if (p1 == null) {
-			p1 = loadDirConfig(File.separator + ZProperties.PROPERTIES_2);
-			filePath = getUseDir() + File.separator + ZProperties.PROPERTIES_2;
+			p1 = loadDirConfig(File.separator + ZProperties.CONFIG_PROPERTIES_NAME);
 			if (p1 == null) {
-				p1 = loadPResources("/" + ZProperties.PROPERTIES_1);
-				filePath = getUseDir() + File.separator + "src" + File.separator + "main" + File.separator + "resources"
-						+ File.separator + ZProperties.PROPERTIES_1;
+				p1 = loadDirConfig(File.separator + "application.properties");
 				if (p1 == null) {
-					p1 = loadPResources("/" + ZProperties.PROPERTIES_2);
-					filePath = getUseDir() + File.separator + "src" + File.separator + "main" + File.separator + "resources"
-							+ File.separator + ZProperties.PROPERTIES_2;
+					p1 = loadPResources("/" + ZProperties.CONFIG_PROPERTIES_NAME);
+					if (p1 == null) {
+						p1 = loadPResources("/" + "application.properties");
+					}
+				} else {
+					filePath = getUseDir() + File.separator + "application.properties";
 				}
+			} else {
+				filePath = getUseDir() + File.separator + ZProperties.CONFIG_PROPERTIES_NAME;
+			}
+		} else {
+			p1 = loadPResources("/" + ZProperties.CONFIG_PROPERTIES_NAME);
+			filePath = getUseDir() + File.separator + SRC + File.separator + MAIN + File.separator + "resources"
+					+ File.separator + ZProperties.CONFIG_PROPERTIES_NAME;
+			if (p1 == null) {
+				p1 = loadPResources("/" + "application.properties");
+				filePath = getUseDir() + File.separator + SRC + File.separator + MAIN + File.separator + "resources"
+						+ File.separator + "application.properties";
 			}
 		}
 
+		ZPropertiesListener.listen(filePath);
+
 		if (p1 == null) {
-			// FIXME 2025年9月1日 上午1:09:02 zhangzhen: 暂时注释,无zf.p则默认用代码中写死的
+			// 到此，无 app.p配置文件，程序仍可以正常启动运行(支持0配置启动)
+			// 但为了下面的存放命令行参数
+			// 和可能的NPE，在此赋值为 new Properties
 			p1 = new Properties();
-//			System.out.println("ERROR: 启动失败," + ZProperties.PROPERTIES_1 + "配置文件不存在,请编写此配置文件");
-//			System.exit(0);
 		}
 
-		// FIXME 2025年9月1日 上午2:56:33 zhangzhen: 发现bug：
-		// 无app.p文件在linux启动，下面.lis报错：NoSuchFile 所以需要修改此处逻辑，考虑好：
-		// 1 无a.p 启动jar，则要同时监控config/a.p 和同目录的a.p 两个文件？还是无a.p启动则指定为config/a.p?
-		
-		ZPropertiesListener.listen(filePath);
-		
 		for(final ArgR a : arL) {
 			p1.put(a.getKey(), a.getValue());
 		}
 
 		properties = p1;
-		
+
 		load.set(true);
 	}
-	
-	private static void writeToAp(final String content) {
-		
+
+	/**
+	 * 以.jar方式运行，并且config下和当前目录都没有application.properties 时，
+	 * 则把.jar中的resources/config下的或者resources下的application.properties
+	 * 复制一份到当前目录的config目录下
+	 */
+	private static void copyAPToConfigWhenRunningJar() {
+
+		if (!isRunningFromJar()) {
+			return;
+		}
+
+		final String userDir = getUseDir();
+
+		final File fileResourcesConfigAP = new File(userDir + File.separator + CONFIG + File.separator + DEFALUT_PROPERTIES_NAME);
+		if (!fileResourcesConfigAP.exists()) {
+			final File fileResourcesAP = new File(userDir + File.separator + DEFALUT_PROPERTIES_NAME);
+			if (!fileResourcesAP.exists()) {
+				// config/app.p 和 app.p 都不存在，则从jar中config/app.p或者app.p 复制一份到config/app.p
+				final StringJoiner apContent = loadAPFromJar(CONFIG + "/" + DEFALUT_PROPERTIES_NAME);
+				if (apContent != null) {
+					writeToConfigAp(apContent.toString());
+				} else {
+					final StringJoiner contentAP = loadAPFromJar(DEFALUT_PROPERTIES_NAME);
+					if (contentAP != null) {
+						writeToConfigAp(contentAP.toString());
+					}
+				}
+			}
+		}
+	}
+
+	private static void writeToConfigAp(final String content) {
+
 		final String prefix =
 				"# 注意：本文件是程序启动时自动生成的，内容是从工程中目录下"
-				+ STU.CRLF + "# resources/config/" + PROPERTIES_NAME
-				+ STU.CRLF + "# 或 resources/" + PROPERTIES_NAME + " 中拷贝过来的"
+				+ STU.CRLF + "# resources/config/" + DEFALUT_PROPERTIES_NAME
+				+ STU.CRLF + "# 或 resources/" + DEFALUT_PROPERTIES_NAME + " 中拷贝过来的"
 				+ STU.CRLF + "# 与工程中的配置完全一致，只为方便查看和修改配置信息"
 				+ STU.CRLF + "# 本文件不存在时才自动生成，存在则优先用存在的作为配置"
 				+ STU.CRLF + "# 本文件生成时间：" + LocalDateTime.now()
 				+ STU.CRLF + STU.CRLF;
-		
+
 		final String useDir = getUseDir();
-		final File dir = new File(useDir + File.separator + "config");
+
+		final File file = mkdirConfigApp(useDir);
+
+		try (FileWriter out = new FileWriter(file);
+			BufferedWriter writer = new BufferedWriter(out)) {
+			writer.write(prefix);
+			writer.write(content);
+			writer.flush();
+		} catch (final IOException e) {
+			e.printStackTrace();
+		}
+
+	}
+
+	private static File mkdirConfigApp(final String useDir) {
+		final File dir = new File(useDir + File.separator + CONFIG);
 		if (!dir.exists()) {
 			dir.mkdirs();
 		}
-		final File file = new File(useDir + File.separator + "config" + File.separator + PROPERTIES_NAME);
+
+		final File file = new File(useDir + File.separator + CONFIG + File.separator + DEFALUT_PROPERTIES_NAME);
 		if (!file.exists()) {
 			try {
 				file.createNewFile();
@@ -345,33 +386,12 @@ public class ZProperties {
 				e.printStackTrace();
 			}
 		}
-		FileWriter out = null;
-		try {
-			out = new FileWriter(file);
-		} catch (final IOException e) {
-			e.printStackTrace();
-		}
-		final BufferedWriter writer = new BufferedWriter(out);
-		try {
-			writer.write(prefix);
-			writer.write(content);
-		} catch (final IOException e) {
-			e.printStackTrace();
-		} finally {
-
-			try {
-				writer.flush();
-				out.flush();
-				writer.close();
-				out.close();
-			} catch (final IOException e) {
-				e.printStackTrace();
-			}
-		}
+		return file;
 	}
 
-	private static StringJoiner loadAP(final String path) {
-		final InputStream inputStream = ZProperties.class.getClassLoader().getResourceAsStream(path);
+	private static StringJoiner loadAPFromJar(final String path) {
+
+		final InputStream inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream(path);
 		if (inputStream == null) {
 			return null;
 		}
@@ -417,7 +437,7 @@ public class ZProperties {
 		final Properties p2 = new Properties();
 		InputStreamReader reader = null;
 		try {
-			reader = new InputStreamReader(inputStream, UTF8);
+			reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
 			p2.load(reader);
 		} catch (final IOException e1) {
 			e1.printStackTrace();
@@ -436,11 +456,12 @@ public class ZProperties {
 	}
 
 	private static Properties loadDirConfig(final String path) {
+
 		final String userDir = getUseDir();
-		final File file1 = new File(userDir + path);
+		final File file = new File(userDir + path);
 		final Properties properties = new Properties();
-		try (FileInputStream in = new FileInputStream(file1);
-				final InputStreamReader inputStreamReader = new InputStreamReader(in, UTF8);) {
+		try (FileInputStream in = new FileInputStream(file);
+				final InputStreamReader inputStreamReader = new InputStreamReader(in, StandardCharsets.UTF_8);) {
 			properties.load(inputStreamReader);
 		} catch (final IOException e) {
 			return null;
