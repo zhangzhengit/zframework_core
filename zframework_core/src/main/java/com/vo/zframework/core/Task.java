@@ -135,11 +135,9 @@ public class Task {
 	/**
 	 * 执行目标方法（接口Method）
 	 *
-	 * @param request 请求体
-	 * @param selectionKey
-	 * @return 响应结果，已根据具体的方法处理好header、cookie、body等内容，只是没write
+	 * @param request
+	 * @return
 	 * @throws Exception
-	 *
 	 */
 	public static ZResponse invoke(final ZRequest request) throws Exception {
 
@@ -147,13 +145,9 @@ public class Task {
 
 			final ZRMethod zrMethod = PDTL.get().getZrMethod();
 			final Object[] parameterArray = generateParameters(zrMethod.getMethod(), request, request.getPath());
-			if (parameterArray == null) {
-				return null;
-			}
 
 			final Object zController = ZControllerMap.getObjectByMethod(zrMethod.getMethod());
-			final ZResponse re = invokeAndResponse(zrMethod, parameterArray, zController, request);
-			return re;
+			return invokeAndResponse(zrMethod, parameterArray, zController, request);
 
 		} catch (final Exception e) {
 			//			e.printStackTrace();
