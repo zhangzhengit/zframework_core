@@ -29,9 +29,7 @@ public class HTTPResponseProcessor {
 
 		try {
 			ReqeustInfo.set(request);
-			final Task task = new Task();
-
-			response(request, task);
+			response0(request);
 
 		} catch (final Exception e) {
 
@@ -79,10 +77,10 @@ public class HTTPResponseProcessor {
 		response.cookie(cookie);
 	}
 
-	private static void response(final ZRequest request, final Task task) throws Exception {
+	private static void response0(final ZRequest request) throws Exception {
 
 		try {
-			final ZResponse response = task.invoke(request);
+			final ZResponse response = Task.invoke(request);
 
 			if ((response == null) || response.isWritten()) {
 				return;
@@ -103,7 +101,7 @@ public class HTTPResponseProcessor {
 			response.write();
 
 			if (!keepAlive) {
-				ZServer.closeSocket(task.getSocket());
+				ZServer.closeSocket(SocketTL.get());
 			}
 
 		} catch (final Exception e) {

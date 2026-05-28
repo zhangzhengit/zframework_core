@@ -13,7 +13,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import java.net.Socket;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -87,10 +86,8 @@ public class Task {
 	public static final int HTTP_STATUS_500 = 500;
 	public static final String INTERNAL_SERVER_ERROR = "Internal Server Error";
 	public static final ContentTypeEnum DEFAULT_CONTENT_TYPE = ContentTypeEnum.APPLICATION_JSON;
-	private final Socket socket;
 
-	public Task() {
-		this.socket = SocketTL.get();
+	private Task() {
 	}
 
 	/**
@@ -144,7 +141,7 @@ public class Task {
 	 * @throws Exception
 	 *
 	 */
-	public ZResponse invoke(final ZRequest request) throws Exception {
+	public static ZResponse invoke(final ZRequest request) throws Exception {
 
 		final String path = request.getPath();
 		ZRMethod zrMethod = ZControllerMap.getMethodByMethodEnumAndPath(request.getMethodEnum(), path);
@@ -185,13 +182,13 @@ public class Task {
 //			}
 
 			// 找到目标方法了，开始生成参数了
-			final Object[] parameterArray = this.generateParameters(zrMethod.getMethod(), request, path);
+			final Object[] parameterArray = generateParameters(zrMethod.getMethod(), request, path);
 			if (parameterArray == null) {
 				return null;
 			}
 
 			final Object zController = ZControllerMap.getObjectByMethod(zrMethod.getMethod());
-			final ZResponse re = this.invokeAndResponse(zrMethod, parameterArray, zController, request);
+			final ZResponse re = invokeAndResponse(zrMethod, parameterArray, zController, request);
 			return re;
 
 		} catch (final Exception e) {
@@ -261,7 +258,7 @@ public class Task {
 	}
 
 	@SuppressWarnings("boxing")
-	private ZResponse invokeAndResponse(final ZRMethod zrMethod, final Object[] parametersArray, final Object zControllerObject, final ZRequest request)
+	private  static ZResponse invokeAndResponse(final ZRMethod zrMethod, final Object[] parametersArray, final Object zControllerObject, final ZRequest request)
 			throws IllegalAccessException, InvocationTargetException {
 
 		final String controllerName = zControllerObject.getClass().getName();
@@ -335,7 +332,7 @@ public class Task {
 
 		ZResponseStatus.initialization();
 
-		this.setZRequestAndZResponse(parametersArray, request, zrMethod);
+		setZRequestAndZResponse(parametersArray, request, zrMethod);
 
 		Object r = null;
 		// 在此zhi执行
@@ -429,7 +426,7 @@ public class Task {
 		final String[] ps = zrMethod.getProduces();
 		if (AU.isNotEmpty(ps)) {
 			if (ps.length == 1) {
-				return this.responseCT(r, ps[0], zrMethod.getCtea()[0]);
+				return responseCT(r, ps[0], zrMethod.getCtea()[0]);
 			}
 			final int x = 20;
 			// FIXME 2025年12月6日 00:39:34 zhangzhen : 多个ps的待会再做，先做下面简单的
@@ -440,9 +437,9 @@ public class Task {
 		// 否则一律application/json
 		if (zrMethod.hasResponseBody()) {
 			if (zrMethod.isRTString()) {
-				return this.responseTextPlain(r);
+				return responseTextPlain(r);
 			}
-			return this.responseAppJSON(r);
+			return responseAppJSON(r);
 		}
 
 		// 第4优先：@ZRestCon还是@ZCon注解,ZC则默认为html名称，
@@ -450,15 +447,15 @@ public class Task {
 		final CTEnum ctEnum = zrMethod.getCtEnum();
 		// 响应 html
 		if (ctEnum == CTEnum.NORMAL ) {
-			return this.responseHtml(r);
+			return responseHtml(r);
 		}
 
 		if ((ctEnum == CTEnum.REST) && zrMethod.isRTString()) {
-			return this.responseTextPlain(r);
+			return responseTextPlain(r);
 		}
 
 		// 默认响应json
-		return this.responseAppJSON(r);
+		return responseAppJSON(r);
 	}
 
 	static String findProduces(final ZRequest request, final String[] ps) {
@@ -542,22 +539,22 @@ public class Task {
 		}
 	}
 
-	private ZResponse responseCT(final Object r, final String contentType, final ContentTypeEnum cte) {
+	private static ZResponse responseCT(final Object r, final String contentType, final ContentTypeEnum cte) {
 		final ZResponse rx = new ZResponse().contentType(contentType);
 		cte.body(r, rx);
 		return rx;
 	}
 
-	private ZResponse responseTextPlain(final Object r) {
+	private static ZResponse responseTextPlain(final Object r) {
 		return new ZResponse().contentType(ContentTypeEnum.TEXT_PLAIN.getType()).body(r instanceof String ? (String) r : String.valueOf(r));
 	}
 
-	private ZResponse responseAppJSON(final Object r) {
+	private static ZResponse responseAppJSON(final Object r) {
 		final String json = J.toJSONString(r, Include.NON_NULL);
 		return new ZResponse().contentType(DEFAULT_CONTENT_TYPE.getType()).body(json);
 	}
 
-	private ZResponse responseHtml(final Object r) {
+	private static ZResponse responseHtml(final Object r) {
 		try {
 
 			final String htmlContent = readHtmlContent(r);
@@ -593,7 +590,7 @@ public class Task {
 		return htmlContent;
 	}
 
-	private Object[] generateParameters(final Method method, final Object[] parametersArray, final ZRequest request,
+	private static Object[] generateParameters(final Method method, final Object[] parametersArray, final ZRequest request,
 			final String path) throws NumberFormatException {
 
 		final Parameter[] ps = RU.getParameters(method);
@@ -985,13 +982,13 @@ public class Task {
 		return nI.get();
 	}
 
-	private Object[] generateParameters(final Method method, final ZRequest request, final String path)
+	private static Object[] generateParameters(final Method method, final ZRequest request, final String path)
 			throws NumberFormatException {
 		final Object[] parametersArray = new Object[method.getParameterCount()];
-		return this.generateParameters(method, parametersArray, request, path);
+		return Task.generateParameters(method, parametersArray, request, path);
 	}
 
-	private void setZRequestAndZResponse(final Object[] parameterArray, final ZRequest request, final ZRMethod zrmethod) {
+	private static void setZRequestAndZResponse(final Object[] parameterArray, final ZRequest request, final ZRMethod zrmethod) {
 
 		if (parameterArray == null) {
 			return;
@@ -1017,8 +1014,5 @@ public class Task {
 		}
 	}
 
-	public Socket getSocket() {
-		return this.socket;
-	}
 
 }
