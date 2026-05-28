@@ -16,9 +16,9 @@ public class ZSessionIdQPSValidator implements ZCustomValidator{
 
 	public static final int MIN_VALUE = 10;
 
-	public static final int MAX_VALUE = 10000 * 20;
+	public static final int MAX_VALUE = 10000 * 200;
 
-	public static final int DEFAULT_VALUE = 1000;
+	public static final int DEFAULT_VALUE = 10000 * 10;
 
 	@Override
 	public void validated(final Object object, final Field field) throws Exception {

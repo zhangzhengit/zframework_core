@@ -19,8 +19,8 @@ public class ZServerQPSValidator implements ZCustomValidator {
 	 * 此值最小为1，即使[server.qps]支持了配置为0，此值也最小为1，因为会qps/此值
 	 */
 	public static final int MIN_VALUE = 1;
-	public static final int MAX_VALUE = 10000 * 100;
-	public static final int DEFAULT_VALUE = 10000 * 10;
+	public static final int MAX_VALUE = 10000 * 1000;
+	public static final int DEFAULT_VALUE = 10000 * 100;
 
 	@Override
 	public void validated(final Object object, final Field field) throws Exception {
