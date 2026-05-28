@@ -30,7 +30,7 @@ public class ZAsyncScanner {
 	public static Set<Class<?>> scan(final Class<? extends Annotation> annoClass,
 			final String... packageName) {
 
-		LOG.info("开始扫描带有[{}]注解的类", annoClass.getCanonicalName());
+//		LOG.info("开始扫描带有[{}]注解的类", annoClass.getCanonicalName());
 		final Set<Class<?>> zcSet = ClassMap.scanPackageByAnnotation(annoClass,
 				packageName);
 

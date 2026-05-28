@@ -46,24 +46,25 @@ public class ZSynchronouslyScanner {
 		// FIXME 2026年5月4日 09:02:20 zhangzhen : 这个方法写的太乱了，记得整理
 		// 其他所有的报错信息也都记得改，改为统一的提示格式
 
-		LOG.info("开始扫描带有[{}]注解的类", annoClass.getCanonicalName());
+//		LOG.info("开始扫描带有[{}]注解的类", annoClass.getCanonicalName());
+
 		final Set<Class<?>> zcSet = ClassMap.scanPackageByAnnotation(annoClass,
 				packageName);
 
 		for (final Class<?> cls : zcSet) {
 			final Method[] ms = cls.getDeclaredMethods();
-			for (final Method mmmmmmmm : ms) {
-				final ZSynchronously ssss = mmmmmmmm.getAnnotation(ZSynchronously.class);
-				if (ssss == null) {
+			for (final Method method : ms) {
+				final ZSynchronously synchronously = method.getAnnotation(ZSynchronously.class);
+				if (synchronously == null) {
 					continue;
 				}
 
-				final String key = ssss.key();
+				final String key = synchronously.key();
 				if (STU.isEmpty(key)) {
 					final String me =
 							"\r\n\t"
 							+
-							cls.getName()+"." + mmmmmmmm.getName()
+							cls.getName()+"." + method.getName()
 							+ " 的"
 							+ "\r\n\t"
 							+ " @" + ZSynchronously.class.getSimpleName() + ".key 不能为空"
@@ -71,12 +72,12 @@ public class ZSynchronouslyScanner {
 
 					throw new StartupException(me);
 				}
-				final Parameter[] ps = mmmmmmmm.getParameters();
+				final Parameter[] ps = method.getParameters();
 				if (AU.isEmpty(ps)) {
 					final String me =
 							"\r\n\t"
 							+
-							cls.getName()+"." + mmmmmmmm.getName()
+							cls.getName()+"." + method.getName()
 							+ " 带有"
 							+ " @" + ZSynchronously.class.getSimpleName() + " 注解,但缺少参数"
 							+ "\r\n\t"
@@ -89,7 +90,7 @@ public class ZSynchronouslyScanner {
 					throw new StartupException(me);
 				}
 
-				cKm(cls, mmmmmmmm, key, ps);
+				cKm(cls, method, key, ps);
 
 			}
 		}

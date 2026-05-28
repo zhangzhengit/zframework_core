@@ -569,7 +569,7 @@ public class ZConfigurationPropertiesScanner {
 	}
 
 	public static Set<Class<?>> scanPackage(final String... packageName) {
-		LOG.info("开始扫描类,scanPackage={}", Arrays.toString(packageName));
+//		LOG.info("开始扫描类,scanPackage={}", Arrays.toString(packageName));
 		final HashSet<Class<?>> rs = new HashSet<>();
 		for (final String p : packageName) {
 			final Set<Class<?>> clsSet = ClassMap.scanPackage(p);

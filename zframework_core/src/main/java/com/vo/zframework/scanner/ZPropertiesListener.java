@@ -33,7 +33,7 @@ public class ZPropertiesListener {
 
 	public static void listen(final String filePath) {
 
-		LOG.info("配置热更新监听器启动,filePath={}", filePath);
+//		LOG.debug("配置热更新监听器启动,filePath={}", filePath);
 
 		final Thread thread = new Thread(task(filePath));
 		thread.setName(ZProperties.PROPERTIES_NAME + "-Thread");
