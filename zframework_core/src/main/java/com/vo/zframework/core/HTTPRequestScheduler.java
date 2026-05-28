@@ -17,7 +17,7 @@ public class HTTPRequestScheduler {
 	 */
 	private static final HttpParseStatusEnum END = HttpParseStatusEnum.PARSE_END;
 
-	HTTPRequestProcessor processor = new HTTPRequestProcessor();
+	private final HTTPRequestProcessor processor = new HTTPRequestProcessor();
 
 	// FIXME 2026年5月26日 10:55:55 zhangzhen : 在read的while中调用本方法，
 
@@ -32,8 +32,7 @@ public class HTTPRequestScheduler {
 			return this.processor.end(pd, array);
 
 		case HttpParseStatusEnum.PARSE_REQUEST_LINE:
-			final HttpParseStatusEnum rl = this.parseRL(pd, array);
-			return rl;
+			return this.parseRL(pd, array);
 
 		case HttpParseStatusEnum.CHECK_METHOD:
 			return this.checkMethod(pd, array);
@@ -45,8 +44,7 @@ public class HTTPRequestScheduler {
 			return this.parseBody(pd, array);
 
 		case HttpParseStatusEnum.START:
-			final HttpParseStatusEnum start2 = this.start(pd, array);
-			return start2;
+			return this.start(pd, array);
 
 		default:
 			break;
