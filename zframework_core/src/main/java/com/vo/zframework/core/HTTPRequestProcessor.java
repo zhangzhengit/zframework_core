@@ -127,19 +127,34 @@ public class HTTPRequestProcessor {
 
 		final String path = ZRequest.parsePATH(requestLine);
 
+		// 1、精确匹配
 		final ZRMethod zrMethod = ZControllerMap.getMethodByMethodEnumAndPath(pd.getMethodEnum(), path);
 		if (zrMethod != null) {
 			// 精确匹配到了
+			pd.setZrMethod(zrMethod);
 			return HttpParseStatusEnum.PARSE_HEADER;
 		}
 
+		// 2、URI正则匹配
 		final ZRMethod matcheZRMethod = Task.getMatcheMethod(pd.getMethodEnum(), path);
-		// 继续正则匹配，依然没匹配到，响应404
 		if (matcheZRMethod == null) {
+
+			// 3、继续URI正则匹配，依然没匹配到，但用非请求的METHOD和URI精确匹配到了，响应405
+			final ZRMethod matchWithServerMethod = Task.matchWithServerMethod(pd.getMethodEnum(), path);
+			if (matchWithServerMethod != null) {
+				final ZResponse response405 = ReU.response405(pd.getMethodEnum().getMethod(), false);
+				pd.setException(response405);
+				return HttpParseStatusEnum.EXCEPTION;
+			}
+			pd.setZrMethod(matchWithServerMethod);
+
+			// FIXME 2026年5月28日 17:44:46 zhangzhen : 到此是否继续用非请求的METHOD和URI正则继续匹配？
+			// 4、响应404
 			final ZResponse response404 = ReU.response404(path, false);
 			pd.setException(response404);
 			return HttpParseStatusEnum.EXCEPTION;
 		}
+		pd.setZrMethod(matcheZRMethod);
 
 		// FIXME 2026年5月26日 15:16:13 zhangzhen : 校验协议版本 http1.1
 
@@ -283,8 +298,8 @@ public class HTTPRequestProcessor {
 			final BufferedInputStream bufferedInputStream, final ZArray array,
 			final PD pd) {
 
-		System.out
-				.println(LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t" + "ZServer.parseBody()");
+//		System.out
+//				.println(LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t" + "ZServer.parseBody()");
 
 		if (pd.getContentLength() >= (UPLOAD_FILE_TO_TEMP_SIZE * 1024)) {
 			return writeToTempFile(socket, capacity, bufferedInputStream, array, pd);

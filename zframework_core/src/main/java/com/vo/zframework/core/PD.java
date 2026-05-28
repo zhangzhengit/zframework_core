@@ -4,6 +4,7 @@ import java.io.BufferedInputStream;
 import java.net.Socket;
 
 import com.vo.zframework.enums.MethodEnum;
+import com.vo.zframework.http.ZRMethod;
 
 /**
  * 解析http请求的中间状态
@@ -27,6 +28,8 @@ public class PD {
 	private MethodEnum methodEnum;
 
 	private ZRequest request;
+
+	private ZRMethod zrMethod;
 
 	/**
 	 * 解析过程中异常状态时，给客户端的响应
@@ -122,6 +125,14 @@ public class PD {
 
 	public void setBufferedInputStream(final BufferedInputStream bufferedInputStream) {
 		this.bufferedInputStream = bufferedInputStream;
+	}
+
+	public ZRMethod getZrMethod() {
+		return this.zrMethod;
+	}
+
+	public void setZrMethod(final ZRMethod zrMethod) {
+		this.zrMethod = zrMethod;
 	}
 
 }

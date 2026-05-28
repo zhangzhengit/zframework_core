@@ -156,6 +156,8 @@ public class ZServer {
 				if (process == HttpParseStatusEnum.START) {
 //					System.out.println( Thread.currentThread().getName() + "\t" +"开始执行目标方法...");
 
+					PDTL.set(pd);
+
 					response(pd.getRequest(), array);
 
 				} else if (process == HttpParseStatusEnum.EXCEPTION) {

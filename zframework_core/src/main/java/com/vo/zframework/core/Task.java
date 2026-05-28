@@ -143,46 +143,10 @@ public class Task {
 	 */
 	public static ZResponse invoke(final ZRequest request) throws Exception {
 
-		final String path = request.getPath();
-		ZRMethod zrMethod = ZControllerMap.getMethodByMethodEnumAndPath(request.getMethodEnum(), path);
-
-		// 查找对应的控制器来处理
-		if (zrMethod == null) {
-
-			// 用非请求的METHOD看是否有，有则响应405
-			final ZRMethod noRequestMethodMethod = ZRC.singleton().computeIfAbsent("MethodEnum.values-" + path, () -> {
-				final MethodEnum[] es = MethodEnum.values();
-				for (final MethodEnum methodEnum : es) {
-					if (methodEnum != request.getMethodEnum()) {
-						final ZRMethod methodT = ZControllerMap.getMethodByMethodEnumAndPath(methodEnum, path);
-						if (methodT != null) {
-							return methodT;
-						}
-					}
-				}
-				return null;
-			}, true);
-
-			if (noRequestMethodMethod != null) {
-				return ReU.response405(request.getMethodEnum().getMethod(), true);
-			}
-
-			// 用正则依然匹配不到，响应404
-			final ZRMethod matcheZRMethod = Task.getMatcheMethod(request.getMethodEnum(), path);
-			if (matcheZRMethod == null) {
-				return ReU.response404(path, true);
-			}
-
-			zrMethod = matcheZRMethod;
-		}
-
 		try {
-//			if (zrMethod.isVoid()) {
-//				ZRSC.set((SocketChannel) selectionKey.channel());
-//			}
 
-			// 找到目标方法了，开始生成参数了
-			final Object[] parameterArray = generateParameters(zrMethod.getMethod(), request, path);
+			final ZRMethod zrMethod = PDTL.get().getZrMethod();
+			final Object[] parameterArray = generateParameters(zrMethod.getMethod(), request, request.getPath());
 			if (parameterArray == null) {
 				return null;
 			}
@@ -196,6 +160,34 @@ public class Task {
 			// 这里不处理，抛出去
 			throw e;
 		}
+
+	}
+
+	/**
+	 * 使用 server.method的配置值中非参数 methodEnum的选项 和 URI来匹配目标接口Method
+	 *
+	 * @param methodEnumP 请求用的METHOD
+	 * @param path
+	 *
+	 * @return
+	 */
+	public static ZRMethod matchWithServerMethod(final MethodEnum methodEnumP, final String path) {
+
+		final ZRMethod noRequestMethodMethod = ZRC.singleton().computeIfAbsent("MethodEnum.values-" + path, () -> {
+			final String serverMethod = SERVER_CONFIGURATIONPROPERTIES.getMethod();
+			for (final String m : serverMethod.split(",")) {
+				final MethodEnum me = MethodEnum.valueOfMethodStringUpper(m);
+				if (me != methodEnumP) {
+					final ZRMethod methodT = ZControllerMap.getMethodByMethodEnumAndPath(me, path);
+					if (methodT != null) {
+						return methodT;
+					}
+				}
+			}
+
+			return null;
+		}, true);
+		return noRequestMethodMethod;
 
 	}
 
