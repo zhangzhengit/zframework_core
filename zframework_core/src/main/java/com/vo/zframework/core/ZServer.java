@@ -48,7 +48,7 @@ public class ZServer {
 		ZContext.addBean(ZServer.requestHandler.getClass(), ZServer.requestHandler);
 
 		final Thread thread = new Thread(() -> this.start(serverPort));
-		thread.setName("ioT");
+		thread.setName("bioT");
 		thread.setPriority(Thread.MAX_PRIORITY);
 		thread.start();
 
@@ -74,7 +74,7 @@ public class ZServer {
 			System.exit(0);
 		}
 
-		LOG.info("httpServer启动成功,等待连接,serverPort={}", serverPort);
+		LOG.debug("httpServer启动成功,port={}", serverPort);
 		this.serverStarted.set(true);
 
 		while (true) {
