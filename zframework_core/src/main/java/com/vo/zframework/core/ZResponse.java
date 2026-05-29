@@ -555,9 +555,8 @@ public class ZResponse {
 	private void write(final ZArray array) {
 
 		try {
-			final byte[] data = array.getRawArray();
 			if (array.length() > 0) {
-				this.bufferedOutputStream.write(data, 0, array.length());
+				this.bufferedOutputStream.write(array.getRawArray(), 0, array.length());
 				this.bufferedOutputStream.flush();
 			}
 		} catch (final IOException e) {
