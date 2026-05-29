@@ -90,6 +90,12 @@ public enum MethodEnum {
 			return MethodEnum.OPTIONS;
 		}
 
+		if ((length == 7) && "CONNECT".equals(string)) {
+			return MethodEnum.CONNECT;
+		}
+
+
+
 		return null;
 	}
 
