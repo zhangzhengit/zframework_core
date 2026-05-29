@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.time.LocalDateTime;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -161,7 +162,7 @@ public class ZServer {
 					response(pd.getRequest(), array);
 
 				} else if (process == HttpParseStatusEnum.EXCEPTION) {
-					System.out.println( Thread.currentThread().getName() + "\t" +"EXCEPTION，开始closeSocket...");
+//					System.out.println( Thread.currentThread().getName() + "\t" +"EXCEPTION，开始closeSocket...");
 					final ZResponse exception = pd.getException();
 					if (exception != null) {
 						exception.write();
@@ -189,7 +190,6 @@ public class ZServer {
 	}
 
 	private static void response(final ZRequest request, final ZArray array) {
-
 		request.setTf(array.getTf());
 		request.setOriginalRequestBytes(array.toByteArray());
 
