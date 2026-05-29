@@ -166,8 +166,8 @@ public class ZServer {
 					if (exception != null) {
 						exception.write();
 					}
-//					closeSocket(socket);
-//					closed = true;
+					closeSocket(socket);
+					closed = true;
 				}
 
 				parseStatusEnum = process;
