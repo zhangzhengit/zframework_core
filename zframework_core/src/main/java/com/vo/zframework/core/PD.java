@@ -14,7 +14,7 @@ import com.vo.zframework.http.ZRMethod;
  */
 public class PD {
 
-	private int requestLineIndex = -1;
+	private int requestLineEndIndex = -1;
 	private int headerEndIndex = -1;
 	private long contentLength = -1;
 	private int bufferCapacity;
@@ -43,12 +43,12 @@ public class PD {
 		this.socket = socket2;
 	}
 
-	public int getRequestLineIndex() {
-		return this.requestLineIndex;
+	public int getRequestLineEndIndex() {
+		return this.requestLineEndIndex;
 	}
 
-	public void setRequestLineIndex(final int requestLineIndex) {
-		this.requestLineIndex = requestLineIndex;
+	public void setRequestLineEndIndex(final int requestLineEndIndex) {
+		this.requestLineEndIndex = requestLineEndIndex;
 	}
 
 	public int getHeaderEndIndex() {

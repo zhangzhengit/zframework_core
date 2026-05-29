@@ -10,7 +10,7 @@ import com.vo.zframework.core.ZRC;
  *
  */
 public class STU {
-	
+
 	public static final String CR = "\r";
 	public static final String LF = "\n";
 	public static final String CRLF = "\r\n";
@@ -35,7 +35,7 @@ public class STU {
 	}
 
 	public static boolean isEmpty(final String string) {
-		return (string == null) || (string.length() == 0);
+		return (string == null) || (string.isEmpty());
 	}
 
 	public static boolean isNotNull(final String string) {
@@ -61,10 +61,9 @@ public class STU {
 	public static boolean hasContent(final String string) {
 		return !isNullOrEmptyOrBlank(string);
 	}
-	
+
 	public static boolean isPureAscii(final String str) {
-		System.out.println("isA.str = " + str);
-		if (str == null || str.isEmpty()) {
+		if ((str == null) || str.isEmpty()) {
 			return true;
 		}
 		for (int i = 0; i < str.length(); i++) {

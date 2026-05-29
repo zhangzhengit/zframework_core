@@ -66,7 +66,7 @@ public class HTTPRequestProcessor {
 	public HttpParseStatusEnum parseRquestLine(final PD pd, final ZArray array) {
 		final String requestLine = parseRequestLine(pd, array);
 //		final String requestLine = parseRequestLine(buffer, pd);
-		if (pd.getRequestLineIndex() <= -1) {
+		if (pd.getRequestLineEndIndex() <= -1) {
 			// FIXME 2026Ln : 没找到，继续读(buffer容量太小)？还是抛异常(恶意制造的不合法请求)？
 			return HttpParseStatusEnum.PARSE_REQUEST_LINE;
 		}
@@ -185,7 +185,7 @@ public class HTTPRequestProcessor {
 		}
 
 		final String contentLength = gContentLength(array, pd);
-		if(STU.isEmpty(contentLength)) {
+		if (STU.isEmpty(contentLength)) {
 			// 无Content-Length，直接跳到结束
 			return HttpParseStatusEnum.PARSE_END;
 		}
@@ -193,7 +193,6 @@ public class HTTPRequestProcessor {
 		if (pd.getContentLength() <= -1) {
 			// Content-Length 不合法，异常结束
 			final ZResponse response = ReU.response400("Content-Length错误", false);
-//			final ZResponse response = ReU.response400(pd.getSocket(), HeaderEnum.CONTENT_LENGTH.getName() + "错误", false);
 			pd.setException(response);
 			return HttpParseStatusEnum.EXCEPTION;
 		}
@@ -237,31 +236,19 @@ public class HTTPRequestProcessor {
 	}
 
 	public static int getHeaderEndIndex(final ZArray array, final PD pd) {
-		final int headerEndIndex = BodyReader.search(array.getRawArray(), STU.CRLFCRLF, 1, pd.getRequestLineIndex());
-//		final int headerEndIndex = BodyReader.search(array.toByteArray(), STU.CRLFCRLF, 1, pd.getRequestLineIndex());
+		final int headerEndIndex = BodyReader.search(array.getRawArray(), STU.CRLFCRLF, 1, pd.getRequestLineEndIndex());
 
 		pd.setHeaderEndIndex(headerEndIndex);
-
-		if (headerEndIndex > -1) {
-//			final byte[] headerBA = Arrays.copyOfRange(array.get(), pd.getRequestLineIndex()
-//					+ STU.CRLF.length()
-//					, headerEndIndex);
-//			final String header = new String(headerBA);
-//			System.out.println("header = ");
-//			System.out.println(header);
-
-		}
 
 		return headerEndIndex;
 	}
 
 	public static String parseRequestLine(final PD pd, final ZArray array) {
-		final int requestLineIndex = BodyReader.search(array.getRawArray(), STU.CRLF, 1, 0);
-//		final int requestLineIndex = BodyReader.search(buffer, STU.CRLF, 1, 0);
-		pd.setRequestLineIndex(requestLineIndex);
+		final int requestLineEndIndex = BodyReader.search(array.getRawArray(), STU.CRLF, 1, 3);
 		// 从0开始找到了第一个CRLF，说明有请求行
-		if (requestLineIndex > -1) {
-			final byte[] lineBA = Arrays.copyOfRange(array.getRawArray(), 0, requestLineIndex);
+		if (requestLineEndIndex > -1) {
+			pd.setRequestLineEndIndex(requestLineEndIndex);
+			final byte[] lineBA = Arrays.copyOfRange(array.getRawArray(), 0, requestLineEndIndex);
 			// FIXME 2026年5月23日 14:35:41 zhangzhen : 解析请求行，看是否不支持的METHOD，不存在的接口等等
 			final String requestLine = new String(lineBA);
 //			System.out.println("requestLine = ");
@@ -275,7 +262,7 @@ public class HTTPRequestProcessor {
 
 	public static String gContentLength(final ZArray array, final PD pd) {
 		final int clIndex = BodyReader.search(array.getRawArray(),
-				HeaderEnum.CONTENT_LENGTH.getName(), 1, pd.getRequestLineIndex() + STU.CRLF.length());
+				HeaderEnum.CONTENT_LENGTH.getName(), 1, pd.getRequestLineEndIndex() + STU.CRLF.length());
 		if (clIndex > -1) {
 			final int clEIndex = BodyReader.search(array.getRawArray(), STU.CRLF, 1, clIndex);
 			if (clEIndex > clIndex) {
