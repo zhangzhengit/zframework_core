@@ -399,7 +399,7 @@ public class ZRequest {
 		parseVersion(line, request);
 
 		// paserHeader
-		paserHeader(request);
+		parseHeader(request);
 
 		// HTTP1.1必须有 HOST 头
 		final String header = request.getHost();
@@ -541,7 +541,7 @@ public class ZRequest {
 		request.version = version;
 	}
 
-	private static void paserHeader(final ZRequest request) {
+	private static void parseHeader(final ZRequest request) {
 		final List<String> x = request.getLineList();
 		final Map<String, String> hm = new HashMap<>(x.size(), 1F);
 		for (int i = x.size() - 1; i > 0; i--) {
