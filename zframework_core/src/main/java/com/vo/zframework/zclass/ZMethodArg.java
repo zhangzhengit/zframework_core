@@ -15,7 +15,7 @@ public class ZMethodArg {
 
 	private String name;
 
-	public ZMethodArg(final Class typeClass, final String name) {
+	public ZMethodArg(final Class<?> typeClass, final String name) {
 		this.type = typeClass.getCanonicalName();
 		this.name = name;
 	}
@@ -32,7 +32,7 @@ public class ZMethodArg {
 	}
 
 	public String getType() {
-		return type;
+		return this.type;
 	}
 
 	public void setType(final String type) {
@@ -40,7 +40,7 @@ public class ZMethodArg {
 	}
 
 	public String getName() {
-		return name;
+		return this.name;
 	}
 
 	public void setName(final String name) {
@@ -49,7 +49,7 @@ public class ZMethodArg {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(name, type);
+		return Objects.hash(this.name, this.type);
 	}
 
 	@Override
@@ -60,11 +60,11 @@ public class ZMethodArg {
 		if (obj == null) {
 			return false;
 		}
-		if (getClass() != obj.getClass()) {
+		if (this.getClass() != obj.getClass()) {
 			return false;
 		}
 		final ZMethodArg other = (ZMethodArg) obj;
-		return Objects.equals(name, other.name) && Objects.equals(type, other.type);
+		return Objects.equals(this.name, other.name) && Objects.equals(this.type, other.type);
 	}
 
 }

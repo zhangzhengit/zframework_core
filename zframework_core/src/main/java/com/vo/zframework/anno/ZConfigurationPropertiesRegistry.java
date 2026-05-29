@@ -11,7 +11,7 @@ import java.util.Map;
  *
  */
 public final class ZConfigurationPropertiesRegistry {
-	
+
 	private final Map<String, Object> zcpMap = new HashMap<>(16, 1f);
 
 	/**
@@ -24,7 +24,7 @@ public final class ZConfigurationPropertiesRegistry {
 		return this.zcpMap.values().toArray();
 	}
 
-	public Object getConfigurationPropertie(final Class cls) {
+	public Object getConfigurationPropertie(final Class<?> cls) {
 		return this.zcpMap.get(cls.getCanonicalName());
 	}
 

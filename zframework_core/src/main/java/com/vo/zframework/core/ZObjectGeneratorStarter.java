@@ -52,7 +52,7 @@ public class ZObjectGeneratorStarter {
 		final Set<Class<?>> zsSet = ZAOPScaner.scanPackage_COM(packageName);
 		for (final Class<?> c : zsSet) {
 			final Class<?>[] is = c.getInterfaces();
-			for (final Class i : is) {
+			for (final Class<?> i : is) {
 				final boolean equals = i.getCanonicalName().equals(ZObjectGenerator.class.getCanonicalName());
 				if (equals) {
 					final Object object = ZSingleton.getSingletonByClass(c);

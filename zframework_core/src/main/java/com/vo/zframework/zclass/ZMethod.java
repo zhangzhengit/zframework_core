@@ -211,7 +211,7 @@ public class ZMethod {
 	public void addAnnotation(final String annotationString) {
 		final List<String> al = this.getAnnotationList();
 		if (al == null) {
-			this.setAnnotationList(new ArrayList());
+			this.setAnnotationList(new ArrayList<>());
 		}
 
 		this.getAnnotationList().add(annotationString);
@@ -307,7 +307,7 @@ public class ZMethod {
 	}
 
 	public ZMethodAccessEnum getAccessRights() {
-		return accessRights;
+		return this.accessRights;
 	}
 
 	public void setAccessRights(final ZMethodAccessEnum accessRights) {
@@ -315,7 +315,7 @@ public class ZMethod {
 	}
 
 	public boolean isFinal() {
-		return isFinal;
+		return this.isFinal;
 	}
 
 	public void setFinal(final boolean isFinal) {
@@ -323,7 +323,7 @@ public class ZMethod {
 	}
 
 	public boolean isStatic() {
-		return isStatic;
+		return this.isStatic;
 	}
 
 	public void setStatic(final boolean isStatic) {
@@ -331,7 +331,7 @@ public class ZMethod {
 	}
 
 	public boolean isSynchronized() {
-		return isSynchronized;
+		return this.isSynchronized;
 	}
 
 	public void setSynchronized(final boolean isSynchronized) {
@@ -339,7 +339,7 @@ public class ZMethod {
 	}
 
 	public boolean isAbstract() {
-		return isAbstract;
+		return this.isAbstract;
 	}
 
 	public void setAbstract(final boolean isAbstract) {
@@ -347,7 +347,7 @@ public class ZMethod {
 	}
 
 	public String getName() {
-		return name;
+		return this.name;
 	}
 
 	public void setName(final String name) {
@@ -355,7 +355,7 @@ public class ZMethod {
 	}
 
 	public List<String> getAnnotationList() {
-		return annotationList;
+		return this.annotationList;
 	}
 
 	public void setAnnotationList(final List<String> annotationList) {
@@ -363,7 +363,7 @@ public class ZMethod {
 	}
 
 	public List<ZMethodArg> getMethodArgList() {
-		return methodArgList;
+		return this.methodArgList;
 	}
 
 	public void setMethodArgList(final List<ZMethodArg> methodArgList) {
@@ -381,7 +381,6 @@ public class ZMethod {
 	public ZMethod(final ZMethodAccessEnum accessRights, final boolean isFinal, final boolean isStatic, final boolean isSynchronized,
 			final boolean isAbstract, final String returnType, final String name, final List<String> annotationList, final String body,
 			final List<ZMethodArg> methodArgList, final boolean gReturn) {
-		super();
 		this.accessRights = accessRights;
 		this.isFinal = isFinal;
 		this.isStatic = isStatic;
@@ -396,13 +395,12 @@ public class ZMethod {
 	}
 
 	public ZMethod() {
-		super();
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(accessRights, annotationList, body, gReturn, isAbstract, isFinal, isStatic, isSynchronized,
-				methodArgList, name, returnType);
+		return Objects.hash(this.accessRights, this.annotationList, this.body, this.gReturn, this.isAbstract, this.isFinal, this.isStatic, this.isSynchronized,
+				this.methodArgList, this.name, this.returnType);
 	}
 
 	@Override
@@ -413,15 +411,15 @@ public class ZMethod {
 		if (obj == null) {
 			return false;
 		}
-		if (getClass() != obj.getClass()) {
+		if (this.getClass() != obj.getClass()) {
 			return false;
 		}
 		final ZMethod other = (ZMethod) obj;
-		return accessRights == other.accessRights && Objects.equals(annotationList, other.annotationList)
-				&& Objects.equals(body, other.body) && gReturn == other.gReturn && isAbstract == other.isAbstract
-				&& isFinal == other.isFinal && isStatic == other.isStatic && isSynchronized == other.isSynchronized
-				&& Objects.equals(methodArgList, other.methodArgList) && Objects.equals(name, other.name)
-				&& Objects.equals(returnType, other.returnType);
+		return (this.accessRights == other.accessRights) && Objects.equals(this.annotationList, other.annotationList)
+				&& Objects.equals(this.body, other.body) && (this.gReturn == other.gReturn) && (this.isAbstract == other.isAbstract)
+				&& (this.isFinal == other.isFinal) && (this.isStatic == other.isStatic) && (this.isSynchronized == other.isSynchronized)
+				&& Objects.equals(this.methodArgList, other.methodArgList) && Objects.equals(this.name, other.name)
+				&& Objects.equals(this.returnType, other.returnType);
 	}
 
 }

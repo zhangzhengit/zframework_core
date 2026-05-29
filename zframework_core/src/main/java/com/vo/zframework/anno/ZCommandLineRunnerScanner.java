@@ -37,7 +37,7 @@ public class ZCommandLineRunnerScanner {
 		final Collection<Object> bs = all.values();
 		for (final Object bean : bs) {
 			final Class<?>[] is = bean.getClass().getInterfaces();
-			for (final Class c : is) {
+			for (final Class<?> c : is) {
 				if(c.equals(ZCommandLineRunner.class)) {
 					set.add(bean);
 				}

@@ -36,7 +36,7 @@ public class ZAsyncRV<T> {
 		this.v = v;
 	}
 
-	void setFuture(final CompletableFuture future) {
+	void setFuture(final CompletableFuture<T> future) {
 		this.future = future;
 	}
 

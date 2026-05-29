@@ -98,7 +98,7 @@ public class ZSynchronouslyScanner {
 		return zcSet;
 	}
 
-	private static boolean cKm(final Class cls, final Method method, final String key,
+	private static boolean cKm(final Class<?> cls, final Method method, final String key,
 			final Parameter[] ps) {
 
 		if (!key.contains(".")) {

@@ -64,10 +64,10 @@ public class ZAOPScaner {
 		final Map<String, ZClass> map = new HashMap<>(16, 1F);
 		final Set<Class<?>> cs = scanPackage_COM(packageName);
 
-		final HashBasedTable<Class, Method, List<Class<?>>> table = extractedC(cs);
+		final HashBasedTable<Class<?>, Method, List<Class<?>>> table = extractedC(cs);
 
-		final Set<Class> rowKeySet = table.rowKeySet();
-		for (final Class cls : rowKeySet) {
+		final Set<Class<?>> rowKeySet = table.rowKeySet();
+		for (final Class<?> cls : rowKeySet) {
 			final ZClass proxyZClass = new ZClass();
 			proxyZClass.setPackage1(new ZPackage(cls.getPackage().getName()));
 			proxyZClass.setName(cls.getSimpleName() + PROXY_ZCLASS_NAME_SUFFIX);
@@ -170,7 +170,7 @@ public class ZAOPScaner {
 		return nameBuilder.toString();
 	}
 
-	private static void addZMethod(final HashBasedTable<Class, Method,List<Class<?>>> table, final Class cls,
+	private static void addZMethod(final HashBasedTable<Class<?>, Method,List<Class<?>>> table, final Class<?> cls,
 			final ZClass proxyZClass, final HashSet<ZMethod> zms, final Method m) {
 
 		final ArrayList<ZMethodArg> argList = ZMethod.getArgListFromMethod(m);
@@ -331,8 +331,8 @@ public class ZAOPScaner {
 	 * @param cs
 	 * @return <类,方法，此类此方法的AOP类>
 	 */
-	public static HashBasedTable<Class, Method, List<Class<?>>> extractedC(final Set<Class<?>> cs) {
-		final HashBasedTable<Class, Method, List<Class<?>>> table = HashBasedTable.create();
+	public static HashBasedTable<Class<?>, Method, List<Class<?>>> extractedC(final Set<Class<?>> cs) {
+		final HashBasedTable<Class<?>, Method, List<Class<?>>> table = HashBasedTable.create();
 		for (final Class<?> c : cs) {
 			final Method[] ms = c.getDeclaredMethods();
 			for (final Method m : ms) {

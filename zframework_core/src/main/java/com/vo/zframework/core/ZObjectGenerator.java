@@ -16,6 +16,6 @@ public interface ZObjectGenerator {
 	 * @return
 	 *
 	 */
-	Object generate(Class clsName);
+	Object generate(Class<?> clsName);
 
 }

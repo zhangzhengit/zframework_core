@@ -108,7 +108,7 @@ public class ZValidator {
 
 	}
 
-	public static boolean isString(final Class cls) {
+	public static boolean isString(final Class<?> cls) {
 		return cls == String.class;
 	}
 

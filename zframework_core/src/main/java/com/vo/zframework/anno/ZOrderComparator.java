@@ -18,16 +18,16 @@ public class ZOrderComparator<T> implements Comparator<T> {
 	@Override
 	public int compare(final T o1, final T o2) {
 
-		final ZOrder z1 = o1.getClass().equals(Class.class) ? (ZOrder) ((Class) o1).getAnnotation(ZOrder.class)
+		final ZOrder z1 = o1.getClass().equals(Class.class) ? (ZOrder) ((Class<?>) o1).getAnnotation(ZOrder.class)
 				: o1.getClass().getAnnotation(ZOrder.class);
 
-		final ZOrder z2 = o2.getClass().equals(Class.class) ? (ZOrder) ((Class) o2).getAnnotation(ZOrder.class)
+		final ZOrder z2 = o2.getClass().equals(Class.class) ? (ZOrder) ((Class<?>) o2).getAnnotation(ZOrder.class)
 				: o2.getClass().getAnnotation(ZOrder.class);
 
-		if (z1 == null && z2 == null) {
+		if ((z1 == null) && (z2 == null)) {
 			return 0;
 		}
-		if (z1 != null && z2 != null) {
+		if ((z1 != null) && (z2 != null)) {
 			return Integer.compare(z1.value(), z2.value());
 		}
 
