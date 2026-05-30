@@ -270,7 +270,7 @@ public class Task {
 
 			final ZResponse response = new ZResponse();
 			response.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
-			.httpStatus(HttpStatusEnum.HTTP_429.getCode())
+			.httpStatus(HttpStatusEnum.HTTP_429.getStatus())
 			.body(J.toJSONString(error, Include.NON_NULL));
 
 			return response;
@@ -300,7 +300,7 @@ public class Task {
 					final CR<Object> error = CR.error(AccessDeniedCodeEnum.ZSESSIONID.getCode(), AccessDeniedCodeEnum.ZSESSIONID.getMessageToClient());
 					final ZResponse response = new ZResponse();
 					response.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
-					.httpStatus(HttpStatusEnum.HTTP_429.getCode())
+					.httpStatus(HttpStatusEnum.HTTP_429.getStatus())
 					.body(J.toJSONString(error, Include.NON_NULL));
 
 					if (SERVER_CONFIGURATIONPROPERTIES.isResponseZSessionId()) {
@@ -563,7 +563,7 @@ public class Task {
 			}
 
 			return new ZResponse()
-					.httpStatus(HttpStatusEnum.HTTP_500.getCode())
+					.httpStatus(HttpStatusEnum.HTTP_500.getStatus())
 					.contentType(DEFAULT_CONTENT_TYPE.getType())
 					.body(J.toJSONString(CR.error(em),Include.NON_NULL));
 		}
@@ -594,7 +594,7 @@ public class Task {
 				final String headerValue = request.getHeaderMap().get(name);
 				if ((headerValue == null) && a.required()) {
 					final String message = "请求方法[" + path + "]的header[" + p.getName() + "]不存在";
-					throw new FormPairParseException(message, HttpStatusEnum.HTTP_400.getCode());
+					throw new FormPairParseException(message, HttpStatusEnum.HTTP_400.getStatus());
 				}
 				parametersArray[pI] = headerValue;
 				pI++;
@@ -607,7 +607,7 @@ public class Task {
 					final String message = "请求方法[" + path + "]缺少名为[" + cookieName + "]的Cookie";
 					if (AU.isEmpty(cookies)) {
 						if (cookieValue.required()) {
-							throw new FormPairParseException(message, HttpStatusEnum.HTTP_400.getCode());
+							throw new FormPairParseException(message, HttpStatusEnum.HTTP_400.getStatus());
 						}
 					} else {
 
@@ -623,7 +623,7 @@ public class Task {
 							}
 						} else {
 							if (cookieValue.required()) {
-								throw new FormPairParseException(message, HttpStatusEnum.HTTP_400.getCode());
+								throw new FormPairParseException(message, HttpStatusEnum.HTTP_400.getStatus());
 							}
 							parametersArray[pI] = null;
 							pI++;
@@ -672,7 +672,7 @@ public class Task {
 						Task.setZPathVariableValue(parametersArray, pI, type, v);
 						zpvPI++;
 					} catch (final NumberFormatException e) {
-						throw new PathVariableException(p.getName() + STU.EQUALS + v, HttpStatusEnum.HTTP_400.getCode());
+						throw new PathVariableException(p.getName() + STU.EQUALS + v, HttpStatusEnum.HTTP_400.getStatus());
 					}
 
 					// FIXME 2023年11月8日 下午10:47:54 zhanghen: TODO 继续支持 校验注解
@@ -698,7 +698,7 @@ public class Task {
 					// 以后再看要不要修复，反正这个bug可以正常运行
 
 					if (AU.isEmpty(request.getOriginalRequestBytes())) {
-						throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在", HttpStatusEnum.HTTP_400.getCode());
+						throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在", HttpStatusEnum.HTTP_400.getStatus());
 					}
 
 					final List<FormData> fdList = HttpRequestParser.readFileFormData(request.getOriginalRequestBytes(),
@@ -706,7 +706,7 @@ public class Task {
 					final Optional<FormData> findAny = fdList.stream().filter(fd -> fd.getName().equals(p.getName()))
 							.findAny();
 					if (!findAny.isPresent()) {
-						throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在", HttpStatusEnum.HTTP_400.getCode());
+						throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在", HttpStatusEnum.HTTP_400.getStatus());
 					}
 
 					if (request.getTf() != null) {
@@ -715,7 +715,7 @@ public class Task {
 						// 走到这，说明是读到内存的，所以构造ByteArrayInputStream
 						if (findAny.get().getBody() == null) {
 							throw new FormPairParseException("上传文件的[" + p.getName() + "]的内容不存在",
-									HttpStatusEnum.HTTP_400.getCode());
+									HttpStatusEnum.HTTP_400.getStatus());
 						}
 
 						final InputStream inputStream = new ByteArrayInputStream(findAny.get().getBody());
@@ -740,7 +740,7 @@ public class Task {
 			final String path, final int pI,
 			final Parameter p) {
 		if ((request.getTf() == null) || !p.getName().equals(request.getTf().getName())) {
-			throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在", HttpStatusEnum.HTTP_400.getCode());
+			throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在", HttpStatusEnum.HTTP_400.getStatus());
 		}
 
 		final File file = request.getTf().getFile();
@@ -809,7 +809,7 @@ public class Task {
 					.findAny();
 			if (!findAny.isPresent()) {
 				throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在",
-						HttpStatusEnum.HTTP_400.getCode());
+						HttpStatusEnum.HTTP_400.getStatus());
 			}
 
 			final Object value = findAny.get().getValue();
@@ -818,7 +818,7 @@ public class Task {
 					piR = Task.setValue(parametersArray, pI, p, findAny.get().getValue());
 				} catch (final NumberFormatException e) {
 					throw new ParsingRequestParamException(p.getName() + STU.EQUALS + findAny.get().getValue(),
-							HttpStatusEnum.HTTP_400.getCode());
+							HttpStatusEnum.HTTP_400.getStatus());
 				}
 			} else {
 				final String defaultValue = p.getAnnotation(ZRequestParam.class).defaultValue();
@@ -828,7 +828,7 @@ public class Task {
 					} catch (final Exception e) {
 						e.printStackTrace();
 						throw new FormPairParseException(p.getName() + " = " + defaultValue,
-								HttpStatusEnum.HTTP_400.getCode());
+								HttpStatusEnum.HTTP_400.getStatus());
 					}
 				}
 			}
@@ -842,19 +842,19 @@ public class Task {
 						piR = Task.setValue(parametersArray, pI, p, defaultValue);
 					} catch (final Exception e) {
 						throw new FormPairParseException(p.getName() + " = " + defaultValue,
-								HttpStatusEnum.HTTP_400.getCode());
+								HttpStatusEnum.HTTP_400.getStatus());
 					}
 					return piR;
 				}
 				throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在",
-						HttpStatusEnum.HTTP_400.getCode());
+						HttpStatusEnum.HTTP_400.getStatus());
 			}
 
 			final List<FormData> fdList = HttpRequestParser.readFileFormData(request.getOriginalRequestBytes(),
 					request.getContentType(), request.getBoundary());
 			if (CU.isEmpty(fdList)) {
 				throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在",
-						HttpStatusEnum.HTTP_400.getCode());
+						HttpStatusEnum.HTTP_400.getStatus());
 			}
 
 			final Optional<FormData> findAny = fdList.stream()
@@ -869,7 +869,7 @@ public class Task {
 				System.out.println(xString);
 
 				throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在",
-						HttpStatusEnum.HTTP_400.getCode());
+						HttpStatusEnum.HTTP_400.getStatus());
 			}
 
 			piR = Task.setValue(parametersArray, pI, p, findAny.get().getValue());

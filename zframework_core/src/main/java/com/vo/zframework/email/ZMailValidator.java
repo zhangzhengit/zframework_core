@@ -35,7 +35,7 @@ public class ZMailValidator implements ZCustomValidator {
 			if (!matcher.matches()) {
 				final String message = object.getClass().getSimpleName() + "." + field.getName() + "值[" + email
 						+ "]不符合邮箱地址规则";
-				throw new ValidatedException(message, HttpStatusEnum.HTTP_400.getCode());
+				throw new ValidatedException(message, HttpStatusEnum.HTTP_400.getStatus());
 			}
 		} else if (email instanceof Set) {
 			final Set set = (Set) email;
@@ -44,7 +44,7 @@ public class ZMailValidator implements ZCustomValidator {
 				if (!matcher.matches()) {
 					final String message = object.getClass().getSimpleName() + "." + field.getName() + "值[" + e
 							+ "]不符合邮箱地址规则";
-					throw new ValidatedException(message, HttpStatusEnum.HTTP_400.getCode());
+					throw new ValidatedException(message, HttpStatusEnum.HTTP_400.getStatus());
 				}
 			}
 		}

@@ -57,7 +57,7 @@ public class ZValidator {
 		if (!ZValidator.isZMinZMaxSupported(p.getType())) {
 			throw new ValidatedException("@" + ZPositive.class.getSimpleName()
 					+ " 只能用于Byte,Short,Integer,Long,Float,Double,BigDecimal,BigInteger,AtomicLong,AtomicInteger类型,当前用于["
-					+ p.getName() + "]",HttpStatusEnum.HTTP_400.getCode());
+					+ p.getName() + "]",HttpStatusEnum.HTTP_400.getStatus());
 		}
 
 		final double doubleValue = ((Number) value).doubleValue();
@@ -103,7 +103,7 @@ public class ZValidator {
 			final String format = String.format(message, t + pName, v)
 					+ (STU.isEmpty(itemName) ? "" : ("\r\n\t" + "请配置[" + itemName + "]为大于0的值"));
 
-			throw new ValidatedException(format, HttpStatusEnum.HTTP_400.getCode());
+			throw new ValidatedException(format, HttpStatusEnum.HTTP_400.getStatus());
 		}
 
 	}
@@ -149,7 +149,7 @@ public class ZValidator {
 
 			final String t = object.getClass().getSimpleName() + "." + field.getName();
 			final String format = String.format(message, t, v);
-			throw new ValidatedException(format, HttpStatusEnum.HTTP_400.getCode());
+			throw new ValidatedException(format, HttpStatusEnum.HTTP_400.getStatus());
 		}
 
 	}
@@ -169,7 +169,7 @@ public class ZValidator {
 		if (!ZValidator.isString(v.getClass())) {
 			throw new ValidatedException(
 					"@" + ZLength.class.getSimpleName() + " 只能用于 String类型,当前用于字段[" + field.getName() + "]",
-					HttpStatusEnum.HTTP_400.getCode());
+					HttpStatusEnum.HTTP_400.getStatus());
 		}
 
 		final String s = (String) v;
@@ -188,7 +188,7 @@ public class ZValidator {
 					String.valueOf(s.length()))
 					+ (STU.isEmpty(itemName) ? ""
 							: ("\r\n\t" + "请配置[" + itemName + "]为在[" + zl.min() + "]和[" + zl.max() + "]之间"));
-			throw new ValidatedException(format, HttpStatusEnum.HTTP_400.getCode());
+			throw new ValidatedException(format, HttpStatusEnum.HTTP_400.getStatus());
 		}
 
 	}
@@ -203,7 +203,7 @@ public class ZValidator {
 		if (!type.getCanonicalName().equals(String.class.getCanonicalName())) {
 			throw new ValidatedException(
 					"@" + ZStartWith.class.getSimpleName() + " 只能用于 String类型,当前用于字段[" + field.getName() + "]",
-					HttpStatusEnum.HTTP_400.getCode());
+					HttpStatusEnum.HTTP_400.getStatus());
 		}
 
 		try {
@@ -233,7 +233,7 @@ public class ZValidator {
 				final String format = String.format(message, t + pName, prefix)
 						+ (STU.isEmpty(itemName) ? "" : ("\r\n\t" + "请配置[" + itemName + "]为以[" + prefix + "]开始"));
 
-				throw new ValidatedException(format, HttpStatusEnum.HTTP_400.getCode());
+				throw new ValidatedException(format, HttpStatusEnum.HTTP_400.getStatus());
 			}
 
 		} catch (final IllegalAccessException e) {
@@ -251,7 +251,7 @@ public class ZValidator {
 		if (!type.getCanonicalName().equals(String.class.getCanonicalName())) {
 			throw new ValidatedException(
 					"@" + ZStartWith.class.getSimpleName() + " 只能用于 String类型,当前用于字段[" + field.getName() + "]",
-					HttpStatusEnum.HTTP_400.getCode());
+					HttpStatusEnum.HTTP_400.getStatus());
 		}
 
 		try {
@@ -279,7 +279,7 @@ public class ZValidator {
 				final String format = String.format(message, t + pName, endsWith.suffix())
 						+ (STU.isEmpty(itemName) ? "" : ("\r\n\t" + "请配置[" + itemName + "]为以[" + endsWith.suffix() + "]结尾"));
 
-				throw new ValidatedException(format, HttpStatusEnum.HTTP_400.getCode());
+				throw new ValidatedException(format, HttpStatusEnum.HTTP_400.getStatus());
 			}
 
 		} catch (final IllegalAccessException e) {
@@ -296,7 +296,7 @@ public class ZValidator {
 		if (!ZValidator.isZMinZMaxSupported(paramValue.getClass())) {
 			throw new ValidatedException("@" + ZMin.class.getSimpleName()
 					+ " 只能用于Byte,Short,Integer,Long,Float,Double,BigDecimal,BigInteger,AtomicLong,AtomicInteger类型,当前用于["
-					+ p.getName() + "]", HttpStatusEnum.HTTP_400.getCode());
+					+ p.getName() + "]", HttpStatusEnum.HTTP_400.getStatus());
 		}
 
 		final String canonicalName = paramValue.getClass().getCanonicalName();
@@ -354,7 +354,7 @@ public class ZValidator {
 		if (!ZValidator.isZMinZMaxSupported(paramValue.getClass())) {
 			throw new ValidatedException("@" + ZMin.class.getSimpleName()
 					+ " 只能用于Byte,Short,Integer,Long,Float,Double,BigDecimal,BigInteger,AtomicLong,AtomicInteger类型,当前用于["
-					+ p.getName() + "]", HttpStatusEnum.HTTP_400.getCode());
+					+ p.getName() + "]", HttpStatusEnum.HTTP_400.getStatus());
 		}
 
 		final String canonicalName = paramValue.getClass().getCanonicalName();
@@ -424,7 +424,7 @@ public class ZValidator {
 			if (!ZValidator.isZMinZMaxSupported(minFiledValue.getClass())) {
 				throw new ValidatedException("@" + ZMin.class.getSimpleName()
 						+ " 只能用于Byte,Short,Integer,Long,Float,Double,BigDecimal,BigInteger,AtomicLong,AtomicInteger类型,当前用于字段["
-						+ field.getName() + "]", HttpStatusEnum.HTTP_400.getCode());
+						+ field.getName() + "]", HttpStatusEnum.HTTP_400.getStatus());
 			}
 
 			final String canonicalName = minFiledValue.getClass().getCanonicalName();
@@ -526,7 +526,7 @@ public class ZValidator {
 
 		final String format = String.format(message, t + pName)
 				+ (STU.isEmpty(itemName) ? "" : ("\r\n\t" + "请配置[" + itemName + "]为非empty值"));
-		throw new ValidatedException(format, HttpStatusEnum.HTTP_400.getCode());
+		throw new ValidatedException(format, HttpStatusEnum.HTTP_400.getStatus());
 	}
 
 	public static void validatedZMax(final Object object, final Field field) {
@@ -711,7 +711,7 @@ public class ZValidator {
 
 		final String format = String.format(message, t + pName)
 				+ (STU.isEmpty(itemName) ? "" : ("\r\n\t" + "请配置[" + itemName + "]"));
-		throw new ValidatedException(format, HttpStatusEnum.HTTP_400.getCode());
+		throw new ValidatedException(format, HttpStatusEnum.HTTP_400.getStatus());
 	}
 
 	/**
@@ -756,7 +756,7 @@ public class ZValidator {
 
 		final String format = String.format(message, t + pName, max, maxFiledValue)
 				+ (STU.isEmpty(itemName) ? "" : ("\r\n\t" + "请配置[" + itemName + "]为不大于[" + max + "]"));
-		throw new ValidatedException(format, HttpStatusEnum.HTTP_400.getCode());
+		throw new ValidatedException(format, HttpStatusEnum.HTTP_400.getStatus());
 	}
 
 	/**
@@ -804,7 +804,7 @@ public class ZValidator {
 						} catch (final Exception e) {
 							final String message = Task.gExceptionMessage(e);
 							throw new ValidatedException("@" + ZCustom.class.getSimpleName() + ".cls 指定的类型["
-									+ customClass + "]初始化异常,message=" + message,HttpStatusEnum.HTTP_400.getCode());
+									+ customClass + "]初始化异常,message=" + message,HttpStatusEnum.HTTP_400.getStatus());
 						}
 
 					}

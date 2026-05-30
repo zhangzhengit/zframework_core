@@ -14,6 +14,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import com.vo.log.core.ZLog2;
 import com.vo.zframework.configuration.ServerConfigurationProperties;
+import com.vo.zframework.http.HttpStatusEnum;
 
 /**
  * 	http服务器
@@ -164,9 +165,12 @@ public class ZServer {
 					final ZResponse exception = pd.getException();
 					if (exception != null) {
 						exception.write();
+						if (!exception.isKeepAlive()
+						|| (exception.getHttpStatus() != HttpStatusEnum.HTTP_200.getStatus())) {
+							closeSocket(socket);
+							closed = true;
+						}
 					}
-					closeSocket(socket);
-					closed = true;
 				}
 
 				parseStatusEnum = process;

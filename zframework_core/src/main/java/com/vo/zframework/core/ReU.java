@@ -20,7 +20,7 @@ public class ReU {
 			.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 			.header(HeaderEnum.CONNECTION.getName(),
 					keepAlive ? ConnectionEnum.KEEP_ALIVE.getValue() : ConnectionEnum.CLOSE.getValue())
-			.httpStatus(HttpStatusEnum.HTTP_429.getCode())
+			.httpStatus(HttpStatusEnum.HTTP_429.getStatus())
 			.body(J.toJSONString(CR.error(message), Include.NON_NULL))
 			;
 	}
@@ -30,14 +30,14 @@ public class ReU {
 		.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 		.header(HeaderEnum.CONNECTION.getName(),
 				keepAlive ? ConnectionEnum.KEEP_ALIVE.getValue() : ConnectionEnum.CLOSE.getValue())
-		.httpStatus(HttpStatusEnum.HTTP_429.getCode())
+		.httpStatus(HttpStatusEnum.HTTP_429.getStatus())
 		.body(J.toJSONString(CR.error(message), Include.NON_NULL));
 
 	}
 
 	public static ZResponse response405(final String message, final boolean keepAlive) {
 		final ZResponse r = new ZResponse()
-				.httpStatus(HttpStatusEnum.HTTP_405.getCode())
+				.httpStatus(HttpStatusEnum.HTTP_405.getStatus())
 				.header(HeaderEnum.CONNECTION.getName(),
 						keepAlive ? ConnectionEnum.KEEP_ALIVE.getValue() : ConnectionEnum.CLOSE.getValue())
 				.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
@@ -48,7 +48,7 @@ public class ReU {
 
 	public static ZResponse response404(final String message, final boolean keepAlive) {
 		final ZResponse r = new ZResponse()
-				.httpStatus(HttpStatusEnum.HTTP_404.getCode())
+				.httpStatus(HttpStatusEnum.HTTP_404.getStatus())
 				.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 				.header(HeaderEnum.CONNECTION.getName(),
 						keepAlive ? ConnectionEnum.KEEP_ALIVE.getValue() : ConnectionEnum.CLOSE.getValue())
@@ -60,7 +60,7 @@ public class ReU {
 		final ZResponse r = new ZResponse()
 				.header(HeaderEnum.CONNECTION.getName(),
 						keepAlive ? ConnectionEnum.KEEP_ALIVE.getValue() : ConnectionEnum.CLOSE.getValue())
-				.httpStatus(HttpStatusEnum.HTTP_400.getCode())
+				.httpStatus(HttpStatusEnum.HTTP_400.getStatus())
 				.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 				.body(J.toJSONString(CR.error(HttpStatusEnum.HTTP_400.getMessage() + "[" + message + "]")));
 		return r;

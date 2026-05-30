@@ -563,7 +563,7 @@ public class ZRequest {
 					// 判断的话会太费性能
 					if (length > requestHeaderSizeLimit) {
 						throw new ParseHTTPRequestException(HttpStatusEnum.HTTP_431.getMessage(),
-								HttpStatusEnum.HTTP_431.getCode());
+								HttpStatusEnum.HTTP_431.getStatus());
 					}
 				}
 

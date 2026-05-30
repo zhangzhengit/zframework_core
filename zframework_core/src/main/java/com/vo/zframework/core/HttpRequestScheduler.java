@@ -17,7 +17,7 @@ public class HttpRequestScheduler {
 	 */
 	private static final HttpParseStatusEnum END = HttpParseStatusEnum.PARSE_END;
 
-	private final HttpRequestProcessor processor = new HttpRequestProcessor();
+	private final HttpRequestProcessor processor = ZContext.getBean(HttpRequestProcessor.class);
 
 	// FIXME 2026年5月26日 10:55:55 zhangzhen : 在read的while中调用本方法，
 

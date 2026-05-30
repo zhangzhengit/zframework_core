@@ -58,7 +58,7 @@ public class ResourcesLoader {
 		try {
 			fileReader = new FileReader(name);
 		} catch (final FileNotFoundException e1) {
-			throw new ResourceNotExistException("资源不存在,name = " + resourceName, HttpStatusEnum.HTTP_404.getCode());
+			throw new ResourceNotExistException("资源不存在,name = " + resourceName, HttpStatusEnum.HTTP_404.getStatus());
 		}
 
 		final BufferedReader bufferedReader = new BufferedReader(fileReader);
@@ -110,7 +110,7 @@ public class ResourcesLoader {
 		try {
 			return new FileInputStream(fileName);
 		} catch (final FileNotFoundException e1) {
-			throw new ResourceNotExistException("资源不存在,name = " + resourceName, HttpStatusEnum.HTTP_404.getCode());
+			throw new ResourceNotExistException("资源不存在,name = " + resourceName, HttpStatusEnum.HTTP_404.getStatus());
 		}
 	}
 
@@ -138,7 +138,7 @@ public class ResourcesLoader {
 		try {
 			fileInputStream = new FileInputStream(new File(fileName));
 		} catch (final FileNotFoundException e1) {
-			throw new ResourceNotExistException("资源不存在,name = " + resourceName, HttpStatusEnum.HTTP_404.getCode());
+			throw new ResourceNotExistException("资源不存在,name = " + resourceName, HttpStatusEnum.HTTP_404.getStatus());
 		}
 
 		final byte[] byteArray = readByteArray0(fileInputStream);
@@ -256,7 +256,7 @@ public class ResourcesLoader {
 		final InputStream inputStream = ResourcesLoader.class.getResourceAsStream(name);
 		if (inputStream == null) {
 			// FIXME 2025年12月8日 17:51:22 zhangzhen : 这里提示详细一点，具体时候那个资源
-			throw new ResourceNotExistException("资源不存在:" + resourceName, HttpStatusEnum.HTTP_404.getCode());
+			throw new ResourceNotExistException("资源不存在:" + resourceName, HttpStatusEnum.HTTP_404.getStatus());
 		}
 		return inputStream;
 	}

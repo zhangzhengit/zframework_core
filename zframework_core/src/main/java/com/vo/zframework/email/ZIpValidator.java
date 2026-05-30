@@ -29,7 +29,7 @@ public class ZIpValidator implements ZCustomValidator {
 		final Matcher matcher = PATTERN.matcher(String.valueOf(v));
 		if (!matcher.matches()) {
 			final String message = object.getClass().getSimpleName() + "." + field.getName() + "值[" + v + "]不符合IP地址规则";
-			throw new ValidatedException(message, HttpStatusEnum.HTTP_400.getCode());
+			throw new ValidatedException(message, HttpStatusEnum.HTTP_400.getStatus());
 		}
 
 	}

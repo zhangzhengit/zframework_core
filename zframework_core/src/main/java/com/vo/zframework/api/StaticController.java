@@ -63,7 +63,7 @@ public class StaticController {
 
 		final int i = resourceName.lastIndexOf(".");
 		if (i <= -1) {
-			response.httpStatus(HttpStatusEnum.HTTP_500.getCode())
+			response.httpStatus(HttpStatusEnum.HTTP_500.getStatus())
 					.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 					.body(J.toJSONString(CR.error("不支持无后缀的文件")));
 			return;
@@ -73,7 +73,7 @@ public class StaticController {
 		final Map<String, String> ctm = SERVER_CONFIGURATION.getStaticControllerContentType();
 		final String ct = ctm.get(sn);
 		if (STU.isEmpty(ct)) {
-			response.httpStatus(HttpStatusEnum.HTTP_500.getCode())
+			response.httpStatus(HttpStatusEnum.HTTP_500.getStatus())
 					.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 					.body(J.toJSONString(CR.error("不支持的文件类型")));
 			return;
@@ -109,7 +109,7 @@ public class StaticController {
 	private static void httpStatus403(final ZResponse response) {
 		response
 		.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
-		.httpStatus(HttpStatusEnum.HTTP_403.getCode())
+		.httpStatus(HttpStatusEnum.HTTP_403.getStatus())
 		.body(J.toJSONString(CR.error("无权访问")));
 	}
 

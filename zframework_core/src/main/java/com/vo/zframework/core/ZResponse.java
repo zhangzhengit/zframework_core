@@ -126,7 +126,7 @@ public class ZResponse {
 
 	private String contentType;
 
-	private final AtomicReference<Integer> httpStatus = new AtomicReference<>(HttpStatusEnum.HTTP_200.getCode());
+	private final AtomicReference<Integer> httpStatus = new AtomicReference<>(HttpStatusEnum.HTTP_200.getStatus());
 	private final AtomicReference<String> contentTypeAR = new AtomicReference<>(Task.DEFAULT_CONTENT_TYPE.getValue());
 
 	private final Socket socket;
@@ -163,6 +163,21 @@ public class ZResponse {
 	 */
 	public int getBodyLength() {
 		return this.body == null ? 0 : this.body.length;
+	}
+
+	public boolean isKeepAlive() {
+		if ((this.headerList == null) || this.headerList.isEmpty()) {
+			return false;
+		}
+
+		for (int i = 0; i < this.headerList.size(); i++) {
+			final ZHeader h = this.headerList.get(i);
+			if (h.getName().equals(HeaderEnum.CONNECTION.getName())) {
+				return ConnectionEnum.KEEP_ALIVE.getValue().equals(h.getValue());
+			}
+		}
+
+		return false;
 	}
 
 	/**
@@ -341,7 +356,7 @@ public class ZResponse {
 
 			final String ifNoneMatch = request.getHeader(HeaderEnum.IF_NONE_MATCH.getName());
 			if ((ifNoneMatch != null) && Objects.equals(eTag, ifNoneMatch)) {
-				this.httpStatus(HttpStatusEnum.HTTP_304.getCode());
+				this.httpStatus(HttpStatusEnum.HTTP_304.getStatus());
 				this.clearBody();
 			}
 		}
@@ -484,7 +499,8 @@ public class ZResponse {
 		return this.body(body.getBytes());
 	}
 
-	public Integer getHttpStatus() {
+	@SuppressWarnings("boxing")
+	public int getHttpStatus() {
 		return this.httpStatus.get();
 	}
 
@@ -525,7 +541,7 @@ public class ZResponse {
 			HTTPResponseProcessor.setZSessionId(request, this);
 		}
 
-		if (this.getHttpStatus() == HttpStatusEnum.HTTP_200.getCode()) {
+		if (this.getHttpStatus() == HttpStatusEnum.HTTP_200.getStatus()) {
 			HTTPResponseProcessor.setCacheControl(request, this);
 		}
 

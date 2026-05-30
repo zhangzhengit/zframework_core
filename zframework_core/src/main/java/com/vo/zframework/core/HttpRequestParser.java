@@ -149,7 +149,7 @@ public class HttpRequestParser {
 		final int bodySI = AU.search(ba, BOUNDARY_PREFIX + boundary, 1, 0);
 
 		if (bodySI <= -1) {
-			throw new ZFException("上传文件不存在", HttpStatusEnum.HTTP_400.getCode());
+			throw new ZFException("上传文件不存在", HttpStatusEnum.HTTP_400.getStatus());
 		}
 
 		final List<Integer> boundaryIndexList = new ArrayList<>();

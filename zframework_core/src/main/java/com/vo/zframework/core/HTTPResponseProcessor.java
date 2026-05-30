@@ -40,7 +40,7 @@ public class HTTPResponseProcessor {
 			final Integer httpStatus = ZControllerAdviceThrowable.findHttpStatus(e);
 			final ZResponse response =
 					new ZResponse()
-					.httpStatus(httpStatus != null ? httpStatus : HttpStatusEnum.HTTP_500.getCode())
+					.httpStatus(httpStatus != null ? httpStatus : HttpStatusEnum.HTTP_500.getStatus())
 					.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
 					.body(J.toJSONString(r));
 
@@ -89,7 +89,7 @@ public class HTTPResponseProcessor {
 			final boolean keepAlive = request.isKeepAlive();
 
 			final Integer httpStatus = response.getHttpStatus();
-			if (httpStatus == HttpStatusEnum.HTTP_200.getCode()) {
+			if (httpStatus == HttpStatusEnum.HTTP_200.getStatus()) {
 				response.setETag(request, response.getBody(), ETagEnum.STRONG);
 			}
 

@@ -32,20 +32,20 @@ public enum HttpStatusEnum {
 
 	HTTP_500(500, "Internal Server Error"),;
 
-	private int code;
+	private int status;
 	private String message;
 
-	HttpStatusEnum(final int code, final String message) {
-		this.code = code;
+	HttpStatusEnum(final int status, final String message) {
+		this.status = status;
 		this.message = message;
 	}
 
-	public int getCode() {
-		return this.code;
+	public int getStatus() {
+		return this.status;
 	}
  
-	public void setCode(final int code) {
-		this.code = code;
+	public void setStatus(final int status) {
+		this.status = status;
 	}
 
 	public String getMessage() {
