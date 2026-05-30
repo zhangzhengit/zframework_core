@@ -19,8 +19,6 @@ public class ZArray {
 	 */
 	private int size;
 
-	private TF tf;
-
 	public ZArray(final int initialCapacity) {
 		if (initialCapacity <= 0) {
 			throw new IllegalArgumentException("initialCapacity必须大于0,当前initialCapacity = " + initialCapacity);
@@ -114,6 +112,11 @@ public class ZArray {
 		return this.ar;
 	}
 
+	/**
+	 * 重置此对象为指定的新容量并且清空原有数据
+	 *
+	 * @param capacity
+	 */
 	public void reset(final int capacity) {
 		if (capacity <= 0) {
 			throw new IllegalArgumentException("capacity必须大于0,当前capacity = " + capacity);
@@ -121,14 +124,6 @@ public class ZArray {
 
 		this.ar = new byte[capacity];
 		this.size = 0;
-	}
-
-	public TF getTf() {
-		return this.tf;
-	}
-
-	public void setTf(final TF tf) {
-		this.tf = tf;
 	}
 
 }

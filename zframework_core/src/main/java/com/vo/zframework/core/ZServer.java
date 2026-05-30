@@ -158,7 +158,7 @@ public class ZServer {
 
 				if (process == HttpParseStatusEnum.START) {
 					PDTL.set(pd);
-					response(pd.getRequest(), array);
+					response(pd.getRequest(), array, pd);
 				} else if (process == HttpParseStatusEnum.EXCEPTION) {
 					final ZResponse exception = pd.getException();
 					if (exception != null) {
@@ -185,8 +185,8 @@ public class ZServer {
 				SERVER_CONFIGURATIONPROPERTIES.getQps(), QPSHandlingEnum.SMOOTH);
 	}
 
-	private static void response(final ZRequest request, final ZArray array) {
-		request.setTf(array.getTf());
+	private static void response(final ZRequest request, final ZArray array, final PD pd) {
+		request.setTf(pd.getTf());
 		request.setOriginalRequestBytes(array.toByteArray());
 
 		requestHandler.handle(request);

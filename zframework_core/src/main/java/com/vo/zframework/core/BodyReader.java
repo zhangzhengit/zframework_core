@@ -39,10 +39,6 @@ public class BodyReader {
 
 		final int headerEndIndex = search(fullBA, STU.CRLFCRLF, 1, 0);
 
-		if(headerEndIndex <= -1) {
-			final int debug = 0;
-		}
-
 		final byte[] headerBA = Arrays.copyOfRange(fullBA, 0, headerEndIndex);
 		final String[] headerKVString = new String(headerBA).split(STU.CRLF);
 
@@ -50,7 +46,6 @@ public class BodyReader {
 
 		if ((headerEndIndex + STU.CRLFCRLF.length()) < fullBA.length) {
 			final byte[] bodyBA = Arrays.copyOfRange(fullBA, headerEndIndex + STU.CRLFCRLF.length(), fullBA.length);
-//			System.out.println("bodyBA.length = " + bodyBA.length);
 			request.setBody(bodyBA);
 		} else {
 			request.setBody(new byte[] {});

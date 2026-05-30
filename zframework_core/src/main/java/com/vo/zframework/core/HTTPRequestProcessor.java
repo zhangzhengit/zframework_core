@@ -336,12 +336,8 @@ public class HTTPRequestProcessor {
 			fRC += r1;
 			tf.write(buffer, 0, r1);
 
-			// FIXME 2026年5月25日 09:09:20 zhangzhen : debug 用暂时放入array，记得删掉
-//				array.add(buffer, 0, r1);
-
 			if ((pd.getHeaderEndIndex() + STU.CRLFCRLF.length() + pd.getContentLength())
 					== (array.length() + fRC)) {
-//						== (array.length())) {
 
 				final Fm fm = DefaultHttpReader.hFM(array);
 				final String boundary = fm.getBoundary();
@@ -349,7 +345,7 @@ public class HTTPRequestProcessor {
 				try {
 					DefaultHttpReader.readFileNameAndContentType(tf);
 					DefaultHttpReader.removeNB(tf, boundary, array);
-					array.setTf(tf);
+					pd.setTf(tf);
 				} finally {
 					DefaultHttpReader.closeTFStream(tf);
 				}

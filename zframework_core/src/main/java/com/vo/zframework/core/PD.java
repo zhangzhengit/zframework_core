@@ -31,6 +31,8 @@ public class PD {
 
 	private ZRMethod zrMethod;
 
+	private TF tf;
+
 	/**
 	 * 解析过程中异常状态时，给客户端的响应
 	 */
@@ -133,6 +135,14 @@ public class PD {
 
 	public void setZrMethod(final ZRMethod zrMethod) {
 		this.zrMethod = zrMethod;
+	}
+
+	public TF getTf() {
+		return this.tf;
+	}
+
+	public void setTf(final TF tf) {
+		this.tf = tf;
 	}
 
 }
