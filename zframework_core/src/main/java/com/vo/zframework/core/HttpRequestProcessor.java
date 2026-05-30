@@ -2,7 +2,6 @@ package com.vo.zframework.core;
 
 import java.io.BufferedInputStream;
 import java.net.Socket;
-import java.time.LocalDateTime;
 import java.util.Arrays;
 
 import com.vo.zframework.anno.ZComponent;
@@ -184,7 +183,6 @@ public class HttpRequestProcessor {
 		// 用正确的http工具来请求测试
 		// 以后再制造不合法的请求来测试本方法
 
-
 		final int headerEndIndex = getHeaderEndIndex(array, pd);
 		if (headerEndIndex <= -1) {
 			// header 没结束，继续读
@@ -217,10 +215,9 @@ public class HttpRequestProcessor {
 
 		// FIXME 2026年5月26日 09:34:11 zhangzhen : 这个相当复杂，先写外面的调用者，根据此类每个方法的返回值来跳转到不同状态
 
-		final HttpParseStatusEnum body = parseBody(pd.getSocket(), pd.getBufferCapacity(), pd.getBufferedInputStream(), array, pd);
+		final HttpParseStatusEnum parseStatusEnum = parseBody(pd.getSocket(), pd.getBufferCapacity(), pd.getBufferedInputStream(), array, pd);
 
-		return body;
-//		return HttpParseStatusEnum.PARSE_END;
+		return parseStatusEnum;
 	}
 
 	/**
@@ -228,17 +225,8 @@ public class HttpRequestProcessor {
 	 * @param array TODO
 	 */
 	public HttpParseStatusEnum end(final PD pd, final ZArray array) {
-//		System.out.println(
-//				LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t" + "HTTPRequestProcessor.end()");
-		// FIXME 2026年5月26日 09:30:41 zhangzhen : 这里应该写：重置ZArray readCount
-		// 等等所有资源，等待下一个请求到来
-
 
 		final ZRequest request = HttpRequestParser.parse(array.toByteArray());
-//		final ZRequest request = BodyReader.parse(buffer, pd.getSocket());
-//		System.out.println("request = ");
-//		System.out.println(request);
-
 		pd.setRequest(request);
 
 		return HttpParseStatusEnum.START;
@@ -254,19 +242,15 @@ public class HttpRequestProcessor {
 
 	public static String parseRequestLine(final PD pd, final ZArray array) {
 		final int requestLineEndIndex = AU.search(array.getRawArray(), STU.CRLF, 1, 3);
-		// 从0开始找到了第一个CRLF，说明有请求行
-		if (requestLineEndIndex > -1) {
-			pd.setRequestLineEndIndex(requestLineEndIndex);
-			final byte[] lineBA = Arrays.copyOfRange(array.getRawArray(), 0, requestLineEndIndex);
-			// FIXME 2026年5月23日 14:35:41 zhangzhen : 解析请求行，看是否不支持的METHOD，不存在的接口等等
-			final String requestLine = new String(lineBA);
-//			System.out.println("requestLine = ");
-//			System.out.println(requestLine);
 
-			return requestLine;
+		if (requestLineEndIndex <= -1) {
+			return null;
 		}
 
-		return null;
+		pd.setRequestLineEndIndex(requestLineEndIndex);
+		final byte[] lineBA = Arrays.copyOfRange(array.getRawArray(), 0, requestLineEndIndex);
+		final String requestLine = new String(lineBA);
+		return requestLine;
 	}
 
 	public static String gContentLength(final ZArray array, final PD pd) {
