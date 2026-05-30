@@ -181,7 +181,7 @@ public class HTTPRequestProcessor {
 		final int headerEndIndex = getHeaderEndIndex(array, pd);
 		if (headerEndIndex <= -1) {
 			// header 没结束，继续读
-			return HttpParseStatusEnum.PARSE_END;
+			return HttpParseStatusEnum.PARSE_HEADER;
 		}
 
 		final String contentLength = gContentLength(array, pd);
