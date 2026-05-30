@@ -32,6 +32,8 @@ import com.vo.zframework.http.ZRMethod;
 // 的开销相对来说完全可忽略
 
 // FIXME 2026年5月26日 17:01:06 zhangzhen : 提供一个类似RequestValidatorAdapter的类，给用户自定义实现自定义的http请求解析
+// FIXME 2026年5月30日 20:36:48 zhangzhen : 截止现在，此类都是认为请求都是正常的合法的，没怎么判断非法情况
+// 记得判断，任何一个点都要判断校验
 @ZComponent
 public class HttpRequestProcessor {
 
