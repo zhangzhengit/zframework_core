@@ -112,6 +112,8 @@ public class ZResponse {
 
 	public static final String HTTP_1_1 = "HTTP/1.1 ";
 
+	private static final int HTTP_1_1_LENGTH = ZResponse.HTTP_1_1.length();
+
 	private static final byte[] HTTP_11_BYTES = ZResponse.HTTP_1_1.getBytes();
 	public static final int CONTENT_LENGTH_BYTES_LENGTH = CONTENT_LENGTH_BYTES.length
 			;
@@ -611,13 +613,15 @@ public class ZResponse {
 				// FIXME 2025年12月24日 12:29:01 zhangzhen : 注意：header都要先URLEncoder
 				headerBytesLength = headerBytesLength + h.getName().length();
 				headerBytesLength += STU.COLON_LENGTH;
-				headerBytesLength += h.getValue().getBytes().length;
+				// FIXME 2026年5月31日 04:51:40 zhangzhen : 暂时去掉getBytes() ，直接getValue().length()
+				headerBytesLength += h.getValue().length();
+//				headerBytesLength += h.getValue().getBytes().length;
 				headerBytesLength += STU.CRLF_LENGTH;
 			}
 		}
 
 		final int capacity
-		= ZResponse.HTTP_1_1.length() + 4 // 4 httpStatus的字节数
+		= HTTP_1_1_LENGTH + 4 // 4 httpStatus的字节数
 		+ STU.CRLF_LENGTH
 		+ CONTENT_LENGTH_BYTES_LENGTH + STU.COLON_LENGTH + this.getBodyLength()
 		// FIXME 2025年12月24日 13:50:33 zhangzhen :  对于ZCtest/接口，试了+6才可以正常。待会查看为什么，现在先这样写
