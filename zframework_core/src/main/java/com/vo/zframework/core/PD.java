@@ -16,6 +16,13 @@ public class PD {
 
 	private int requestLineEndIndex = -1;
 	private int headerEndIndex = -1;
+
+	/**
+	 * 搜索header截止符号index的开始index，即：从哪个位置开始搜索[header截止符号]
+	 * 初始默认值为0
+	 */
+	private int searchHeaderEndIndexFromIndex = 0;
+
 	private long contentLength = -1;
 	private int bufferCapacity;
 
@@ -143,6 +150,14 @@ public class PD {
 
 	public void setTf(final TF tf) {
 		this.tf = tf;
+	}
+
+	public int getSearchHeaderEndIndexFromIndex() {
+		return this.searchHeaderEndIndexFromIndex;
+	}
+
+	public void setSearchHeaderEndIndexFromIndex(final int searchHeaderEndIndexFromIndex) {
+		this.searchHeaderEndIndexFromIndex = searchHeaderEndIndexFromIndex;
 	}
 
 }

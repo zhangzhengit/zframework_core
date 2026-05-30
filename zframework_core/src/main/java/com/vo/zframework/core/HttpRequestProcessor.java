@@ -175,19 +175,21 @@ public class HttpRequestProcessor {
 	 * 3、单个header大小 HTTP_431
 	 *
 	 * @param pd
-	 * @param array TODO
+	 * @param array
 	 * @return
 	 */
 	public HttpParseStatusEnum parseHeader(final PD pd, final ZArray array) {
-		// FIXME 2026年5月26日 09:28:58 zhangzhen : 这个方法要校验的太多了，先忽略掉,默认返回 PARSE_BODY
-		// 用正确的http工具来请求测试
-		// 以后再制造不合法的请求来测试本方法
 
-		final int headerEndIndex = getHeaderEndIndex(array, pd);
+		final int headerEndIndex = AU.search(array.getRawArray(), STU.CRLFCRLF, 1, pd.getSearchHeaderEndIndexFromIndex());
 		if (headerEndIndex <= -1) {
+
+			// 本次read后没找到，则设置下次搜索开始位置为当前已读取的长度，即：从下次读取的内容的开头开始搜
+			pd.setSearchHeaderEndIndexFromIndex(array.length());
+
 			// header 没结束，继续读
 			return HttpParseStatusEnum.PARSE_HEADER;
 		}
+		pd.setHeaderEndIndex(headerEndIndex);
 
 		final String contentLength = gContentLength(array, pd);
 		if (STU.isEmpty(contentLength)) {
@@ -232,14 +234,6 @@ public class HttpRequestProcessor {
 		return HttpParseStatusEnum.START;
 	}
 
-	private static int getHeaderEndIndex(final ZArray array, final PD pd) {
-		final int headerEndIndex = AU.search(array.getRawArray(), STU.CRLFCRLF, 1, pd.getRequestLineEndIndex());
-
-		pd.setHeaderEndIndex(headerEndIndex);
-
-		return headerEndIndex;
-	}
-
 	private static String parseRequestLine(final PD pd, final ZArray array) {
 		final int requestLineEndIndex = AU.search(array.getRawArray(), STU.CRLF, 1, 3);
 
@@ -277,7 +271,7 @@ public class HttpRequestProcessor {
 //				.println(LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t" + "ZServer.parseBody()");
 
 		if (pd.getContentLength() >= (UPLOAD_FILE_TO_TEMP_SIZE * 1024)) {
-			return writeToTempFile(socket, capacity, bufferedInputStream, array, pd);
+			return writeToTempFile(bufferedInputStream, array, pd);
 		}
 
 		if ((pd.getHeaderEndIndex() + STU.CRLFCRLF.length() + pd.getContentLength()) == array.length()) {
@@ -292,8 +286,8 @@ public class HttpRequestProcessor {
 	}
 
 
-	public static HttpParseStatusEnum writeToTempFile(final Socket socket, final int capacity,
-			final BufferedInputStream bufferedInputStream, final ZArray array, final PD pd) {
+	public static HttpParseStatusEnum writeToTempFile(final BufferedInputStream bufferedInputStream, final ZArray array,
+			final PD pd) {
 
 		final String randomFileName = "file_" + System.nanoTime();
 		final TF tf = HttpRequestParser.saveToTempFile(randomFileName, randomFileName, randomFileName);
