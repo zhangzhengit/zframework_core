@@ -196,6 +196,8 @@ public class HTTPRequestProcessor {
 			pd.setException(response);
 			return HttpParseStatusEnum.EXCEPTION;
 		}
+		// FIXME 2026年5月30日 09:54:00 zhangzhen : parseHeader应该在这里就执行，今早解析今早发现错误，记得在这里加了以后，把
+		// end 流程中的parseHeader避免掉，整个流程只解析一次
 
 		// FIXME 2026年5月26日 15:27:57 zhangzhen : 校验 Transfer-Encoding
 
