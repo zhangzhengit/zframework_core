@@ -32,6 +32,8 @@ import com.vo.zframework.http.ZRMethod;
 // FIXME 2026年5月26日 17:01:06 zhangzhen : 提供一个类似RequestValidatorAdapter的类，给用户自定义实现自定义的http请求解析
 public class HTTPRequestProcessor {
 
+	// FIXME 2026年5月30日 16:00:48 zhangzhen : 这个里面所有的search，如果返回-1了 ，可以设置一个当前length A,下次search从A开始，就少做很多重复的无用功
+
 	private static final ServerConfigurationProperties SERVER_CONFIGURATIONPROPERTIES= ZContext.getBean(ServerConfigurationProperties.class);
 
 	private static final int UPLOAD_FILE_TO_TEMP_SIZE = SERVER_CONFIGURATIONPROPERTIES.getUploadFileToTempSize();
