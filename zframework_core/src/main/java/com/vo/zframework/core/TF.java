@@ -86,17 +86,6 @@ public class TF {
 		return this.bufferedOutputStream;
 	}
 
-	public TF(final File file, final String tempFilePath, final String name, final String fileName, final String contentType,
-			final OutputStream outputStream, final BufferedOutputStream bufferedOutputStream) {
-		this.setFile(file);
-		this.tempFilePath = tempFilePath;
-		this.name = name;
-		this.fileName = fileName;
-		this.contentType = contentType;
-		this.outputStream = outputStream;
-		this.bufferedOutputStream = bufferedOutputStream;
-	}
-
 	public void setFile(final File file) {
 		this.file = file;
 	}

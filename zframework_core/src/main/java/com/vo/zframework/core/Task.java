@@ -701,7 +701,7 @@ public class Task {
 						throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在", HttpStatusEnum.HTTP_400.getCode());
 					}
 
-					final List<FormData> fdList = BodyReader.readFormData(request.getOriginalRequestBytes(),
+					final List<FormData> fdList = HttpRequestParser.readFileFormData(request.getOriginalRequestBytes(),
 							request.getContentType(), request.getBoundary());
 					final Optional<FormData> findAny = fdList.stream().filter(fd -> fd.getName().equals(p.getName()))
 							.findAny();
@@ -850,7 +850,7 @@ public class Task {
 						HttpStatusEnum.HTTP_400.getCode());
 			}
 
-			final List<FormData> fdList = BodyReader.readFormData(request.getOriginalRequestBytes(),
+			final List<FormData> fdList = HttpRequestParser.readFileFormData(request.getOriginalRequestBytes(),
 					request.getContentType(), request.getBoundary());
 			if (CU.isEmpty(fdList)) {
 				throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在",

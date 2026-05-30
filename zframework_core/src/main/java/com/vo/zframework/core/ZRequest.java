@@ -358,9 +358,9 @@ public class ZRequest {
 		return this.lineList;
 	}
 
-	public ZRequest(final String[] lineArray, final Socket socket) {
+	public ZRequest(final String[] lineArray) {
 		this.lineList = new ArrayList<>(lineArray.length);
-		this.socket = socket;
+		this.socket = SocketTL.get();
 
 		Collections.addAll(this.lineList, lineArray);
 

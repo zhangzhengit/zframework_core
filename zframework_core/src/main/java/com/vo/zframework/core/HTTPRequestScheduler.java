@@ -17,7 +17,7 @@ public class HTTPRequestScheduler {
 	 */
 	private static final HttpParseStatusEnum END = HttpParseStatusEnum.PARSE_END;
 
-	private final HTTPRequestProcessor processor = new HTTPRequestProcessor();
+	private final HttpRequestProcessor processor = new HttpRequestProcessor();
 
 	// FIXME 2026年5月26日 10:55:55 zhangzhen : 在read的while中调用本方法，
 

@@ -5,6 +5,8 @@ import java.net.Socket;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 
+import com.vo.zframework.anno.ZComponent;
+import com.vo.zframework.cache.AU;
 import com.vo.zframework.cache.STU;
 import com.vo.zframework.configuration.ServerConfigurationProperties;
 import com.vo.zframework.enums.MethodEnum;
@@ -30,7 +32,8 @@ import com.vo.zframework.http.ZRMethod;
 // 的开销相对来说完全可忽略
 
 // FIXME 2026年5月26日 17:01:06 zhangzhen : 提供一个类似RequestValidatorAdapter的类，给用户自定义实现自定义的http请求解析
-public class HTTPRequestProcessor {
+@ZComponent
+public class HttpRequestProcessor {
 
 	// FIXME 2026年5月30日 16:00:48 zhangzhen : 这个里面所有的search，如果返回-1了 ，可以设置一个当前length A,下次search从A开始，就少做很多重复的无用功
 
@@ -229,7 +232,7 @@ public class HTTPRequestProcessor {
 		// 等等所有资源，等待下一个请求到来
 
 
-		final ZRequest request = BodyReader.parse(array.toByteArray(), pd.getSocket());
+		final ZRequest request = HttpRequestParser.parse(array.toByteArray());
 //		final ZRequest request = BodyReader.parse(buffer, pd.getSocket());
 //		System.out.println("request = ");
 //		System.out.println(request);
@@ -240,7 +243,7 @@ public class HTTPRequestProcessor {
 	}
 
 	public static int getHeaderEndIndex(final ZArray array, final PD pd) {
-		final int headerEndIndex = BodyReader.search(array.getRawArray(), STU.CRLFCRLF, 1, pd.getRequestLineEndIndex());
+		final int headerEndIndex = AU.search(array.getRawArray(), STU.CRLFCRLF, 1, pd.getRequestLineEndIndex());
 
 		pd.setHeaderEndIndex(headerEndIndex);
 
@@ -248,7 +251,7 @@ public class HTTPRequestProcessor {
 	}
 
 	public static String parseRequestLine(final PD pd, final ZArray array) {
-		final int requestLineEndIndex = BodyReader.search(array.getRawArray(), STU.CRLF, 1, 3);
+		final int requestLineEndIndex = AU.search(array.getRawArray(), STU.CRLF, 1, 3);
 		// 从0开始找到了第一个CRLF，说明有请求行
 		if (requestLineEndIndex > -1) {
 			pd.setRequestLineEndIndex(requestLineEndIndex);
@@ -265,10 +268,9 @@ public class HTTPRequestProcessor {
 	}
 
 	public static String gContentLength(final ZArray array, final PD pd) {
-		final int clIndex = BodyReader.search(array.getRawArray(),
-				HeaderEnum.CONTENT_LENGTH.getName(), 1, pd.getRequestLineEndIndex() + STU.CRLF.length());
+		final int clIndex = AU.search(array.getRawArray(), HeaderEnum.CONTENT_LENGTH.getName(), 1, pd.getRequestLineEndIndex() + STU.CRLF.length());
 		if (clIndex > -1) {
-			final int clEIndex = BodyReader.search(array.getRawArray(), STU.CRLF, 1, clIndex);
+			final int clEIndex = AU.search(array.getRawArray(), STU.CRLF, 1, clIndex);
 			if (clEIndex > clIndex) {
 
 				final byte[] clBA = Arrays.copyOfRange(array.getRawArray(), clIndex, clEIndex);
@@ -312,7 +314,9 @@ public class HTTPRequestProcessor {
 			final BufferedInputStream bufferedInputStream, final ZArray array, final PD pd) {
 
 		final String randomFileName = "file_" + System.nanoTime();
-		final TF tf = DefaultHttpReader.saveToTempFile(randomFileName, randomFileName, randomFileName);
+		final TF tf = HttpRequestParser.saveToTempFile(randomFileName, randomFileName, randomFileName);
+
+		System.out.println("randomFileName = " + randomFileName);
 
 		final byte[] bodyOne = Arrays.copyOfRange(array.getRawArray(), pd.getHeaderEndIndex() + STU.CRLF.length(),
 				array.length());
@@ -341,15 +345,15 @@ public class HTTPRequestProcessor {
 			if ((pd.getHeaderEndIndex() + STU.CRLFCRLF.length() + pd.getContentLength())
 					== (array.length() + fRC)) {
 
-				final Fm fm = DefaultHttpReader.hFM(array);
+				final Fm fm = HttpRequestParser.hFM(array);
 				final String boundary = fm.getBoundary();
 
 				try {
-					DefaultHttpReader.readFileNameAndContentType(tf);
-					DefaultHttpReader.removeNB(tf, boundary, array);
+					HttpRequestParser.readFileNameAndContentType(tf);
+					HttpRequestParser.removeNB(tf, boundary, array);
 					pd.setTf(tf);
 				} finally {
-					DefaultHttpReader.closeTFStream(tf);
+					HttpRequestParser.closeTFStream(tf);
 				}
 
 				return HttpParseStatusEnum.PARSE_END;
