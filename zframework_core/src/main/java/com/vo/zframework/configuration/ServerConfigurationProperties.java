@@ -65,23 +65,14 @@ public class ServerConfigurationProperties {
 	private int byteBufferSize = 1024 * 4;
 
 	/**
-	 * nio 读取http请求的body时
-	 * socketChannel.read()方法一直返回0时的等待超时毫秒数
-	 *
-	 */
-	@ZMin(min = 1)
-	@ZMax(max = 1000 * 60)
-	@ZNotNull
-	private int nioReadTimeout = 100 * 5;
-
-	/**
 	 * 限制上传文件的最大KB数
 	 * 单位：KB
 	 */
 	@ZMin(min = 1)
-	@ZMax(max = 1024 * 10000)
+	@ZMax(max = 1024 * 1024 * 10)
 	@ZNotNull
-	private int uploadFileSize = 1024 * 50;
+	// FIXME 2026年5月30日 10:09:10 zhangzhen : 这个改为BIO后，截止现在还没用上，记得用上
+	private int uploadFileSize = 1024 * 1024;
 
 	/**
 	 * 上传文件时从[一次性读取内存]改为[边读边写入到临时文件]的阈值,单位：KB
@@ -359,18 +350,6 @@ public class ServerConfigurationProperties {
 	private boolean printProxyClass = false;
 
 	/**
-	 * 是否输出nio select() 的结果
-	 *
-	 */
-	@ZNotNull
-	private boolean printNioSelect = false;
-
-	/**
-	 *	启动时是否打印banner
-	 */
-	private boolean showBanner = false;
-
-	/**
 	 * 是否打印请求的header
 	 */
 	private boolean showHttpHeader = false;
@@ -425,25 +404,8 @@ public class ServerConfigurationProperties {
 		return this.byteBufferSize;
 	}
 
-
-	public boolean getPrintNioSelect() {
-		return this.printNioSelect;
-	}
-
-	public void setPrintNioSelect(final boolean printNioSelect) {
-		this.printNioSelect = printNioSelect;
-	}
-
 	public void setByteBufferSize(final int byteBufferSize) {
 		this.byteBufferSize = byteBufferSize;
-	}
-
-	public int getNioReadTimeout() {
-		return this.nioReadTimeout;
-	}
-
-	public void setNioReadTimeout(final int nioReadTimeout) {
-		this.nioReadTimeout = nioReadTimeout;
 	}
 
 	public int getUploadFileSize() {
@@ -654,14 +616,6 @@ public class ServerConfigurationProperties {
 		this.printProxyClass = printProxyClass;
 	}
 
-	public boolean getShowBanner() {
-		return this.showBanner;
-	}
-
-	public void setShowBanner(final boolean showBanner) {
-		this.showBanner = showBanner;
-	}
-
 	public int getStaticResponseBufferSize() {
 		return this.staticResponseBufferSize;
 	}
@@ -706,28 +660,6 @@ public class ServerConfigurationProperties {
 		this.staticControllerContentType = staticControllerContentType;
 	}
 
-	@Override
-	public String toString() {
-		return "ServerConfigurationProperties [port=" + this.port + ", responseZSessionId=" + this.responseZSessionId + ", name="
-				+ this.name + ", byteBufferSize=" + this.byteBufferSize + ", nioReadTimeout=" + this.nioReadTimeout
-				+ ", uploadFileSize=" + this.uploadFileSize + ", uploadTempDir=" + this.uploadTempDir + ", threadName="
-				+ this.threadName + ", staticResourceCacheEnable=" + this.staticResourceCacheEnable + ", scanPackage="
-				+ this.scanPackage + ", qpsLimitEnabled=" + this.qpsLimitEnabled + ", qps=" + this.qps + ", qpsExceedMessage="
-				+ this.qpsExceedMessage + ", requestHeaderSizeLimit=" + this.requestHeaderSizeLimit + ", enableClientQps="
-				+ this.enableClientQps + ", clientQps=" + this.clientQps + ", sessionIdQps=" + this.sessionIdQps
-				+ ", staticControllerEnable=" + this.staticControllerEnable + ", staticControllerContentType="
-				+ this.staticControllerContentType + ", staticControllerReferersAllowed=" + this.staticControllerReferersAllowed
-				+ ", staticControllerMemoryCacheCapacity=" + this.staticControllerMemoryCacheCapacity
-				+ ", staticResponseBufferSize=" + this.staticResponseBufferSize + ", keepAliveTimeout=" + this.keepAliveTimeout
-				+ ", sessionStorageType=" + this.sessionStorageType + ", sessionTimeout=" + this.sessionTimeout
-				+ ", sessionMaxTimeout=" + this.sessionMaxTimeout + ", sessionMaxActive=" + this.sessionMaxActive
-				+ ", sessionMaxActiveInMemory=" + this.sessionMaxActiveInMemory + ", staticPath=" + this.staticPath
-				+ ", staticPrefix=" + this.staticPrefix + ", compressionEnable=" + this.compressionEnable + ", compressionTypes="
-				+ this.compressionTypes + ", compressionMinLength=" + this.compressionMinLength + ", responseHeaders="
-				+ this.responseHeaders + ", printConfigurationProperties=" + this.printConfigurationProperties
-				+ ", printProxyClass=" + this.printProxyClass + ", showBanner=" + this.showBanner + ", showHttpHeader="
-				+ this.showHttpHeader + "]";
-	}
 
 	static Map<String, String> initCTM() {
 		final Map<String, String> ctm = new HashMap<>(16, 1F);
@@ -767,6 +699,89 @@ public class ServerConfigurationProperties {
 
 	public void setUploadFileToTempSize(final int uploadFileToTempSize) {
 		this.uploadFileToTempSize = uploadFileToTempSize;
+	}
+
+	@Override
+	public String toString() {
+		final StringBuilder builder = new StringBuilder();
+		builder.append("ServerConfigurationProperties [port=");
+		builder.append(this.port);
+		builder.append(", responseZSessionId=");
+		builder.append(this.responseZSessionId);
+		builder.append(", name=");
+		builder.append(this.name);
+		builder.append(", byteBufferSize=");
+		builder.append(this.byteBufferSize);
+		builder.append(", uploadFileSize=");
+		builder.append(this.uploadFileSize);
+		builder.append(", uploadFileToTempSize=");
+		builder.append(this.uploadFileToTempSize);
+		builder.append(", uploadTempDir=");
+		builder.append(this.uploadTempDir);
+		builder.append(", threadName=");
+		builder.append(this.threadName);
+		builder.append(", staticResourceCacheEnable=");
+		builder.append(this.staticResourceCacheEnable);
+		builder.append(", scanPackage=");
+		builder.append(this.scanPackage);
+		builder.append(", qpsLimitEnabled=");
+		builder.append(this.qpsLimitEnabled);
+		builder.append(", qps=");
+		builder.append(this.qps);
+		builder.append(", qpsExceedMessage=");
+		builder.append(this.qpsExceedMessage);
+		builder.append(", requestHeaderSizeLimit=");
+		builder.append(this.requestHeaderSizeLimit);
+		builder.append(", enableClientQps=");
+		builder.append(this.enableClientQps);
+		builder.append(", clientQps=");
+		builder.append(this.clientQps);
+		builder.append(", sessionIdQps=");
+		builder.append(this.sessionIdQps);
+		builder.append(", method=");
+		builder.append(this.method);
+		builder.append(", staticControllerEnable=");
+		builder.append(this.staticControllerEnable);
+		builder.append(", staticControllerContentType=");
+		builder.append(this.staticControllerContentType);
+		builder.append(", staticControllerReferersAllowed=");
+		builder.append(this.staticControllerReferersAllowed);
+		builder.append(", staticControllerMemoryCacheCapacity=");
+		builder.append(this.staticControllerMemoryCacheCapacity);
+		builder.append(", staticResponseBufferSize=");
+		builder.append(this.staticResponseBufferSize);
+		builder.append(", keepAliveTimeout=");
+		builder.append(this.keepAliveTimeout);
+		builder.append(", sessionStorageType=");
+		builder.append(this.sessionStorageType);
+		builder.append(", sessionTimeout=");
+		builder.append(this.sessionTimeout);
+		builder.append(", sessionMaxTimeout=");
+		builder.append(this.sessionMaxTimeout);
+		builder.append(", sessionMaxActive=");
+		builder.append(this.sessionMaxActive);
+		builder.append(", sessionMaxActiveInMemory=");
+		builder.append(this.sessionMaxActiveInMemory);
+		builder.append(", staticPath=");
+		builder.append(this.staticPath);
+		builder.append(", staticPrefix=");
+		builder.append(this.staticPrefix);
+		builder.append(", compressionEnable=");
+		builder.append(this.compressionEnable);
+		builder.append(", compressionTypes=");
+		builder.append(this.compressionTypes);
+		builder.append(", compressionMinLength=");
+		builder.append(this.compressionMinLength);
+		builder.append(", responseHeaders=");
+		builder.append(this.responseHeaders);
+		builder.append(", printConfigurationProperties=");
+		builder.append(this.printConfigurationProperties);
+		builder.append(", printProxyClass=");
+		builder.append(this.printProxyClass);
+		builder.append(", showHttpHeader=");
+		builder.append(this.showHttpHeader);
+		builder.append("]");
+		return builder.toString();
 	}
 
 }
