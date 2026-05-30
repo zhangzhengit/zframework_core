@@ -1,7 +1,7 @@
 package com.vo.zframework.core;
 
 /**
- * 本类规定了 HTTPRequestProcessor 的执行状态，从A状态到B状态
+ * 本类规定了 HttpRequestScheduler 的执行状态，从A状态到B状态
  *
  * @author zhangzhen
  * @date 2026年5月26日 10:54:00
