@@ -57,11 +57,11 @@ public class ServerConfigurationProperties {
 	private String name = "ZServer";
 
 	/**
-	 * 读取http请求的header的ByteBuffer的容量大小
+	 * 读取http请求byte[]的容量大小,单位：字节
 	 */
 	@ZNotNull
-	@ZMin(min = 1024)
-	@ZMax(max = 1024 * 10)
+	@ZMin(min = 512)
+	@ZMax(max = 1024 * 16)
 	private int byteBufferSize = 1024 * 4;
 
 	/**
