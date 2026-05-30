@@ -109,27 +109,29 @@ public class ZServer {
 		return socket;
 	}
 
-	/**
-	 * @param socket
-	 */
-	void handle(final Socket socket) {
-//		System.out.println("New connection from: " + socket.getRemoteSocketAddress());
+	private void handle(final Socket socket) {
 
-		final int capacity = SERVER_CONFIGURATIONPROPERTIES.getByteBufferSize();
+		try (final InputStream inputStream = ZServer.getInputStream(socket);
+			BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream)) {
+			this.action(socket, bufferedInputStream);
+		} catch (final IOException e) {
+			e.printStackTrace();
+		}
 
-		final InputStream inputStream = ZServer.getInputStream(socket);
-		final BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
+	}
 
-		boolean closed = false;
+	private void action(final Socket socket, final BufferedInputStream bufferedInputStream) {
 
 		SocketTL.set(socket);
+
+		boolean closed = false;
+		final int capacity = SERVER_CONFIGURATIONPROPERTIES.getByteBufferSize();
 
 		while (!closed) {
 
 			final byte[] buffer = new byte[capacity];
 			final ZArray array = new ZArray(buffer.length);
 
-			// FIXME 2026年5月26日 16:41:16 zhangzhen : 有 socket传参的地方都改掉，不要到处传来传去，只应该出现在本类中
 			final PD pd = new PD();
 			pd.setBufferCapacity(capacity);
 			pd.setBufferedInputStream(bufferedInputStream);
@@ -153,16 +155,11 @@ public class ZServer {
 				array.add(buffer, 0, read);
 
 				final HttpParseStatusEnum process = this.requestScheduler.process(parseStatusEnum, pd, array);
-//				System.out.println( Thread.currentThread().getName() + "\t" +"process = " + process);
+
 				if (process == HttpParseStatusEnum.START) {
-//					System.out.println( Thread.currentThread().getName() + "\t" +"开始执行目标方法...");
-
 					PDTL.set(pd);
-
 					response(pd.getRequest(), array);
-
 				} else if (process == HttpParseStatusEnum.EXCEPTION) {
-//					System.out.println( Thread.currentThread().getName() + "\t" +"EXCEPTION，开始closeSocket...");
 					final ZResponse exception = pd.getException();
 					if (exception != null) {
 						exception.write();
@@ -180,7 +177,6 @@ public class ZServer {
 				break;
 			}
 		}
-
 	}
 
 
