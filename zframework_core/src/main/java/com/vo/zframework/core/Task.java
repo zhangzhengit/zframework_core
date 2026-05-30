@@ -701,9 +701,9 @@ public class Task {
 						throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在", HttpStatusEnum.HTTP_400.getCode());
 					}
 
-					final List<FD2> fdList = BodyReader.readFormData(request.getOriginalRequestBytes(),
+					final List<FormData> fdList = BodyReader.readFormData(request.getOriginalRequestBytes(),
 							request.getContentType(), request.getBoundary());
-					final Optional<FD2> findAny = fdList.stream().filter(fd -> fd.getName().equals(p.getName()))
+					final Optional<FormData> findAny = fdList.stream().filter(fd -> fd.getName().equals(p.getName()))
 							.findAny();
 					if (!findAny.isPresent()) {
 						throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在", HttpStatusEnum.HTTP_400.getCode());
@@ -850,14 +850,14 @@ public class Task {
 						HttpStatusEnum.HTTP_400.getCode());
 			}
 
-			final List<FD2> fdList = BodyReader.readFormData(request.getOriginalRequestBytes(),
+			final List<FormData> fdList = BodyReader.readFormData(request.getOriginalRequestBytes(),
 					request.getContentType(), request.getBoundary());
 			if (CU.isEmpty(fdList)) {
 				throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在",
 						HttpStatusEnum.HTTP_400.getCode());
 			}
 
-			final Optional<FD2> findAny = fdList.stream()
+			final Optional<FormData> findAny = fdList.stream()
 					// FIXME 2024年12月21日 下午10:05:21 zhangzhen : 这个是isEmpty？是当时手误写错了？记得debug看下
 					.filter(f -> STU.isEmpty(f.getFileName()))
 					.filter(f -> f.getName().equals(p.getName()))

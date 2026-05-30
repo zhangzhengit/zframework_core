@@ -123,11 +123,11 @@ public class BodyReader {
 	 * @param boundary
 	 * @return
 	 */
-	public static List<FD2> readFormData(final byte[] ba, final String contentType, final String boundary) {
+	public static List<FormData> readFormData(final byte[] ba, final String contentType, final String boundary) {
 		return readFormData0(ba, contentType, boundary);
 	}
 
-	private static List<FD2> readFormData0(final byte[] ba, final String contentType, final String boundary) {
+	private static List<FormData> readFormData0(final byte[] ba, final String contentType, final String boundary) {
 		if (boundary == null) {
 			return Collections.emptyList();
 		}
@@ -138,7 +138,7 @@ public class BodyReader {
 			return Collections.emptyList();
 		}
 
-		final List<FD2> fd2l = new ArrayList<>();
+		final List<FormData> fd2l = new ArrayList<>();
 
 		final int bodySI = search(ba, BOUNDARY_PREFIX + boundary, 1,0);
 
@@ -161,8 +161,8 @@ public class BodyReader {
 		}
 
 		for (int from = 0, to = 1; from < (r.size() - 1); from++, to++) {
-			final byte[] x = Arrays.copyOfRange(ba, r.get(from),  r.get(to));
-			final FD2 one = handleOneItem(x);
+			final byte[] x = Arrays.copyOfRange(ba, r.get(from), r.get(to));
+			final FormData one = handleOneItem(x);
 			fd2l.add(one);
 		}
 
@@ -175,9 +175,9 @@ public class BodyReader {
 	 * @param oneBA
 	 * @return
 	 */
-	public static FD2 handleOneItem(final byte[] oneBA) {
+	public static FormData handleOneItem(final byte[] oneBA) {
 
-		final FD2 fd2 = new FD2();
+		final FormData fd2 = new FormData();
 		final int ctIndex = search(oneBA, HeaderEnum.CONTENT_TYPE.getName(), 1, 0);
 		if (ctIndex > -1) {
 			final int ctRNIndex = search(oneBA, STU.CRLF, 1, ctIndex);

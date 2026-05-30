@@ -9,7 +9,7 @@ import java.util.Arrays;
  * @date 2024年12月8日 下午1:59:03
  *
  */
-public class FD2 {
+public class FormData {
 
 	/**
 	 * 表示完整的Content-Disposition的一行
@@ -19,22 +19,19 @@ public class FD2 {
 	private String contentDisposition;
 
 	/**
-	 * 表示name
-	 * 如下例子中本字段值为file
+	 * 表示name,如下例子中本字段值为file
 	 * Content-Disposition: form-data; name="file"; filename="123.txt"
 	 */
 	private String name;
 
 	/**
-	 * 表示filename
-	 * 如下例子中本字段值为123.txt
+	 * 表示filename,如下例子中本字段值为123.txt
 	 * Content-Disposition: form-data; name="file"; filename="123.txt"
 	 */
 	private String fileName;
 
 	/**
-	 * 表示Content-Type
-	 * 如下例子中本字段值为text/plain
+	 * 表示Content-Type,如下例子中本字段值为text/plain
 	 * Content-Type: text/plain
 	 */
 	private String contentType;
@@ -53,7 +50,7 @@ public class FD2 {
 		return this.contentDisposition;
 	}
 
-	public void setContentDisposition(String contentDisposition) {
+	public void setContentDisposition(final String contentDisposition) {
 		this.contentDisposition = contentDisposition;
 	}
 
@@ -61,7 +58,7 @@ public class FD2 {
 		return this.name;
 	}
 
-	public void setName(String name) {
+	public void setName(final String name) {
 		this.name = name;
 	}
 
@@ -69,7 +66,7 @@ public class FD2 {
 		return this.fileName;
 	}
 
-	public void setFileName(String fileName) {
+	public void setFileName(final String fileName) {
 		this.fileName = fileName;
 	}
 
@@ -77,7 +74,7 @@ public class FD2 {
 		return this.contentType;
 	}
 
-	public void setContentType(String contentType) {
+	public void setContentType(final String contentType) {
 		this.contentType = contentType;
 	}
 
@@ -85,7 +82,7 @@ public class FD2 {
 		return this.body;
 	}
 
-	public void setBody(byte[] body) {
+	public void setBody(final byte[] body) {
 		this.body = body;
 	}
 
@@ -93,15 +90,27 @@ public class FD2 {
 		return this.value;
 	}
 
-	public void setValue(String value) {
+	public void setValue(final String value) {
 		this.value = value;
 	}
 
 	@Override
 	public String toString() {
-		return "FD2 [contentDisposition=" + this.contentDisposition + ", name=" + this.name + ", fileName=" + this.fileName
-				+ ", contentType=" + this.contentType + ", body=" + Arrays.toString(this.body) + ", value=" + this.value + "]";
+		final StringBuilder builder = new StringBuilder();
+		builder.append("FormData [contentDisposition=");
+		builder.append(this.contentDisposition);
+		builder.append(", name=");
+		builder.append(this.name);
+		builder.append(", fileName=");
+		builder.append(this.fileName);
+		builder.append(", contentType=");
+		builder.append(this.contentType);
+		builder.append(", body=");
+		builder.append(Arrays.toString(this.body));
+		builder.append(", value=");
+		builder.append(this.value);
+		builder.append("]");
+		return builder.toString();
 	}
-
 
 }
