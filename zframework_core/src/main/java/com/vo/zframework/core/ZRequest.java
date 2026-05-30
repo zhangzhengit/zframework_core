@@ -692,12 +692,37 @@ public class ZRequest {
 
 	@Override
 	public String toString() {
-		return "ZRequest [lineList=" + this.lineList + ", original=" + this.original + ", queryString=" + this.queryString + ", tf="
-				+ this.tf + ", methodEnum=" + this.methodEnum + ", fullpath=" + this.requestURI + ", path=" + this.path + ", paramSet="
-				+ this.paramSet + ", version=" + this.version + ", headerMap=" + this.headerMap + ", originalRequestBytes="
-				+ Arrays.toString(this.originalRequestBytes) + ", body=" + Arrays.toString(this.body) + ", clientIp=" + this.clientIp
-				+ "]";
+		final StringBuilder builder = new StringBuilder();
+		builder.append("ZRequest [lineList=");
+		builder.append(this.lineList);
+		builder.append(", original=");
+		builder.append(this.original);
+		builder.append(", queryString=");
+		builder.append(this.queryString);
+		builder.append(", tf=");
+		builder.append(this.tf);
+		builder.append(", methodEnum=");
+		builder.append(this.methodEnum);
+		builder.append(", requestURI=");
+		builder.append(this.requestURI);
+		builder.append(", path=");
+		builder.append(this.path);
+		builder.append(", paramSet=");
+		builder.append(this.paramSet);
+		builder.append(", version=");
+		builder.append(this.version);
+		builder.append(", headerMap=");
+		builder.append(this.headerMap);
+		builder.append(", originalRequestBytes=");
+		builder.append(Arrays.toString(this.originalRequestBytes));
+		builder.append(", body=");
+		builder.append(Arrays.toString(this.body));
+		builder.append(", clientIp=");
+		builder.append(this.clientIp);
+		builder.append(", socket=");
+		builder.append(this.socket);
+		builder.append("]");
+		return builder.toString();
 	}
-
 
 }
