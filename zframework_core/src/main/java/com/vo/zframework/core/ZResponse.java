@@ -560,7 +560,6 @@ public class ZResponse {
 				this.bufferedOutputStream.flush();
 			}
 		} catch (final IOException e) {
-			e.printStackTrace();
 			ZServer.closeSocket(this.socket);
 		}
 	}
