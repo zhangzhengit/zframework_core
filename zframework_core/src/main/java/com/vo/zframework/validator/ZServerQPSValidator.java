@@ -20,7 +20,7 @@ public class ZServerQPSValidator implements ZCustomValidator {
 	 */
 	public static final int MIN_VALUE = 1;
 	public static final int MAX_VALUE = 10000 * 1000;
-	public static final int DEFAULT_VALUE = 10000 * 100;
+	public static final int DEFAULT_VALUE = 10000 * 200;
 
 	@Override
 	public void validated(final Object object, final Field field) throws Exception {

@@ -48,7 +48,7 @@ public enum QPSEnum {
 	/**
 	 * [不]平滑处理
 	 */
-	UNEVEN(1, Integer.MAX_VALUE, 10000),
+	UNEVEN(1, Integer.MAX_VALUE, 10000 * 200),
 
 	;
 
@@ -69,7 +69,7 @@ public enum QPSEnum {
 	public void setMinValue(final int minValue) {
 		this.minValue = minValue;
 	}
- 
+
 	public int getMaxValue() {
 		return this.maxValue;
 	}
@@ -85,5 +85,5 @@ public enum QPSEnum {
 	public void setDefaultValue(final int defaultValue) {
 		this.defaultValue = defaultValue;
 	}
-	
+
 }

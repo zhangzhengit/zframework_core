@@ -23,9 +23,9 @@ public @interface ZRequestMapping {
 
 	public static final int MIN_COUNT = 1;
 
-	public static final int MAX_COUNT = 10000 * 100;
+	public static final int MAX_COUNT = 10000 * 1000;
 
-	public static final int DEFAULT_COUNT = 10000 * 5;
+	public static final int DEFAULT_COUNT = 10000 * 200;
 
 	/**
 	 * 请求路径，如：/index
@@ -72,19 +72,19 @@ public @interface ZRequestMapping {
 	 * @return
 	 */
 	String description() default "";
-	
+
 	/**
-	 * 指定接口所接受的Content-Type，如果接口设置了本属性则要求匹配(兼容) 
+	 * 指定接口所接受的Content-Type，如果接口设置了本属性则要求匹配(兼容)
 	 * 没设置则接受所有的Content-Type
-	 * 
+	 *
 	 * @return
 	 */
 	String[] consumes() default {};
-	
+
 	/**
 	 * 指定请求的Accept来决定此接口返回的Content-Type，
 	 * 如指定多个则优先返回匹配度最高的，如都不匹配则按配置顺序返回第一个
-	 * 
+	 *
 	 * @return
 	 */
 	String[] produces() default {};
