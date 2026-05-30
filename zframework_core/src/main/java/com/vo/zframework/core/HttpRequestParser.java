@@ -49,8 +49,7 @@ public class HttpRequestParser {
 
 		final int headerEndIndex = AU.search(httpRequestBA, STU.CRLFCRLF, 1, 0);
 
-		final byte[] headerBA = Arrays.copyOfRange(httpRequestBA, 0, headerEndIndex);
-		final String[] headerKVString = new String(headerBA).split(STU.CRLF);
+		final String[] headerKVString = new String(httpRequestBA, 0, headerEndIndex).split(STU.CRLF);
 
 		final ZRequest request= new ZRequest(headerKVString);
 
@@ -74,8 +73,7 @@ public class HttpRequestParser {
 
 		final int headerEndIndex = AU.search(ba, STU.CRLFCRLF, 1, 0);
 
-		final byte[] headerBA = Arrays.copyOfRange(ba, 0, headerEndIndex);
-		final String[] headerKVString = new String(headerBA).split(STU.CRLF);
+		final String[] headerKVString = new String(ba, 0, headerEndIndex).split(STU.CRLF);
 
 		final ZRequest request= new ZRequest(headerKVString);
 
@@ -190,8 +188,7 @@ public class HttpRequestParser {
 		if (contentTypeIndex > -1) {
 			final int ctRNIndex = AU.search(ba, STU.CRLF, 1, contentTypeIndex);
 			if (ctRNIndex > -1) {
-				final byte[] ctBA = Arrays.copyOfRange(ba, contentTypeIndex, ctRNIndex + STU.CRLF.length());
-				final String ctX = new String(ctBA).split(STU.COLON)[1].trim();
+				final String ctX = new String(ba, contentTypeIndex, ctRNIndex + STU.CRLF.length()).split(STU.COLON)[1].trim();
 				formData.setContentType(ctX);
 
 				final int bodyStartIndexX = AU.search(ba, STU.CRLFCRLF, 1, 0);
@@ -206,8 +203,7 @@ public class HttpRequestParser {
 		} else {
 			final int bodyStartIndexX = AU.search(ba, STU.CRLFCRLF, 1, 0);
 			if (bodyStartIndexX > -1) {
-				final byte[] valueBA = Arrays.copyOfRange(ba, bodyStartIndexX + STU.CRLFCRLF.length(), ba.length);
-				final String value = new String(valueBA);
+				final String value = new String(ba, bodyStartIndexX + STU.CRLFCRLF.length(), ba.length);
 				formData.setValue(value);
 			}
 		}
@@ -217,8 +213,7 @@ public class HttpRequestParser {
 		if (cdIndex > -1) {
 			final int cdRNIndex = AU.search(ba, STU.CRLF, 1, cdIndex);
 			if (cdRNIndex > -1) {
-				final byte[] cdBA = Arrays.copyOfRange(ba, cdIndex, cdRNIndex + STU.CRLF.length());
-				final String line = new String(cdBA);
+				final String line = new String(ba, cdIndex, cdRNIndex + STU.CRLF.length());
 				final Map<String, String> vMap = handleBodyContentDisposition(line);
 				formData.setName(vMap.get(NAME));
 				formData.setFileName(vMap.get(FILENAME));
@@ -349,15 +344,13 @@ public class HttpRequestParser {
 						}
 					}
 
-					final byte[] xxx = Arrays.copyOfRange(ba, cdI, ctI);
-					final String cdLine = new String(xxx);
+					final String cdLine = new String(ba, cdI, ctI);
 					final Map<String, String> cdMap = parseCDLine(cdLine);
 					tf.setName(cdMap.get("name"));
 					tf.setFileName(cdMap.get("filename"));
 					final int crlf2I = AU.search(ba, STU.CRLFCRLF, 1, ctI);
 					if (crlf2I > ctI) {
-						final byte[] ctBA = Arrays.copyOfRange(ba, ctI, crlf2I);
-						final String contentType = gCT(new String(ctBA));
+						final String contentType = gCT(new String(ba, ctI, crlf2I));
 						tf.setContentType(contentType);
 						break;
 					}

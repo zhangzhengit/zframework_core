@@ -232,7 +232,7 @@ public class HttpRequestProcessor {
 		return HttpParseStatusEnum.START;
 	}
 
-	public static int getHeaderEndIndex(final ZArray array, final PD pd) {
+	private static int getHeaderEndIndex(final ZArray array, final PD pd) {
 		final int headerEndIndex = AU.search(array.getRawArray(), STU.CRLFCRLF, 1, pd.getRequestLineEndIndex());
 
 		pd.setHeaderEndIndex(headerEndIndex);
@@ -240,7 +240,7 @@ public class HttpRequestProcessor {
 		return headerEndIndex;
 	}
 
-	public static String parseRequestLine(final PD pd, final ZArray array) {
+	private static String parseRequestLine(final PD pd, final ZArray array) {
 		final int requestLineEndIndex = AU.search(array.getRawArray(), STU.CRLF, 1, 3);
 
 		if (requestLineEndIndex <= -1) {
@@ -248,21 +248,17 @@ public class HttpRequestProcessor {
 		}
 
 		pd.setRequestLineEndIndex(requestLineEndIndex);
-		final byte[] lineBA = Arrays.copyOfRange(array.getRawArray(), 0, requestLineEndIndex);
-		final String requestLine = new String(lineBA);
+		final String requestLine = new String(array.getRawArray(), 0, requestLineEndIndex);
 		return requestLine;
 	}
 
-	public static String gContentLength(final ZArray array, final PD pd) {
+	private static String gContentLength(final ZArray array, final PD pd) {
 		final int clIndex = AU.search(array.getRawArray(), HeaderEnum.CONTENT_LENGTH.getName(), 1, pd.getRequestLineEndIndex() + STU.CRLF.length());
 		if (clIndex > -1) {
 			final int clEIndex = AU.search(array.getRawArray(), STU.CRLF, 1, clIndex);
 			if (clEIndex > clIndex) {
 
-				final byte[] clBA = Arrays.copyOfRange(array.getRawArray(), clIndex, clEIndex);
-				final String contentLengthS = new String(clBA);
-//				System.out.println("parseContentLength-content-Length = ");
-//				System.out.println(contentLengthS);
+				final String contentLengthS = new String(array.getRawArray(), clIndex, clEIndex);
 
 				final long contentLength = Long.parseLong(contentLengthS.split(":")[1].trim());
 				pd.setContentLength(contentLength);
