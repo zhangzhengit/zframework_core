@@ -864,10 +864,6 @@ public class Task {
 					.findAny();
 			if (!findAny.isPresent()) {
 
-				final String xString = new String(request.getOriginalRequestBytes());
-				System.out.println("request.getOriginalRequestBytes() = ");
-				System.out.println(xString);
-
 				throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在",
 						HttpStatusEnum.HTTP_400.getStatus());
 			}

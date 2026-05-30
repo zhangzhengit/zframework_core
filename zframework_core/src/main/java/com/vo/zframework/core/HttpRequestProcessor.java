@@ -258,7 +258,7 @@ public class HttpRequestProcessor {
 			final int clEIndex = AU.search(array.getRawArray(), STU.CRLF, 1, clIndex);
 			if (clEIndex > clIndex) {
 
-				final String contentLengthS = new String(array.getRawArray(), clIndex, clEIndex);
+				final String contentLengthS = new String(array.getRawArray(), clIndex, clEIndex - clIndex);
 
 				final long contentLength = Long.parseLong(contentLengthS.split(":")[1].trim());
 				pd.setContentLength(contentLength);
@@ -297,8 +297,6 @@ public class HttpRequestProcessor {
 
 		final String randomFileName = "file_" + System.nanoTime();
 		final TF tf = HttpRequestParser.saveToTempFile(randomFileName, randomFileName, randomFileName);
-
-		System.out.println("randomFileName = " + randomFileName);
 
 		final byte[] bodyOne = Arrays.copyOfRange(array.getRawArray(), pd.getHeaderEndIndex() + STU.CRLF.length(),
 				array.length());

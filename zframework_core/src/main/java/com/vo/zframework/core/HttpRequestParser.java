@@ -32,6 +32,7 @@ import com.vo.zframework.validator.ZFException;
  */
 public class HttpRequestParser {
 
+	private static final byte[] BOUNDARY_BYTES = ZRequest.BOUNDARY.getBytes();
 	public static final String BOUNDARY_PREFIX = "--";
 	public static final String BOUNDARY_SUFFIX = "--";
 	public static final String FILENAME = "filename";
@@ -188,7 +189,7 @@ public class HttpRequestParser {
 		if (contentTypeIndex > -1) {
 			final int ctRNIndex = AU.search(ba, STU.CRLF, 1, contentTypeIndex);
 			if (ctRNIndex > -1) {
-				final String ctX = new String(ba, contentTypeIndex, ctRNIndex + STU.CRLF.length()).split(STU.COLON)[1].trim();
+				final String ctX = new String(ba, contentTypeIndex, (ctRNIndex + STU.CRLF.length()) - contentTypeIndex).split(STU.COLON)[1].trim();
 				formData.setContentType(ctX);
 
 				final int bodyStartIndexX = AU.search(ba, STU.CRLFCRLF, 1, 0);
@@ -203,7 +204,8 @@ public class HttpRequestParser {
 		} else {
 			final int bodyStartIndexX = AU.search(ba, STU.CRLFCRLF, 1, 0);
 			if (bodyStartIndexX > -1) {
-				final String value = new String(ba, bodyStartIndexX + STU.CRLFCRLF.length(), ba.length);
+				final String value = new String(ba, bodyStartIndexX + STU.CRLFCRLF.length(),
+						ba.length - (bodyStartIndexX + STU.CRLFCRLF.length()));
 				formData.setValue(value);
 			}
 		}
@@ -213,7 +215,7 @@ public class HttpRequestParser {
 		if (cdIndex > -1) {
 			final int cdRNIndex = AU.search(ba, STU.CRLF, 1, cdIndex);
 			if (cdRNIndex > -1) {
-				final String line = new String(ba, cdIndex, cdRNIndex + STU.CRLF.length());
+				final String line = new String(ba, cdIndex, (cdRNIndex + STU.CRLF.length()) - cdIndex);
 				final Map<String, String> vMap = handleBodyContentDisposition(line);
 				formData.setName(vMap.get(NAME));
 				formData.setFileName(vMap.get(FILENAME));
@@ -344,13 +346,13 @@ public class HttpRequestParser {
 						}
 					}
 
-					final String cdLine = new String(ba, cdI, ctI);
+					final String cdLine = new String(ba, cdI, ctI - cdI);
 					final Map<String, String> cdMap = parseCDLine(cdLine);
 					tf.setName(cdMap.get("name"));
 					tf.setFileName(cdMap.get("filename"));
 					final int crlf2I = AU.search(ba, STU.CRLFCRLF, 1, ctI);
 					if (crlf2I > ctI) {
-						final String contentType = gCT(new String(ba, ctI, crlf2I));
+						final String contentType = gCT(new String(ba, ctI, crlf2I - ctI));
 						tf.setContentType(contentType);
 						break;
 					}
@@ -456,7 +458,6 @@ public class HttpRequestParser {
 		if (!file.exists()) {
 			try {
 				file.createNewFile();
-				System.out.println("新建临时文件 = " + tempFilePath);
 			} catch (final IOException e) {
 				e.printStackTrace();
 			}
@@ -509,12 +510,12 @@ public class HttpRequestParser {
 			return new Fm(false, "");
 		}
 
-		final int boundaryEndIndex = AU.search(array.getRawArray(), STU.CRLF, 1, boundaryStartIndex + ZRequest.BOUNDARY.getBytes().length);
+		final int boundaryEndIndex = AU.search(array.getRawArray(), STU.CRLF, 1, boundaryStartIndex + BOUNDARY_BYTES.length);
 		if (boundaryEndIndex > boundaryStartIndex) {
 
-			final byte[] copyOfRange = Arrays.copyOfRange(array.getRawArray(),
-					boundaryStartIndex + ZRequest.BOUNDARY.getBytes().length, boundaryEndIndex);
-			final String boundary = new String(copyOfRange);
+			final String boundary = new String(array.getRawArray(),
+					boundaryStartIndex + BOUNDARY_BYTES.length,
+					boundaryEndIndex - (boundaryStartIndex + BOUNDARY_BYTES.length));
 			return new Fm(true, boundary);
 		}
 
