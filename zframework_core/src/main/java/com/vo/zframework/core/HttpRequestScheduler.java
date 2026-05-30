@@ -6,7 +6,7 @@ package com.vo.zframework.core;
  * @author zhangzhen
  * @date 2026年5月26日 10:54:00
  */
-public class HTTPRequestScheduler {
+public class HttpRequestScheduler {
 
 	private static final HttpParseStatusEnum START = HttpParseStatusEnum.START;
 

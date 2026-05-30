@@ -38,7 +38,7 @@ public class ZServer {
 
 	private static final TaskRequestHandler requestHandler = new TaskRequestHandler();
 
-	private final HTTPRequestScheduler requestScheduler = new HTTPRequestScheduler();
+	private final HttpRequestScheduler requestScheduler = new HttpRequestScheduler();
 
 	private final ExecutorService ves = Executors.newVirtualThreadPerTaskExecutor();
 
