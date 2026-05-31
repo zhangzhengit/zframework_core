@@ -1,7 +1,6 @@
 package vo.zframework.core;
 
 import java.io.BufferedInputStream;
-import java.net.Socket;
 import java.util.Arrays;
 
 import vo.zframework.anno.ZComponent;
@@ -13,22 +12,13 @@ import vo.zframework.http.ZControllerMap;
 import vo.zframework.http.ZRMethod;
 
 /**
- * 默认的http请求处理流程
- *
- * 正常流程：
- * 1、GET
- * 		开始 > 校验请求行 > 校验METHOD > 校验请求头 > 结束
- * 2、POST
- * 		开始 > 校验请求行 > 校验METHOD > 校验请求头 > 校验body > 结束
+ * 默认的http请求处理流程，用户可自定义类继承并覆盖相关方法实现自定义的解析流程
  *
  * @author zhangzhen
  * @date 2024年12月22日 下午4:57:13
  *
  */
 // FIXME 2026年5月26日 08:56:17 zhangzhen : 其他method继续写
-// FIXME 2026年5月26日 10:46:28 zhangzhen : 要不要简单一点，本类任何方法不通过，都是响应后直接close，
-// 免得处理不好脏数据导致一堆bug出力不讨好，尤其是解析body尤其是上传文件这种低频大数据量的操作，新建一个tcp连接
-// 的开销相对来说完全可忽略
 
 // FIXME 2026年5月26日 17:01:06 zhangzhen : 提供一个类似RequestValidatorAdapter的类，给用户自定义实现自定义的http请求解析
 // FIXME 2026年5月30日 20:36:48 zhangzhen : 截止现在，此类都是认为请求都是正常的合法的，没怎么判断非法情况
@@ -41,7 +31,6 @@ public class HttpRequestProcessor {
 	private static final ServerConfigurationProperties SERVER_CONFIGURATIONPROPERTIES= ZContext.getBean(ServerConfigurationProperties.class);
 
 	private static final int UPLOAD_FILE_TO_TEMP_SIZE = SERVER_CONFIGURATIONPROPERTIES.getUploadFileToTempSize();
-
 
 	/**
 	 * 用于在一次http请求读取解析之前初始化和校验一些服务器限制等等
@@ -56,9 +45,6 @@ public class HttpRequestProcessor {
 			return HttpParseStatusEnum.PARSE_REQUEST_LINE;
 		}
 
-		// FIXME 2026年5月26日 10:58:54 zhangzhen : 抛异常
-		// FIXME 2026年5月26日 12:19:02 zhangzhen : 不应该在此类中响应，此类应该只负责解析，
-		// 把ZResponse放在pd中，在外面根据状态EXCEPTION来响应异常信息
 		final ZResponse response = ReU.gResponse429(SERVER_CONFIGURATIONPROPERTIES.getQpsExceedMessage(), false);
 		pd.setException(response);
 		return HttpParseStatusEnum.EXCEPTION;
@@ -71,11 +57,11 @@ public class HttpRequestProcessor {
 	 */
 	public HttpParseStatusEnum parseRquestLine(final PD pd, final ZArray array) {
 		final String requestLine = parseRequestLine(pd, array);
-//		final String requestLine = parseRequestLine(buffer, pd);
 		if (pd.getRequestLineEndIndex() <= -1) {
 			// FIXME 2026Ln : 没找到，继续读(buffer容量太小)？还是抛异常(恶意制造的不合法请求)？
 			return HttpParseStatusEnum.PARSE_REQUEST_LINE;
 		}
+
 		pd.setRequestLine(requestLine);
 
 		// FIXME 2026年5月26日 09:56:12 zhangzhen : 除了METHOD，还看版本，不支持响应505
@@ -217,7 +203,7 @@ public class HttpRequestProcessor {
 
 		// FIXME 2026年5月26日 09:34:11 zhangzhen : 这个相当复杂，先写外面的调用者，根据此类每个方法的返回值来跳转到不同状态
 
-		final HttpParseStatusEnum parseStatusEnum = parseBody(pd.getSocket(), pd.getBufferCapacity(), pd.getBufferedInputStream(), array, pd);
+		final HttpParseStatusEnum parseStatusEnum = parseBody(pd.getBufferedInputStream(), array, pd);
 
 		return parseStatusEnum;
 	}
@@ -263,28 +249,19 @@ public class HttpRequestProcessor {
 		return null;
 	}
 
-	public static HttpParseStatusEnum parseBody(final Socket socket, final int capacity,
-			final BufferedInputStream bufferedInputStream, final ZArray array,
-			final PD pd) {
-
-//		System.out
-//				.println(LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t" + "ZServer.parseBody()");
+	public static HttpParseStatusEnum parseBody(final BufferedInputStream bufferedInputStream,
+			final ZArray array, final PD pd) {
 
 		if (pd.getContentLength() >= (UPLOAD_FILE_TO_TEMP_SIZE * 1024)) {
 			return writeToTempFile(bufferedInputStream, array, pd);
 		}
 
 		if ((pd.getHeaderEndIndex() + STU.CRLFCRLF.length() + pd.getContentLength()) == array.length()) {
-//			final ZRequest request = ZServer.parse(array, socket);
-//			response(request, socket, array);
-//			array.reset(capacity);
-
 			return HttpParseStatusEnum.PARSE_END;
 		}
 
 		return HttpParseStatusEnum.PARSE_BODY;
 	}
-
 
 	public static HttpParseStatusEnum writeToTempFile(final BufferedInputStream bufferedInputStream, final ZArray array,
 			final PD pd) {
