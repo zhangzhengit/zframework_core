@@ -9,8 +9,14 @@ package vo.zframework.core;
  */
 public enum SKStatusEnum {
 
+	/**
+	 * 正在读取
+	 */
 	READING,
 
+	/**
+	 * 空闲
+	 */
 	IDLE,;
 
 }

@@ -15,6 +15,7 @@ public class HTTPProcessor {
 
 	public static ZArray process(final SelectionKey selectionKey) {
 
+//		final AR arx = DefaultHttpReader.r2222222All(selectionKey);
 		final AR ar = DefaultHttpReader.readHeader(selectionKey);
 
 		if (ar == null) {

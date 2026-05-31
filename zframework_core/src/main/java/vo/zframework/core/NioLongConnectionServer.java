@@ -193,18 +193,17 @@ public class NioLongConnectionServer {
 
 		boolean shouldProcess = false;
 		synchronized (selectionKey) {
-			final Object att = selectionKey.attachment();
+			final Object attachment = selectionKey.attachment();
 
-			if (att == null) {
-				final ConnectionState state = new ConnectionState();
-				state.setLastActiveTime(System.currentTimeMillis());
-				state.setStatusEnum(SKStatusEnum.READING);
+			if (attachment == null) {
+				final CS state = new CS();
+				state.startReading();
 				selectionKey.attach(state);
 				shouldProcess = true;
 			} else {
-				final ConnectionState state = (ConnectionState) att;
-				if (state.getStatusEnum() == SKStatusEnum.IDLE) {
-					state.setStatusEnum(SKStatusEnum.READING);
+				final CS state = (CS) attachment;
+				if (state.isSKIdle()) {
+					state.startReading();
 					shouldProcess = true;
 				}
 			}
@@ -215,7 +214,7 @@ public class NioLongConnectionServer {
 				try {
 					this.action(selectionKey);
 				} finally {
-					SK.setSelectionKeyIDLE(selectionKey);
+					((CS) selectionKey.attachment()).finishReading();
 				}
 			});
 		}
@@ -267,8 +266,6 @@ public class NioLongConnectionServer {
 			array = HTTPProcessor.process(selectionKey);
 		} catch (final Exception e) {
 
-			SK.setSelectionKeyIDLE(selectionKey);
-
 			final ZControllerAdviceActuator a = ZContext.getBean(ZControllerAdviceActuator.class);
 			final Object r = a.execute(e);
 
@@ -286,9 +283,6 @@ public class NioLongConnectionServer {
 			if (e instanceof IOException) {
 				closeSocketChannelAndKeyCancel(selectionKey);
 			}
-
-		} finally {
-			SK.setSelectionKeyIDLE(selectionKey);
 		}
 
 		if (array == null) {
@@ -313,8 +307,6 @@ public class NioLongConnectionServer {
 				this.response(selectionKey, array);
 			} catch (final Exception e) {
 
-				SK.setSelectionKeyIDLE(selectionKey);
-
 				final ZControllerAdviceActuator a = ZContext.getBean(ZControllerAdviceActuator.class);
 				final Object r = a.execute(e);
 
@@ -333,8 +325,6 @@ public class NioLongConnectionServer {
 					closeSocketChannelAndKeyCancel(selectionKey);
 				}
 
-			} finally {
-				SK.setSelectionKeyIDLE(selectionKey);
 			}
 		}
 	}
@@ -389,7 +379,7 @@ public class NioLongConnectionServer {
 				if (!key.isValid()) {
 					continue;
 				}
-				final ConnectionState state = (ConnectionState) key.attachment();
+				final CS state = (CS) key.attachment();
 
 				if ((state != null) && ((now - state.lastActiveTime) > (keepAliveTimeout * 1000))) {
 //					LOG.debug("keepAliveTimeoutJOB.sKey超时,sKey={}", key);

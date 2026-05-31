@@ -20,6 +20,7 @@ import java.util.Map;
 
 import vo.log.core.ZLog2;
 import vo.zframework.anno.ZComponent;
+import vo.zframework.cache.AU;
 import vo.zframework.cache.STU;
 import vo.zframework.configuration.ServerConfigurationProperties;
 import vo.zframework.configuration.TempDir;
@@ -229,6 +230,46 @@ public class DefaultHttpReader {
 		return true;
 	}
 
+	public static AR r2222222All(final SelectionKey selectionKey) {
+		if (!selectionKey.isValid()) {
+			return null;
+		}
+
+		final CS state = (CS) selectionKey.attachment();
+
+
+		final SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
+
+		final int byteBufferSize = SERVER_CONFIGURATIONPROPERTIES.getByteBufferSize();
+		final ByteBuffer byteBuffer = ByteBuffer.allocate(byteBufferSize);
+
+		final int read = read0(socketChannel, byteBuffer);
+		if (read == 0) {
+			return null;
+		}
+
+		// 到此读到新数据了，再次解析
+		final ZArray array = state.getArray();
+		DefaultHttpReader.add(byteBuffer, array);
+
+		final int headerEndIndex = AU.search(array.get()	, STU.CRLFCRLF, 1, 0);
+		if(headerEndIndex <= -1) {
+			// 依然没读到header截止位置，继续
+			return null;
+		}
+
+		final int ctI = AU.search(array.get()	, HeaderEnum.CONTENT_LENGTH.getName(), 1, 0);
+		if(ctI <= -1) {
+			// header中不含 Content-Length，无body，不用读body，到此已读完一个完整的http请求
+			// FIXME 2026年5月31日 23:12:59 zhangzhen : 先从jdk21分支复制过来解析的几个类
+			final int debug = 0;
+		}
+
+
+		return null;
+	}
+
+
 	public static AR readHeader(final SelectionKey selectionKey) {
 
 		if(!selectionKey.isValid()) {
@@ -258,48 +299,38 @@ public class DefaultHttpReader {
 		int totalBytesRead = 0;
 		int rC = 0;
 		while (true) {
-			try {
-				if (!socketChannel.isOpen()) {
-					return null;
+			if (!socketChannel.isOpen()) {
+				return null;
+			}
+
+			final int tR = read0(socketChannel, byteBuffer);
+			if (tR == -1) {
+				NioLongConnectionServer.closeSocketChannelAndKeyCancel(selectionKey);
+				return null;
+			}
+
+			rC++;
+			totalBytesRead += tR;
+
+			if (tR > 0) {
+				final byte[] a = DefaultHttpReader.add(byteBuffer, array);
+				headerEndIndex = BodyReader.search(rC == 1 ? a : array.get(), STU.CRLFCRLF, 1, 4);
+				if (headerEndIndex > -1) {
+					break;
 				}
 
-				final int tR = socketChannel.read(byteBuffer);
-				if (tR == -1) {
-					NioLongConnectionServer.closeSocketChannelAndKeyCancel(selectionKey);
-					return null;
-				}
-
-				rC++;
-				totalBytesRead += tR;
-
-				if (tR > 0) {
-					final byte[] a = DefaultHttpReader.add(byteBuffer, array);
-					headerEndIndex = BodyReader.search(rC == 1 ? a : array.get(), STU.CRLFCRLF, 1, 4);
-					if (headerEndIndex > -1) {
-						break;
-					}
-
-					// FIXME 2026年1月28日 11:18:58 zhangzhen : 现在看这个判断无意义，先注释了，以后再测试不带
-					// \r\n\r\n的请求
-					// 没找到\r\n\r\n，读到的不足byteBufferSize，说明不存在\r\n\r\n，是bad request
+				// FIXME 2026年1月28日 11:18:58 zhangzhen : 现在看这个判断无意义，先注释了，以后再测试不带
+				// \r\n\r\n的请求
+				// 没找到\r\n\r\n，读到的不足byteBufferSize，说明不存在\r\n\r\n，是bad request
 //					if (tR < byteBufferSizeREAD) {
 //						throw new IllegalArgumentException("header截止错误");
 //					}
-				} else // 如果读取返回 0，则检查超时
-				if (((totalBytesRead == 0) || (tR == 0))
-						&& ((System.currentTimeMillis() - startTime) > SERVER_CONFIGURATIONPROPERTIES
-								.getNioReadTimeout())) {
+			} else // 如果读取返回 0，则检查超时
+			if (((totalBytesRead == 0) || (tR == 0))
+					&& ((System.currentTimeMillis() - startTime) > SERVER_CONFIGURATIONPROPERTIES
+							.getNioReadTimeout())) {
 
-					LOG.error("readHeader超时[{}]", SERVER_CONFIGURATIONPROPERTIES.getNioReadTimeout());
-					NioLongConnectionServer.closeSocketChannelAndKeyCancel(selectionKey);
-					return null;
-				}
-
-			} catch (final IOException e) {
-				// 不打印了
-				e.printStackTrace();
-				final String message = Task.gExceptionMessage(e);
-				LOG.error("readHeaderWhile异常,message={}", message);
+				LOG.error("readHeader超时[{}]", SERVER_CONFIGURATIONPROPERTIES.getNioReadTimeout());
 				NioLongConnectionServer.closeSocketChannelAndKeyCancel(selectionKey);
 				return null;
 			}
@@ -309,7 +340,19 @@ public class DefaultHttpReader {
 		return new AR(array, headerEndIndex, socketChannel);
 	}
 
-	private static byte[] add(final ByteBuffer byteBuffer, final ZArray array) {
+
+	private static int read0(final SocketChannel socketChannel, final ByteBuffer byteBuffer)  {
+		int tR = -1;
+		try {
+			tR = socketChannel.read(byteBuffer);
+		} catch (final IOException e) {
+//			e.printStackTrace();
+			return -1;
+		}
+		return tR;
+	}
+
+	public static byte[] add(final ByteBuffer byteBuffer, final ZArray array) {
 		byteBuffer.flip();
 		if (byteBuffer.remaining() <= 0) {
 			return null;

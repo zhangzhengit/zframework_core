@@ -9,41 +9,6 @@ package vo.zframework.cache;
  */
 public class AU {
 
-	/**
-	 * 取一个数组的特征
-	 * 
-	 * @param ba
-	 * @return
-	 */
-	public static String tezheng(final byte[] ba) {
-		if (AU.isEmpty(ba)) {
-			return null;
-		}
-
-		long sum = 0L;
-		long difference = Long.MAX_VALUE;
-		long sumJi = 0L;
-		long sumOu = 0L;
-		long zeroC = 0L;
-		long oneC = 0L;
-		for (int i = 0; i < ba.length; i++) {
-			sum += ba[i];
-			difference -= ba[i];
-			if ((i % 2) == 1) {
-				sumJi += ba[i];
-			} else {
-				sumOu += ba[i];
-			}
-			if (ba[i] == 0) {
-				zeroC++;
-			} else if (ba[i] == 1) {
-				oneC++;
-			}
-		}
-
-		return "T-" + ba.length + '-' + sum + '-' + difference + '-' + sumJi + '-' + sumOu + '-' + zeroC + '-' + oneC;
-	}
-	
 	public static <T> boolean isNotEmpty(final T[] array) {
 		return (array != null) && (array.length > 0);
 	}
@@ -58,6 +23,52 @@ public class AU {
 
 	public static boolean isEmpty(final boolean[] ba) {
 		return (ba == null) || (ba.length == 0);
+	}
+
+	/**
+	 * 按行搜索关键字出现在byte[]中的位置
+	 *
+	 * @param ba          http完整的请求内容数组
+	 * @param keyword     关键字
+	 * @param iN          第几次出现的位置
+	 * @param fromBAIndex 从ba数组开始搜索的位置
+	 * @return
+	 */
+	public static int search(final byte[] ba,final String keyword, final int iN, final int fromBAIndex) {
+		if ((keyword == null) || keyword.isEmpty()) {
+			return -1;
+		}
+		final byte[] kb = keyword.getBytes();
+
+		int findN = 0;
+		for (int i = fromBAIndex; i < ba.length; i++) {
+			boolean find = true;
+			if (i >= ((ba.length - kb.length) + 1)) {
+				find = false;
+				break;
+			}
+			for (int k = 0; k < kb.length; k++) {
+				if (ba[i + k] != kb[k]) {
+					find = false;
+					break;
+				}
+			}
+
+			// FIXME 2025年12月4日 下午8:23:49 zhangzhen: 下面if先注释，因为发现了bug了，不知道当时为什么这么写了
+			// 当前字节的上面是\r
+//			if (find && (i > 0) && (ba[i - 1] == '=')) {
+//				find = false;
+//				break;
+//			}
+			if (find) {
+				findN++;
+				if (findN >= iN) {
+					return i;
+				}
+			}
+		}
+
+		return -1;
 	}
 
 }

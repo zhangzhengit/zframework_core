@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import vo.zframework.cache.AU;
 import vo.zframework.cache.STU;
 import vo.zframework.http.HttpStatusEnum;
 import vo.zframework.validator.ZFException;
@@ -140,7 +141,7 @@ public class BodyReader {
 		final String bas = new String(Arrays.copyOfRange(ba, bodySI, ba.length));
 		final String[] baa = bas.split(BOUNDARY_PREFIX + boundary);
 		for (final String b1 : baa) {
-			if (b1 == null || b1.isEmpty()) {
+			if ((b1 == null) || b1.isEmpty()) {
 				continue;
 			}
 
@@ -170,7 +171,7 @@ public class BodyReader {
 		final int ctIndex = search(oneBA, HeaderEnum.CONTENT_TYPE.getName(), 1, 0);
 		for (int i = 0; i < ba.length; i++) {
 			if (ba[i] == '\r') {
-				if (i < ba.length - 1 && ba[i + 1] == '\n') {
+				if ((i < (ba.length - 1)) && (ba[i + 1] == '\n')) {
 					final byte[] lineBA = listToArray(bl);
 					final String line = new String(lineBA);
 
@@ -246,40 +247,7 @@ public class BodyReader {
 	 * @return
 	 */
 	public static int search(final byte[] ba,final String keyword, final int iN, final int fromBAIndex) {
-		if (keyword == null || keyword.isEmpty()) {
-			return -1;
-		}
-		final byte[] kb = keyword.getBytes();
-
-		int findN = 0;
-		for (int i = fromBAIndex; i < ba.length; i++) {
-			boolean find = true;
-			if (i >= ba.length - kb.length + 1) {
-				find = false;
-				break;
-			}
-			for (int k = 0; k < kb.length; k++) {
-				if (ba[i + k] != kb[k]) {
-					find = false;
-					break;
-				}
-			}
-
-			// FIXME 2025年12月4日 下午8:23:49 zhangzhen: 下面if先注释，因为发现了bug了，不知道当时为什么这么写了
-			// 当前字节的上面是\r
-//			if (find && (i > 0) && (ba[i - 1] == '=')) {
-//				find = false;
-//				break;
-//			}
-			if (find) {
-				findN++;
-				if (findN >= iN) {
-					return i;
-				}
-			}
-		}
-
-		return -1;
+		return AU.search(ba, keyword, iN, fromBAIndex);
 	}
 
 }
