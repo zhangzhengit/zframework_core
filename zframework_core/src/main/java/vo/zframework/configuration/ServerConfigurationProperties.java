@@ -103,10 +103,10 @@ public class ServerConfigurationProperties {
 	private boolean staticResourceCacheEnable = true;
 
 	/**
-	 * 扫描的包配置，如：com.vo
+	 * 扫描的包配置，如：vo
 	 */
 	@ZNotNull
-	private String scanPackage = "com.vo"; //$NON-NLS-1$
+	private String scanPackage = "vo"; //$NON-NLS-1$
 
 	/**
 	 * 是否启用QPS限制 (server.qps)
