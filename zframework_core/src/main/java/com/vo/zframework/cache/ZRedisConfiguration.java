@@ -1,6 +1,5 @@
 package com.vo.zframework.cache;
 
-import com.vo.log.core.ZLog2;
 import com.vo.zframework.anno.ZAutowired;
 import com.vo.zframework.anno.ZBean;
 import com.vo.zframework.anno.ZCacheRedisCondition;
@@ -13,6 +12,7 @@ import com.vo.zframework.exception.StartupException;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
+import vo.log.core.ZLog2;
 
 /**
  *

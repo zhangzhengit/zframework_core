@@ -5,7 +5,6 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Set;
 
-import com.vo.log.core.ZLog2;
 import com.vo.zframework.anno.ZAutowired;
 import com.vo.zframework.anno.ZBean;
 import com.vo.zframework.anno.ZCondition;
@@ -17,6 +16,8 @@ import com.vo.zframework.cache.CU;
 import com.vo.zframework.core.Task;
 import com.vo.zframework.core.ZContext;
 import com.vo.zframework.core.ZSingleton;
+
+import vo.log.core.ZLog2;
 
 /**
  *	扫描 @ZConfiguration 注解，找到里面的 @ZBean方法，来生成一个配置类

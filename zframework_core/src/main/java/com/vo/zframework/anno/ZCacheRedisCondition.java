@@ -1,8 +1,9 @@
 package com.vo.zframework.anno;
 
-import com.vo.log.core.ZLog2;
 import com.vo.zframework.cache.ZCacheConfiguration;
 import com.vo.zframework.cache.ZCacheConfigurationProperties;
+
+import vo.log.core.ZLog2;
 
 /**
  * 缓存包连接Redis的条件类，仅当启用了缓存并且缓存方式为Redis或者MIXED时才去连接Redis

@@ -22,7 +22,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
-import com.vo.log.core.ZLog2;
 import com.vo.zframework.anno.ZAutowired;
 import com.vo.zframework.anno.ZConfigurationProperties;
 import com.vo.zframework.anno.ZConfigurationPropertiesRegistry;
@@ -39,6 +38,8 @@ import com.vo.zframework.exception.StartupException;
 import com.vo.zframework.exception.TypeNotSupportedExcpetion;
 import com.vo.zframework.validator.ZConfigurationPropertiesException;
 import com.vo.zframework.validator.ZValidator;
+
+import vo.log.core.ZLog2;
 
 /**
  * 扫描 @ZConfigurationProperties 的类，从配置文件读取配置组长一个此类的对象
