@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.vo.log.core.ZLog2;
 import com.vo.zframework.anno.ZAutowired;
 import com.vo.zframework.anno.ZComponent;
 import com.vo.zframework.anno.ZConfiguration;
@@ -21,6 +20,8 @@ import com.vo.zframework.cache.STU;
 import com.vo.zframework.core.ZContext;
 import com.vo.zframework.core.ZSingleton;
 import com.vo.zframework.exception.BeanNotExistException;
+
+import vo.log.core.ZLog2;
 
 /**
  * 扫描 @ZController 的类，注册为一个控制类

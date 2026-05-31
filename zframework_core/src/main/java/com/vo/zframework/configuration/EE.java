@@ -2,8 +2,6 @@ package com.vo.zframework.configuration;
 
 import org.codehaus.janino.ExpressionEvaluator;
 
-import com.vo.log.core.ZLog2;
-
 /**
  * 执行配置java语句表达式，如： 60 * 60 ，执行结果：3600
  *
@@ -11,8 +9,6 @@ import com.vo.log.core.ZLog2;
  * @date 2025年12月26日 18:03:08
  */
 public class EE {
-
-//	static ZLog2 LOG = ZLog2.getInstance();
 
 	public static Object execute(final String command) {
 		try {
