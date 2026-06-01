@@ -273,6 +273,8 @@ public class HttpRequestProcessor {
 				array.length());
 		tf.write(bodyOne);
 
+		// FIXME 2026年6月1日 22:25:08 zhangzhen : 这个的array需要删除headerEnd之后的部分
+
 		// 先判断一下 bodyOne 是否已包含了完整的请求
 		if ((pd.getHeaderEndIndex() + STU.CRLFCRLF.length() + pd.getContentLength()) == array.length()) {
 			return HttpParseStatusEnum.PARSE_END;
