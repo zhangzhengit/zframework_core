@@ -27,6 +27,7 @@ import vo.zframework.compression.ZSTD;
 import vo.zframework.configuration.ServerConfigurationProperties;
 import vo.zframework.core.ZRequest.ZHeader;
 import vo.zframework.enums.ConnectionEnum;
+import vo.zframework.enums.TransferEncodingEnum;
 import vo.zframework.http.HttpStatusEnum;
 import vo.zframework.http.ZCookie;
 import vo.zframework.http.ZETag;
@@ -82,15 +83,17 @@ import vo.zframework.http.ZETag;
  * @date 2023年6月26日
  *
  */
+// FIXME 2026年6月7日 03:22:22 zhangzhen : 这个类也和解析请求一样，抽出几个步骤提供默认实现，可以让用户自己覆盖
+// 如：校验content-type必须设置、content-length和TransferEncoding这2个header不能同时存在等等，可以抽出一个checkHeader方法
+// 或者用户实现特殊需求，比如某些接口响应某些header，可以覆盖某个方法来很简单的实现
 public class ZResponse {
+
 
 	static ZLog2 LOG = ZLog2.getInstance();
 
-	private static final byte[] COLON_BYTES = STU.COLON.getBytes();
+	private static final int DEFAULT_HEADERS_COUNT = 16;
 
-	private static final byte[] CONTENT_LENGTH_BYTES = HeaderEnum.CONTENT_LENGTH.getName().getBytes();
-
-	private static final byte[] CRLF_BYTES = STU.CRLF.getBytes();
+	private static final byte[] CRLF_BYTES = STU.CRLF_BYTES;
 
 	private static final byte[] ZERO_RNRN_BYTES = ("0" + STU.CRLFCRLF).getBytes();
 
@@ -111,13 +114,7 @@ public class ZResponse {
 
 	public static final String HTTP_1_1 = "HTTP/1.1 ";
 
-	private static final int HTTP_1_1_LENGTH = ZResponse.HTTP_1_1.length();
-
-	private static final byte[] HTTP_11_BYTES = ZResponse.HTTP_1_1.getBytes();
-	public static final int CONTENT_LENGTH_BYTES_LENGTH = CONTENT_LENGTH_BYTES.length
-			;
-
-	public static final String SET_COOKIE = HeaderEnum.SET_COOKIE.getName();
+	private static final byte[] HTTP_1_1_BYTES = HTTP_1_1.getBytes();
 
 	/**
 	 * write 方法是否执行过
@@ -134,11 +131,11 @@ public class ZResponse {
 	private OutputStream outputStream;
 	private BufferedOutputStream bufferedOutputStream;
 
-	private List<ZHeader> headerList;
+	private final List<ZHeader> headerList = new ArrayList<>(DEFAULT_HEADERS_COUNT);
 
 	private byte[] body;
 
-	private int bIC = 0;
+	private volatile int bIC = 0;
 
 	/**
 	 * write()方法是否执行过了
@@ -183,6 +180,8 @@ public class ZResponse {
 
 	/**
 	 * 获取body的byte[]
+	 * 对使用body(final InputStream inputStream)方法设置的body无效，
+	 * 因为它是使用流一边读入一边写到响应中的没有放在内存中
 	 *
 	 * @return
 	 */
@@ -201,6 +200,9 @@ public class ZResponse {
 		}
 		this.setContentType.set(true);
 		this.contentType = contentType;
+
+		this.header(new ZHeader(HeaderEnum.CONTENT_TYPE.getName(), contentType));
+
 		return this;
 	}
 
@@ -215,21 +217,18 @@ public class ZResponse {
 	}
 
 	public ZResponse cookie(final String name,final String value) {
-		this.header(new ZHeader(ZResponse.SET_COOKIE, name + STU.EQUALS + value));
+		this.header(new ZHeader(HeaderEnum.SET_COOKIE.getName(), name + STU.EQUALS + value));
 		return this;
 	}
 
 	public ZResponse header(final ZHeader zHeader) {
-		if (this.headerList == null) {
-			this.headerList = new ArrayList<>(1);
-		}
 		this.headerList.add(zHeader);
 		return this;
 	}
 
 	public ZResponse header(final String name,final String value) {
 		if (HeaderEnum.CONTENT_TYPE.getName().equals(name)) {
-			throw new IllegalArgumentException(HeaderEnum.CONTENT_TYPE.getName() + " 使用 setContentType 方法来设置");
+			throw new IllegalArgumentException(HeaderEnum.CONTENT_TYPE.getName() + " 使用 contentType 方法来设置");
 		}
 		this.header(new ZHeader(name, value));
 
@@ -254,6 +253,8 @@ public class ZResponse {
 	 *
 	 * @param inputStream
 	 */
+	// FIXME 2026年6月7日 03:49:01 zhangzhen : 为了限制用户在最后调用本方法，要不要改为header方法返回一个对象A
+	// 只有A才有本方法？
 	public synchronized void body(final InputStream inputStream) {
 
 		this.checkBIC();
@@ -268,7 +269,6 @@ public class ZResponse {
 
 		// 已经确定的header部分
 		this.beforeWrite();
-		this.header(HeaderEnum.TRANSFER_ENCODING.getName(), "chunked");
 
 		// body部分
 		final int bufferCapacity = DEFAULT_BUFFER_SIZE;
@@ -294,8 +294,14 @@ public class ZResponse {
 					// FIXME 2025年12月13日 00:14:31 zhangzhen :  这里逻辑不对，304了，就不应该继续读写body了
 					// 要不先读一次，和if-none-match比较，否再读写body，是则直接304？
 					this.setETag(request, buffer, ETagEnum.WEAK);
-					this.setContentEncoding(request, exceedsCompressionMinLength);
-					this.write(this.headerArray());
+
+					final String contentEncoding = this.getContentEncoding(request, exceedsCompressionMinLength);
+					if (STU.isNotEmpty(contentEncoding)) {
+						this.header(HeaderEnum.CONTENT_ENCODING.getName(), contentEncoding);
+					}
+
+					this.header(HeaderEnum.TRANSFER_ENCODING.getName(), TransferEncodingEnum.CHUNKED.getValue());
+					this.writeStatusLineAndHeaders();
 				}
 
 				readFirst = false;
@@ -303,7 +309,7 @@ public class ZResponse {
 				final byte[] bx = read >= bufferCapacity ? buffer :Arrays.copyOfRange(buffer, 0, read);
 				this.compressBodyAndWrite(request, read, exceedsCompressionMinLength, bx);
 
-				this.write(CRLF_BYTES);
+				this.write(CRLF_BYTES, false);
 
 				if (read < bufferCapacity) {
 					break;
@@ -313,7 +319,7 @@ public class ZResponse {
 			}
 		}
 
-		this.write(ZERO_RNRN_BYTES);
+		this.write(ZERO_RNRN_BYTES, true);
 
 		this.write.set(true);
 
@@ -341,6 +347,7 @@ public class ZResponse {
 	// 对于INputStream的，比如测一些txt文件前面一部分都是相同内容
 	// 则每个文件读一次的byte[]很可能是相同的，从而算出来的ETag也是相同的。
 	// 显然是错的，现在还没取到文件的size和最后修改日期/名称/等等内容
+	// FIXME 2026年6月7日 03:16:22 zhangzhen : 这个方法不好，违反了单一功能原则，改掉，并且返回返回header
 	void setETag(final ZRequest request, final byte[] ba, final ETagEnum eTagEnum) {
 		final ZETag methodETag = Task.getMethodAnnotation(request, ZETag.class);
 		if (methodETag != null) {
@@ -368,39 +375,36 @@ public class ZResponse {
 
 		if (!this.compress(exceedsCompressionMinLength)) {
 			final String chunkHeader = Integer.toHexString(read) + STU.CRLF;
-			this.write(chunkHeader.getBytes());
-			this.write(ba);
+			this.write(chunkHeader.getBytes(), false);
+			this.write(ba, true);
 
 			return;
 		}
 
 		if (request.isSupportZSTD()) {
 
-			final byte[] bfZSTD =ba;
-			final byte[] compress = ZSTD.compress(bfZSTD);
+			final byte[] compress = ZSTD.compress(ba);
 			final String chunkHeader = Integer.toHexString(compress.length) + STU.CRLF;
-			this.write(chunkHeader.getBytes());
-			this.write(compress);
+			this.write(chunkHeader.getBytes(), false);
+			this.write(compress, true);
 
 		} else if (request.isSupportGZIP()) {
 			// FIXME 2025年1月20日 下午5:34:10 zhangzhen : qq浏览器和360极速浏览器 gzip 解码 2MB的.css文件不完整？后面有一部分不显示？
 			// 而上面的支持zstd的Edge和Firefox 解码zstd是正常的。
 
-			final byte[] bfGZIP = ba;
-			final byte[] compress = ZGzip.compress(bfGZIP);
+			final byte[] compress = ZGzip.compress(ba);
 			final String chunkHeader = Integer.toHexString(compress.length) + STU.CRLF;
-			this.write(chunkHeader.getBytes());
-			this.write(compress);
+			this.write(chunkHeader.getBytes(), false);
+			this.write(compress, true);
 		} else if (request.isSupportDEFLATE()) {
-			final byte[] bfDEFLATE = ba;
-			final byte[] compress = Deflater.compress(bfDEFLATE);
+			final byte[] compress = Deflater.compress(ba);
 			final String chunkHeader = Integer.toHexString(compress.length) + STU.CRLF;
-			this.write(chunkHeader.getBytes());
-			this.write(compress);
+			this.write(chunkHeader.getBytes(), false);
+			this.write(compress, true);
 		} else {
 			final String chunkHeader = Integer.toHexString(read) + STU.CRLF;
-			this.write(chunkHeader.getBytes());
-			this.write(ba);
+			this.write(chunkHeader.getBytes(), false);
+			this.write(ba, true);
 		}
 	}
 
@@ -410,20 +414,26 @@ public class ZResponse {
 				&& SERVER_CONFIGURATIONPROPERTIES.compressionContains(this.getContentType());
 	}
 
-	private void setContentEncoding(final ZRequest request, final boolean exceedsCompressionMinLength) {
+	private String getContentEncoding(final ZRequest request, final boolean exceedsCompressionMinLength) {
 
 		if (!this.compress(exceedsCompressionMinLength)) {
-			return;
+			return null;
 		}
 
 		// FIXME 2025年1月20日 下午4:41:18 zhangzhen : 记得以后支持了br以后再加一个else
 		if (request.isSupportZSTD()) {
-			this.header(HeaderEnum.CONTENT_ENCODING.getName(), AcceptEncodingEnum.ZSTD.getValue());
-		} else if (request.isSupportGZIP()) {
-			this.header(HeaderEnum.CONTENT_ENCODING.getName(), AcceptEncodingEnum.GZIP.getValue());
-		} else if (request.isSupportDEFLATE()) {
-			this.header(HeaderEnum.CONTENT_ENCODING.getName(), AcceptEncodingEnum.DEFLATE.getValue());
+			return AcceptEncodingEnum.ZSTD.getValue();
 		}
+
+		if (request.isSupportGZIP()) {
+			return AcceptEncodingEnum.GZIP.getValue();
+		}
+
+		if (request.isSupportDEFLATE()) {
+			return AcceptEncodingEnum.DEFLATE.getValue();
+		}
+
+		return null;
 	}
 
 	private void checkContentType() {
@@ -432,26 +442,56 @@ public class ZResponse {
 		}
 	}
 
-	private ZArray headerArray() {
-		// FIXME 2025年12月24日 14:10:54 zhangzhen :  给个默认值，避免扩容,具体给多少待会再算，可以从header算出来
-		final ZArray headerArray = new ZArray(800);
-		headerArray.add((ZResponse.HTTP_1_1).getBytes()).add(String.valueOf(this.getHttpStatus()).getBytes());
-		headerArray.add(CRLF_BYTES);
-		headerArray.add((this.contentTypeAR.get()).getBytes());
-		headerArray.add(CRLF_BYTES);
-		if (this.headerList != null) {
-			for (int i = 0; i < this.headerList.size(); i++) {
-				final ZHeader zHeader = this.headerList.get(i);
-				headerArray.add(zHeader.getName().getBytes()).add(COLON_BYTES).add(zHeader.getValue().getBytes());
-				headerArray.add(CRLF_BYTES);
-			}
-		}
-		headerArray.add(CRLF_BYTES);
-
-		return headerArray;
+	private void writeStatusLineAndHeaders() {
+		this.writeStatusLine();
+		this.writeHeaders();
 	}
 
+	/**
+	 * 写入状态行：如：HTTP/1.1 200 OK
+	 */
+	private void writeStatusLine() {
+		this.write(HTTP_1_1_BYTES, false);
+		this.write(String.valueOf(this.getHttpStatus()).getBytes(), false);
+		this.write(CRLF_BYTES, false);
+	}
 
+	/**
+	 * 写入header部分
+	 */
+	private void writeHeaders() {
+		if ((this.headerList == null) || this.headerList.isEmpty()) {
+			return;
+		}
+
+		for (int i = 0; i < this.headerList.size(); i++) {
+			final ZHeader zHeader = this.headerList.get(i);
+			this.write(zHeader.getName().getBytes(), false);
+			this.write(STU.COLON_BYTES, false);
+			this.write(zHeader.getValue().getBytes(), false);
+
+			this.write(CRLF_BYTES, false);
+		}
+
+		this.write(CRLF_BYTES, true);
+	}
+
+	/**
+	 * 写入body部分
+	 */
+	private void writeBody() {
+		if (this.body != null) {
+			this.write(this.body, false);
+			this.write(CRLF_BYTES, true);
+		}
+	}
+
+	/**
+	 * 设置body为一个byte[]
+	 *
+	 * @param body
+	 * @return
+	 */
 	public synchronized ZResponse body(final byte[] body) {
 		this.checkBIC();
 
@@ -484,7 +524,7 @@ public class ZResponse {
 		return this;
 	}
 
-	private void checkBIC() {
+	private synchronized void checkBIC() {
 		if (this.bIC > 0) {
 			throw new IllegalArgumentException("body 只能设置一次");
 		}
@@ -492,10 +532,22 @@ public class ZResponse {
 		this.bIC++;
 	}
 
+	/**
+	 * 设置body为一个Object对象
+	 *
+	 * @param body
+	 * @return
+	 */
 	public synchronized ZResponse body(final Object body) {
 		return this.body(String.valueOf(body));
 	}
 
+	/**
+	 * 设置body为一个String对象
+	 *
+	 * @param body
+	 * @return
+	 */
 	public synchronized ZResponse body(final String body) {
 		return this.body(body.getBytes());
 	}
@@ -569,24 +621,14 @@ public class ZResponse {
 		}
 	}
 
-	private void write(final ZArray array) {
-
-		try {
-			if (array.length() > 0) {
-				this.bufferedOutputStream.write(array.getRawArray(), 0, array.length());
-				this.bufferedOutputStream.flush();
-			}
-		} catch (final IOException e) {
-			ZServer.closeSocket(this.socket);
-		}
-	}
-
-	private void write(final byte[] data) {
+	private void write(final byte[] data, final boolean flush) {
 
 		try {
 			if (AU.isNotEmpty(data)) {
 				this.bufferedOutputStream.write(data);
-				this.bufferedOutputStream.flush();
+				if (flush) {
+					this.bufferedOutputStream.flush();
+				}
 			}
 		} catch (final IOException e) {
 			e.printStackTrace();
@@ -594,68 +636,18 @@ public class ZResponse {
 		}
 	}
 
-	private void writeResponse() {
-		this.write(this.fillBA());
-	}
 
-	private ZArray fillBA()  {
+	private void writeResponse()  {
 
 		this.checkContentType();
 
-		// 2
-		// FIXME 2025年12月24日 11:47:12 zhangzhen :  这个类看所有的String能否直接getBytes
-		// 是否全都是ascii字符，是则length()获取长度，便于确定ZArray长度
-		int headerBytesLength = 0;
-		if (CU.isNotEmpty(this.headerList)) {
-			for (int i = 0; i < this.headerList.size(); i++) {
-				final ZHeader h = this.headerList.get(i);
-				// FIXME 2025年12月24日 12:29:01 zhangzhen : 注意：header都要先URLEncoder
-				headerBytesLength = headerBytesLength + h.getName().length();
-				headerBytesLength += STU.COLON_LENGTH;
-				// FIXME 2026年5月31日 04:51:40 zhangzhen : 暂时去掉getBytes() ，直接getValue().length()
-				headerBytesLength += h.getValue().length();
-//				headerBytesLength += h.getValue().getBytes().length;
-				headerBytesLength += STU.CRLF_LENGTH;
-			}
-		}
+		// 设置Content-Length头
+		this.header(HeaderEnum.CONTENT_LENGTH.getName(), String.valueOf(this.getBodyLength()));
 
-		final int capacity
-		= HTTP_1_1_LENGTH + 4 // 4 httpStatus的字节数
-		+ STU.CRLF_LENGTH
-		+ CONTENT_LENGTH_BYTES_LENGTH + STU.COLON_LENGTH + this.getBodyLength()
-		// FIXME 2025年12月24日 13:50:33 zhangzhen :  对于ZCtest/接口，试了+6才可以正常。待会查看为什么，现在先这样写
-		+ 6
-		+ STU.CRLF_LENGTH
-		+ this.contentTypeAR.get().length()
-		+ STU.CRLF_LENGTH
-		+ headerBytesLength
-		+ STU.CRLF_LENGTH
-		+ STU.CRLF_LENGTH
-		;
+		this.writeStatusLineAndHeaders();
 
-		final ZArray array = new ZArray(capacity);
+		this.writeBody();
 
-		array.add(HTTP_11_BYTES).add(String.valueOf(this.getHttpStatus()).getBytes());
-		array.add(CRLF_BYTES);
-		array.add(CONTENT_LENGTH_BYTES).add(COLON_BYTES).add(String.valueOf(this.getBodyLength()).getBytes());
-		array.add(CRLF_BYTES);
-		array.add(this.contentTypeAR.get().getBytes());
-		array.add(CRLF_BYTES);
-
-		if (CU.isNotEmpty(this.headerList)) {
-			for (int i = 0; i < this.headerList.size(); i++) {
-				final ZHeader h = this.headerList.get(i);
-				array.add(h.getName().getBytes()).add(COLON_BYTES).add(h.getValue().getBytes());
-				array.add(CRLF_BYTES);
-			}
-		}
-		array.add(CRLF_BYTES);
-		if (this.body != null) {
-			array.add(this.body);
-			array.add(CRLF_BYTES);
-		}
-
-		return array;
 	}
 
 	public ZResponse() {
@@ -675,10 +667,6 @@ public class ZResponse {
 
 	public String getContentType() {
 		return this.contentType;
-	}
-
-	public void setContentType(final String contentType) {
-		this.contentType = contentType;
 	}
 
 }

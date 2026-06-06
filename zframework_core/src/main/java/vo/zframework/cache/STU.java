@@ -15,8 +15,10 @@ public class STU {
 	public static final String LF = "\n";
 	public static final String CRLF = "\r\n";
 	public static final int CRLF_LENGTH = CRLF.getBytes().length;
+	public static final byte[] CRLF_BYTES = STU.CRLF.getBytes();
 	public static final String CRLFCRLF = "\r\n\r\n";
 	public static final String COLON = ":";
+	public static final byte[] COLON_BYTES = STU.COLON.getBytes();
 	public static final int COLON_LENGTH = COLON.getBytes().length;
 	public static final char COLON_C = ':';
 	public static final String EMPTY = "";
