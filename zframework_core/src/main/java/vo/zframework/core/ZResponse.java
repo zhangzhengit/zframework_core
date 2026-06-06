@@ -479,14 +479,18 @@ public class ZResponse {
 			return;
 		}
 
+		final StringBuilder headerBuilder = new StringBuilder( this.headerList.size() * 100);
+
 		for (int i = 0; i < this.headerList.size(); i++) {
 			final ZHeader zHeader = this.headerList.get(i);
-			this.writeBA(zHeader.getName().getBytes());
-			this.writeBA(STU.COLON_BYTES);
-			this.writeBA(zHeader.getValue().getBytes());
 
-			this.writeBA(CRLF_BYTES);
+			headerBuilder.append(zHeader.getName())
+				   .append(STU.COLON_C)
+				   .append(zHeader.getValue())
+				   .append(STU.CRLF);
 		}
+
+		this.writeBA(headerBuilder.toString().getBytes());
 
 		this.writeBA(CRLF_BYTES);
 	}
