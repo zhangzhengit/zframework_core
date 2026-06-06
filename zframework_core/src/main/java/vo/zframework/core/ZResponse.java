@@ -2,6 +2,7 @@ package vo.zframework.core;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -115,6 +116,8 @@ public class ZResponse {
 	public static final String HTTP_1_1 = "HTTP/1.1 ";
 
 	private static final byte[] HTTP_1_1_BYTES = HTTP_1_1.getBytes();
+	private
+	final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(1024 * 4);
 
 	/**
 	 * write 方法是否执行过
@@ -302,6 +305,9 @@ public class ZResponse {
 
 					this.header(HeaderEnum.TRANSFER_ENCODING.getName(), TransferEncodingEnum.CHUNKED.getValue());
 					this.writeStatusLineAndHeaders();
+
+					this.write(this.byteArrayOutputStream.toByteArray());
+
 				}
 
 				readFirst = false;
@@ -309,7 +315,7 @@ public class ZResponse {
 				final byte[] bx = read >= bufferCapacity ? buffer :Arrays.copyOfRange(buffer, 0, read);
 				this.compressBodyAndWrite(request, read, exceedsCompressionMinLength, bx);
 
-				this.write(CRLF_BYTES, false);
+				this.write(CRLF_BYTES);
 
 				if (read < bufferCapacity) {
 					break;
@@ -319,7 +325,7 @@ public class ZResponse {
 			}
 		}
 
-		this.write(ZERO_RNRN_BYTES, true);
+		this.write(ZERO_RNRN_BYTES);
 
 		this.write.set(true);
 
@@ -375,8 +381,8 @@ public class ZResponse {
 
 		if (!this.compress(exceedsCompressionMinLength)) {
 			final String chunkHeader = Integer.toHexString(read) + STU.CRLF;
-			this.write(chunkHeader.getBytes(), false);
-			this.write(ba, true);
+			this.write(chunkHeader.getBytes());
+			this.write(ba);
 
 			return;
 		}
@@ -385,8 +391,8 @@ public class ZResponse {
 
 			final byte[] compress = ZSTD.compress(ba);
 			final String chunkHeader = Integer.toHexString(compress.length) + STU.CRLF;
-			this.write(chunkHeader.getBytes(), false);
-			this.write(compress, true);
+			this.write(chunkHeader.getBytes());
+			this.write(compress);
 
 		} else if (request.isSupportGZIP()) {
 			// FIXME 2025年1月20日 下午5:34:10 zhangzhen : qq浏览器和360极速浏览器 gzip 解码 2MB的.css文件不完整？后面有一部分不显示？
@@ -394,17 +400,17 @@ public class ZResponse {
 
 			final byte[] compress = ZGzip.compress(ba);
 			final String chunkHeader = Integer.toHexString(compress.length) + STU.CRLF;
-			this.write(chunkHeader.getBytes(), false);
-			this.write(compress, true);
+			this.write(chunkHeader.getBytes());
+			this.write(compress);
 		} else if (request.isSupportDEFLATE()) {
 			final byte[] compress = Deflater.compress(ba);
 			final String chunkHeader = Integer.toHexString(compress.length) + STU.CRLF;
-			this.write(chunkHeader.getBytes(), false);
-			this.write(compress, true);
+			this.write(chunkHeader.getBytes());
+			this.write(compress);
 		} else {
 			final String chunkHeader = Integer.toHexString(read) + STU.CRLF;
-			this.write(chunkHeader.getBytes(), false);
-			this.write(ba, true);
+			this.write(chunkHeader.getBytes());
+			this.write(ba);
 		}
 	}
 
@@ -451,10 +457,19 @@ public class ZResponse {
 	 * 写入状态行：如：HTTP/1.1 200 OK
 	 */
 	private void writeStatusLine() {
-		this.write(HTTP_1_1_BYTES, false);
-		this.write(String.valueOf(this.getHttpStatus()).getBytes(), false);
-		this.write(CRLF_BYTES, false);
+		this.writeBA(HTTP_1_1_BYTES);
+		this.writeBA(String.valueOf(this.getHttpStatus()).getBytes());
+		this.writeBA(CRLF_BYTES);
 	}
+
+	private void writeBA(final byte[] ba) {
+		try {
+			this.byteArrayOutputStream.write(ba);
+		} catch (final IOException e) {
+			e.printStackTrace();
+		}
+	}
+
 
 	/**
 	 * 写入header部分
@@ -466,14 +481,14 @@ public class ZResponse {
 
 		for (int i = 0; i < this.headerList.size(); i++) {
 			final ZHeader zHeader = this.headerList.get(i);
-			this.write(zHeader.getName().getBytes(), false);
-			this.write(STU.COLON_BYTES, false);
-			this.write(zHeader.getValue().getBytes(), false);
+			this.writeBA(zHeader.getName().getBytes());
+			this.writeBA(STU.COLON_BYTES);
+			this.writeBA(zHeader.getValue().getBytes());
 
-			this.write(CRLF_BYTES, false);
+			this.writeBA(CRLF_BYTES);
 		}
 
-		this.write(CRLF_BYTES, true);
+		this.writeBA(CRLF_BYTES);
 	}
 
 	/**
@@ -481,8 +496,8 @@ public class ZResponse {
 	 */
 	private void writeBody() {
 		if (this.body != null) {
-			this.write(this.body, false);
-			this.write(CRLF_BYTES, true);
+			this.writeBA(this.body);
+			this.writeBA(CRLF_BYTES);
 		}
 	}
 
@@ -621,21 +636,18 @@ public class ZResponse {
 		}
 	}
 
-	private void write(final byte[] data, final boolean flush) {
+	private void write(final byte[] data) {
 
 		try {
 			if (AU.isNotEmpty(data)) {
 				this.bufferedOutputStream.write(data);
-				if (flush) {
-					this.bufferedOutputStream.flush();
-				}
+				this.bufferedOutputStream.flush();
 			}
 		} catch (final IOException e) {
 			e.printStackTrace();
 			ZServer.closeSocket(this.socket);
 		}
 	}
-
 
 	private void writeResponse()  {
 
@@ -647,6 +659,9 @@ public class ZResponse {
 		this.writeStatusLineAndHeaders();
 
 		this.writeBody();
+
+		final byte[] byteArray = this.byteArrayOutputStream.toByteArray();
+		this.write(byteArray);
 
 	}
 
