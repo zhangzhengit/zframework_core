@@ -37,6 +37,8 @@ public enum HeaderEnum {
 
 	CACHE_CONTROL("Cache-Control"),
 
+	LAST_MODIFIED("Last-Modified"),
+
 	CONTENT_LENGTH("Content-Length"),
 
 	IF_MODIFIED_SINCE("If-Modified-Since"),
@@ -57,12 +59,12 @@ public enum HeaderEnum {
 
 	private final String name;
 
-	private HeaderEnum(String name) {
+	HeaderEnum(final String name) {
 		this.name = name;
 	}
 
 	public String getName() {
-		return name;
+		return this.name;
 	}
 
 }

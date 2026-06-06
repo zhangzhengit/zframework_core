@@ -9,7 +9,6 @@ import java.net.Socket;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -537,7 +536,7 @@ public class ZResponse {
 
 		this.setCustomHeader();
 		this.setServer(SERVER_NAME);
-		this.setDate(new Date());
+		this.setDate();
 
 		if (SERVER_CONFIGURATIONPROPERTIES.isResponseZSessionId()) {
 			HTTPResponseProcessor.setZSessionId(request, this);
@@ -549,8 +548,8 @@ public class ZResponse {
 
 	}
 
-	public void setDate(final Date date) {
-		this.header(HeaderEnum.DATE.getName(), ZDateUtil.gmt(date));
+	public void setDate() {
+		this.header(HeaderEnum.DATE.getName(), ZDateUtil.getCurrentGmtDate());
 	}
 
 	public void setServer(final String server) {

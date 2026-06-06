@@ -1,13 +1,11 @@
 package vo.zframework.core;
 
-import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.Locale;
-import java.util.TimeZone;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  *
@@ -18,13 +16,29 @@ import java.util.TimeZone;
  */
 public class ZDateUtil {
 
-	private final static DateTimeFormatter FORMATTER = DateTimeFormatter
-			.ofPattern("EEE, dd MMM yyyy HH:mm:ss 'GMT'", Locale.ENGLISH).withZone(ZoneOffset.UTC); // 确保使用 UTC 时区
+	private static final int _1000 = 1000;
+	private static final AtomicLong LAST_SECOND = new AtomicLong(0);
+	private static volatile String CACHED_DATE_STRING = "";
 
+	private final static DateTimeFormatter FORMATTER = DateTimeFormatter
+			.ofPattern("EEE, dd MMM yyyy HH:mm:ss 'GMT'", Locale.ENGLISH).withZone(ZoneOffset.UTC);
 
 	public static String gmt(final Date date) {
 		final ZonedDateTime zonedDateTime = ZonedDateTime.ofInstant(date.toInstant(), ZoneOffset.UTC);
 		return FORMATTER.format(zonedDateTime);
+	}
+
+	public static String getCurrentGmtDate() {
+		final long nowSeconds = System.currentTimeMillis() / _1000;
+		if (nowSeconds != LAST_SECOND.get()) {
+			synchronized (ZDateUtil.class) {
+				if (nowSeconds != LAST_SECOND.get()) {
+					CACHED_DATE_STRING = FORMATTER.format(ZonedDateTime.now(ZoneOffset.UTC));
+					LAST_SECOND.set(nowSeconds);
+				}
+			}
+		}
+		return CACHED_DATE_STRING;
 	}
 
 }

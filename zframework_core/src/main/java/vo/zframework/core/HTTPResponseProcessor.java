@@ -158,7 +158,7 @@ public class HTTPResponseProcessor {
 			return;
 		}
 
-		response.header("Last-Modified", ZDateUtil.gmt(new Date()));
+		response.header(HeaderEnum.LAST_MODIFIED.getName(), ZDateUtil.getCurrentGmtDate());
 	}
 
 
