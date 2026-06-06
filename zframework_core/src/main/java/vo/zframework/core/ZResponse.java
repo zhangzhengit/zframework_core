@@ -475,7 +475,7 @@ public class ZResponse {
 	 * 写入header部分
 	 */
 	private void writeHeaders() {
-		if ((this.headerList == null) || this.headerList.isEmpty()) {
+		if (this.headerList.isEmpty()) {
 			return;
 		}
 
