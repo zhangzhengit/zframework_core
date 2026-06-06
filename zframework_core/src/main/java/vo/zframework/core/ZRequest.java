@@ -81,7 +81,7 @@ public class ZRequest {
 	/**
 	 * 请求头,如： Accept-Encoding: gzip, deflate
 	 */
-	private Map<String, String> headerMap;
+	private final Map<String, String> headerMap = new HashMap<>();
 
 	/**
 	 * http完整的请求信息
@@ -543,7 +543,6 @@ public class ZRequest {
 
 	private static void parseHeader(final ZRequest request) {
 		final List<String> x = request.getLineList();
-		final Map<String, String> hm = new HashMap<>(x.size(), 1F);
 		for (int i = x.size() - 1; i > 0; i--) {
 			final String l = x.get(i);
 			if (STU.EMPTY.equals(l)) {
@@ -551,8 +550,14 @@ public class ZRequest {
 			}
 
 			final int k = l.indexOf(STU.COLON);
-			if (k > -1) {
+			if ((k + 1 + 1) >= l.length()) {
 				final String key = l.substring(0, k).trim();
+				request.headerMap.put(key, "");
+				continue;
+			}
+
+			if (k > -1) {
+
 				final String value = l.substring(k + 1).trim();
 				// CONTENT_LENGTH 头在bodyreader.readHeader时已经校验过了，在此肯定非负的整数
 
@@ -567,12 +572,12 @@ public class ZRequest {
 					}
 				}
 
-
-				hm.put(key, value);
+				final String key = l.substring(0, k).trim();
+				// FIXME 2026年6月7日 05:45:39 zhangzhen : 奇怪了，k和v去掉trim()反而变慢？
+				request.headerMap.put(key, value);
 			}
 		}
 
-		request.headerMap = hm;
 	}
 
 	public String getOriginal() {
