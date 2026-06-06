@@ -1,5 +1,9 @@
 package vo.zframework.cache;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import vo.zframework.core.ZRC;
 
 /**
@@ -17,6 +21,7 @@ public class STU {
 	public static final int CRLF_LENGTH = CRLF.getBytes().length;
 	public static final byte[] CRLF_BYTES = STU.CRLF.getBytes();
 	public static final String CRLFCRLF = "\r\n\r\n";
+	public static final byte[] CRLFCRLF_BYTES = CRLFCRLF.getBytes();
 	public static final String COLON = ":";
 	public static final byte[] COLON_BYTES = STU.COLON.getBytes();
 	public static final int COLON_LENGTH = COLON.getBytes().length;
@@ -76,5 +81,44 @@ public class STU {
 		return true;
 	}
 
+	/**
+	 * split，没仔细测，暂时写为一个工具类方法，只是为了替代split("\r\n")而写的，因为它会走正则
+	 *
+	 * @param ba
+	 * @param keyword
+	 * @return
+	 */
+	public static List<String> split(final byte[] ba, final String keyword) {
+
+		final List<String> ls = new ArrayList<>();
+
+		int from = 0;
+		int to = 0;
+
+		int fromIndex = 0;
+
+		final byte[] kba = keyword.getBytes();
+
+		while (true) {
+			final int i = AU.search(ba, kba, 1, fromIndex);
+			if (i <= -1) {
+				ls.add(new String(Arrays.copyOfRange(ba, to + keyword.length(), ba.length)));
+				break;
+			}
+
+			fromIndex = i + keyword.length();
+			to = i;
+
+			if (from == to) {
+				break;
+			}
+
+			ls.add(new String(Arrays.copyOfRange(ba, from, to)));
+
+			from = to + keyword.length();
+		}
+
+		return ls;
+	}
 
 }

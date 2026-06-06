@@ -6,7 +6,6 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -42,7 +41,7 @@ public class ZRequest {
 	public static final String MULTIPART_FORM_DATA = "multipart/form-data";
 
 	// -------------------------------------------------------------------------------------------------
-	private final List<String> lineList;
+	private final List<String> lineList = new ArrayList<>(10);
 
 	/**
 	 *	请求行一行完整内容如：GET / HTTP/1.1
@@ -358,12 +357,9 @@ public class ZRequest {
 		return this.lineList;
 	}
 
-	public ZRequest(final String[] lineArray) {
-		this.lineList = new ArrayList<>(lineArray.length);
+	public ZRequest(final List<String> lineList) {
 		this.socket = SocketTL.get();
-
-		Collections.addAll(this.lineList, lineArray);
-
+		this.lineList.addAll(lineList);
 		parseRequest(this);
 	}
 

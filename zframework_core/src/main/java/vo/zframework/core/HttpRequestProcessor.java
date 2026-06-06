@@ -28,6 +28,8 @@ public class HttpRequestProcessor {
 
 	// FIXME 2026年5月30日 16:00:48 zhangzhen : 这个里面所有的search，如果返回-1了 ，可以设置一个当前length A,下次search从A开始，就少做很多重复的无用功
 
+	private static final byte[] CONTENT_LENGTH_BYTES = HeaderEnum.CONTENT_LENGTH.getName().getBytes();
+
 	private static final ServerConfigurationProperties SERVER_CONFIGURATIONPROPERTIES= ZContext.getBean(ServerConfigurationProperties.class);
 
 	private static final int UPLOAD_FILE_TO_TEMP_SIZE = SERVER_CONFIGURATIONPROPERTIES.getUploadFileToTempSize();
@@ -166,7 +168,7 @@ public class HttpRequestProcessor {
 	 */
 	public HttpParseStatusEnum parseHeader(final PD pd, final ZArray array) {
 
-		final int headerEndIndex = AU.search(array.getRawArray(), STU.CRLFCRLF, 1, pd.getSearchHeaderEndIndexFromIndex());
+		final int headerEndIndex = AU.search(array.getRawArray(), STU.CRLFCRLF_BYTES, 1, pd.getSearchHeaderEndIndexFromIndex());
 		if (headerEndIndex <= -1) {
 
 			// 本次read后没找到，则设置下次搜索开始位置为当前已读取的长度，即：从下次读取的内容的开头开始搜
@@ -210,6 +212,7 @@ public class HttpRequestProcessor {
 
 	/**
 	 * 解析成功完成后的最后状态
+	 *
 	 * @param array TODO
 	 */
 	public HttpParseStatusEnum end(final PD pd, final ZArray array) {
@@ -221,7 +224,7 @@ public class HttpRequestProcessor {
 	}
 
 	private static String parseRequestLine(final PD pd, final ZArray array) {
-		final int requestLineEndIndex = AU.search(array.getRawArray(), STU.CRLF, 1, 3);
+		final int requestLineEndIndex = AU.search(array.getRawArray(), STU.CRLF_BYTES, 1, 3);
 
 		if (requestLineEndIndex <= -1) {
 			return null;
@@ -233,9 +236,9 @@ public class HttpRequestProcessor {
 	}
 
 	private static String gContentLength(final ZArray array, final PD pd) {
-		final int clIndex = AU.search(array.getRawArray(), HeaderEnum.CONTENT_LENGTH.getName(), 1, pd.getRequestLineEndIndex() + STU.CRLF.length());
+		final int clIndex = AU.search(array.getRawArray(), CONTENT_LENGTH_BYTES, 1, pd.getRequestLineEndIndex() + STU.CRLF.length());
 		if (clIndex > -1) {
-			final int clEIndex = AU.search(array.getRawArray(), STU.CRLF, 1, clIndex);
+			final int clEIndex = AU.search(array.getRawArray(), STU.CRLF_BYTES, 1, clIndex);
 			if (clEIndex > clIndex) {
 
 				final String contentLengthS = new String(array.getRawArray(), clIndex, clEIndex - clIndex);

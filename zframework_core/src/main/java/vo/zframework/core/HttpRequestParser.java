@@ -32,6 +32,8 @@ import vo.zframework.validator.ZFException;
  */
 public class HttpRequestParser {
 
+	private static final byte[] CONTENT_DISPOSITION_BYTES = HeaderEnum.CONTENT_DISPOSITION.getName().getBytes();
+	private static final byte[] CONTENT_TYPE_BYTES = HeaderEnum.CONTENT_TYPE.getName().getBytes();
 	private static final byte[] BOUNDARY_BYTES = ZRequest.BOUNDARY.getBytes();
 	public static final String BOUNDARY_PREFIX = "--";
 	public static final String BOUNDARY_SUFFIX = "--";
@@ -48,11 +50,15 @@ public class HttpRequestParser {
 	 */
 	public static ZRequest parse(final byte[] httpRequestBA) {
 
-		final int headerEndIndex = AU.search(httpRequestBA, STU.CRLFCRLF, 1, 0);
+		final int headerEndIndex = AU.search(httpRequestBA, STU.CRLFCRLF_BYTES, 1, 0);
 
-		final String[] headerKVString = new String(httpRequestBA, 0, headerEndIndex).split(STU.CRLF);
+		// FIXME 2026年6月7日 06:32:16 zhangzhen : 下面这个copy应该是不需要的，但是split 的是CRLF，而截止符号是CRLFCRLF，不好处理
+		// 也不方便在split中处理
 
-		final ZRequest request= new ZRequest(headerKVString);
+		final byte[] hba = Arrays.copyOfRange(httpRequestBA, 0, headerEndIndex);
+
+		final List<String> lineList = STU.split(hba, STU.CRLF);
+		final ZRequest request= new ZRequest(lineList);
 
 		if ((headerEndIndex + STU.CRLFCRLF.length()) < httpRequestBA.length) {
 			final byte[] bodyBA = Arrays.copyOfRange(httpRequestBA, headerEndIndex + STU.CRLFCRLF.length(), httpRequestBA.length);
@@ -62,66 +68,6 @@ public class HttpRequestParser {
 		}
 
 		return request;
-	}
-
-	/**
-	 * 从http请求报文中解析出header，是只解析header，不解析header下面的部分
-	 *
-	 * @param ba
-	 * @return
-	 */
-	public static ZRequest parseHeader(final byte[] ba) {
-
-		final int headerEndIndex = AU.search(ba, STU.CRLFCRLF, 1, 0);
-
-		final String[] headerKVString = new String(ba, 0, headerEndIndex).split(STU.CRLF);
-
-		final ZRequest request= new ZRequest(headerKVString);
-
-		final byte[] readFullBody = readFullBody(ba, request.getContentType(), headerEndIndex, request.getBoundary());
-		request.setBody(readFullBody);
-
-		return request;
-	}
-
-	/**
-	 * 从完整的http请求报文中解析出完整的body部分，返回body部分的byte[]
-	 *
-	 * @param ba
-	 * @param contentType    header中的 Content-Type
-	 * @param headerEndIndex header截止符号(\r\n\r\n)在ba中的位置
-	 * @param boundary       header中的 Content-Type中的boundary值，有则传，无则传null
-	 * @return
-	 */
-	public static byte[] readFullBody(final byte[] ba, final String contentType, final int headerEndIndex, final String boundary) {
-
-		final int contentTypeIndex = AU.search(ba, contentType, 1, 0);
-
-		if (contentTypeIndex <= -1) {
-			return null;
-		}
-
-		// boundary 不为空表示formdata，则根据 boundary来截取body
-		if (boundary != null) {
-			final int boundaryStartIndex = AU.search(ba, boundary, 1, contentTypeIndex);
-			if (boundaryStartIndex > -1) {
-				final int boundaryEndIndex = AU.search(ba, STU.CRLF + BOUNDARY_PREFIX + boundary + BOUNDARY_SUFFIX, 1, boundaryStartIndex);
-				if (boundaryEndIndex > boundaryStartIndex) {
-					final byte[] fullBodyBA = Arrays.copyOfRange(ba,
-							boundaryStartIndex + boundary.getBytes().length + STU.CRLF.getBytes().length,
-							boundaryEndIndex);
-					return fullBodyBA;
-				}
-			}
-		}
-
-		// 执行到此，headerEndIndex < ba.length 则说明header后面还有内容，此内容就是body
-		if (headerEndIndex < ba.length) {
-			final byte[] copyOfRange = Arrays.copyOfRange(ba, headerEndIndex + STU.CRLFCRLF.getBytes().length, ba.length);
-			return copyOfRange;
-		}
-
-		return null;
 	}
 
 	/**
@@ -185,14 +131,14 @@ public class HttpRequestParser {
 	public static FormData handleOneItem(final byte[] ba) {
 
 		final FormData formData = new FormData();
-		final int contentTypeIndex = AU.search(ba, HeaderEnum.CONTENT_TYPE.getName(), 1, 0);
+		final int contentTypeIndex = AU.search(ba, CONTENT_TYPE_BYTES, 1, 0);
 		if (contentTypeIndex > -1) {
-			final int ctRNIndex = AU.search(ba, STU.CRLF, 1, contentTypeIndex);
+			final int ctRNIndex = AU.search(ba, STU.CRLF_BYTES, 1, contentTypeIndex);
 			if (ctRNIndex > -1) {
 				final String ctX = new String(ba, contentTypeIndex, (ctRNIndex + STU.CRLF.length()) - contentTypeIndex).split(STU.COLON)[1].trim();
 				formData.setContentType(ctX);
 
-				final int bodyStartIndexX = AU.search(ba, STU.CRLFCRLF, 1, 0);
+				final int bodyStartIndexX = AU.search(ba, STU.CRLFCRLF_BYTES, 1, 0);
 				if (bodyStartIndexX > -1) {
 					// XXX 注意：截止要减去一个CRLF的长度，因为参数byte[] 包含了body后面的一个空行
 					final byte[] bodyBA = Arrays.copyOfRange(ba, bodyStartIndexX + STU.CRLFCRLF.length(),
@@ -202,7 +148,7 @@ public class HttpRequestParser {
 
 			}
 		} else {
-			final int bodyStartIndexX = AU.search(ba, STU.CRLFCRLF, 1, 0);
+			final int bodyStartIndexX = AU.search(ba, STU.CRLFCRLF_BYTES, 1, 0);
 			if (bodyStartIndexX > -1) {
 				final String value = new String(ba, bodyStartIndexX + STU.CRLFCRLF.length(),
 						ba.length - (bodyStartIndexX + STU.CRLFCRLF.length()));
@@ -210,10 +156,10 @@ public class HttpRequestParser {
 			}
 		}
 
-		final int cdIndex = AU.search(ba, HeaderEnum.CONTENT_DISPOSITION.getName(), 1, 0);
+		final int cdIndex = AU.search(ba, CONTENT_DISPOSITION_BYTES, 1, 0);
 
 		if (cdIndex > -1) {
-			final int cdRNIndex = AU.search(ba, STU.CRLF, 1, cdIndex);
+			final int cdRNIndex = AU.search(ba, STU.CRLF_BYTES, 1, cdIndex);
 			if (cdRNIndex > -1) {
 				final String line = new String(ba, cdIndex, (cdRNIndex + STU.CRLF.length()) - cdIndex);
 				final Map<String, String> vMap = handleBodyContentDisposition(line);
@@ -268,9 +214,9 @@ public class HttpRequestParser {
 				readCount++;
 				tR += read;
 
-				final int ctI = AU.search(ba, HeaderEnum.CONTENT_TYPE.getName(), 1, 0);
+				final int ctI = AU.search(ba, CONTENT_TYPE_BYTES, 1, 0);
 				if (ctI > -1) {
-					final int crlf2I = AU.search(ba, STU.CRLFCRLF, 1, ctI);
+					final int crlf2I = AU.search(ba, STU.CRLFCRLF_BYTES, 1, ctI);
 					if (crlf2I > ctI) {
 						bodyStartI = crlf2I;
 
@@ -323,13 +269,15 @@ public class HttpRequestParser {
 					break;
 				}
 
-				final int ctI = AU.search(ba, HeaderEnum.CONTENT_TYPE.getName(), 1, 0);
+				final int ctI = AU.search(ba, CONTENT_TYPE_BYTES, 1, 0);
+//				final int ctI = AU.search(ba, HeaderEnum.CONTENT_TYPE.getName(), 1, 0);
 				if (ctI > -1) {
 					final List<Integer> arrayList = new ArrayList<>();
 					int i = 0;
 					while (true) {
 						final int iN = i;
-						final int sr = AU.search(ba, HeaderEnum.CONTENT_DISPOSITION.getName(), iN, 0);
+						final int sr = AU.search(ba, CONTENT_DISPOSITION_BYTES, iN, 0);
+//						final int sr = AU.search(ba, HeaderEnum.CONTENT_DISPOSITION.getName(), iN, 0);
 						if (sr <= -1) {
 							break;
 						}
@@ -350,7 +298,7 @@ public class HttpRequestParser {
 					final Map<String, String> cdMap = parseCDLine(cdLine);
 					tf.setName(cdMap.get("name"));
 					tf.setFileName(cdMap.get("filename"));
-					final int crlf2I = AU.search(ba, STU.CRLFCRLF, 1, ctI);
+					final int crlf2I = AU.search(ba, STU.CRLFCRLF_BYTES, 1, ctI);
 					if (crlf2I > ctI) {
 						final String contentType = gCT(new String(ba, ctI, crlf2I - ctI));
 						tf.setContentType(contentType);
@@ -505,12 +453,12 @@ public class HttpRequestParser {
 	}
 
 	public static Fm hFM(final ZArray array) {
-		final int boundaryStartIndex = AU.search(array.getRawArray(), ZRequest.BOUNDARY, 1, 1);
+		final int boundaryStartIndex = AU.search(array.getRawArray(), BOUNDARY_BYTES, 1, 1);
 		if (boundaryStartIndex <= -1) {
 			return new Fm(false, "");
 		}
 
-		final int boundaryEndIndex = AU.search(array.getRawArray(), STU.CRLF, 1, boundaryStartIndex + BOUNDARY_BYTES.length);
+		final int boundaryEndIndex = AU.search(array.getRawArray(), STU.CRLF_BYTES, 1, boundaryStartIndex + BOUNDARY_BYTES.length);
 		if (boundaryEndIndex > boundaryStartIndex) {
 
 			final String boundary = new String(array.getRawArray(),
