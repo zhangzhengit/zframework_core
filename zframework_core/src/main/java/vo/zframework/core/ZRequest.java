@@ -58,7 +58,7 @@ public class ZRequest {
 	/**
 	 * 请求方法
 	 */
-	MethodEnum methodEnum;
+	private MethodEnum methodEnum;
 
 	/**
 	 * 完整的requestURI，如：/hello?name=z&age=20
@@ -364,11 +364,6 @@ public class ZRequest {
 	}
 
 	private static ZRequest parseRequest(final ZRequest request) {
-		return parseRequest0(request);
-	}
-
-	private static ZRequest parseRequest0(final ZRequest request) {
-
 		if (CU.isEmpty(request.getLineList())) {
 			return request;
 		}
@@ -377,22 +372,10 @@ public class ZRequest {
 		final String line = request.getLineList().get(0);
 		request.original = line;
 
-		// METHOD 第一个空格前面的是METHOD
 		final int methodIndex = line.indexOf(STU.SAPCE);
-		if (methodIndex <= -1) {
-			throw new IllegalArgumentException("请求行错误");
-		}
-
-		final String methodS = line.substring(0, methodIndex);
-		final MethodEnum me = MethodEnum.valueOfMethodStringUpper(methodS);
-		// 可能是null，在这里不管，在外面处理，返回405
-		request.methodEnum = me;
 
 		// path
 		parsePath(line, request, methodIndex);
-
-		// version
-		parseVersion(line, request);
 
 		// paserHeader
 		parseHeader(request);
@@ -703,7 +686,7 @@ public class ZRequest {
 		builder.append(", tf=");
 		builder.append(this.tf);
 		builder.append(", methodEnum=");
-		builder.append(this.methodEnum);
+		builder.append(this.getMethodEnum());
 		builder.append(", requestURI=");
 		builder.append(this.requestURI);
 		builder.append(", path=");
@@ -724,6 +707,10 @@ public class ZRequest {
 		builder.append(this.socket);
 		builder.append("]");
 		return builder.toString();
+	}
+
+	public void setMethodEnum(final MethodEnum methodEnum) {
+		this.methodEnum = methodEnum;
 	}
 
 }

@@ -54,8 +54,9 @@ public class HttpRequestProcessor {
 
 
 	/**
-	 * 从read出的buffer中解析请求行
-	 * @param array TODO
+	 * 解析请求行
+	 *
+	 * @param array
 	 */
 	public HttpParseStatusEnum parseRquestLine(final PD pd, final ZArray array) {
 		final String requestLine = parseRequestLine(pd, array);
@@ -126,7 +127,7 @@ public class HttpRequestProcessor {
 		if (zrMethod != null) {
 			// 精确匹配到了
 			pd.setZrMethod(zrMethod);
-			return HttpParseStatusEnum.PARSE_HEADER;
+			return HttpParseStatusEnum.CHECK_VERSION;
 		}
 
 		// 2、URI正则匹配
@@ -152,7 +153,25 @@ public class HttpRequestProcessor {
 
 		// FIXME 2026年5月26日 15:16:13 zhangzhen : 校验协议版本 http1.1
 
-		// 继续下一步，解析HEADER
+		// 继续下一步，校验httpVERSION
+		return HttpParseStatusEnum.CHECK_VERSION;
+	}
+
+	public HttpParseStatusEnum checkVersion(final PD pd, final String requestLine) {
+
+		final int hI = requestLine.lastIndexOf("HTTP/");
+		if (hI <= -1) {
+			throw new IllegalArgumentException("请求行错误：找不到HTTP版本");
+		}
+
+		final String version = requestLine.substring(hI);
+		if (!ZRequest.HTTP_11.equalsIgnoreCase(version)) {
+			// FIXME 2024年12月19日 下午1:41:45 zhangzhen : ab 命令测试会走到异常，要不要抛异常以后再看
+			//				throw new IllegalArgumentException("请求行错误：HTTP版本错误,本服务器支持HTTP/1.1");
+		}
+
+		pd.setHttpVersion(version);
+
 		return HttpParseStatusEnum.PARSE_HEADER;
 	}
 
@@ -218,6 +237,8 @@ public class HttpRequestProcessor {
 	public HttpParseStatusEnum end(final PD pd, final ZArray array) {
 
 		final ZRequest request = HttpRequestParser.parse(array.toByteArray());
+		request.setMethodEnum(pd.getMethodEnum());
+
 		pd.setRequest(request);
 
 		return HttpParseStatusEnum.START;

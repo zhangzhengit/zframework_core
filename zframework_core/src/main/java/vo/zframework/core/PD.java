@@ -29,6 +29,7 @@ public class PD {
 	private BufferedInputStream bufferedInputStream;
 
 	private String requestLine;
+	private String httpVersion;
 
 	private final Socket socket;
 
@@ -158,6 +159,14 @@ public class PD {
 
 	public void setSearchHeaderEndIndexFromIndex(final int searchHeaderEndIndexFromIndex) {
 		this.searchHeaderEndIndexFromIndex = searchHeaderEndIndexFromIndex;
+	}
+
+	public String getHttpVersion() {
+		return this.httpVersion;
+	}
+
+	public void setHttpVersion(final String httpVersion) {
+		this.httpVersion = httpVersion;
 	}
 
 }

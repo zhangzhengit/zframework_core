@@ -92,15 +92,17 @@ public class HttpRequestScheduler {
 
 	private HttpParseStatusEnum checkMethod(final PD pd, final ZArray array) {
 		final HttpParseStatusEnum checkMethodStatus = this.processor.checkMethod(pd, pd.getRequestLine());
-		if (checkMethodStatus == END) {
-			return this.processor.end(pd, array);
+
+		if (checkMethodStatus == HttpParseStatusEnum.CHECK_URI) {
+			return this.checkURI(pd, array);
 		}
 
 		if (checkMethodStatus == HttpParseStatusEnum.PARSE_HEADER) {
 			return this.parseHeader(pd, array);
 		}
-		if (checkMethodStatus == HttpParseStatusEnum.CHECK_URI) {
-			return this.checkURI(pd, array);
+
+		if (checkMethodStatus == END) {
+			return this.processor.end(pd, array);
 		}
 
 		return checkMethodStatus;
@@ -108,6 +110,15 @@ public class HttpRequestScheduler {
 
 	private HttpParseStatusEnum checkURI(final PD pd, final ZArray array) {
 		final HttpParseStatusEnum parseHeaderStatus = this.processor.checkURI(pd, pd.getRequestLine());
+
+		if (parseHeaderStatus == HttpParseStatusEnum.CHECK_VERSION) {
+			final HttpParseStatusEnum checkVersion = this.processor.checkVersion(pd, pd.getRequestLine());
+			if (checkVersion == HttpParseStatusEnum.PARSE_HEADER) {
+				return this.parseHeader(pd, array);
+			}
+			return checkVersion;
+		}
+
 		if (parseHeaderStatus == HttpParseStatusEnum.PARSE_HEADER) {
 			return this.parseHeader(pd, array);
 		}

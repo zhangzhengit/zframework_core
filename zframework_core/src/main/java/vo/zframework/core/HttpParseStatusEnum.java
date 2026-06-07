@@ -17,6 +17,8 @@ public enum HttpParseStatusEnum {
 
 	CHECK_URI,
 
+	CHECK_VERSION,
+
 	PARSE_HEADER,
 
 	PARSE_CONTENT_LENGTH,
