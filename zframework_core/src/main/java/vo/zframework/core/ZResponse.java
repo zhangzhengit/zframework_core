@@ -336,7 +336,7 @@ public class ZResponse {
 			e.printStackTrace();
 		}
 
-		if (!ReqeustInfo.get().isKeepAlive()) {
+		if (!request.isKeepAlive()) {
 			ZServer.closeSocket(this.socket);
 		}
 
@@ -601,7 +601,7 @@ public class ZResponse {
 
 		final ZRequest request = ReqeustInfo.get();
 
-		if ((request != null) && request.isKeepAlive()) {
+		if (request.isKeepAlive()) {
 			this.header(HeaderEnum.CONNECTION.getName(), ConnectionEnum.KEEP_ALIVE.getValue());
 		}
 

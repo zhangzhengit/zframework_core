@@ -86,7 +86,6 @@ public class HTTPResponseProcessor {
 				return;
 			}
 
-			final boolean keepAlive = request.isKeepAlive();
 
 			final Integer httpStatus = response.getHttpStatus();
 			if (httpStatus == HttpStatusEnum.HTTP_200.getStatus()) {
@@ -100,7 +99,7 @@ public class HTTPResponseProcessor {
 
 			response.write();
 
-			if (!keepAlive) {
+			if (!request.isKeepAlive()) {
 				ZServer.closeSocket(SocketTL.get());
 			}
 

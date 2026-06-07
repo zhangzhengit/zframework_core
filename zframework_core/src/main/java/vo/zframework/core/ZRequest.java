@@ -100,6 +100,12 @@ public class ZRequest {
 
 	final Socket socket;
 
+	/**
+	 * 对 isKeepAlive方法结果的暂存
+	 * -1 未设置过 0 否 1 是
+	 */
+	private volatile int keepAlive = -1;
+
 	public boolean isSupportZSTD() {
 		return this.supportCompression(AcceptEncodingEnum.ZSTD);
 	}
@@ -328,11 +334,18 @@ public class ZRequest {
 	}
 
 	public boolean isKeepAlive() {
+		if (this.keepAlive != -1) {
+			return this.keepAlive == 1;
+		}
+
 		final String connection = this.getHeader(HeaderEnum.CONNECTION.getName());
 		final boolean keepAlive = STU.isNotEmpty(connection)
 				&& (connection.length() == ConnectionEnum.KEEP_ALIVE.getValue().length())
 				&& (connection.equals(ConnectionEnum.KEEP_ALIVE.getValue())
 						|| connection.toLowerCase().contains(ConnectionEnum.KEEP_ALIVE.getValue().toLowerCase()));
+
+		this.keepAlive = keepAlive ? 1 : 0;
+
 		return keepAlive;
 	}
 
