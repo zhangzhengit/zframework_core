@@ -4,7 +4,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -105,6 +104,11 @@ public class ZRequest {
 	 * 暂存值
 	 */
 	ZCookie[] cookies;
+
+	/**
+	 * 暂存值
+	 */
+	String userAgent = null;
 
 	/**
 	 * 对 isKeepAlive方法结果的暂存
@@ -289,13 +293,17 @@ public class ZRequest {
 
 	public ZCookie[] getCookies() {
 
-		if (this.cookies != null) {
-			return this.cookies;
+		if (this.cookies == null) {
+			this.cookies = this.gc();
 		}
 
+		return this.cookies;
+	}
+
+	private ZCookie[] gc() {
 		final String cookisString = this.headerMap.get(HeaderEnum.COOKIE.getName());
 		if (STU.isEmpty(cookisString)) {
-			return null;
+			return new ZCookie[0];
 		}
 
 		final String[] a = cookisString.split(STU.SEMICOLON);
@@ -308,8 +316,6 @@ public class ZRequest {
 			c[cI] = zCookie;
 			cI++;
 		}
-
-		this.cookies = c;
 
 		return c;
 	}
@@ -330,7 +336,11 @@ public class ZRequest {
 	}
 
 	public String getUserAgent() {
-		return this.headerMap.get(HeaderEnum.USER_AGENT.getName());
+		if (this.userAgent == null) {
+			this.userAgent = this.headerMap.get(HeaderEnum.USER_AGENT.getName());
+		}
+
+		return this.userAgent;
 	}
 
 	public String getHeader(final String name) {
