@@ -105,7 +105,7 @@ public class STU {
 		while (true) {
 			final int i = AU.search(ba, kba, 1, fromIndex);
 			if (i <= -1) {
-				ls.add(new String(Arrays.copyOfRange(ba, to + kba.length, ba.length)));
+				ls.add(new String(ba, to + kba.length, ba.length - (to + kba.length)));
 				break;
 			}
 
@@ -116,12 +116,13 @@ public class STU {
 				break;
 			}
 
-			ls.add(new String(Arrays.copyOfRange(ba, from, to)));
+			ls.add(new String(ba, from, to-from));
 
 			from = to + kba.length;
 		}
 
 		return ls;
 	}
+
 
 }
