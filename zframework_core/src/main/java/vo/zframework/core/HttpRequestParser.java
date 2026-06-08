@@ -51,11 +51,7 @@ public class HttpRequestParser {
 	 */
 	public static ZRequest parse(final byte[] httpRequestBA, final int headerEndIndex) {
 
-		// FIXME 2026年6月7日 06:32:16 zhangzhen : 下面这个copy应该是不需要的，但是split 的是CRLF，而截止符号是CRLFCRLF，不好处理
-		// 也不方便在split中处理
-		final byte[] hba = Arrays.copyOfRange(httpRequestBA, 0, headerEndIndex);
-
-		final List<String> lineList = STU.split(hba, STU.CRLF_BYTES);
+		final List<String> lineList = STU.split(httpRequestBA, headerEndIndex, STU.CRLF_BYTES);
 		final ZRequest request= new ZRequest(lineList);
 
 		if ((headerEndIndex + STU.CRLFCRLF.length()) < httpRequestBA.length) {
@@ -129,14 +125,14 @@ public class HttpRequestParser {
 	public static FormData handleOneItem(final byte[] ba) {
 
 		final FormData formData = new FormData();
-		final int contentTypeIndex = AU.search(ba, CONTENT_TYPE_BYTES, 1, 0);
+		final int contentTypeIndex = AU.search(ba, ba.length, CONTENT_TYPE_BYTES, 1, 0);
 		if (contentTypeIndex > -1) {
-			final int ctRNIndex = AU.search(ba, STU.CRLF_BYTES, 1, contentTypeIndex);
+			final int ctRNIndex = AU.search(ba, ba.length, STU.CRLF_BYTES, 1, contentTypeIndex);
 			if (ctRNIndex > -1) {
 				final String ctX = new String(ba, contentTypeIndex, (ctRNIndex + STU.CRLF.length()) - contentTypeIndex).split(STU.COLON)[1].trim();
 				formData.setContentType(ctX);
 
-				final int bodyStartIndexX = AU.search(ba, STU.CRLFCRLF_BYTES, 1, 0);
+				final int bodyStartIndexX = AU.search(ba, ba.length, STU.CRLFCRLF_BYTES, 1, 0);
 				if (bodyStartIndexX > -1) {
 					// XXX 注意：截止要减去一个CRLF的长度，因为参数byte[] 包含了body后面的一个空行
 					final byte[] bodyBA = Arrays.copyOfRange(ba, bodyStartIndexX + STU.CRLFCRLF.length(),
@@ -146,7 +142,7 @@ public class HttpRequestParser {
 
 			}
 		} else {
-			final int bodyStartIndexX = AU.search(ba, STU.CRLFCRLF_BYTES, 1, 0);
+			final int bodyStartIndexX = AU.search(ba, ba.length, STU.CRLFCRLF_BYTES, 1, 0);
 			if (bodyStartIndexX > -1) {
 				final String value = new String(ba, bodyStartIndexX + STU.CRLFCRLF.length(),
 						ba.length - (bodyStartIndexX + STU.CRLFCRLF.length()));
@@ -154,10 +150,10 @@ public class HttpRequestParser {
 			}
 		}
 
-		final int cdIndex = AU.search(ba, CONTENT_DISPOSITION_BYTES, 1, 0);
+		final int cdIndex = AU.search(ba, ba.length, CONTENT_DISPOSITION_BYTES, 1, 0);
 
 		if (cdIndex > -1) {
-			final int cdRNIndex = AU.search(ba, STU.CRLF_BYTES, 1, cdIndex);
+			final int cdRNIndex = AU.search(ba, ba.length, STU.CRLF_BYTES, 1, cdIndex);
 			if (cdRNIndex > -1) {
 				final String line = new String(ba, cdIndex, (cdRNIndex + STU.CRLF.length()) - cdIndex);
 				final Map<String, String> vMap = handleBodyContentDisposition(line);
@@ -212,9 +208,9 @@ public class HttpRequestParser {
 				readCount++;
 				tR += read;
 
-				final int ctI = AU.search(ba, CONTENT_TYPE_BYTES, 1, 0);
+				final int ctI = AU.search(ba, ba.length, CONTENT_TYPE_BYTES, 1, 0);
 				if (ctI > -1) {
-					final int crlf2I = AU.search(ba, STU.CRLFCRLF_BYTES, 1, ctI);
+					final int crlf2I = AU.search(ba, ba.length, STU.CRLFCRLF_BYTES, 1, ctI);
 					if (crlf2I > ctI) {
 						bodyStartI = crlf2I;
 
@@ -267,14 +263,14 @@ public class HttpRequestParser {
 					break;
 				}
 
-				final int ctI = AU.search(ba, CONTENT_TYPE_BYTES, 1, 0);
+				final int ctI = AU.search(ba, ba.length, CONTENT_TYPE_BYTES, 1, 0);
 //				final int ctI = AU.search(ba, HeaderEnum.CONTENT_TYPE.getName(), 1, 0);
 				if (ctI > -1) {
 					final List<Integer> arrayList = new ArrayList<>();
 					int i = 0;
 					while (true) {
 						final int iN = i;
-						final int sr = AU.search(ba, CONTENT_DISPOSITION_BYTES, iN, 0);
+						final int sr = AU.search(ba, ba.length, CONTENT_DISPOSITION_BYTES, iN, 0);
 //						final int sr = AU.search(ba, HeaderEnum.CONTENT_DISPOSITION.getName(), iN, 0);
 						if (sr <= -1) {
 							break;
@@ -296,7 +292,7 @@ public class HttpRequestParser {
 					final Map<String, String> cdMap = parseCDLine(cdLine);
 					tf.setName(cdMap.get("name"));
 					tf.setFileName(cdMap.get("filename"));
-					final int crlf2I = AU.search(ba, STU.CRLFCRLF_BYTES, 1, ctI);
+					final int crlf2I = AU.search(ba, ba.length, STU.CRLFCRLF_BYTES, 1, ctI);
 					if (crlf2I > ctI) {
 						final String contentType = gCT(new String(ba, ctI, crlf2I - ctI));
 						tf.setContentType(contentType);
@@ -451,12 +447,12 @@ public class HttpRequestParser {
 	}
 
 	public static Fm hFM(final ZArray array) {
-		final int boundaryStartIndex = AU.search(array.getRawArray(), BOUNDARY_BYTES, 1, 1);
+		final int boundaryStartIndex = AU.search(array.getRawArray(), array.length(), BOUNDARY_BYTES, 1, 1);
 		if (boundaryStartIndex <= -1) {
 			return new Fm(false, "");
 		}
 
-		final int boundaryEndIndex = AU.search(array.getRawArray(), STU.CRLF_BYTES, 1, boundaryStartIndex + BOUNDARY_BYTES.length);
+		final int boundaryEndIndex = AU.search(array.getRawArray(), array.length(), STU.CRLF_BYTES, 1, boundaryStartIndex + BOUNDARY_BYTES.length);
 		if (boundaryEndIndex > boundaryStartIndex) {
 
 			final String boundary = new String(array.getRawArray(),

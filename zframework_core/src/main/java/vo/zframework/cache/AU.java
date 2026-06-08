@@ -44,18 +44,20 @@ public class AU {
 			return -1;
 		}
 
-		return search(data, keyword.getBytes(), iN, fromIndex);
+		return search(data, data.length, keyword.getBytes(), iN, fromIndex);
 	}
 
-	public static int search(final byte[] data, final byte[] keyword, final int iN, final int fromIndex) {
+	public static int search(final byte[] data, final int dataTo, final byte[] keyword, final int iN, final int fromIndex) {
 		if (isEmpty(keyword)) {
 			return -1;
 		}
 
 		int findN = 0;
-		for (int i = fromIndex; i < data.length; i++) {
+		for (int i = fromIndex; i < dataTo; i++) {
+//		for (int i = fromIndex; i < data.length; i++) {
 			boolean find = true;
-			if (i >= ((data.length - keyword.length) + 1)) {
+			if (i >= ((dataTo - keyword.length) + 1)) {
+//			if (i >= ((data.length - keyword.length) + 1)) {
 				find = false;
 				break;
 			}

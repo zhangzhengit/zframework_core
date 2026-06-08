@@ -89,10 +89,10 @@ public class STU {
 	 * @return
 	 */
 	public static List<String> split(final byte[] ba, final String keyword) {
-		return split(ba, keyword.getBytes());
+		return split(ba, ba.length, keyword.getBytes());
 	}
 
-	public static List<String> split(final byte[] ba, final byte[] kba) {
+	public static List<String> split(final byte[] ba, final int baTo, final byte[] kba) {
 
 		final List<String> ls = new ArrayList<>();
 
@@ -103,9 +103,11 @@ public class STU {
 
 
 		while (true) {
-			final int i = AU.search(ba, kba, 1, fromIndex);
+			final int i = AU.search(ba, baTo, kba, 1, fromIndex);
+//			final int i = AU.search(ba, ba.length, kba, 1, fromIndex);
 			if (i <= -1) {
-				ls.add(new String(ba, to + kba.length, ba.length - (to + kba.length)));
+				ls.add(new String(ba, to + kba.length, baTo - (to + kba.length)));
+//				ls.add(new String(ba, to + kba.length, ba.length - (to + kba.length)));
 				break;
 			}
 

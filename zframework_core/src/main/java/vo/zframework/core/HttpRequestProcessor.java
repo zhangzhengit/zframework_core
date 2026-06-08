@@ -193,7 +193,7 @@ public class HttpRequestProcessor {
 	 */
 	public HttpParseStatusEnum parseHeader(final PD pd, final ZArray array) {
 
-		final int headerEndIndex = AU.search(array.getRawArray(), STU.CRLFCRLF_BYTES, 1, pd.getSearchHeaderEndIndexFromIndex());
+		final int headerEndIndex = AU.search(array.getRawArray(), array.length(), STU.CRLFCRLF_BYTES, 1, pd.getSearchHeaderEndIndexFromIndex());
 		if (headerEndIndex <= -1) {
 
 			// 本次read后没找到，则设置下次搜索开始位置为当前已读取的长度，即：从下次读取的内容的开头开始搜
@@ -251,7 +251,7 @@ public class HttpRequestProcessor {
 	}
 
 	private static String parseRequestLine(final PD pd, final ZArray array) {
-		final int requestLineEndIndex = AU.search(array.getRawArray(), STU.CRLF_BYTES, 1, 3);
+		final int requestLineEndIndex = AU.search(array.getRawArray(), array.length(), STU.CRLF_BYTES, 1, 3);
 
 		if (requestLineEndIndex <= -1) {
 			return null;
@@ -263,9 +263,10 @@ public class HttpRequestProcessor {
 	}
 
 	private static String gContentLength(final ZArray array, final PD pd) {
-		final int clIndex = AU.search(array.getRawArray(), CONTENT_LENGTH_BYTES, 1, pd.getRequestLineEndIndex() + STU.CRLF.length());
+		final int clIndex = AU.search(array.getRawArray(), array.length()
+				, CONTENT_LENGTH_BYTES, 1, pd.getRequestLineEndIndex() + STU.CRLF.length());
 		if (clIndex > -1) {
-			final int clEIndex = AU.search(array.getRawArray(), STU.CRLF_BYTES, 1, clIndex);
+			final int clEIndex = AU.search(array.getRawArray(), array.length(), STU.CRLF_BYTES, 1, clIndex);
 			if (clEIndex > clIndex) {
 
 				final String contentLengthS = new String(array.getRawArray(), clIndex, clEIndex - clIndex);
