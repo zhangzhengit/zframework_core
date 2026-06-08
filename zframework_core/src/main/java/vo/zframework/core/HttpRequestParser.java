@@ -46,18 +46,16 @@ public class HttpRequestParser {
 	 * 从一个完整的http请求报文中解析出所有内容
 	 *
 	 * @param httpRequestBA 一个完整的http请求的 byte[]
+	 * @param headerEndIndex TODO
 	 * @return
 	 */
-	public static ZRequest parse(final byte[] httpRequestBA) {
-
-		final int headerEndIndex = AU.search(httpRequestBA, STU.CRLFCRLF_BYTES, 1, 0);
+	public static ZRequest parse(final byte[] httpRequestBA, final int headerEndIndex) {
 
 		// FIXME 2026年6月7日 06:32:16 zhangzhen : 下面这个copy应该是不需要的，但是split 的是CRLF，而截止符号是CRLFCRLF，不好处理
 		// 也不方便在split中处理
-
 		final byte[] hba = Arrays.copyOfRange(httpRequestBA, 0, headerEndIndex);
 
-		final List<String> lineList = STU.split(hba, STU.CRLF);
+		final List<String> lineList = STU.split(hba, STU.CRLF_BYTES);
 		final ZRequest request= new ZRequest(lineList);
 
 		if ((headerEndIndex + STU.CRLFCRLF.length()) < httpRequestBA.length) {

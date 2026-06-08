@@ -89,6 +89,10 @@ public class STU {
 	 * @return
 	 */
 	public static List<String> split(final byte[] ba, final String keyword) {
+		return split(ba, keyword.getBytes());
+	}
+
+	public static List<String> split(final byte[] ba, final byte[] kba) {
 
 		final List<String> ls = new ArrayList<>();
 
@@ -97,16 +101,15 @@ public class STU {
 
 		int fromIndex = 0;
 
-		final byte[] kba = keyword.getBytes();
 
 		while (true) {
 			final int i = AU.search(ba, kba, 1, fromIndex);
 			if (i <= -1) {
-				ls.add(new String(Arrays.copyOfRange(ba, to + keyword.length(), ba.length)));
+				ls.add(new String(Arrays.copyOfRange(ba, to + kba.length, ba.length)));
 				break;
 			}
 
-			fromIndex = i + keyword.length();
+			fromIndex = i + kba.length;
 			to = i;
 
 			if (from == to) {
@@ -115,7 +118,7 @@ public class STU {
 
 			ls.add(new String(Arrays.copyOfRange(ba, from, to)));
 
-			from = to + keyword.length();
+			from = to + kba.length;
 		}
 
 		return ls;
