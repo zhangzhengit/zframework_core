@@ -592,7 +592,7 @@ public class Task {
 			if (p.isAnnotationPresent(ZRequestHeader.class)) {
 				final ZRequestHeader a = RU.getAnnotation(p, ZRequestHeader.class);
 				final String name = a.value();
-				final String headerValue = request.getHeaderMap().get(name);
+				final String headerValue = request.getHeader(name);
 				if ((headerValue == null) && a.required()) {
 					final String message = "请求方法[" + path + "]的header[" + p.getName() + "]不存在";
 					throw new FormPairParseException(message, HttpStatusEnum.HTTP_400.getStatus());

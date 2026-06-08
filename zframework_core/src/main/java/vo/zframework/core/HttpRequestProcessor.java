@@ -32,6 +32,8 @@ public class HttpRequestProcessor {
 
 	private static final ServerConfigurationProperties SERVER_CONFIGURATIONPROPERTIES= ZContext.getBean(ServerConfigurationProperties.class);
 
+	private static final String[] SUPPORTED_METHOD = SERVER_CONFIGURATIONPROPERTIES.getMethod().split(",");
+
 	private static final int UPLOAD_FILE_TO_TEMP_SIZE = SERVER_CONFIGURATIONPROPERTIES.getUploadFileToTempSize();
 
 	/**
@@ -91,24 +93,28 @@ public class HttpRequestProcessor {
 
 		final String method = requestLine.substring(0, i);
 
-		final String serverMethod = SERVER_CONFIGURATIONPROPERTIES.getMethod();
-		final String[] ma = serverMethod.split(",");
-		for (final String m : ma) {
-			if (method.equals(m)) {
-				final MethodEnum methodEnum = MethodEnum.valueOfMethodStringUpper(method);
-				pd.setMethodEnum(methodEnum);
-				return HttpParseStatusEnum.CHECK_URI;
-			}
+		final MethodEnum methodEnum = this.methodSupport(method);
+		if (methodEnum != null) {
+			pd.setMethodEnum(methodEnum);
+			return HttpParseStatusEnum.CHECK_URI;
 		}
 
 		// 到此，METHOD 不支持
 		final ZResponse response = ReU.response405(method, false);
 		pd.setException(response);
 
-		// FIXME 2026年5月26日 09:23:02 zhangzhen : END后，本次请求的请求行之后的数据怎么处理？
-		// 要不直接closeSocket?
 		return HttpParseStatusEnum.EXCEPTION;
+	}
 
+	private MethodEnum methodSupport(final String method) {
+
+		for (final String m : SUPPORTED_METHOD) {
+			if (method.equals(m)) {
+				return MethodEnum.valueOfMethodStringUpper(method);
+			}
+		}
+
+		return null;
 	}
 
 	/**

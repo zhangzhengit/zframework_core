@@ -148,7 +148,7 @@ public class ZRequest {
 
 	public int getServerPort() {
 
-		final String host = this.getHeaderMap().get(HeaderEnum.HOST.getName());
+		final String host = this.headerMap.get(HeaderEnum.HOST.getName());
 
 		final int i = host.indexOf(STU.COLON);
 		if (i > -1) {
@@ -189,7 +189,7 @@ public class ZRequest {
 		if (!this.isContentTypeFormData()) {
 			return null;
 		}
-		final String ct = this.getHeaderMap().get(HeaderEnum.CONTENT_TYPE.getName());
+		final String ct = this.headerMap.get(HeaderEnum.CONTENT_TYPE.getName());
 
 		final int i = ct.indexOf(BOUNDARY);
 		if (i > -1) {
@@ -272,7 +272,7 @@ public class ZRequest {
 
 	public ZCookie getCookie(final String name) {
 
-		final String cookisString = this.getHeaderMap().get(HeaderEnum.COOKIE.getName());
+		final String cookisString = this.headerMap.get(HeaderEnum.COOKIE.getName());
 		if (STU.isEmpty(cookisString)) {
 			return null;
 		}
@@ -291,7 +291,7 @@ public class ZRequest {
 
 	public ZCookie[] getCookies() {
 
-		final String cookisString = this.getHeaderMap().get(HeaderEnum.COOKIE.getName());
+		final String cookisString = this.headerMap.get(HeaderEnum.COOKIE.getName());
 		if (STU.isEmpty(cookisString)) {
 			return null;
 		}
@@ -326,11 +326,13 @@ public class ZRequest {
 	}
 
 	public String getUserAgent() {
-		return this.getHeaderMap().get(HeaderEnum.USER_AGENT.getName());
+		return this.headerMap.get(HeaderEnum.USER_AGENT.getName());
 	}
 
 	public String getHeader(final String name) {
-		return this.getHeaderMap().get(name);
+		// FIXME 2026年6月9日 05:10:03 zhangzhen : 要不要延迟解析？似乎不行，对于一个http服务器，要保证各个header合法，
+		// 但是提前全解析了又会有很多header用不到，做的全是无用功
+		return this.headerMap.get(name);
 	}
 
 	public boolean isKeepAlive() {
@@ -603,10 +605,6 @@ public class ZRequest {
 
 	public String getVersion() {
 		return this.version;
-	}
-
-	public Map<String, String> getHeaderMap() {
-		return this.headerMap;
 	}
 
 	public byte[] getOriginalRequestBytes() {
