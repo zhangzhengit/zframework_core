@@ -4,6 +4,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -99,6 +100,11 @@ public class ZRequest {
 
 
 	final Socket socket;
+
+	/**
+	 * 暂存值
+	 */
+	ZCookie[] cookies;
 
 	/**
 	 * 对 isKeepAlive方法结果的暂存
@@ -271,17 +277,9 @@ public class ZRequest {
 	}
 
 	public ZCookie getCookie(final String name) {
-
-		final String cookisString = this.headerMap.get(HeaderEnum.COOKIE.getName());
-		if (STU.isEmpty(cookisString)) {
-			return null;
-		}
-
-		final String[] a = cookisString.split(STU.SEMICOLON);
-		for (final String s : a) {
-			final String[] c1 = s.split(STU.EQUALS);
-			if (c1[0].trim().equals(name)) {
-				final ZCookie zCookie = new ZCookie(c1[0].trim(), c1[1].trim());
+		final ZCookie[] cs = this.getCookies();
+		for (final ZCookie zCookie : cs) {
+			if (zCookie.getName().equals(name)) {
 				return zCookie;
 			}
 		}
@@ -290,6 +288,10 @@ public class ZRequest {
 	}
 
 	public ZCookie[] getCookies() {
+
+		if (this.cookies != null) {
+			return this.cookies;
+		}
 
 		final String cookisString = this.headerMap.get(HeaderEnum.COOKIE.getName());
 		if (STU.isEmpty(cookisString)) {
@@ -301,11 +303,13 @@ public class ZRequest {
 		int cI = 0;
 		for (final String s : a) {
 			final String[] c1 = s.split(STU.EQUALS);
-			final ZCookie zCookie = new ZCookie(c1[0].trim(),c1[1].trim());
+			final ZCookie zCookie = new ZCookie(c1[0].trim(), c1[1].trim());
 
 			c[cI] = zCookie;
 			cI++;
 		}
+
+		this.cookies = c;
 
 		return c;
 	}
