@@ -27,7 +27,6 @@ import vo.zframework.enums.ConnectionEnum;
 import vo.zframework.enums.TransferEncodingEnum;
 import vo.zframework.http.HttpStatusEnum;
 import vo.zframework.http.ZCookie;
-import vo.zframework.http.ZETag;
 
 /**
  *
@@ -359,24 +358,25 @@ public class ZResponse {
 	// 显然是错的，现在还没取到文件的size和最后修改日期/名称/等等内容
 	// FIXME 2026年6月7日 03:16:22 zhangzhen : 这个方法不好，违反了单一功能原则，改掉，并且返回返回header
 	void setETag(final ZRequest request, final byte[] ba, final ETagEnum eTagEnum) {
-		final ZETag methodETag = Task.getMethodAnnotation(request, ZETag.class);
-		if (methodETag != null) {
 
-			final String murmur3 = Hash.murmur3(ba);
-			final String md5 = Hash.md5(ba);
-			final String goodFastHash = Hash.goodFastHash(ba);
-			final String sha256 = Hash.sha256(ba);
-			final String v4 =  murmur3 + md5 + goodFastHash + sha256;
+		if (!PDTL.get().getZrMethod().hasZETag()) {
+			return;
+		}
 
-			final String eTag = eTagEnum.handle(v4);
+		final String murmur3 = Hash.murmur3(ba);
+		final String md5 = Hash.md5(ba);
+		final String goodFastHash = Hash.goodFastHash(ba);
+		final String sha256 = Hash.sha256(ba);
+		final String v4 = murmur3 + md5 + goodFastHash + sha256;
 
-			this.header(HeaderEnum.ETAG.getName(), eTag);
+		final String eTag = eTagEnum.handle(v4);
 
-			final String ifNoneMatch = request.getHeader(HeaderEnum.IF_NONE_MATCH.getName());
-			if ((ifNoneMatch != null) && Objects.equals(eTag, ifNoneMatch)) {
-				this.httpStatus(HttpStatusEnum.HTTP_304.getStatus());
-				this.clearBody();
-			}
+		this.header(HeaderEnum.ETAG.getName(), eTag);
+
+		final String ifNoneMatch = request.getHeader(HeaderEnum.IF_NONE_MATCH.getName());
+		if ((ifNoneMatch != null) && Objects.equals(eTag, ifNoneMatch)) {
+			this.httpStatus(HttpStatusEnum.HTTP_304.getStatus());
+			this.clearBody();
 		}
 	}
 
@@ -615,7 +615,7 @@ public class ZResponse {
 		}
 
 		if (this.getHttpStatus() == HttpStatusEnum.HTTP_200.getStatus()) {
-			HTTPResponseProcessor.setCacheControl(request, this);
+			HTTPResponseProcessor.setCacheControl(this);
 		}
 
 	}

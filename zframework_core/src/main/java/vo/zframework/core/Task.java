@@ -99,6 +99,7 @@ public class Task {
 	 * @return
 	 * @throws Exception
 	 */
+	// FIXME 2026年6月10日 06:47:53 zhangzhen : 截止现在，本方法只有一个调用者，看是不是可以删掉本方法？
 	static <T extends Annotation> T getMethodAnnotation(final ZRequest request, final Class<T> annoClass) {
 
 		final String key = request.getRequestURI() + '@' + annoClass.getName()  + '-' + annoClass.hashCode();

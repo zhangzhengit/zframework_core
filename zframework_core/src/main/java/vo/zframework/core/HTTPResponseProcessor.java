@@ -86,8 +86,7 @@ public class HTTPResponseProcessor {
 				return;
 			}
 
-
-			final Integer httpStatus = response.getHttpStatus();
+			final int httpStatus = response.getHttpStatus();
 			if (httpStatus == HttpStatusEnum.HTTP_200.getStatus()) {
 				response.setETag(request, response.getBody(), ETagEnum.STRONG);
 			}
@@ -110,37 +109,16 @@ public class HTTPResponseProcessor {
 
 	}
 
+	public static void setCacheControl(final ZResponse response) {
 
-
-	public static void setCacheControl(final ZRequest request, final ZResponse response) {
-
-		if (request == null) {
-			return;
-		}
-
-		final String key = request.getRequestURI() + '@' + ZCacheControl.class.getName() + '-'
-				+ ZCacheControl.class.hashCode();
-
-		final ZCacheControl cacheControl = ZRC.singleton().computeIfAbsent("cc" + '-' + key,
-				() -> Task.getMethodAnnotation0(request, ZCacheControl.class));
-
+		final ZCacheControl cacheControl = PDTL.get().getZrMethod().getCacheControl();
 		if (cacheControl == null) {
 			return;
 		}
 
-		final StringJoiner joiner = new StringJoiner(",");
+		final String cacheControlVString = PDTL.get().getZrMethod().getCacheControlVString();
 
-		final CacheControlEnum[] vs = cacheControl.value();
-		for (final CacheControlEnum v : vs) {
-			joiner.add(v.getValue());
-		}
-
-		final int maxAge = cacheControl.maxAge();
-		if (maxAge != ZCacheControl.IGNORE_MAX_AGE) {
-			joiner.add(CacheControlEnum.MAX_AGE.getValue().toLowerCase() + STU.EQUALS + maxAge);
-		}
-
-		response.header(HeaderEnum.CACHE_CONTROL.getName(), joiner.toString());
+		response.header(HeaderEnum.CACHE_CONTROL.getName(), cacheControlVString);
 	}
 
 	// FIXME 2026年5月25日 14:42:26 zhangzhen : 注意：这个不要删，黄了也不删，这是以前打算过的功能，

@@ -4,9 +4,12 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.util.StringJoiner;
 
 import vo.zframework.anno.ZResponseBody;
 import vo.zframework.cache.AU;
+import vo.zframework.cache.STU;
+import vo.zframework.core.CacheControlEnum;
 import vo.zframework.core.ContentTypeEnum;
 import vo.zframework.core.ZMultipartFile;
 import vo.zframework.core.ZResponse;
@@ -66,11 +69,27 @@ public class ZRMethod {
 	private final boolean hasZRequestParam;
 	private final boolean hasZMultipartFile;
 
+	private final boolean hasZETag;
+
+	private final ZCacheControl cacheControl;
+	
+	private final String cacheControlVString;
+
 	public ZRMethod(final Method method, final CTEnum ctEnum, final Object zcObject) {
 
 		this.method = method;
 
 		this.methodHandle = ZRMethod.gMH(method, zcObject);
+
+		this.hasZETag = method.getAnnotation(ZETag.class) != null;
+
+		this.cacheControl = method.getAnnotation(ZCacheControl.class);
+
+		if (this.cacheControl != null) {
+			this.cacheControlVString = this.gCCVS();
+		} else {
+			this.cacheControlVString = null;
+		}
 
 		// FIXME 2025年12月6日 14:38:05 zhangzhen :  接下来实现这个功能
 		this.consumes = method.getAnnotation(ZRequestMapping.class).consumes();
@@ -101,6 +120,22 @@ public class ZRMethod {
 		}
 
 		this.ctEnum = ctEnum;
+	}
+
+	private String gCCVS() {
+		final StringJoiner joiner = new StringJoiner(",");
+
+		final CacheControlEnum[] vs = this.cacheControl.value();
+		for (final CacheControlEnum v : vs) {
+			joiner.add(v.getValue());
+		}
+
+		final int maxAge = this.cacheControl.maxAge();
+		if (maxAge != ZCacheControl.IGNORE_MAX_AGE) {
+			joiner.add(CacheControlEnum.MAX_AGE.getValue().toLowerCase() + STU.EQUALS + maxAge);
+		}
+
+		return joiner.toString();
 	}
 
 	private static MethodHandle gMH(final Method method, final Object zcObject) {
@@ -197,6 +232,18 @@ public class ZRMethod {
 
 	public MethodHandle getMethodHandle() {
 		return this.methodHandle;
+	}
+
+	public boolean hasZETag() {
+		return this.hasZETag;
+	}
+
+	public ZCacheControl getCacheControl() {
+		return this.cacheControl;
+	}
+
+	public String getCacheControlVString() {
+		return cacheControlVString;
 	}
 
 }
