@@ -45,17 +45,18 @@ public class HttpRequestParser {
 	/**
 	 * 从一个完整的http请求报文中解析出所有内容
 	 *
-	 * @param httpRequestBA 一个完整的http请求的 byte[]
-	 * @param headerEndIndex TODO
+	 * @param data 包含了一个完整的http请求的 byte[]，可能后面一部分全是0
+	 * @param dataLength data的实际有效长度，实际有数据的长度
+	 * @param headerEndIndex header截止index
 	 * @return
 	 */
-	public static ZRequest parse(final byte[] httpRequestBA, final int headerEndIndex) {
+	public static ZRequest parse(final byte[] data, final int dataLength, final int headerEndIndex) {
 
-		final List<String> lineList = STU.split(httpRequestBA, headerEndIndex, STU.CRLF_BYTES);
+		final List<String> lineList = STU.split(data, headerEndIndex, STU.CRLF_BYTES);
 		final ZRequest request= new ZRequest(lineList);
 
-		if ((headerEndIndex + STU.CRLFCRLF.length()) < httpRequestBA.length) {
-			final byte[] bodyBA = Arrays.copyOfRange(httpRequestBA, headerEndIndex + STU.CRLFCRLF.length(), httpRequestBA.length);
+		if ((headerEndIndex + STU.CRLFCRLF.length()) < dataLength) {
+			final byte[] bodyBA = Arrays.copyOfRange(data, headerEndIndex + STU.CRLFCRLF.length(), dataLength);
 			request.setBody(bodyBA);
 		} else {
 			request.setBody(new byte[] {});

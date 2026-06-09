@@ -242,7 +242,8 @@ public class HttpRequestProcessor {
 	 */
 	public HttpParseStatusEnum end(final PD pd, final ZArray array) {
 
-		final ZRequest request = HttpRequestParser.parse(array.toByteArray(), pd.getHeaderEndIndex());
+//		final ZRequest request = HttpRequestParser.parse(array.toByteArray(), 223232323, pd.getHeaderEndIndex());
+		final ZRequest request = HttpRequestParser.parse(array.getRawArray(), array.length(), pd.getHeaderEndIndex());
 		request.setMethodEnum(pd.getMethodEnum());
 
 		pd.setRequest(request);

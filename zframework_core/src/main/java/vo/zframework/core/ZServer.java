@@ -14,6 +14,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import vo.log.core.ZLog2;
 import vo.zframework.configuration.ServerConfigurationProperties;
 import vo.zframework.http.HttpStatusEnum;
+import vo.zframework.http.ZRMethod;
 
 /**
  * 	http服务器
@@ -191,7 +192,11 @@ public class ZServer {
 
 	private static void response(final ZRequest request, final ZArray array, final PD pd) {
 		request.setTf(pd.getTf());
-		request.setOriginalRequestBytes(array.toByteArray());
+
+		final ZRMethod zrMethod = pd.getZrMethod();
+		if (zrMethod.hasZRequestParam() || zrMethod.hasZMultipartFile()) {
+			request.setOriginalRequestBytes(array.toByteArray());
+		}
 
 		requestHandler.handle(request);
 	}
