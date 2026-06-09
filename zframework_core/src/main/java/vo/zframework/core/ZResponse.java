@@ -2,7 +2,6 @@ package vo.zframework.core;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -19,7 +18,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import vo.log.core.ZLog2;
-import vo.zframework.cache.AU;
 import vo.zframework.cache.CU;
 import vo.zframework.cache.STU;
 import vo.zframework.compression.Deflater;
@@ -307,6 +305,7 @@ public class ZResponse {
 					this.writeStatusLineAndHeaders();
 
 					this.write(this.array.getRawArray(), this.array.length());
+					this.flush();
 
 				}
 
@@ -316,6 +315,7 @@ public class ZResponse {
 				this.compressBodyAndWrite(request, read, exceedsCompressionMinLength, bx);
 
 				this.write(CRLF_BYTES);
+				this.flush();
 
 				if (read < bufferCapacity) {
 					break;
@@ -326,6 +326,7 @@ public class ZResponse {
 		}
 
 		this.write(ZERO_RNRN_BYTES);
+		this.flush();
 
 		this.write.set(true);
 
@@ -644,8 +645,16 @@ public class ZResponse {
 		try {
 			if (length > 0) {
 				this.bufferedOutputStream.write(data, 0, length);
-				this.bufferedOutputStream.flush();
 			}
+		} catch (final IOException e) {
+			e.printStackTrace();
+			ZServer.closeSocket(this.socket);
+		}
+	}
+
+	private void flush()  {
+		try {
+			this.bufferedOutputStream.flush();
 		} catch (final IOException e) {
 			e.printStackTrace();
 			ZServer.closeSocket(this.socket);
@@ -664,7 +673,7 @@ public class ZResponse {
 		this.writeBody();
 
 		this.write(this.array.getRawArray(), this.array.length());
-
+		this.flush();
 	}
 
 	public ZResponse() {
