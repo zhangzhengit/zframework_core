@@ -601,7 +601,7 @@ public class ZResponse {
 
 		final ZRequest request = ReqeustInfo.get();
 
-		if (request.isKeepAlive()) {
+		if ((request != null) && request.isKeepAlive()) {
 			this.header(HeaderEnum.CONNECTION.getName(), ConnectionEnum.KEEP_ALIVE.getValue());
 		}
 
