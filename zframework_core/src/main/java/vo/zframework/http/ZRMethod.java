@@ -1,5 +1,7 @@
 package vo.zframework.http;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 
@@ -24,6 +26,8 @@ public class ZRMethod {
 	 * API方法的Method
 	 */
 	private final Method method;
+
+	private	final MethodHandle methodHandle;
 
 	/**
 	 *
@@ -62,8 +66,11 @@ public class ZRMethod {
 	private final boolean hasZRequestParam;
 	private final boolean hasZMultipartFile;
 
-	public ZRMethod(final Method method, final CTEnum ctEnum) {
+	public ZRMethod(final Method method, final CTEnum ctEnum, final Object zcObject) {
+
 		this.method = method;
+
+		this.methodHandle = ZRMethod.gMH(method, zcObject);
 
 		// FIXME 2025年12月6日 14:38:05 zhangzhen :  接下来实现这个功能
 		this.consumes = method.getAnnotation(ZRequestMapping.class).consumes();
@@ -94,6 +101,27 @@ public class ZRMethod {
 		}
 
 		this.ctEnum = ctEnum;
+	}
+
+	private static MethodHandle gMH(final Method method, final Object zcObject) {
+
+		final MethodHandles.Lookup lookup = MethodHandles.lookup();
+
+		try {
+			final MethodHandle bindTo = lookup.unreflect(method).bindTo(zcObject);
+
+			final int paramCount = bindTo.type().parameterCount();
+			MethodHandle mhT = bindTo.asSpreader(Object[].class, paramCount);
+			if (mhT.type().returnType() != Object.class) {
+				mhT = mhT.asType(mhT.type().changeReturnType(Object.class));
+			}
+
+			return mhT;
+		} catch (final IllegalAccessException e) {
+			e.printStackTrace();
+		}
+
+		return null;
 	}
 
 	private static boolean gZRequestParam(final Parameter[] ps) {
@@ -165,6 +193,10 @@ public class ZRMethod {
 
 	public boolean hasZMultipartFile() {
 		return this.hasZMultipartFile;
+	}
+
+	public MethodHandle getMethodHandle() {
+		return this.methodHandle;
 	}
 
 }

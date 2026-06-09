@@ -24,7 +24,8 @@ public class AOPParameter {
 	public Object invoke() {
 
 		try {
-			if (getIsVOID()) {
+			if (this.getIsVOID()) {
+				// FIXME 2026年6月10日 04:37:41 zhangzhen : 搜一下method.invoke记得都改为MethodHandle
 				this.method.invoke(this.target, this.parameterList.toArray());
 				return null;
 			}
@@ -93,5 +94,5 @@ public class AOPParameter {
 		this.parameterList = null;
 		this.target = null;
 	}
-	
+
 }

@@ -325,7 +325,7 @@ public class Task {
 		// 在此zhi执行
 		final List<ZHandlerInterceptor> zhiList = ZHandlerInterceptorScanner.match(request.getRequestURI());
 		if (CU.isEmpty(zhiList)) {
-			r = invoke0(zrMethod.getMethod(), parametersArray, zControllerObject);
+			r = invoke0(zControllerObject, zrMethod, parametersArray);
 		} else {
 			final ZResponse response = new ZResponse();
 			final ArrayList<Object> pa = new ArrayList<>();
@@ -350,7 +350,7 @@ public class Task {
 
 			if (!stop) {
 
-				r = invoke0(zrMethod.getMethod(), parametersArray, zControllerObject);
+				r = invoke0(zControllerObject, zrMethod, parametersArray);
 				final ZModelAndView modelAndView =
 						zrMethod.getCtEnum() == CTEnum.NORMAL
 						? new ZModelAndView(true, String.valueOf(r), readHtmlContent(r), ZModel.get(),
@@ -479,29 +479,32 @@ public class Task {
 	/**
 	 * 真正的API目标方法执行，统一在本方法里面执行，方便统一处理
 	 *
-	 * @param apiMethod		要执行的API的method
-	 * @param pArray		此method的参数数组，如：ZRequest/ZModel/@ZRequestHeader/@ZRequestParam等等
-	 * @param zControllerObject	此method所在的 @ZController 标记的对象
+	 * @param zControllerObject		此method所在的 @ZController 标记的对象
+	 * @param zrMethod 				组合的Method相关内容的对象
+	 * @param pArray				此method的参数数组，如：ZRequest/ZModel/@ZRequestHeader/@ZRequestParam等等
 	 * @return
 	 * @throws IllegalAccessException
 	 * @throws IllegalArgumentException
 	 * @throws InvocationTargetException
 	 */
-	private static Object invoke0(final Method apiMethod, final Object[] pArray, final Object zControllerObject)
-			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+	private static Object invoke0(final Object zControllerObject, final ZRMethod zrMethod, final Object[] pArray) {
 
+		try {
+			return zrMethod.getMethodHandle().invokeExact(pArray);
+		} catch (final Throwable e) {
+			e.printStackTrace();
+			return null;
+		} finally {
 
-		final Object r = apiMethod.invoke(zControllerObject, pArray);
-
-		if (pArray.length > 0) {
-			try {
-				closeZMFInputStreamAndDeleteTempFile(pArray);
-			} catch (final IOException e) {
-				e.printStackTrace();
+			if (pArray.length > 0) {
+				try {
+					closeZMFInputStreamAndDeleteTempFile(pArray);
+				} catch (final IOException e) {
+					e.printStackTrace();
+				}
 			}
 		}
 
-		return r;
 	}
 
 	private static void closeZMFInputStreamAndDeleteTempFile(final Object[] arraygP) throws IOException {

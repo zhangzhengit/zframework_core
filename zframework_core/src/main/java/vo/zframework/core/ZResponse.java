@@ -94,7 +94,7 @@ public class ZResponse {
 
 	private static final byte[] ZERO_RNRN_BYTES = ("0" + STU.CRLFCRLF).getBytes();
 
-	private static final int BIS_DEFAULT_BUFFER_SIZE = 1024 * 32;
+	private static final int BIS_DEFAULT_BUFFER_SIZE = 1024 * 8;
 
 	private static final ServerConfigurationProperties SERVER_CONFIGURATIONPROPERTIES = ZContext
 			.getBean(ServerConfigurationProperties.class);
@@ -113,12 +113,14 @@ public class ZResponse {
 
 	private static final byte[] HTTP_1_1_BYTES = HTTP_1_1.getBytes();
 
-	private final ZArray array = new ZArray(1024 * 4);
+	public final static int D_A_C = 1024 * 4;
+
+	private final ZArray array = SocketTL.get().getArray();
 
 	/**
 	 * write 方法是否执行过
 	 */
-	private final AtomicBoolean write = new AtomicBoolean(false);
+	private volatile boolean write = false;
 	private final AtomicBoolean setContentType  = new AtomicBoolean(false);
 
 	private String contentType;
@@ -140,7 +142,7 @@ public class ZResponse {
 	 * @return
 	 */
 	public boolean isWritten() {
-		return this.write.get();
+		return this.write;
 	}
 
 	/**
@@ -256,7 +258,7 @@ public class ZResponse {
 
 		this.checkBIC();
 
-		if (this.write.get()) {
+		if (this.isWritten()) {
 			return;
 		}
 
@@ -300,8 +302,7 @@ public class ZResponse {
 					this.header(HeaderEnum.TRANSFER_ENCODING.getName(), TransferEncodingEnum.CHUNKED.getValue());
 					this.addStatusLineAndHeaders();
 
-					this.write(this.array.getRawArray(), this.array.length());
-					this.flush();
+					this.wrieZArrayAndFlush();
 
 				}
 
@@ -324,7 +325,9 @@ public class ZResponse {
 		this.write(ZERO_RNRN_BYTES);
 		this.flush();
 
-		this.write.set(true);
+		this.write = true;
+
+		this.resetZArray();
 
 		try {
 			bufferedInputStream.close();
@@ -337,6 +340,10 @@ public class ZResponse {
 			SocketTL.closeOutputStreamAndSocket();
 		}
 
+	}
+
+	private void resetZArray() {
+		this.array.reset();
 	}
 
 	/**
@@ -572,7 +579,7 @@ public class ZResponse {
 	 * 根据header和body 来响应结果，只响应一次
 	 */
 	public synchronized void write() {
-		if (this.write.get()) {
+		if (this.isWritten()) {
 			return;
 		}
 
@@ -580,7 +587,9 @@ public class ZResponse {
 
 		this.writeResponse();
 
-		this.write.set(true);
+		this.write = true;
+
+		this.resetZArray();
 
 		ZResponseStatus.written();
 
@@ -668,6 +677,10 @@ public class ZResponse {
 
 		this.addBody();
 
+		this.wrieZArrayAndFlush();
+	}
+
+	private void wrieZArrayAndFlush() {
 		this.write(this.array.getRawArray(), this.array.length());
 		this.flush();
 	}

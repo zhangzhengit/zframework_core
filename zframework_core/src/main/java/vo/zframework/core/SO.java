@@ -16,6 +16,8 @@ public class SO {
 	private final OutputStream outputStream;
 	private final BufferedOutputStream bufferedOutputStream;
 
+	private final ZArray array = new ZArray(ZResponse.D_A_C);
+
 	public SO(final Socket socket, final OutputStream outputStream, final BufferedOutputStream bufferedOutputStream) {
 		this.socket = socket;
 		this.outputStream = outputStream;
@@ -32,6 +34,10 @@ public class SO {
 
 	public BufferedOutputStream getBufferedOutputStream() {
 		return this.bufferedOutputStream;
+	}
+
+	public ZArray getArray() {
+		return this.array;
 	}
 
 }

@@ -40,41 +40,41 @@ public class ZControllerMap {
 	 * @param methodEnum 接口请求方法，如： MethodEnum.POST
 	 * @param mapping    匹配路径，如：/index
 	 * @param method     具体的接口方法
-	 * @param cte TODO
-	 * @param object     接口方法所在的对象
+	 * @param cte
+	 * @param zcObject     接口方法所在的对象
 	 * @param isRegex    mapping 是否正则表达式
 	 */
 	public synchronized static void put(final MethodEnum methodEnum, final String mapping, final Method method,
-			final CTEnum cte, final Object object, final boolean isRegex) {
+			final CTEnum cte, final Object zcObject, final boolean isRegex) {
 
 		final ZRequestMapping requestMapping = method.getAnnotation(ZRequestMapping.class);
 
-		checkAPI(methodEnum, mapping, method, object, requestMapping);
-		
+		checkAPI(methodEnum, mapping, method, zcObject, requestMapping);
+
 		final Parameter[] ps = method.getParameters();
 		for (final Parameter pp : ps) {
-			if(pp.getType().equals(ZMultipartFile.class) && (methodEnum != MethodEnum.POST
-					&& methodEnum != MethodEnum.PUT
-					&& methodEnum != MethodEnum.PATCH)
+			if(pp.getType().equals(ZMultipartFile.class) && ((methodEnum != MethodEnum.POST)
+					&& (methodEnum != MethodEnum.PUT)
+					&& (methodEnum != MethodEnum.PATCH))
 					) {
-				
-				
+
+
 				throw new StartupException(
 						"接口 " + method.getName() + " 带有 " + ZMultipartFile.class.getSimpleName() + " 参数，请改为 "
-				
+
 							+ MethodEnum.POST.name() + "/" + MethodEnum.PUT.name() + "/" + MethodEnum.PATCH.name()
-								
+
 						);
-				
+
 			}
-			
+
 		}
-		
-		methodPathTable.put(methodEnum, mapping, new ZRMethod(method, cte));
+
+		methodPathTable.put(methodEnum, mapping, new ZRMethod(method, cte, zcObject));
 
 		methodIsregexTable.put(method, mapping, isRegex);
 
-		objectMap.put(method, object);
+		objectMap.put(method, zcObject);
 
 		//		final ZRequestMappingConfigurationProperties zrmConf = ZContext.getBean(ZRequestMappingConfigurationProperties.class);
 		final int count = requestMapping.count() == ZRequestMapping.DEFAULT_COUNT ? ZRequestMapping.DEFAULT_COUNT : requestMapping.count();
@@ -88,10 +88,10 @@ public class ZControllerMap {
 					+ method.getName() + ",\t" + "count = " + count);
 		}
 
-		methodQPSTable.put(object.getClass().getName(), method.getName(), count);
-		methodTimeTable.put(object.getClass().getName(), method.getName(), requestMapping.time());
-		
-		
+		methodQPSTable.put(zcObject.getClass().getName(), method.getName(), count);
+		methodTimeTable.put(zcObject.getClass().getName(), method.getName(), requestMapping.time());
+
+
 		final ZQPSLimitation zqpsl = method.getAnnotation(ZQPSLimitation.class);
 		if (zqpsl != null) {
 			final ZQPSLimitationEnum type = zqpsl.type();
@@ -112,22 +112,22 @@ public class ZControllerMap {
 
 			if (countL > count) {
 				throw new IllegalArgumentException(
-						object.getClass().getCanonicalName() + "." + method.getName()
+						zcObject.getClass().getCanonicalName() + "." + method.getName()
 						+ " 配置错误：" +
 						"@" + ZQPSLimitation.class.getSimpleName() + ".count 不能大于 @"
 						+ ZRequestMapping.class.getSimpleName() + ".count"
 						);
 			}
 
-			methodZQPSLimitationTable.put(object.getClass().getName(), method.getName(), zqpsl);
+			methodZQPSLimitationTable.put(zcObject.getClass().getName(), method.getName(), zqpsl);
 		}
 	}
 
-	
+
 	public static final int getAPIMethodSize() {
 		return objectMap.size();
 	}
-	
+
 	public static ZQPSLimitation getZQPSLimitationByControllerNameAndMethodName(final String controllerName,final String methodName) {
 		final ZQPSLimitation zqpsLimitation = methodZQPSLimitationTable.get(controllerName, methodName);
 		return zqpsLimitation;
@@ -137,7 +137,7 @@ public class ZControllerMap {
 		final QCTimeEnum qcTimeEnum = methodTimeTable.get(controllerName, methodName);
 		return qcTimeEnum;
 	}
-	
+
 	public static Integer getQPSByControllerNameAndMethodName(final String controllerName,final String methodName) {
 		final Integer qps = methodQPSTable.get(controllerName, methodName);
 		return qps;

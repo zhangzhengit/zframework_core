@@ -143,7 +143,7 @@ public class ZServer {
 
 				if (   (parseStatusEnum == HttpParseStatusEnum.START)
 					|| (parseStatusEnum == HttpParseStatusEnum.EXCEPTION)) {
-					array.reset(capacity);
+					array.reset();
 					pd.setTf(null);
 				}
 

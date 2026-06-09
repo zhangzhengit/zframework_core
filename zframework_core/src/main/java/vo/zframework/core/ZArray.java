@@ -126,4 +126,8 @@ public class ZArray {
 		this.size = 0;
 	}
 
+	public void reset() {
+		this.size = 0;
+	}
+
 }
