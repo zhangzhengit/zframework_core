@@ -398,13 +398,13 @@ public class ZRequest {
 		}
 
 		// 0 为 请求行
-		final String line = request.getLineList().get(0);
-		request.original = line;
+		final String requestLine = request.getLineList().get(0);
+		request.original = requestLine;
 
-		final int methodIndex = line.indexOf(STU.SAPCE);
+		final int methodIndex = requestLine.indexOf(STU.SAPCE);
 
 		// path
-		parsePath(line, request, methodIndex);
+		parsePath(requestLine, request, methodIndex);
 
 		// paserHeader
 		parseHeader(request);
@@ -449,8 +449,8 @@ public class ZRequest {
 	}
 
 
-	private static void parsePath(final String s, final ZRequest request, final int methodIndex) {
-		final String requestURI = parseURI(s, request, methodIndex);
+	private static void parsePath(final String requestLine, final ZRequest request, final int methodIndex) {
+		final String requestURI = parseURI(requestLine, request, methodIndex);
 
 		try {
 			request.requestURI = java.net.URLDecoder.decode(requestURI, Task.DEFAULT_CHARSET_NAME);
@@ -479,13 +479,13 @@ public class ZRequest {
 		return null;
 	}
 
-	private static String parseURI(final String s, final ZRequest request, final int methodIndex) {
-		final int pathI = s.indexOf(STU.SAPCE, methodIndex + 1);
+	private static String parseURI(final String requestLine, final ZRequest request, final int methodIndex) {
+		final int pathI = requestLine.indexOf(STU.SAPCE, methodIndex + 1);
 		if (pathI <= -1) {
 			throw new IllegalArgumentException("请求行错误：找不到path");
 		}
 
-		final String requestURI = s.substring(methodIndex  + 1, pathI);
+		final String requestURI = requestLine.substring(methodIndex  + 1, pathI);
 
 		final int wenI = requestURI.indexOf("?");
 		if (wenI > -1) {
