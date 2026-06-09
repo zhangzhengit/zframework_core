@@ -116,8 +116,8 @@ public class ZResponse {
 	public static final String HTTP_1_1 = "HTTP/1.1 ";
 
 	private static final byte[] HTTP_1_1_BYTES = HTTP_1_1.getBytes();
-	private
-	final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(1024 * 4);
+
+	private final ZArray array = new ZArray(1024 * 4);
 
 	/**
 	 * write 方法是否执行过
@@ -306,7 +306,7 @@ public class ZResponse {
 					this.header(HeaderEnum.TRANSFER_ENCODING.getName(), TransferEncodingEnum.CHUNKED.getValue());
 					this.writeStatusLineAndHeaders();
 
-					this.write(this.byteArrayOutputStream.toByteArray());
+					this.write(this.array.getRawArray(), this.array.length());
 
 				}
 
@@ -457,19 +457,14 @@ public class ZResponse {
 	 * 写入状态行：如：HTTP/1.1 200 OK
 	 */
 	private void writeStatusLine() {
-		this.writeBA(HTTP_1_1_BYTES);
-		this.writeBA(String.valueOf(this.getHttpStatus()).getBytes());
-		this.writeBA(CRLF_BYTES);
+		this.arrayAdd(HTTP_1_1_BYTES);
+		this.arrayAdd(String.valueOf(this.getHttpStatus()).getBytes());
+		this.arrayAdd(CRLF_BYTES);
 	}
 
-	private void writeBA(final byte[] ba) {
-		try {
-			this.byteArrayOutputStream.write(ba);
-		} catch (final IOException e) {
-			e.printStackTrace();
-		}
+	private void arrayAdd(final byte[] ba) {
+		this.array.add(ba);
 	}
-
 
 	/**
 	 * 写入header部分
@@ -490,9 +485,9 @@ public class ZResponse {
 				   .append(STU.CRLF);
 		}
 
-		this.writeBA(headerBuilder.toString().getBytes());
+		this.arrayAdd(headerBuilder.toString().getBytes());
 
-		this.writeBA(CRLF_BYTES);
+		this.arrayAdd(CRLF_BYTES);
 	}
 
 	/**
@@ -500,8 +495,8 @@ public class ZResponse {
 	 */
 	private void writeBody() {
 		if (this.body != null) {
-			this.writeBA(this.body);
-			this.writeBA(CRLF_BYTES);
+			this.arrayAdd(this.body);
+			this.arrayAdd(CRLF_BYTES);
 		}
 	}
 
@@ -641,10 +636,14 @@ public class ZResponse {
 	}
 
 	private void write(final byte[] data) {
+		this.write(data, data.length);
+	}
+
+	private void write(final byte[] data, final int length) {
 
 		try {
-			if (AU.isNotEmpty(data)) {
-				this.bufferedOutputStream.write(data);
+			if (length > 0) {
+				this.bufferedOutputStream.write(data, 0, length);
 				this.bufferedOutputStream.flush();
 			}
 		} catch (final IOException e) {
@@ -664,8 +663,7 @@ public class ZResponse {
 
 		this.writeBody();
 
-		final byte[] byteArray = this.byteArrayOutputStream.toByteArray();
-		this.write(byteArray);
+		this.write(this.array.getRawArray(), this.array.length());
 
 	}
 
