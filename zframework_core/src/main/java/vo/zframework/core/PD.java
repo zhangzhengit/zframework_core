@@ -31,8 +31,6 @@ public class PD {
 	private String requestLine;
 	private String httpVersion;
 
-	private final Socket socket;
-
 	private MethodEnum methodEnum;
 
 	private ZRequest request;
@@ -47,11 +45,6 @@ public class PD {
 	private ZResponse exception;
 
 	private HttpParseStatusEnum parseStatusEnum;
-
-	public PD() {
-		final Socket socket2 = SocketTL.get();
-		this.socket = socket2;
-	}
 
 	public int getRequestLineEndIndex() {
 		return this.requestLineEndIndex;
@@ -83,10 +76,6 @@ public class PD {
 
 	public void setParseStatusEnum(final HttpParseStatusEnum parseStatusEnum) {
 		this.parseStatusEnum = parseStatusEnum;
-	}
-
-	public Socket getSocket() {
-		return this.socket;
 	}
 
 	public String getRequestLine() {

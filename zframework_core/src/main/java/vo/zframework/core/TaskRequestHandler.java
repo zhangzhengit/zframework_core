@@ -76,7 +76,7 @@ public final class TaskRequestHandler {
 				.write();
 
 			if (e instanceof IOException) {
-				ZServer.closeSocket();
+				SocketTL.closeOutputStreamAndSocket();
 			}
 
 			return;

@@ -1,5 +1,9 @@
 package vo.zframework.core;
 
+import java.io.BufferedOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.lang.classfile.AnnotationValue.OfAnnotation;
 import java.net.Socket;
 
 /**
@@ -10,13 +14,21 @@ import java.net.Socket;
  */
 public class SocketTL {
 
-	private final static ThreadLocal<Socket> TL = new ThreadLocal<>();
+	private final static ThreadLocal<SO> TL = new ThreadLocal<>();
 
 	public static void set(final Socket socket) {
-		TL.set(socket);
+		OutputStream outputStream = null;
+		try {
+			outputStream = socket.getOutputStream();
+		} catch (final IOException e) {
+			e.printStackTrace();
+		}
+
+		final SO so = new SO(socket, outputStream,  new BufferedOutputStream(outputStream));
+		TL.set(so);
 	}
 
-	public static Socket get() {
+	public static SO get() {
 		return TL.get();
 	}
 
@@ -24,5 +36,17 @@ public class SocketTL {
 		TL.remove();
 	}
 
+	public static void closeOutputStreamAndSocket() {
+		final SO so = get();
+		try {
+			so.getBufferedOutputStream().close();
+			so.getOutputStream().close();
+			if (!so.getSocket().isClosed()) {
+				so.getSocket().close();
+			}
+		} catch (final IOException e) {
+			e.printStackTrace();
+		}
+	}
 
 }

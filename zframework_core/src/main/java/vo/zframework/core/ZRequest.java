@@ -97,9 +97,6 @@ public class ZRequest {
 	 */
 	private String clientIp;
 
-
-	final Socket socket;
-
 	/**
 	 * 暂存值
 	 */
@@ -387,7 +384,6 @@ public class ZRequest {
 	}
 
 	public ZRequest(final List<String> lineList) {
-		this.socket = SocketTL.get();
 		this.lineList.addAll(lineList);
 		parseRequest(this);
 	}
@@ -435,11 +431,12 @@ public class ZRequest {
 		}
 
 		// FIXME 2023年11月16日 下午2:47:38 zhanghen: ab 测试这里可能取不到,修复掉
-		if (this.socket == null) {
+		final Socket socket = SocketTL.get().getSocket();
+		if (socket == null) {
 			return null;
 		}
 
-		final InetSocketAddress inetSocketAddress = (InetSocketAddress) this.socket.getRemoteSocketAddress();
+		final InetSocketAddress inetSocketAddress = (InetSocketAddress) socket.getRemoteSocketAddress();
 		if (inetSocketAddress == null) {
 			return null;
 		}
@@ -699,6 +696,10 @@ public class ZRequest {
 
 	}
 
+	public void setMethodEnum(final MethodEnum methodEnum) {
+		this.methodEnum = methodEnum;
+	}
+
 	@Override
 	public String toString() {
 		final StringBuilder builder = new StringBuilder();
@@ -711,7 +712,7 @@ public class ZRequest {
 		builder.append(", tf=");
 		builder.append(this.tf);
 		builder.append(", methodEnum=");
-		builder.append(this.getMethodEnum());
+		builder.append(this.methodEnum);
 		builder.append(", requestURI=");
 		builder.append(this.requestURI);
 		builder.append(", path=");
@@ -728,14 +729,14 @@ public class ZRequest {
 		builder.append(Arrays.toString(this.body));
 		builder.append(", clientIp=");
 		builder.append(this.clientIp);
-		builder.append(", socket=");
-		builder.append(this.socket);
+		builder.append(", cookies=");
+		builder.append(Arrays.toString(this.cookies));
+		builder.append(", userAgent=");
+		builder.append(this.userAgent);
+		builder.append(", keepAlive=");
+		builder.append(this.keepAlive);
 		builder.append("]");
 		return builder.toString();
-	}
-
-	public void setMethodEnum(final MethodEnum methodEnum) {
-		this.methodEnum = methodEnum;
 	}
 
 }

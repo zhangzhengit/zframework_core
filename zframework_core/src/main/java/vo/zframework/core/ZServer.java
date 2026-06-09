@@ -150,7 +150,7 @@ public class ZServer {
 				final int read = ZServer.read0(bufferedInputStream, buffer);
 				if (read == -1) {
 					closed = true;
-					closeSocket(socket);
+					SocketTL.closeOutputStreamAndSocket();
 					break;
 				}
 
@@ -167,7 +167,7 @@ public class ZServer {
 						exception.write();
 						if (!exception.isKeepAlive()
 						|| (exception.getHttpStatus() != HttpStatusEnum.HTTP_200.getStatus())) {
-							closeSocket(socket);
+							SocketTL.closeOutputStreamAndSocket();
 							closed = true;
 						}
 					}
@@ -178,7 +178,7 @@ public class ZServer {
 			}
 
 			if (closed) {
-				ZServer.closeSocket(socket);
+				SocketTL.closeOutputStreamAndSocket();
 				break;
 			}
 		}
@@ -199,21 +199,6 @@ public class ZServer {
 		}
 
 		requestHandler.handle(request);
-	}
-
-	public static void closeSocket() {
-		closeSocket(SocketTL.get());
-	}
-
-	public static void closeSocket(final Socket socket) {
-		try {
-			if (!socket.isClosed()) {
-				socket.close();
-			}
-		} catch (final IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 	}
 
 	public static int read0(final BufferedInputStream bufferedInputStream, final byte[] buffer)  {

@@ -4,8 +4,6 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.Socket;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -128,9 +126,7 @@ public class ZResponse {
 	private final AtomicReference<Integer> httpStatus = new AtomicReference<>(HttpStatusEnum.HTTP_200.getStatus());
 	private final AtomicReference<String> contentTypeAR = new AtomicReference<>(Task.DEFAULT_CONTENT_TYPE.getValue());
 
-	private final Socket socket;
-	private OutputStream outputStream;
-	private BufferedOutputStream bufferedOutputStream;
+	private final BufferedOutputStream bufferedOutputStream;
 
 	private final List<ZHeader> headerList = new ArrayList<>(DEFAULT_HEADERS_COUNT);
 
@@ -338,7 +334,7 @@ public class ZResponse {
 		}
 
 		if (!request.isKeepAlive()) {
-			ZServer.closeSocket(this.socket);
+			SocketTL.closeOutputStreamAndSocket();
 		}
 
 	}
@@ -648,7 +644,7 @@ public class ZResponse {
 			}
 		} catch (final IOException e) {
 			e.printStackTrace();
-			ZServer.closeSocket(this.socket);
+			SocketTL.closeOutputStreamAndSocket();
 		}
 	}
 
@@ -657,7 +653,7 @@ public class ZResponse {
 			this.bufferedOutputStream.flush();
 		} catch (final IOException e) {
 			e.printStackTrace();
-			ZServer.closeSocket(this.socket);
+			SocketTL.closeOutputStreamAndSocket();
 		}
 	}
 
@@ -677,14 +673,7 @@ public class ZResponse {
 	}
 
 	public ZResponse() {
-		this.socket = SocketTL.get();
-
-		try {
-			this.outputStream = this.socket.getOutputStream();
-			this.bufferedOutputStream = new BufferedOutputStream(this.outputStream);
-		} catch (final IOException e) {
-			e.printStackTrace();
-		}
+		this.bufferedOutputStream = SocketTL.get().getBufferedOutputStream();
 	}
 
 	public AtomicBoolean getSetContentType() {

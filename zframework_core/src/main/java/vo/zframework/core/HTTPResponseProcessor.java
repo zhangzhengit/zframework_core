@@ -51,7 +51,7 @@ public class HTTPResponseProcessor {
 			response.write();
 
 			if (e instanceof IOException) {
-				ZServer.closeSocket();
+				SocketTL.closeOutputStreamAndSocket();
 			}
 
 		} finally {
@@ -100,7 +100,7 @@ public class HTTPResponseProcessor {
 			response.write();
 
 			if (!request.isKeepAlive()) {
-				ZServer.closeSocket(SocketTL.get());
+				SocketTL.closeOutputStreamAndSocket();
 			}
 
 		} catch (final Exception e) {
