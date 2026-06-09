@@ -302,7 +302,7 @@ public class ZResponse {
 					}
 
 					this.header(HeaderEnum.TRANSFER_ENCODING.getName(), TransferEncodingEnum.CHUNKED.getValue());
-					this.writeStatusLineAndHeaders();
+					this.addStatusLineAndHeaders();
 
 					this.write(this.array.getRawArray(), this.array.length());
 					this.flush();
@@ -449,15 +449,15 @@ public class ZResponse {
 		}
 	}
 
-	private void writeStatusLineAndHeaders() {
-		this.writeStatusLine();
-		this.writeHeaders();
+	private void addStatusLineAndHeaders() {
+		this.addStatusLine();
+		this.addHeaders();
 	}
 
 	/**
 	 * 写入状态行：如：HTTP/1.1 200 OK
 	 */
-	private void writeStatusLine() {
+	private void addStatusLine() {
 		this.arrayAdd(HTTP_1_1_BYTES);
 		this.arrayAdd(String.valueOf(this.getHttpStatus()).getBytes());
 		this.arrayAdd(CRLF_BYTES);
@@ -470,7 +470,7 @@ public class ZResponse {
 	/**
 	 * 写入header部分
 	 */
-	private void writeHeaders() {
+	private void addHeaders() {
 		if (this.headerList.isEmpty()) {
 			return;
 		}
@@ -494,7 +494,7 @@ public class ZResponse {
 	/**
 	 * 写入body部分
 	 */
-	private void writeBody() {
+	private void addBody() {
 		if (this.body != null) {
 			this.arrayAdd(this.body);
 			this.arrayAdd(CRLF_BYTES);
@@ -668,9 +668,9 @@ public class ZResponse {
 		// 设置Content-Length头
 		this.header(HeaderEnum.CONTENT_LENGTH.getName(), String.valueOf(this.getBodyLength()));
 
-		this.writeStatusLineAndHeaders();
+		this.addStatusLineAndHeaders();
 
-		this.writeBody();
+		this.addBody();
 
 		this.write(this.array.getRawArray(), this.array.length());
 		this.flush();
