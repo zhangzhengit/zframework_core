@@ -1,6 +1,5 @@
 package vo.zframework.api;
 
-import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.Map;
 import java.util.Optional;
@@ -64,7 +63,7 @@ public class StaticController {
 		final int i = resourceName.lastIndexOf(".");
 		if (i <= -1) {
 			response.httpStatus(HttpStatusEnum.HTTP_500.getStatus())
-					.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
+					.contentType(ContentTypeEnum.APPLICATION_JSON.getTypeBytes())
 					.body(J.toJSONString(CR.error("不支持无后缀的文件")));
 			return;
 		}
@@ -74,7 +73,7 @@ public class StaticController {
 		final String ct = ctm.get(sn);
 		if (STU.isEmpty(ct)) {
 			response.httpStatus(HttpStatusEnum.HTTP_500.getStatus())
-					.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
+					.contentType(ContentTypeEnum.APPLICATION_JSON.getTypeBytes())
 					.body(J.toJSONString(CR.error("不支持的文件类型")));
 			return;
 		}
@@ -108,7 +107,7 @@ public class StaticController {
 
 	private static void httpStatus403(final ZResponse response) {
 		response
-		.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
+		.contentType(ContentTypeEnum.APPLICATION_JSON.getTypeBytes())
 		.httpStatus(HttpStatusEnum.HTTP_403.getStatus())
 		.body(J.toJSONString(CR.error("无权访问")));
 	}

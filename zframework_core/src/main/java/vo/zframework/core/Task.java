@@ -288,7 +288,7 @@ public class Task {
 			// 无ZR参数，直接给一个默认的json 200
 			if (response == null) {
 				return new ZResponse()
-						.contentType(ContentTypeEnum.APPLICATION_JSON.getType());
+						.contentType(ContentTypeEnum.APPLICATION_JSON.getTypeBytes());
 			}
 
 			// 有ZR参数未CT，根据produces然后看类的注解
@@ -475,7 +475,7 @@ public class Task {
 	private static ZResponse response429_2(final ZRequest request) {
 		final CR<Object> error = CR.error(AccessDeniedCodeEnum.ZSESSIONID.getCode(), AccessDeniedCodeEnum.ZSESSIONID.getMessageToClient());
 		final ZResponse response = new ZResponse();
-		response.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
+		response.contentType(ContentTypeEnum.APPLICATION_JSON.getTypeBytes())
 		.httpStatus(HttpStatusEnum.HTTP_429.getStatus())
 		.body(J.toJSONString(error, Include.NON_NULL));
 
@@ -490,7 +490,7 @@ public class Task {
 				AccessDeniedCodeEnum.API.getInternalMessage());
 
 		final ZResponse response = new ZResponse();
-		response.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
+		response.contentType(ContentTypeEnum.APPLICATION_JSON.getTypeBytes())
 		.httpStatus(HttpStatusEnum.HTTP_429.getStatus())
 		.body(J.toJSONString(error, Include.NON_NULL));
 
@@ -588,12 +588,14 @@ public class Task {
 	}
 
 	private static ZResponse responseTextPlain(final Object r) {
-		return new ZResponse().contentType(ContentTypeEnum.TEXT_PLAIN.getType()).body(r instanceof String ? (String) r : String.valueOf(r));
+		return new ZResponse()
+				.contentType(ContentTypeEnum.TEXT_PLAIN.getTypeBytes())
+				.body(r instanceof String ? (String) r : String.valueOf(r));
 	}
 
 	private static ZResponse responseAppJSON(final Object r) {
 		final String json = J.toJSONString(r, Include.NON_NULL);
-		return new ZResponse().contentType(DEFAULT_CONTENT_TYPE.getType()).body(json);
+		return new ZResponse().contentType(DEFAULT_CONTENT_TYPE.getTypeBytes()).body(json);
 	}
 
 	private static ZResponse responseHtml(final Object r) {
@@ -604,7 +606,7 @@ public class Task {
 			final String html = ZTemplate.freemarker(r instanceof String ? (String)r : String.valueOf(r), htmlContent);
 			ZModel.clear();
 
-			return new ZResponse().contentType(ContentTypeEnum.TEXT_HTML.getType()).body(html);
+			return new ZResponse().contentType(ContentTypeEnum.TEXT_HTML.getTypeBytes()).body(html);
 
 		} catch (final Exception e) {
 			e.printStackTrace();
@@ -614,13 +616,13 @@ public class Task {
 				final ResourceNotExistException ex = (ResourceNotExistException) e;
 				return new ZResponse()
 						.httpStatus(ex.getHttpStatus())
-						.contentType(DEFAULT_CONTENT_TYPE.getType())
+						.contentType(DEFAULT_CONTENT_TYPE.getTypeBytes())
 						.body(J.toJSONString(CR.error(ex.getMessagezf()),Include.NON_NULL));
 			}
 
 			return new ZResponse()
 					.httpStatus(HttpStatusEnum.HTTP_500.getStatus())
-					.contentType(DEFAULT_CONTENT_TYPE.getType())
+					.contentType(DEFAULT_CONTENT_TYPE.getTypeBytes())
 					.body(J.toJSONString(CR.error(em),Include.NON_NULL));
 		}
 	}

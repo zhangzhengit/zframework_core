@@ -4,7 +4,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -41,7 +40,7 @@ public class ZRequest {
 	public static final String MULTIPART_FORM_DATA = "multipart/form-data";
 
 	// -------------------------------------------------------------------------------------------------
-	private final List<String> lineList = new ArrayList<>(10);
+	private List<String> lineList = null;
 
 	/**
 	 *	请求行一行完整内容如：GET / HTTP/1.1
@@ -384,7 +383,7 @@ public class ZRequest {
 	}
 
 	public ZRequest(final List<String> lineList) {
-		this.lineList.addAll(lineList);
+		this.lineList = lineList;
 		parseRequest(this);
 	}
 
@@ -555,6 +554,7 @@ public class ZRequest {
 			}
 
 			final int k = l.indexOf(STU.COLON);
+			// : 出现位置不小于length了，说明:后面没东西了
 			if ((k + 1 + 1) >= l.length()) {
 				final String key = l.substring(0, k).trim();
 				request.headerMap.put(key, "");
@@ -564,7 +564,6 @@ public class ZRequest {
 			if (k > -1) {
 
 				final String value = l.substring(k + 1).trim();
-				// CONTENT_LENGTH 头在bodyreader.readHeader时已经校验过了，在此肯定非负的整数
 
 				if (STU.hasContent(value)) {
 
@@ -664,34 +663,6 @@ public class ZRequest {
 		}
 
 		public RequestParam() {
-		}
-
-	}
-
-	public static class ZHeader {
-
-		private String name;
-		private String value;
-		public String getName() {
-			return this.name;
-		}
-		public void setName(final String name) {
-			this.name = name;
-		}
-		public String getValue() {
-			return this.value;
-		}
-		public void setValue(final String value) {
-			this.value = value;
-		}
-		public ZHeader(final String name, final String value) {
-			this.name = name;
-			this.value = value;
-		}
-
-		@Override
-		public String toString() {
-			return "ZHeader [name=" + this.name + ", value=" + this.value + "]";
 		}
 
 	}

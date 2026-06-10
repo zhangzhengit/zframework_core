@@ -9,22 +9,30 @@ package vo.zframework.core;
  */
 public enum AcceptEncodingEnum {
 
-	GZIP("gzip"),
+	GZIP("gzip", "gzip".getBytes()),
 
-	DEFLATE("DEFLATE"),
+	DEFLATE("DEFLATE", "DEFLATE".getBytes()),
 
-	BR("br"),
+	BR("br", "br".getBytes()),
 
-	ZSTD("zstd"),;
+	ZSTD("zstd", "zstd".getBytes()),;
 
 	private final String value;
+	private final byte[] valueBytes;
 
-	AcceptEncodingEnum(final String value) {
+
+	AcceptEncodingEnum(final String value, final byte[] valueBytes) {
 		this.value = value;
+		this.valueBytes = valueBytes;
 	}
+
 
 	public String getValue() {
 		return this.value;
+	}
+
+	public byte[] getValueBytes() {
+		return this.valueBytes;
 	}
 
 }

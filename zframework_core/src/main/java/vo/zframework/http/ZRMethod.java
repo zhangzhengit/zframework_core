@@ -76,6 +76,7 @@ public class ZRMethod {
 	private final ZCacheControl cacheControl;
 
 	private final String cacheControlVString;
+	private final byte[] cacheControlVStringBytes;
 
 	private final ZQPSLimitation zqpsLimitation;
 
@@ -99,8 +100,10 @@ public class ZRMethod {
 
 		if (this.cacheControl != null) {
 			this.cacheControlVString = this.gCCVS();
+			this.cacheControlVStringBytes = this.cacheControlVString.getBytes();
 		} else {
 			this.cacheControlVString = null;
+			this.cacheControlVStringBytes = null;
 		}
 
 		// FIXME 2025年12月6日 14:38:05 zhangzhen :  接下来实现这个功能
@@ -267,7 +270,11 @@ public class ZRMethod {
 	}
 
 	public Parameter[] getMethodParameters() {
-		return methodParameters;
+		return this.methodParameters;
+	}
+
+	public byte[] getCacheControlVStringBytes() {
+		return this.cacheControlVStringBytes;
 	}
 
 }

@@ -12,13 +12,14 @@ import java.util.concurrent.ConcurrentMap;
  */
 public enum ConnectionEnum {
 
-	KEEP_ALIVE("keep-alive"),
+	KEEP_ALIVE("keep-alive","keep-alive".getBytes()),
 
-	CLOSE("close"),
+	CLOSE("close","close".getBytes()),
 
 	;
 
 	private String value;
+	private final byte[] valueBytes;
 
 	private final static ConcurrentMap<String, ConnectionEnum> mapV = new ConcurrentHashMap<>();
 	static {
@@ -41,8 +42,14 @@ public enum ConnectionEnum {
 		this.value = value;
 	}
 
-	ConnectionEnum(final String value) {
+	ConnectionEnum(final String value, final byte[] valueBytes) {
 		this.value = value;
+		this.valueBytes = valueBytes;
 	}
+
+	public byte[] getValueBytes() {
+		return this.valueBytes;
+	}
+
 
 }

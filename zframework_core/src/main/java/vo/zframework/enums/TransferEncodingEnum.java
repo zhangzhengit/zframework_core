@@ -8,16 +8,22 @@ package vo.zframework.enums;
  */
 public enum TransferEncodingEnum {
 
-	CHUNKED("chunked");
+	CHUNKED("chunked", "chunked".getBytes());
 
-	TransferEncodingEnum(final String value) {
+	TransferEncodingEnum(final String value, final byte[] valueBytes) {
 		this.value = value;
+		this.valueBytes = valueBytes;
 	}
 
 	public String getValue() {
-		return value;
+		return this.value;
+	}
+
+	public byte[] getValueBytes() {
+		return this.valueBytes;
 	}
 
 	private final String value;
+	private final byte[] valueBytes;
 
 }

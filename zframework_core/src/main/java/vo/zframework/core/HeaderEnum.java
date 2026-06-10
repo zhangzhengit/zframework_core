@@ -9,62 +9,68 @@ package vo.zframework.core;
  */
 public enum HeaderEnum {
 
-	SET_COOKIE("Set-Cookie"),
+	SET_COOKIE("Set-Cookie", "Set-Cookie".getBytes()),
 
-	CONTENT_ENCODING("Content-Encoding"),
+	CONTENT_ENCODING("Content-Encoding", "Content-Encoding".getBytes()),
 
-	Z_SESSION_ID("ZSESSIONID"),
+	Z_SESSION_ID("ZSESSIONID", "ZSESSIONID".getBytes()),
 
-	HOST("Host"),
+	HOST("Host", "Host".getBytes()),
 
-	TRANSFER_ENCODING("Transfer-Encoding"),
+	TRANSFER_ENCODING("Transfer-Encoding", "Transfer-Encoding".getBytes()),
 
-	ACCEPT_ENCODING("Accept-Encoding"),
+	ACCEPT_ENCODING("Accept-Encoding", "Accept-Encoding".getBytes()),
 
-	COOKIE("Cookie"),
+	COOKIE("Cookie", "Cookie".getBytes()),
 
-	CONTENT_DISPOSITION("Content-Disposition"),
+	CONTENT_DISPOSITION("Content-Disposition", "Content-Disposition".getBytes()),
 
-	CONTENT_TYPE("Content-Type"),
+	CONTENT_TYPE("Content-Type", "Content-Type".getBytes()),
 
-	ALLOW("Allow"),
+	ALLOW("Allow", "Allow".getBytes()),
 
-	USER_AGENT("User-Agent"),
+	USER_AGENT("User-Agent", "User-Agent".getBytes()),
 
-	SERVER("Server"),
+	SERVER("Server", "Server".getBytes()),
 
-	CONNECTION("Connection"),
+	CONNECTION("Connection", "Connection".getBytes()),
 
-	CACHE_CONTROL("Cache-Control"),
+	CACHE_CONTROL("Cache-Control", "Cache-Control".getBytes()),
 
-	LAST_MODIFIED("Last-Modified"),
+	LAST_MODIFIED("Last-Modified", "Last-Modified".getBytes()),
 
-	CONTENT_LENGTH("Content-Length"),
+	CONTENT_LENGTH("Content-Length", "Content-Length".getBytes()),
 
-	IF_MODIFIED_SINCE("If-Modified-Since"),
+	IF_MODIFIED_SINCE("If-Modified-Since", "If-Modified-Since".getBytes()),
 
-	IF_NONE_MATCH("If-None-Match"),
+	IF_NONE_MATCH("If-None-Match", "If-None-Match".getBytes()),
 
-	DATE("Date"),
+	DATE("Date", "Date".getBytes()),
 
-	ETAG("ETag"),
+	ETAG("ETag", "ETag".getBytes()),
 
-	REFERER("Referer"),
+	REFERER("Referer", "Referer".getBytes()),
 
-	X_REAL_IP("X-Real-IP"),
+	X_REAL_IP("X-Real-IP", "X-Real-IP".getBytes()),
 
-	X_Forwarded_For("X-Forwarded-For"),
+	X_Forwarded_For("X-Forwarded-For", "X-Forwarded-For".getBytes()),
 
 	;
 
 	private final String name;
+	private final byte[] nameBytes;
 
-	HeaderEnum(final String name) {
+	HeaderEnum(final String name, final byte[] nameBytes) {
 		this.name = name;
+		this.nameBytes = nameBytes;
 	}
 
 	public String getName() {
 		return this.name;
+	}
+
+	public byte[] getNameBytes() {
+		return this.nameBytes;
 	}
 
 }

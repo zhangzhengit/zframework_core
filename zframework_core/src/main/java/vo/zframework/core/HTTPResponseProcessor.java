@@ -2,7 +2,6 @@ package vo.zframework.core;
 
 import java.io.IOException;
 import java.util.Date;
-import java.util.StringJoiner;
 
 import vo.zframework.cache.J;
 import vo.zframework.cache.STU;
@@ -41,7 +40,7 @@ public class HTTPResponseProcessor {
 			final ZResponse response =
 					new ZResponse()
 					.httpStatus(httpStatus != null ? httpStatus : HttpStatusEnum.HTTP_500.getStatus())
-					.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
+					.contentType(ContentTypeEnum.APPLICATION_JSON.getTypeBytes())
 					.body(J.toJSONString(r));
 
 			if (RESPONSE_Z_SESSION_ID) {
@@ -116,9 +115,7 @@ public class HTTPResponseProcessor {
 			return;
 		}
 
-		final String cacheControlVString = PDTL.get().getZrMethod().getCacheControlVString();
-
-		response.header(HeaderEnum.CACHE_CONTROL.getName(), cacheControlVString);
+		response.header(HeaderEnum.CACHE_CONTROL.getNameBytes(), PDTL.get().getZrMethod().getCacheControlVStringBytes());
 	}
 
 	// FIXME 2026年5月25日 14:42:26 zhangzhen : 注意：这个不要删，黄了也不删，这是以前打算过的功能，
@@ -135,9 +132,8 @@ public class HTTPResponseProcessor {
 			return;
 		}
 
-		response.header(HeaderEnum.LAST_MODIFIED.getName(), ZDateUtil.getCurrentGmtDate());
+		response.header(HeaderEnum.LAST_MODIFIED.getNameBytes(), ZDateUtil.getCurrentGmtDateBytes());
 	}
-
 
 
 }

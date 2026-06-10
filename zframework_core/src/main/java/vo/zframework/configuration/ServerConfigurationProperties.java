@@ -2,14 +2,17 @@ package vo.zframework.configuration;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
+import vo.log.common.CU;
 import vo.zframework.anno.ZConfigurationProperties;
 import vo.zframework.anno.ZOrder;
 import vo.zframework.anno.ZValue;
 import vo.zframework.core.ContentTypeEnum;
 import vo.zframework.core.PortChecker;
 import vo.zframework.core.QPSEnum;
+import vo.zframework.core.ZHeader;
 import vo.zframework.enums.MethodEnum;
 import vo.zframework.enums.ZSessionStorageTypeEnum;
 import vo.zframework.validator.ZClientQPSValidator;
@@ -593,6 +596,24 @@ public class ServerConfigurationProperties {
 
 	public Map<String, String> getResponseHeaders() {
 		return this.responseHeaders;
+	}
+
+	public ZHeader[] getResponseHeadersBytes() {
+
+		if (CU.isEmpty(this.getResponseHeaders())) {
+			return null;
+		}
+
+		final Set<Entry<String, String>> es = this.getResponseHeaders().entrySet();
+		final ZHeader[] a = new ZHeader[es.size()];
+		int c = 0;
+		for (final Entry<String, String> e : es) {
+			final ZHeader header = new ZHeader(e.getKey().getBytes(), e.getValue().getBytes());
+			a[c] = header;
+			c++;
+		}
+
+		return a;
 	}
 
 	public void setResponseHeaders(final Map<String, String> responseHeaders) {

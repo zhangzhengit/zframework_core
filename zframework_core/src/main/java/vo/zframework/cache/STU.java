@@ -26,6 +26,7 @@ public class STU {
 	public static final byte[] COLON_BYTES = STU.COLON.getBytes();
 	public static final int COLON_LENGTH = COLON.getBytes().length;
 	public static final char COLON_C = ':';
+	public static final byte[] COLON_C_BYTES = String.valueOf(COLON_C).getBytes();
 	public static final String EMPTY = "";
 	public static final String EQUALS = "=";
 	public static final char EQUALS_C = '=';
@@ -125,6 +126,5 @@ public class STU {
 
 		return ls;
 	}
-
 
 }

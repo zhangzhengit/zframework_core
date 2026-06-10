@@ -4,25 +4,20 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import vo.log.core.ZLog2;
+import vo.zframework.cache.AU;
 import vo.zframework.cache.CU;
 import vo.zframework.cache.STU;
 import vo.zframework.compression.Deflater;
 import vo.zframework.compression.ZGzip;
 import vo.zframework.compression.ZSTD;
 import vo.zframework.configuration.ServerConfigurationProperties;
-import vo.zframework.core.ZRequest.ZHeader;
 import vo.zframework.enums.ConnectionEnum;
 import vo.zframework.enums.TransferEncodingEnum;
 import vo.zframework.http.HttpStatusEnum;
@@ -98,15 +93,15 @@ public class ZResponse {
 	private static final ServerConfigurationProperties SERVER_CONFIGURATIONPROPERTIES = ZContext
 			.getBean(ServerConfigurationProperties.class);
 
-	private static final boolean compressionEnable = SERVER_CONFIGURATIONPROPERTIES.getCompressionEnable();
+	private static final ZHeader[] CUSTOM_HEADER_BYTES = SERVER_CONFIGURATIONPROPERTIES.getResponseHeadersBytes();
 
-	private static final String DEFAULTCHARSET_DISPLAY_NAME = Charset.defaultCharset().displayName();
+	private static final boolean compressionEnable = SERVER_CONFIGURATIONPROPERTIES.getCompressionEnable();
 
 	private static final String SERVER_NAME = SERVER_CONFIGURATIONPROPERTIES.getName();
 
-	private static final int DEFAULT_BUFFER_SIZE = SERVER_CONFIGURATIONPROPERTIES.getStaticResponseBufferSize();
+	private static final byte[] SERVER_NAME_BYTES = SERVER_NAME.getBytes();
 
-	private static final String CHARSET = "charset";
+	private static final int DEFAULT_BUFFER_SIZE = SERVER_CONFIGURATIONPROPERTIES.getStaticResponseBufferSize();
 
 	public static final String HTTP_1_1 = "HTTP/1.1 ";
 
@@ -120,12 +115,10 @@ public class ZResponse {
 	 * write 方法是否执行过
 	 */
 	private volatile boolean write = false;
-	private final AtomicBoolean setContentType  = new AtomicBoolean(false);
 
 	private String contentType;
-
 	private final AtomicReference<Integer> httpStatus = new AtomicReference<>(HttpStatusEnum.HTTP_200.getStatus());
-	private final AtomicReference<String> contentTypeAR = new AtomicReference<>(Task.DEFAULT_CONTENT_TYPE.getValue());
+	private boolean contentTypeHasBeenSet = false;
 
 	private final BufferedOutputStream bufferedOutputStream;
 
@@ -162,14 +155,14 @@ public class ZResponse {
 	}
 
 	public boolean isKeepAlive() {
-		if ((this.headerList == null) || this.headerList.isEmpty()) {
+		if (CU.isEmpty(this.headerList)) {
 			return false;
 		}
 
 		for (int i = 0; i < this.headerList.size(); i++) {
 			final ZHeader h = this.headerList.get(i);
-			if (h.getName().equals(HeaderEnum.CONNECTION.getName())) {
-				return ConnectionEnum.KEEP_ALIVE.getValue().equals(h.getValue());
+			if (HeaderEnum.CONNECTION.getNameBytes().equals(h.getNameBytes())) {
+				return Arrays.equals(ConnectionEnum.KEEP_ALIVE.getValueBytes(), h.getValueBytes());
 			}
 		}
 
@@ -187,19 +180,22 @@ public class ZResponse {
 		return this.body;
 	}
 
+	public synchronized ZResponse contentType(final byte[] contentTypePBytes) {
+		this.contentTypeHasBeenSet = true;
+		// 注意：这个就是故意不调用 public ZResponse header(final byte[] nameBytes,final byte[] valueBytes)
+		// 防止它里面的那个throw异常
+		this.header(new ZHeader(HeaderEnum.CONTENT_TYPE.getName().getBytes(), contentTypePBytes));
+
+		return this;
+	}
+
 	public synchronized ZResponse contentType(final String contentType) {
-		if (!this.setContentType.get() && (contentType != null)) {
-			if (!contentType.toLowerCase().contains(CHARSET)) {
-				this.contentTypeAR.set(
-						HeaderEnum.CONTENT_TYPE.getName() + STU.COLON + contentType + STU.SEMICOLON + CHARSET + STU.EQUALS + DEFAULTCHARSET_DISPLAY_NAME);
-			} else {
-				this.contentTypeAR.set(HeaderEnum.CONTENT_TYPE.getName() + STU.COLON + contentType);
-			}
-		}
-		this.setContentType.set(true);
+		this.contentTypeHasBeenSet = true;
 		this.contentType = contentType;
 
-		this.header(new ZHeader(HeaderEnum.CONTENT_TYPE.getName(), contentType));
+		// 注意：这个就是故意不调用 public ZResponse header(final byte[] nameBytes,final byte[] valueBytes)
+		// 防止它里面的那个throw异常
+		this.header(new ZHeader(HeaderEnum.CONTENT_TYPE.getName().getBytes(), contentType.getBytes()));
 
 		return this;
 	}
@@ -215,7 +211,7 @@ public class ZResponse {
 	}
 
 	public ZResponse cookie(final String name,final String value) {
-		this.header(new ZHeader(HeaderEnum.SET_COOKIE.getName(), name + STU.EQUALS + value));
+		this.header(HeaderEnum.SET_COOKIE.getNameBytes(), (name + STU.EQUALS + value).getBytes());
 		return this;
 	}
 
@@ -224,11 +220,20 @@ public class ZResponse {
 		return this;
 	}
 
+	public ZResponse header(final byte[] nameBytes,final byte[] valueBytes) {
+		if (Arrays.equals(HeaderEnum.CONTENT_TYPE.getNameBytes(), nameBytes)) {
+			throw new IllegalArgumentException(HeaderEnum.CONTENT_TYPE.getName() + " 使用 contentType 方法来设置");
+		}
+		this.header(new ZHeader(nameBytes, valueBytes));
+
+		return this;
+	}
+
 	public ZResponse header(final String name,final String value) {
 		if (HeaderEnum.CONTENT_TYPE.getName().equals(name)) {
 			throw new IllegalArgumentException(HeaderEnum.CONTENT_TYPE.getName() + " 使用 contentType 方法来设置");
 		}
-		this.header(new ZHeader(name, value));
+		this.header(name.getBytes(),value.getBytes());
 
 		return this;
 	}
@@ -293,12 +298,12 @@ public class ZResponse {
 					// 要不先读一次，和if-none-match比较，否再读写body，是则直接304？
 					this.setETag(request, buffer, ETagEnum.WEAK);
 
-					final String contentEncoding = this.getContentEncoding(request, exceedsCompressionMinLength);
-					if (STU.isNotEmpty(contentEncoding)) {
-						this.header(HeaderEnum.CONTENT_ENCODING.getName(), contentEncoding);
+					final byte[] contentEncodingBytes = this.getContentEncodingBytes(request, exceedsCompressionMinLength);
+					if (AU.isNotEmpty(contentEncodingBytes)) {
+						this.header(HeaderEnum.CONTENT_ENCODING.getNameBytes(), contentEncodingBytes);
 					}
 
-					this.header(HeaderEnum.TRANSFER_ENCODING.getName(), TransferEncodingEnum.CHUNKED.getValue());
+					this.header(HeaderEnum.TRANSFER_ENCODING.getNameBytes(), TransferEncodingEnum.CHUNKED.getValueBytes());
 					this.addStatusLineAndHeaders();
 
 					this.wrieZArrayAndFlush();
@@ -375,7 +380,7 @@ public class ZResponse {
 
 		final String eTag = eTagEnum.handle(v4);
 
-		this.header(HeaderEnum.ETAG.getName(), eTag);
+		this.header(HeaderEnum.ETAG.getNameBytes(), eTag.getBytes());
 
 		final String ifNoneMatch = request.getHeader(HeaderEnum.IF_NONE_MATCH.getName());
 		if ((ifNoneMatch != null) && Objects.equals(eTag, ifNoneMatch)) {
@@ -428,7 +433,7 @@ public class ZResponse {
 				&& SERVER_CONFIGURATIONPROPERTIES.compressionContains(this.getContentType());
 	}
 
-	private String getContentEncoding(final ZRequest request, final boolean exceedsCompressionMinLength) {
+	private byte[] getContentEncodingBytes(final ZRequest request, final boolean exceedsCompressionMinLength) {
 
 		if (!this.compress(exceedsCompressionMinLength)) {
 			return null;
@@ -436,22 +441,22 @@ public class ZResponse {
 
 		// FIXME 2025年1月20日 下午4:41:18 zhangzhen : 记得以后支持了br以后再加一个else
 		if (request.isSupportZSTD()) {
-			return AcceptEncodingEnum.ZSTD.getValue();
+			return AcceptEncodingEnum.ZSTD.getValueBytes();
 		}
 
 		if (request.isSupportGZIP()) {
-			return AcceptEncodingEnum.GZIP.getValue();
+			return AcceptEncodingEnum.GZIP.getValueBytes();
 		}
 
 		if (request.isSupportDEFLATE()) {
-			return AcceptEncodingEnum.DEFLATE.getValue();
+			return AcceptEncodingEnum.DEFLATE.getValueBytes();
 		}
 
 		return null;
 	}
 
 	private void checkContentType() {
-		if (STU.isEmpty(this.contentTypeAR.get())) {
+		if (!this.contentTypeHasBeenSet) {
 			throw new IllegalArgumentException(HeaderEnum.CONTENT_TYPE.getName() + "未设置");
 		}
 	}
@@ -482,18 +487,14 @@ public class ZResponse {
 			return;
 		}
 
-		final StringBuilder headerBuilder = new StringBuilder( this.headerList.size() * 100);
-
 		for (int i = 0; i < this.headerList.size(); i++) {
 			final ZHeader zHeader = this.headerList.get(i);
 
-			headerBuilder.append(zHeader.getName())
-				   .append(STU.COLON_C)
-				   .append(zHeader.getValue())
-				   .append(STU.CRLF);
+			this.arrayAdd(zHeader.getNameBytes());
+			this.arrayAdd(STU.COLON_C_BYTES);
+			this.arrayAdd(zHeader.getValueBytes());
+			this.arrayAdd(STU.CRLF_BYTES);
 		}
-
-		this.arrayAdd(headerBuilder.toString().getBytes());
 
 		this.arrayAdd(CRLF_BYTES);
 	}
@@ -525,14 +526,14 @@ public class ZResponse {
 			byte[] compress = null;
 			final ZRequest request = ReqeustInfo.get();
 			if (request.isSupportZSTD()) {
-				this.header(HeaderEnum.CONTENT_ENCODING.getName(), AcceptEncodingEnum.ZSTD.getValue());
+				this.header(HeaderEnum.CONTENT_ENCODING.getNameBytes(), AcceptEncodingEnum.ZSTD.getValueBytes());
 				compress = ZSTD.compress(body);
 				// FIXME 2025年1月2日 下午9:37:52 zhangzhen : 支持了br后，要再加一个ifelse
 			} else if (request.isSupportGZIP()) {
-				this.header(HeaderEnum.CONTENT_ENCODING.getName(), AcceptEncodingEnum.GZIP.getValue());
+				this.header(HeaderEnum.CONTENT_ENCODING.getNameBytes(), AcceptEncodingEnum.GZIP.getValueBytes());
 				compress = ZGzip.compress(body);
 			} else if (request.isSupportDEFLATE()) {
-				this.header(HeaderEnum.CONTENT_ENCODING.getName(), AcceptEncodingEnum.DEFLATE.getValue());
+				this.header(HeaderEnum.CONTENT_ENCODING.getNameBytes(), AcceptEncodingEnum.DEFLATE.getValueBytes());
 				compress = Deflater.compress(body);
 			} else {
 				compress = body;
@@ -607,11 +608,11 @@ public class ZResponse {
 		final ZRequest request = ReqeustInfo.get();
 
 		if ((request != null) && request.isKeepAlive()) {
-			this.header(HeaderEnum.CONNECTION.getName(), ConnectionEnum.KEEP_ALIVE.getValue());
+			this.header(HeaderEnum.CONNECTION.getNameBytes(), ConnectionEnum.KEEP_ALIVE.getValueBytes());
 		}
 
 		this.setCustomHeader();
-		this.setServer(SERVER_NAME);
+		this.setServerName();
 		this.setDate();
 
 		if (SERVER_CONFIGURATIONPROPERTIES.isResponseZSessionId()) {
@@ -625,23 +626,18 @@ public class ZResponse {
 	}
 
 	public void setDate() {
-		this.header(HeaderEnum.DATE.getName(), ZDateUtil.getCurrentGmtDate());
+		this.header(HeaderEnum.DATE.getNameBytes(), ZDateUtil.getCurrentGmtDateBytes());
 	}
 
-	public void setServer(final String server) {
-		this.header(HeaderEnum.SERVER.getName(), server);
+	private void setServerName() {
+		this.header(HeaderEnum.SERVER.getNameBytes(), SERVER_NAME_BYTES);
 	}
 
-
-	void setCustomHeader() {
-		final Map<String, String> responseHeaders = SERVER_CONFIGURATIONPROPERTIES.getResponseHeaders();
-		if (CU.isEmpty(responseHeaders)) {
-			return;
-		}
-
-		final Set<Entry<String, String>> entrySet = responseHeaders.entrySet();
-		for (final Entry<String, String> entry : entrySet) {
-			this.header(entry.getKey(), entry.getValue());
+	private void setCustomHeader() {
+		if (AU.isNotEmpty(CUSTOM_HEADER_BYTES)) {
+			for (final ZHeader zHeader : CUSTOM_HEADER_BYTES) {
+				this.header(zHeader.getNameBytes(), zHeader.getValueBytes());
+			}
 		}
 	}
 
@@ -675,7 +671,7 @@ public class ZResponse {
 		this.checkContentType();
 
 		// 设置Content-Length头
-		this.header(HeaderEnum.CONTENT_LENGTH.getName(), String.valueOf(this.getBodyLength()));
+		this.header(HeaderEnum.CONTENT_LENGTH.getNameBytes(), String.valueOf(this.getBodyLength()).getBytes());
 
 		this.addStatusLineAndHeaders();
 
@@ -691,10 +687,6 @@ public class ZResponse {
 
 	public ZResponse() {
 		this.bufferedOutputStream = SocketTL.get().getBufferedOutputStream();
-	}
-
-	public AtomicBoolean getSetContentType() {
-		return this.setContentType;
 	}
 
 	public String getContentType() {

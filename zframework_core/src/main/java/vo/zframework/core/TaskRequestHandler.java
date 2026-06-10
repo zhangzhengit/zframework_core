@@ -69,9 +69,9 @@ public final class TaskRequestHandler {
 
 			final String error = J.toJSONString(CR.error(message));
 			new ZResponse()
-				.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
+				.contentType(ContentTypeEnum.APPLICATION_JSON.getTypeBytes())
 				.httpStatus(httpStatus != null ? httpStatus : HttpStatusEnum.HTTP_500.getStatus())
-				.header(HeaderEnum.CONNECTION.getName(), ConnectionEnum.CLOSE.getValue())
+				.header(HeaderEnum.CONNECTION.getNameBytes(), ConnectionEnum.CLOSE.getValueBytes())
 				.body(error)
 				.write();
 
