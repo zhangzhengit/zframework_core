@@ -635,22 +635,18 @@ public class Task {
 		return htmlContent;
 	}
 
-	private static Object[] generateParameters(
-			final Object[] parametersArray,
+	private static Object[] generateParameters0(
 			final ZRequest request,
 			final String path,
 			final ZRMethod zrMethod)
 					throws NumberFormatException {
 
-		final Parameter[] ps = zrMethod.getMethodParameters();
-		if (ps.length < parametersArray.length) {
-			throw new IllegalArgumentException("方法参数个数小于数组length,method = " + zrMethod.getMethod().getName()
-			+ " parametersArray.length = " + parametersArray.length);
-		}
+		final Object[] parametersArray = new Object[zrMethod.getMethodParameters().length];
 
 		int pI = 0;
 		int zpvPI = 0;
-		for (final Parameter p : ps) {
+
+		for (final Parameter p : zrMethod.getMethodParameters()) {
 			if (p.isAnnotationPresent(ZRequestHeader.class)) {
 				final ZRequestHeader a = RU.getAnnotation(p, ZRequestHeader.class);
 				final String name = a.value();
@@ -1030,12 +1026,11 @@ public class Task {
 	private static Object[] generateParameters(final ZRequest request, final String path, final ZRMethod zrMethod)
 			throws NumberFormatException {
 
-		final Object[] parametersArray = new Object[zrMethod.getMethodParameters().length];
 		if (zrMethod.getMethodParameters().length <= 0) {
-			return parametersArray;
+			return new Object[0];
 		}
 
-		return Task.generateParameters(parametersArray, request, path, zrMethod);
+		return Task.generateParameters0(request, path, zrMethod);
 	}
 
 	private static void setZRequestAndZResponse(final ZRequest request, final Object[] parameterArray) {
