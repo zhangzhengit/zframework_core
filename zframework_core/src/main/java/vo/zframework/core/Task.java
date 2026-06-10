@@ -146,10 +146,10 @@ public class Task {
 		try {
 
 			final ZRMethod zrMethod = PDTL.get().getZrMethod();
-			final Object[] parameterArray = generateParameters(request, request.getPath(), zrMethod);
+			final Object[] parameters = generateParameters(request, request.getPath(), zrMethod);
 
 			final Object zController = ZControllerMap.getObjectByMethod(zrMethod.getMethod());
-			return invokeAndResponse(zrMethod, parameterArray, zController, request);
+			return invokeAndResponse(zrMethod, parameters, zController, request);
 
 		} catch (final Exception e) {
 			//			e.printStackTrace();
@@ -247,7 +247,7 @@ public class Task {
 
 	private static ZResponse invokeAndResponse(
 					final ZRMethod zrMethod,
-					final Object[] parametersArray,
+					final Object[] parameters,
 					final Object zControllerObject,
 					final ZRequest request) {
 
@@ -266,13 +266,13 @@ public class Task {
 
 		ZResponseStatus.initialization();
 
-		setZRequestAndZResponse(request, parametersArray);
+		setZRequestAndZResponse(request, parameters);
 
 		final List<ZHandlerInterceptor> hiList = ZHandlerInterceptorScanner.match(request.getRequestURI());
 
 		final Object r = CU.isEmpty(hiList)
-				? invoke0(zControllerObject, zrMethod, parametersArray)
-				: invokeZHandlerInterceptor(zrMethod, parametersArray, zControllerObject, request, hiList);
+				? invoke0(zControllerObject, zrMethod, parameters)
+				: invokeZHandlerInterceptor(zrMethod, parameters, zControllerObject, request, hiList);
 
 		// 最高优先级：业务代码处理 接口方法void
 		// 1、先看方法里的业务代码是否new ZResponse.write过了，有则停止，无则继续第二步
@@ -375,18 +375,18 @@ public class Task {
 		return null;
 	}
 
-	private static Object invokeZHandlerInterceptor(final ZRMethod zrMethod, final Object[] parametersArray,
+	private static Object invokeZHandlerInterceptor(final ZRMethod zrMethod, final Object[] parameters,
 			final Object zControllerObject, final ZRequest request, final List<ZHandlerInterceptor> zhiList) {
 
 		// FIXME 2026年6月10日 09:30:02 zhangzhen : 这里又new ZResponse应该是bug，应该取上面set过的ZResponse对象。
 		final ZResponse response = ZHttpContext.getZResponse();
 //		final ZResponse response = new ZResponse();
 
-		final ArrayList<Object> pa = new ArrayList<>();
-		Collections.addAll(pa, parametersArray);
-		final InterceptorParameter interceptorParameter = new InterceptorParameter(zrMethod.getMethod().getName(), zrMethod.getMethod(),
+		final InterceptorParameter interceptorParameter =
+				new InterceptorParameter(
+			zrMethod.getMethod().getName(), zrMethod.getMethod(),
 				zrMethod.getMethod().getReturnType().getName().equals(Void.class.getName()),
-				pa, zControllerObject);
+				zControllerObject, parameters);
 
 		// 1 按从小到大执行preHandle
 		boolean stop = false;
@@ -405,12 +405,12 @@ public class Task {
 		}
 
 		// 2 执行目标方法
-		final Object rV = invoke0(zControllerObject, zrMethod, parametersArray);
+		final Object rV = invoke0(zControllerObject, zrMethod, parameters);
 
 		final ZModelAndView modelAndView =
 				zrMethod.getCtEnum() == CTEnum.NORMAL
 				? new ZModelAndView(true, String.valueOf(rV), readHtmlContent(rV), ZModel.get(),
-						(ZModel) Arrays.stream(parametersArray).filter(arg -> arg.getClass().equals(ZModel.class))
+						(ZModel) Arrays.stream(parameters).filter(arg -> arg.getClass().equals(ZModel.class))
 						.findAny().orElse(null),
 						null)
 						: new ZModelAndView(false, null, null, null, (ZModel) null, rV);
@@ -536,24 +536,24 @@ public class Task {
 	 *
 	 * @param zControllerObject		此method所在的 @ZController 标记的对象
 	 * @param zrMethod 				组合的Method相关内容的对象
-	 * @param pArray				此method的参数数组，如：ZRequest/ZModel/@ZRequestHeader/@ZRequestParam等等
+	 * @param parameters				此method的参数数组，如：ZRequest/ZModel/@ZRequestHeader/@ZRequestParam等等
 	 * @return
 	 * @throws IllegalAccessException
 	 * @throws IllegalArgumentException
 	 * @throws InvocationTargetException
 	 */
-	private static Object invoke0(final Object zControllerObject, final ZRMethod zrMethod, final Object[] pArray) {
+	private static Object invoke0(final Object zControllerObject, final ZRMethod zrMethod, final Object[] parameters) {
 
 		try {
-			return zrMethod.getMethodHandle().invokeExact(pArray);
+			return zrMethod.getMethodHandle().invokeExact(parameters);
 		} catch (final Throwable e) {
 			e.printStackTrace();
 			return null;
 		} finally {
 
-			if (pArray.length > 0) {
+			if (parameters.length > 0) {
 				try {
-					closeZMFInputStreamAndDeleteTempFile(pArray);
+					closeZMFInputStreamAndDeleteTempFile(parameters);
 				} catch (final IOException e) {
 					e.printStackTrace();
 				}
@@ -641,7 +641,7 @@ public class Task {
 			final ZRMethod zrMethod)
 					throws NumberFormatException {
 
-		final Object[] parametersArray = new Object[zrMethod.getMethodParameters().length];
+		final Object[] parameters = new Object[zrMethod.getMethodParameters().length];
 
 		int pI = 0;
 		int zpvPI = 0;
@@ -655,7 +655,7 @@ public class Task {
 					final String message = "请求方法[" + path + "]的header[" + p.getName() + "]不存在";
 					throw new FormPairParseException(message, HttpStatusEnum.HTTP_400.getStatus());
 				}
-				parametersArray[pI] = headerValue;
+				parameters[pI] = headerValue;
 				pI++;
 			} else {
 				final Class<?> pType = p.getType();
@@ -674,31 +674,31 @@ public class Task {
 								.filter(cookie -> Objects.equals(cookie.getName(), cookieName)).findAny();
 						if (c.isPresent()) {
 							if (pType == String.class) {
-								parametersArray[pI] = c.get().getValue();
+								parameters[pI] = c.get().getValue();
 								pI++;
 							} else if (pType == ZCookie.class) {
-								parametersArray[pI] = c.get();
+								parameters[pI] = c.get();
 								pI++;
 							}
 						} else {
 							if (cookieValue.required()) {
 								throw new FormPairParseException(message, HttpStatusEnum.HTTP_400.getStatus());
 							}
-							parametersArray[pI] = null;
+							parameters[pI] = null;
 							pI++;
 						}
 					}
 
 				} else if (ZRequest.class == pType) {
-					parametersArray[pI] = request;
+					parameters[pI] = request;
 					pI++;
 				} else if (pType == ZResponse.class) {
 					final ZResponse response = new ZResponse();
-					parametersArray[pI] = response;
+					parameters[pI] = response;
 					pI++;
 				} else if (pType == ZModel.class) {
 					final ZModel model = new ZModel();
-					parametersArray[pI] = model;
+					parameters[pI] = model;
 					pI++;
 				} else if (RU.isAnnotationPresent(p, ZRequestBody.class)) {
 					final byte[] body = request.getBody();
@@ -717,18 +717,18 @@ public class Task {
 
 					Task.checkZValidated(p, object);
 
-					parametersArray[pI] = object;
+					parameters[pI] = object;
 					pI++;
 
 				} else if (RU.isAnnotationPresent(p, ZRequestParam.class)) {
-					pI = Task.hZRequestParam(parametersArray, request, path, pI, p);
+					pI = Task.hZRequestParam(parameters, request, path, pI, p);
 				} else if (RU.isAnnotationPresent(p, ZPathVariable.class)) {
 					final List<Object> list = ZPVTL.get();
 					final Class<?> type = pType;
 					// FIXME 2023年11月8日 下午4:39:18 zhanghen: @ZRM 启动校验是否此类型
 					final Object v = list.get(zpvPI);
 					try {
-						Task.setZPathVariableValue(parametersArray, pI, type, v);
+						Task.setZPathVariableValue(parameters, pI, type, v);
 						zpvPI++;
 					} catch (final NumberFormatException e) {
 						throw new PathVariableException(p.getName() + STU.EQUALS + v, HttpStatusEnum.HTTP_400.getStatus());
@@ -736,15 +736,15 @@ public class Task {
 
 					// FIXME 2023年11月8日 下午10:47:54 zhanghen: TODO 继续支持 校验注解
 					if (RU.isAnnotationPresent(p, ZMax.class)) {
-						ZValidator.validatedZMax(p, parametersArray[pI], RU.getAnnotation(p, ZMax.class).max());
+						ZValidator.validatedZMax(p, parameters[pI], RU.getAnnotation(p, ZMax.class).max());
 					}
 
 					if (RU.isAnnotationPresent(p, ZPositive.class)) {
-						ZValidator.validatedZPositive(p, parametersArray[pI]);
+						ZValidator.validatedZPositive(p, parameters[pI]);
 					}
 
 					if (RU.isAnnotationPresent(p, ZMin.class)) {
-						ZValidator.validatedZMin(p, parametersArray[pI], RU.getAnnotation(p, ZMin.class).min());
+						ZValidator.validatedZMin(p, parameters[pI], RU.getAnnotation(p, ZMin.class).min());
 					}
 
 
@@ -769,7 +769,7 @@ public class Task {
 					}
 
 					if (request.getTf() != null) {
-						pI = tf(parametersArray, request, path, zpvPI, p);
+						pI = tf(parameters, request, path, zpvPI, p);
 					} else {
 						// 走到这，说明是读到内存的，所以构造ByteArrayInputStream
 						if (findAny.get().getBody() == null) {
@@ -784,7 +784,7 @@ public class Task {
 								findAny.get().getBody(), false,
 								findAny.get().getContentType(), inputStream, findAny.get().getBody().length);
 
-						pI = Task.setValue(parametersArray, pI, p, file);
+						pI = Task.setValue(parameters, pI, p, file);
 					}
 
 				}
@@ -792,10 +792,10 @@ public class Task {
 
 		}
 
-		return parametersArray;
+		return parameters;
 	}
 
-	private static int tf(final Object[] parametersArray, final ZRequest request,
+	private static int tf(final Object[] parameters, final ZRequest request,
 			final String path, final int pI,
 			final Parameter p) {
 		if ((request.getTf() == null) || !p.getName().equals(request.getTf().getName())) {
@@ -820,7 +820,7 @@ public class Task {
 				contentType, inputStream, file.length());
 
 		final int nI = pI;
-		final int newPI = Task.setValue(parametersArray, nI, p, zmFile);
+		final int newPI = Task.setValue(parameters, nI, p, zmFile);
 		return newPI;
 	}
 
@@ -835,29 +835,29 @@ public class Task {
 				Character.class.getName(), String.class.getName());
 	}
 
-	private static void setZPathVariableValue(final Object[] parametersArray, final int pI, final Class<?> type, final Object value) {
+	private static void setZPathVariableValue(final Object[] parameters, final int pI, final Class<?> type, final Object value) {
 		if (type.getName().equals(Byte.class.getName())) {
-			parametersArray[pI] = Byte.valueOf(String.valueOf(value));
+			parameters[pI] = Byte.valueOf(String.valueOf(value));
 		} else if (type.getName().equals(Short.class.getName())) {
-			parametersArray[pI] = Short.valueOf(String.valueOf(value));
+			parameters[pI] = Short.valueOf(String.valueOf(value));
 		} else if (type.getName().equals(Integer.class.getName())) {
-			parametersArray[pI] = Integer.valueOf(String.valueOf(value));
+			parameters[pI] = Integer.valueOf(String.valueOf(value));
 		} else if (type.getName().equals(Long.class.getName())) {
-			parametersArray[pI] = Long.valueOf(String.valueOf(value));
+			parameters[pI] = Long.valueOf(String.valueOf(value));
 		} else if (type.getName().equals(Float.class.getName())) {
-			parametersArray[pI] = Float.valueOf(String.valueOf(value));
+			parameters[pI] = Float.valueOf(String.valueOf(value));
 		} else if (type.getName().equals(Double.class.getName())) {
-			parametersArray[pI] = Double.valueOf(String.valueOf(value));
+			parameters[pI] = Double.valueOf(String.valueOf(value));
 		} else if (type.getName().equals(Boolean.class.getName())) {
-			parametersArray[pI] = Boolean.valueOf(String.valueOf(value));
+			parameters[pI] = Boolean.valueOf(String.valueOf(value));
 		} else if (type.getName().equals(Character.class.getName())) {
-			parametersArray[pI] = Character.valueOf(String.valueOf(value).charAt(0));
+			parameters[pI] = Character.valueOf(String.valueOf(value).charAt(0));
 		} else if (type.getName().equals(String.class.getName())) {
-			parametersArray[pI] = String.valueOf(value);
+			parameters[pI] = String.valueOf(value);
 		}
 	}
 
-	private static int hZRequestParam(final Object[] parametersArray, final ZRequest request, final String path,
+	private static int hZRequestParam(final Object[] parameters, final ZRequest request, final String path,
 			final int pI, final Parameter p) {
 
 		int piR = 0;
@@ -874,7 +874,7 @@ public class Task {
 			final Object value = findAny.get().getValue();
 			if (value != null) {
 				try {
-					piR = Task.setValue(parametersArray, pI, p, findAny.get().getValue());
+					piR = Task.setValue(parameters, pI, p, findAny.get().getValue());
 				} catch (final NumberFormatException e) {
 					throw new ParsingRequestParamException(p.getName() + STU.EQUALS + findAny.get().getValue(),
 							HttpStatusEnum.HTTP_400.getStatus());
@@ -883,7 +883,7 @@ public class Task {
 				final String defaultValue = p.getAnnotation(ZRequestParam.class).defaultValue();
 				if (defaultValue != null) {
 					try {
-						piR = Task.setValue(parametersArray, pI, p, defaultValue);
+						piR = Task.setValue(parameters, pI, p, defaultValue);
 					} catch (final Exception e) {
 						e.printStackTrace();
 						throw new FormPairParseException(p.getName() + " = " + defaultValue,
@@ -898,7 +898,7 @@ public class Task {
 				final String defaultValue = p.getAnnotation(ZRequestParam.class).defaultValue();
 				if (defaultValue != null) {
 					try {
-						piR = Task.setValue(parametersArray, pI, p, defaultValue);
+						piR = Task.setValue(parameters, pI, p, defaultValue);
 					} catch (final Exception e) {
 						throw new FormPairParseException(p.getName() + " = " + defaultValue,
 								HttpStatusEnum.HTTP_400.getStatus());
@@ -927,7 +927,7 @@ public class Task {
 						HttpStatusEnum.HTTP_400.getStatus());
 			}
 
-			piR = Task.setValue(parametersArray, pI, p, findAny.get().getValue());
+			piR = Task.setValue(parameters, pI, p, findAny.get().getValue());
 		}
 		return piR;
 	}
@@ -987,37 +987,37 @@ public class Task {
 		}
 	}
 
-	private static int setValue(final Object[] parametersArray, final int pI, final Parameter parameter, final Object value)
+	private static int setValue(final Object[] parameters, final int pI, final Parameter parameter, final Object value)
 			throws NumberFormatException {
 
 		final Class<?> parameterType = parameter.getType();
 		final AtomicInteger nI = new AtomicInteger(pI);
 		if (parameterType == Byte.class) {
-			parametersArray[nI.getAndIncrement()] = Byte.valueOf(
+			parameters[nI.getAndIncrement()] = Byte.valueOf(
 					value instanceof String ? (String)value : String.valueOf(value));
 		} else if (parameterType == Short.class) {
-			parametersArray[nI.getAndIncrement()] = Short.valueOf(
+			parameters[nI.getAndIncrement()] = Short.valueOf(
 					value instanceof String ? (String)value : String.valueOf(value));
 		} else if (parameterType == Integer.class) {
-			parametersArray[nI.getAndIncrement()] = Integer.valueOf(
+			parameters[nI.getAndIncrement()] = Integer.valueOf(
 					value instanceof String ? (String)value : String.valueOf(value));
 		} else if (parameterType == Long.class) {
-			parametersArray[nI.getAndIncrement()] = Long.valueOf(
+			parameters[nI.getAndIncrement()] = Long.valueOf(
 					value instanceof String ? (String)value : String.valueOf(value));
 		} else if (parameterType == Float.class) {
-			parametersArray[nI.getAndIncrement()] = Float.valueOf(
+			parameters[nI.getAndIncrement()] = Float.valueOf(
 					value instanceof String ? (String)value : String.valueOf(value));
 		} else if (parameterType == Double.class) {
-			parametersArray[nI.getAndIncrement()] = Double.valueOf(
+			parameters[nI.getAndIncrement()] = Double.valueOf(
 					value instanceof String ? (String)value : String.valueOf(value));
 		} else if (parameterType == Character.class) {
-			parametersArray[nI.getAndIncrement()] = Character.valueOf((
+			parameters[nI.getAndIncrement()] = Character.valueOf((
 					value instanceof String ? (String)value : String.valueOf(value)).charAt(0));
 		} else if (parameterType == Boolean.class) {
-			parametersArray[nI.getAndIncrement()] = Boolean.valueOf(
+			parameters[nI.getAndIncrement()] = Boolean.valueOf(
 					value instanceof String ? (String)value : String.valueOf(value));
 		} else {
-			parametersArray[nI.getAndIncrement()] = value;
+			parameters[nI.getAndIncrement()] = value;
 		}
 
 		return nI.get();

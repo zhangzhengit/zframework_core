@@ -2,7 +2,6 @@ package vo.zframework.aop;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.List;
 
 /**
  * 拦截器参数
@@ -16,9 +15,9 @@ public class InterceptorParameter {
 	private final String methodName;
 	private final Method method;
 
-	private final Boolean isVOID;
+	private final boolean isVoid;
 
-	private final List<Object> parameterList;
+	private final Object[] parameters;
 
 	private final Object target;
 
@@ -26,12 +25,12 @@ public class InterceptorParameter {
 
 		try {
 
-			if (Boolean.TRUE.equals(this.getIsVOID())) {
-				this.method.invoke(this.target, this.parameterList.toArray());
+			if (this.isVoid()) {
+				this.method.invoke(this.target, this.getParameters());
 				return null;
 			}
 
-			return this.method.invoke(this.target, this.parameterList.toArray());
+			return this.method.invoke(this.target, this.getParameters());
 
 		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
 			e.printStackTrace();
@@ -41,33 +40,32 @@ public class InterceptorParameter {
 	}
 
 	public String getMethodName() {
-		return methodName;
+		return this.methodName;
 	}
 
 	public Method getMethod() {
-		return method;
-	}
-
-	public Boolean getIsVOID() {
-		return isVOID;
-	}
-
-	public List<Object> getParameterList() {
-		return parameterList;
+		return this.method;
 	}
 
 	public Object getTarget() {
-		return target;
+		return this.target;
 	}
 
-	public InterceptorParameter(String methodName, Method method, Boolean isVOID, List<Object> parameterList,
-			Object target) {
-		super();
+	public InterceptorParameter(final String methodName, final Method method, final boolean isVoid, final Object target,
+			final Object[] parameters) {
 		this.methodName = methodName;
 		this.method = method;
-		this.isVOID = isVOID;
-		this.parameterList = parameterList;
+		this.isVoid = isVoid;
+		this.parameters = parameters;
 		this.target = target;
 	}
-	
+
+	public boolean isVoid() {
+		return this.isVoid;
+	}
+
+	public Object[] getParameters() {
+		return parameters;
+	}
+
 }
