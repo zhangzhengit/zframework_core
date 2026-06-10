@@ -53,6 +53,7 @@ import vo.zframework.http.ZCookie;
 import vo.zframework.http.ZPVTL;
 import vo.zframework.http.ZQPSLimitation;
 import vo.zframework.http.ZRMethod;
+import vo.zframework.http.ZRequestMapping;
 import vo.zframework.http.ZRequestParam;
 import vo.zframework.scanner.ZHandlerInterceptor;
 import vo.zframework.scanner.ZHandlerInterceptorScanner;
@@ -251,26 +252,15 @@ public class Task {
 					final Object zControllerObject,
 					final ZRequest request) {
 
-		final String controllerName = zControllerObject.getClass().getName();
-		final Integer qps = ZControllerMap.getQPSByControllerNameAndMethodName(controllerName, zrMethod.getMethod().getName());
-
-		final QCTimeEnum qcTimeEnum = ZControllerMap.getQCTimeByControllerNameAndMethodName(controllerName, zrMethod.getMethod().getName());
-
-		final QPSHandlingEnum handlingEnum = REQUEST_VALIDATOR_CONFIGURATION_PROPERTIES.getHandlingEnum(request.getUserAgent());
-		final boolean allow = QC.allow(qcTimeEnum,
-				"a-" + controllerName.hashCode() + '@' + zrMethod.getMethod().getName().hashCode(), qps,
-				handlingEnum);
-		if (!allow) {
-			// FIXME 2025年1月3日 上午4:19:33 zhangzhen : 这里有个严重的问题会导致可能浪费服务器性能和存储空间
-			// 尤其是上传文件尤其是很大的文件时，因为当前逻辑是解析完body并且save到临时文件之后，才会走到
-			// 什么的判断api.qps的部分，所以频繁上传可能再次导致不执行api
-			// 前几天写的功能[自定义http解析流程]，似乎可以把这个部分逻辑放进去，
-			// 即：先解析header如果API.qps超了，则不解析body
-			return response429();
+		final ZRequestMapping requestMapping = zrMethod.getZRequestMapping();
+		if (requestMapping.qpsLimit()) {
+			final ZResponse checkZRequestMappingQPS = checkZRequestMappingCount(request, zControllerObject, zrMethod);
+			if (checkZRequestMappingQPS != null) {
+				return checkZRequestMappingQPS;
+			}
 		}
 
-		// 是否超过 ZQPSLimitation.qps
-		final ZResponse checkZQPSLimitation = checkZQPSLimitation(zrMethod, request, controllerName, handlingEnum);
+		final ZResponse checkZQPSLimitation = checkZQPSLimitation(zrMethod, request, zControllerObject.getClass().getName());
 		if (checkZQPSLimitation != null) {
 			return checkZQPSLimitation;
 		}
@@ -358,6 +348,34 @@ public class Task {
 		return responseAppJSON(r);
 	}
 
+	private static ZResponse checkZRequestMappingCount(
+			final ZRequest request,
+			final Object zControllerObject,
+			final ZRMethod zrMethod) {
+
+		final ZRequestMapping requestMapping = zrMethod.getZRequestMapping();
+
+		final QPSHandlingEnum handlingEnum = REQUEST_VALIDATOR_CONFIGURATION_PROPERTIES.getHandlingEnum(request.getUserAgent());
+
+		final String keyPrefix = "a-" + zControllerObject.getClass().getName().hashCode() + '@' + zrMethod.getMethod().getName().hashCode();
+		final boolean allow = QC.allow(
+			 requestMapping.time(),
+						keyPrefix,
+				requestMapping.count(),
+					handlingEnum);
+
+		if (!allow) {
+			// FIXME 2025年1月3日 上午4:19:33 zhangzhen : 这里有个严重的问题会导致可能浪费服务器性能和存储空间
+			// 尤其是上传文件尤其是很大的文件时，因为当前逻辑是解析完body并且save到临时文件之后，才会走到
+			// 什么的判断api.qps的部分，所以频繁上传可能再次导致不执行api
+			// 前几天写的功能[自定义http解析流程]，似乎可以把这个部分逻辑放进去，
+			// 即：先解析header如果API.qps超了，则不解析body
+			return response429();
+		}
+
+		return null;
+	}
+
 	private static Object invokeZHandlerInterceptor(final ZRMethod zrMethod, final Object[] parametersArray,
 			final Object zControllerObject, final ZRequest request, final List<ZHandlerInterceptor> zhiList) {
 
@@ -413,30 +431,37 @@ public class Task {
 		return rV;
 	}
 
-	private static ZResponse checkZQPSLimitation(final ZRMethod zrMethod, final ZRequest request,
-			final String controllerName, final QPSHandlingEnum handlingEnum) {
+	private static ZResponse checkZQPSLimitation(
+			final ZRMethod zrMethod,
+			final ZRequest request,
+			final String controllerName) {
+
 		final ZQPSLimitation zqpsLimitation = zrMethod.getZqpsLimitation();
-		if (zqpsLimitation != null) {
+		if (zqpsLimitation == null) {
+			return null;
+		}
 
-			switch (zqpsLimitation.type()) {
+		switch (zqpsLimitation.type()) {
 
-			case ZSESSIONID:
-				if (!SERVER_CONFIGURATIONPROPERTIES.isResponseZSessionId()) {
-					break;
-				}
-
-				final ZSession session = Task.getOrGSession(request);
-				final String keyword = gzqpsLimitationKeyword(zrMethod, controllerName, session);
-
-				if (!QC.allow(zqpsLimitation.time(), keyword, zqpsLimitation.count(), handlingEnum)) {
-					return response429_2(request);
-				}
-
-				break;
-
-			default:
+		case ZSESSIONID:
+			if (!SERVER_CONFIGURATIONPROPERTIES.isResponseZSessionId()) {
 				break;
 			}
+
+			final ZSession session = Task.getOrGSession(request);
+			final String keyword = gzqpsLimitationKeyword(zrMethod, controllerName, session);
+
+			final QPSHandlingEnum handlingEnum = REQUEST_VALIDATOR_CONFIGURATION_PROPERTIES
+					.getHandlingEnum(request.getUserAgent());
+
+			if (!QC.allow(zqpsLimitation.time(), keyword, zqpsLimitation.count(), handlingEnum)) {
+				return response429_2(request);
+			}
+
+			break;
+
+		default:
+			break;
 		}
 
 		return null;

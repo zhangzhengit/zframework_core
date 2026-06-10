@@ -11,12 +11,10 @@ import java.util.Set;
 import com.google.common.collect.HashBasedTable;
 
 import vo.zframework.cache.STU;
-import vo.zframework.core.QCTimeEnum;
 import vo.zframework.core.QPSEnum;
 import vo.zframework.core.ZMultipartFile;
 import vo.zframework.enums.MethodEnum;
 import vo.zframework.exception.StartupException;
-import vo.zframework.zclass.SCU;
 
 /**
  * 存取接口方法
@@ -27,9 +25,6 @@ import vo.zframework.zclass.SCU;
  */
 public class ZControllerMap {
 	static final HashBasedTable<MethodEnum, String, ZRMethod> methodPathTable = HashBasedTable.create();
-	static final HashBasedTable<String, String, Integer> methodQPSTable = HashBasedTable.create();
-	static final HashBasedTable<String, String, QCTimeEnum> methodTimeTable = HashBasedTable.create();
-	static final HashBasedTable<String, String, ZQPSLimitation> methodZQPSLimitationTable = HashBasedTable.create();
 	static final HashBasedTable<Method, String, Boolean> methodIsregexTable = HashBasedTable.create();
 	static final HashMap<Method, Object> objectMap = new HashMap<>(16, 1F);
 	static final HashSet<String> mappingSet = new HashSet<>();
@@ -88,18 +83,14 @@ public class ZControllerMap {
 					+ method.getName() + ",\t" + "count = " + count);
 		}
 
-		methodQPSTable.put(zcObject.getClass().getName(), method.getName(), count);
-		methodTimeTable.put(zcObject.getClass().getName(), method.getName(), requestMapping.time());
-
-
-		final ZQPSLimitation zqpsl = method.getAnnotation(ZQPSLimitation.class);
-		if (zqpsl != null) {
-			final ZQPSLimitationEnum type = zqpsl.type();
+		final ZQPSLimitation zQPSLimitation = method.getAnnotation(ZQPSLimitation.class);
+		if (zQPSLimitation != null) {
+			final ZQPSLimitationEnum type = zQPSLimitation.type();
 			if (type == null) {
 				throw new IllegalArgumentException(
 						"@" + ZQPSLimitation.class.getSimpleName() + ".type 不能为空,method = " + method.getName());
 			}
-			final int countL = zqpsl.count();
+			final int countL = zQPSLimitation.count();
 			if (countL <= 0) {
 				throw new IllegalArgumentException(
 						"@" + ZQPSLimitation.class.getSimpleName() + ".count 必须大于0,method = " + method.getName());
@@ -119,33 +110,12 @@ public class ZControllerMap {
 						);
 			}
 
-			methodZQPSLimitationTable.put(zcObject.getClass().getName(), method.getName(), zqpsl);
 		}
 	}
 
 
-	public static final int getAPIMethodSize() {
-		return objectMap.size();
-	}
-
-	public static ZQPSLimitation getZQPSLimitationByControllerNameAndMethodName(final String controllerName,final String methodName) {
-		final ZQPSLimitation zqpsLimitation = methodZQPSLimitationTable.get(controllerName, methodName);
-		return zqpsLimitation;
-	}
-
-	public static QCTimeEnum getQCTimeByControllerNameAndMethodName(final String controllerName,final String methodName) {
-		final QCTimeEnum qcTimeEnum = methodTimeTable.get(controllerName, methodName);
-		return qcTimeEnum;
-	}
-
-	public static Integer getQPSByControllerNameAndMethodName(final String controllerName,final String methodName) {
-		final Integer qps = methodQPSTable.get(controllerName, methodName);
-		return qps;
-	}
-
 	public static Object getObjectByMethod(final Method method) {
-		final Object object = objectMap.get(method);
-		return object;
+		return objectMap.get(method);
 	}
 
 	public static ZRMethod getMethodByMethodEnumAndPath(final MethodEnum methodEnum, final String path) {
@@ -209,15 +179,8 @@ public class ZControllerMap {
 		return null;
 	}
 
-	public static Map<MethodEnum, ZRMethod> getByPath(final String path) {
-		final Map<MethodEnum, ZRMethod> column = methodPathTable.column(path);
-		return column;
-	}
-
 	public static Map<String, ZRMethod> getByMethodEnum(final MethodEnum methodEnum) {
-
-		final Map<String, ZRMethod> row = methodPathTable.row(methodEnum);
-		return row;
+		return methodPathTable.row(methodEnum);
 	}
 
 	public static Boolean getIsregexByMethodEnumAndPath(final Method method, final String path) {

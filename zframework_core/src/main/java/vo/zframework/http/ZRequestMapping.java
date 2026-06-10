@@ -59,6 +59,13 @@ public @interface ZRequestMapping {
 	QCTimeEnum time() default QCTimeEnum.SECOND;
 
 	/**
+	 * 是否限制此接口的QPS
+	 *
+	 * @return
+	 */
+	boolean qpsLimit() default false;
+
+	/**
 	 * 单位时间内最大count限制，所有请求共享此值，不管是浏览器/脚本/命令行都共享此值
 	 *
 	 * @return

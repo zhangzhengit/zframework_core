@@ -74,8 +74,10 @@ public class ZRMethod {
 	private final ZCacheControl cacheControl;
 
 	private final String cacheControlVString;
-	
+
 	private final ZQPSLimitation zqpsLimitation;
+
+	private final ZRequestMapping zRequestMapping;
 
 	public ZRMethod(final Method method, final CTEnum ctEnum, final Object zcObject) {
 
@@ -88,6 +90,8 @@ public class ZRMethod {
 		this.zqpsLimitation = method.getAnnotation(ZQPSLimitation.class);
 
 		this.cacheControl = method.getAnnotation(ZCacheControl.class);
+
+		this.zRequestMapping = method.getAnnotation(ZRequestMapping.class);
 
 		if (this.cacheControl != null) {
 			this.cacheControlVString = this.gCCVS();
@@ -252,6 +256,10 @@ public class ZRMethod {
 
 	public ZQPSLimitation getZqpsLimitation() {
 		return this.zqpsLimitation;
+	}
+
+	public ZRequestMapping getZRequestMapping() {
+		return this.zRequestMapping;
 	}
 
 }
