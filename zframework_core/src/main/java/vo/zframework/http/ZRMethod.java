@@ -30,6 +30,8 @@ public class ZRMethod {
 	 */
 	private final Method method;
 
+	private final Parameter[] methodParameters;
+
 	private	final MethodHandle methodHandle;
 
 	/**
@@ -82,6 +84,8 @@ public class ZRMethod {
 	public ZRMethod(final Method method, final CTEnum ctEnum, final Object zcObject) {
 
 		this.method = method;
+
+		this.methodParameters = method.getParameters();
 
 		this.methodHandle = ZRMethod.gMH(method, zcObject);
 
@@ -260,6 +264,10 @@ public class ZRMethod {
 
 	public ZRequestMapping getZRequestMapping() {
 		return this.zRequestMapping;
+	}
+
+	public Parameter[] getMethodParameters() {
+		return methodParameters;
 	}
 
 }

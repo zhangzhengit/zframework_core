@@ -11,7 +11,6 @@ import java.io.StringWriter;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -147,7 +146,7 @@ public class Task {
 		try {
 
 			final ZRMethod zrMethod = PDTL.get().getZrMethod();
-			final Object[] parameterArray = generateParameters(zrMethod.getMethod(), request, request.getPath());
+			final Object[] parameterArray = generateParameters(request, request.getPath(), zrMethod);
 
 			final Object zController = ZControllerMap.getObjectByMethod(zrMethod.getMethod());
 			return invokeAndResponse(zrMethod, parameterArray, zController, request);
@@ -636,12 +635,16 @@ public class Task {
 		return htmlContent;
 	}
 
-	private static Object[] generateParameters(final Method method, final Object[] parametersArray, final ZRequest request,
-			final String path) throws NumberFormatException {
+	private static Object[] generateParameters(
+			final Object[] parametersArray,
+			final ZRequest request,
+			final String path,
+			final ZRMethod zrMethod)
+					throws NumberFormatException {
 
-		final Parameter[] ps = RU.getParameters(method);
+		final Parameter[] ps = zrMethod.getMethodParameters();
 		if (ps.length < parametersArray.length) {
-			throw new IllegalArgumentException("方法参数个数小于数组length,method = " + method.getName()
+			throw new IllegalArgumentException("方法参数个数小于数组length,method = " + zrMethod.getMethod().getName()
 			+ " parametersArray.length = " + parametersArray.length);
 		}
 
@@ -1024,10 +1027,15 @@ public class Task {
 		return nI.get();
 	}
 
-	private static Object[] generateParameters(final Method method, final ZRequest request, final String path)
+	private static Object[] generateParameters(final ZRequest request, final String path, final ZRMethod zrMethod)
 			throws NumberFormatException {
-		final Object[] parametersArray = new Object[method.getParameterCount()];
-		return Task.generateParameters(method, parametersArray, request, path);
+
+		final Object[] parametersArray = new Object[zrMethod.getMethodParameters().length];
+		if (zrMethod.getMethodParameters().length <= 0) {
+			return parametersArray;
+		}
+
+		return Task.generateParameters(parametersArray, request, path, zrMethod);
 	}
 
 	private static void setZRequestAndZResponse(final ZRequest request, final Object[] parameterArray) {
