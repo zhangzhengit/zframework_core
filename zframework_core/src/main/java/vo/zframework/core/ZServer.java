@@ -126,15 +126,15 @@ public class ZServer {
 		SocketTL.set(socket);
 
 		boolean closed = false;
-		final int capacity = SERVER_CONFIGURATIONPROPERTIES.getByteBufferSize();
+
+		final int byteBufferCapacity = SERVER_CONFIGURATIONPROPERTIES.getByteBufferSize();
 
 		while (!closed) {
 
-			final byte[] buffer = new byte[capacity];
-			final ZArray array = new ZArray(buffer.length);
+			final byte[] buffer = new byte[byteBufferCapacity];
+			final ZArray array = new ZArray(byteBufferCapacity);
 
 			final PD pd = new PD();
-			pd.setBufferCapacity(capacity);
 			pd.setBufferedInputStream(bufferedInputStream);
 
 			HttpParseStatusEnum parseStatusEnum = HttpParseStatusEnum.PARSE_REQUEST_LINE;
@@ -143,7 +143,7 @@ public class ZServer {
 
 				if (   (parseStatusEnum == HttpParseStatusEnum.START)
 					|| (parseStatusEnum == HttpParseStatusEnum.EXCEPTION)) {
-					array.reset();
+					ZServer.resetZArray(byteBufferCapacity, array);
 					pd.setTf(null);
 				}
 
@@ -181,6 +181,16 @@ public class ZServer {
 				SocketTL.closeOutputStreamAndSocket();
 				break;
 			}
+		}
+	}
+
+	private static void resetZArray(final int byteBufferCapacity, final ZArray array) {
+		// 实际存储byte个数大于了初始容量，则重置为初始容量，不然此连接的ZArray对象会一直保持在新的容量占太多内存
+		// 尤其对于全读到内存的上传文件
+		if (array.length() >= byteBufferCapacity) {
+			array.reset(byteBufferCapacity);
+		} else {
+			array.reset();
 		}
 	}
 

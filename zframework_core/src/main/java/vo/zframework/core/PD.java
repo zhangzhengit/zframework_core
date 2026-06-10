@@ -24,7 +24,6 @@ public class PD {
 	private int searchHeaderEndIndexFromIndex = 0;
 
 	private long contentLength = -1;
-	private int bufferCapacity;
 
 	private BufferedInputStream bufferedInputStream;
 
@@ -108,14 +107,6 @@ public class PD {
 
 	public void setMethodEnum(final MethodEnum methodEnum) {
 		this.methodEnum = methodEnum;
-	}
-
-	public int getBufferCapacity() {
-		return this.bufferCapacity;
-	}
-
-	public void setBufferCapacity(final int bufferCapacity) {
-		this.bufferCapacity = bufferCapacity;
 	}
 
 	public BufferedInputStream getBufferedInputStream() {
