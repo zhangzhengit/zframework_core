@@ -245,9 +245,11 @@ public class Task {
 		//		}
 	}
 
-	@SuppressWarnings("boxing")
-	private  static ZResponse invokeAndResponse(final ZRMethod zrMethod, final Object[] parametersArray, final Object zControllerObject, final ZRequest request)
-			throws IllegalAccessException, InvocationTargetException {
+	private static ZResponse invokeAndResponse(
+					final ZRMethod zrMethod,
+					final Object[] parametersArray,
+					final Object zControllerObject,
+					final ZRequest request) {
 
 		final String controllerName = zControllerObject.getClass().getName();
 		final Integer qps = ZControllerMap.getQPSByControllerNameAndMethodName(controllerName, zrMethod.getMethod().getName());
@@ -259,119 +261,29 @@ public class Task {
 				"a-" + controllerName.hashCode() + '@' + zrMethod.getMethod().getName().hashCode(), qps,
 				handlingEnum);
 		if (!allow) {
-
 			// FIXME 2025年1月3日 上午4:19:33 zhangzhen : 这里有个严重的问题会导致可能浪费服务器性能和存储空间
 			// 尤其是上传文件尤其是很大的文件时，因为当前逻辑是解析完body并且save到临时文件之后，才会走到
 			// 什么的判断api.qps的部分，所以频繁上传可能再次导致不执行api
 			// 前几天写的功能[自定义http解析流程]，似乎可以把这个部分逻辑放进去，
 			// 即：先解析header如果API.qps超了，则不解析body
-
-
-			final CR<Object> error = CR.error(AccessDeniedCodeEnum.API.getCode(),
-					AccessDeniedCodeEnum.API.getInternalMessage());
-
-			final ZResponse response = new ZResponse();
-			response.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
-			.httpStatus(HttpStatusEnum.HTTP_429.getStatus())
-			.body(J.toJSONString(error, Include.NON_NULL));
-
-			return response;
+			return response429();
 		}
 
 		// 是否超过 ZQPSLimitation.qps
-		final ZQPSLimitation zqpsLimitation = ZControllerMap.getZQPSLimitationByControllerNameAndMethodName(controllerName,
-				zrMethod.getMethod().getName());
-		if (zqpsLimitation != null) {
-
-			switch (zqpsLimitation.type()) {
-
-			case ZSESSIONID:
-				if (!SERVER_CONFIGURATIONPROPERTIES.isResponseZSessionId()) {
-					break;
-				}
-
-				final ZSession session = Task.getOrGSession(request);
-				final String keyword = controllerName
-						+ "@" + zrMethod.getMethod().getName()
-						+ "@ZQPSLimitation" + '_'
-						+ session.getId();
-
-				if (!QC.allow(zqpsLimitation.time(), keyword, zqpsLimitation.count(), handlingEnum)) {
-					//				if (!QC.allow(QCTimeEnum.SECOND, keyword, zqpsLimitation.count(), handlingEnum)) {
-
-					final CR<Object> error = CR.error(AccessDeniedCodeEnum.ZSESSIONID.getCode(), AccessDeniedCodeEnum.ZSESSIONID.getMessageToClient());
-					final ZResponse response = new ZResponse();
-					response.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
-					.httpStatus(HttpStatusEnum.HTTP_429.getStatus())
-					.body(J.toJSONString(error, Include.NON_NULL));
-
-					if (SERVER_CONFIGURATIONPROPERTIES.isResponseZSessionId()) {
-						HTTPResponseProcessor.setZSessionId(request, response);
-					}
-
-					return response;
-				}
-				break;
-
-			default:
-				break;
-			}
+		final ZResponse checkZQPSLimitation = checkZQPSLimitation(zrMethod, request, controllerName, handlingEnum);
+		if (checkZQPSLimitation != null) {
+			return checkZQPSLimitation;
 		}
 
 		ZResponseStatus.initialization();
 
-		setZRequestAndZResponse(parametersArray, request, zrMethod);
+		setZRequestAndZResponse(request, parametersArray);
 
-		Object r = null;
-		// 在此zhi执行
-		final List<ZHandlerInterceptor> zhiList = ZHandlerInterceptorScanner.match(request.getRequestURI());
-		if (CU.isEmpty(zhiList)) {
-			r = invoke0(zControllerObject, zrMethod, parametersArray);
-		} else {
-			final ZResponse response = new ZResponse();
-			final ArrayList<Object> pa = new ArrayList<>();
-			Collections.addAll(pa, parametersArray);
-			final InterceptorParameter interceptorParameter = new InterceptorParameter(zrMethod.getMethod().getName(), zrMethod.getMethod(),
-					zrMethod.getMethod().getReturnType().getName().equals(Void.class.getName()),
-					pa, zControllerObject);
-			// 1 按从小到大执行pre
-			boolean stop = false;
-			for (final ZHandlerInterceptor zhi : zhiList) {
-				final boolean preHandle = zhi.preHandle(request, response, interceptorParameter);
-				if (!preHandle) {
-					stop = true;
-					break;
-				}
-			}
+		final List<ZHandlerInterceptor> hiList = ZHandlerInterceptorScanner.match(request.getRequestURI());
 
-			// 有 preHandle 返回false，直接返回response（在preHandle可能设值了）
-			if (stop) {
-				return response;
-			}
-
-			if (!stop) {
-
-				r = invoke0(zControllerObject, zrMethod, parametersArray);
-				final ZModelAndView modelAndView =
-						zrMethod.getCtEnum() == CTEnum.NORMAL
-						? new ZModelAndView(true, String.valueOf(r), readHtmlContent(r), ZModel.get(),
-								(ZModel) Arrays.stream(parametersArray).filter(arg -> arg.getClass().equals(ZModel.class))
-								.findAny().orElse(null),
-								null)
-								: new ZModelAndView(false, null, null, null, (ZModel) null, r);
-
-				// 2 按从大到小执行post
-				for (int i = zhiList.size() - 1; i >= 0; i--) {
-					final ZHandlerInterceptor zhi = zhiList.get(i);
-					zhi.postHandle(request, response, interceptorParameter, modelAndView);
-				}
-				// 3 按从大到小执行after
-				for (int i = zhiList.size() - 1; i >= 0; i--) {
-					final ZHandlerInterceptor zhi = zhiList.get(i);
-					zhi.afterCompletion(request, response, interceptorParameter, modelAndView);
-				}
-			}
-		}
+		final Object r = CU.isEmpty(hiList)
+				? invoke0(zControllerObject, zrMethod, parametersArray)
+				: invokeZHandlerInterceptor(zrMethod, parametersArray, zControllerObject, request, hiList);
 
 		// 最高优先级：业务代码处理 接口方法void
 		// 1、先看方法里的业务代码是否new ZResponse.write过了，有则停止，无则继续第二步
@@ -444,6 +356,124 @@ public class Task {
 
 		// 默认响应json
 		return responseAppJSON(r);
+	}
+
+	private static Object invokeZHandlerInterceptor(final ZRMethod zrMethod, final Object[] parametersArray,
+			final Object zControllerObject, final ZRequest request, final List<ZHandlerInterceptor> zhiList) {
+
+		// FIXME 2026年6月10日 09:30:02 zhangzhen : 这里又new ZResponse应该是bug，应该取上面set过的ZResponse对象。
+		final ZResponse response = ZHttpContext.getZResponse();
+//		final ZResponse response = new ZResponse();
+
+		final ArrayList<Object> pa = new ArrayList<>();
+		Collections.addAll(pa, parametersArray);
+		final InterceptorParameter interceptorParameter = new InterceptorParameter(zrMethod.getMethod().getName(), zrMethod.getMethod(),
+				zrMethod.getMethod().getReturnType().getName().equals(Void.class.getName()),
+				pa, zControllerObject);
+
+		// 1 按从小到大执行preHandle
+		boolean stop = false;
+		for (int i = 0; i < zhiList.size(); i++) {
+			final ZHandlerInterceptor hi = zhiList.get(i);
+			final boolean preHandle = hi.preHandle(request, response, interceptorParameter);
+			if (!preHandle) {
+				stop = true;
+				break;
+			}
+		}
+
+		// 有 preHandle 返回false，直接返回response（在preHandle可能设值了）
+		if (stop) {
+			return response;
+		}
+
+		// 2 执行目标方法
+		final Object rV = invoke0(zControllerObject, zrMethod, parametersArray);
+
+		final ZModelAndView modelAndView =
+				zrMethod.getCtEnum() == CTEnum.NORMAL
+				? new ZModelAndView(true, String.valueOf(rV), readHtmlContent(rV), ZModel.get(),
+						(ZModel) Arrays.stream(parametersArray).filter(arg -> arg.getClass().equals(ZModel.class))
+						.findAny().orElse(null),
+						null)
+						: new ZModelAndView(false, null, null, null, (ZModel) null, rV);
+
+		// 3 按从大到小执行postHandle
+		for (int i = zhiList.size() - 1; i >= 0; i--) {
+			final ZHandlerInterceptor hi = zhiList.get(i);
+			hi.postHandle(request, response, interceptorParameter, modelAndView);
+		}
+
+		// 4 按从大到小执行afterCompletion
+		for (int i = zhiList.size() - 1; i >= 0; i--) {
+			final ZHandlerInterceptor hi = zhiList.get(i);
+			hi.afterCompletion(request, response, interceptorParameter, modelAndView);
+		}
+
+		return rV;
+	}
+
+	private static ZResponse checkZQPSLimitation(final ZRMethod zrMethod, final ZRequest request,
+			final String controllerName, final QPSHandlingEnum handlingEnum) {
+		final ZQPSLimitation zqpsLimitation = zrMethod.getZqpsLimitation();
+		if (zqpsLimitation != null) {
+
+			switch (zqpsLimitation.type()) {
+
+			case ZSESSIONID:
+				if (!SERVER_CONFIGURATIONPROPERTIES.isResponseZSessionId()) {
+					break;
+				}
+
+				final ZSession session = Task.getOrGSession(request);
+				final String keyword = gzqpsLimitationKeyword(zrMethod, controllerName, session);
+
+				if (!QC.allow(zqpsLimitation.time(), keyword, zqpsLimitation.count(), handlingEnum)) {
+					return response429_2(request);
+				}
+
+				break;
+
+			default:
+				break;
+			}
+		}
+
+		return null;
+	}
+
+	private static String gzqpsLimitationKeyword(final ZRMethod zrMethod, final String controllerName,
+			final ZSession session) {
+		final String keyword = controllerName
+				+ "@" + zrMethod.getMethod().getName()
+				+ "@ZQPSLimitation" + '_'
+				+ session.getId();
+		return keyword;
+	}
+
+	private static ZResponse response429_2(final ZRequest request) {
+		final CR<Object> error = CR.error(AccessDeniedCodeEnum.ZSESSIONID.getCode(), AccessDeniedCodeEnum.ZSESSIONID.getMessageToClient());
+		final ZResponse response = new ZResponse();
+		response.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
+		.httpStatus(HttpStatusEnum.HTTP_429.getStatus())
+		.body(J.toJSONString(error, Include.NON_NULL));
+
+		if (SERVER_CONFIGURATIONPROPERTIES.isResponseZSessionId()) {
+			HTTPResponseProcessor.setZSessionId(request, response);
+		}
+		return response;
+	}
+
+	private static ZResponse response429() {
+		final CR<Object> error = CR.error(AccessDeniedCodeEnum.API.getCode(),
+				AccessDeniedCodeEnum.API.getInternalMessage());
+
+		final ZResponse response = new ZResponse();
+		response.contentType(ContentTypeEnum.APPLICATION_JSON.getType())
+		.httpStatus(HttpStatusEnum.HTTP_429.getStatus())
+		.body(J.toJSONString(error, Include.NON_NULL));
+
+		return response;
 	}
 
 	static String findProduces(final ZRequest request, final String[] ps) {
@@ -975,22 +1005,22 @@ public class Task {
 		return Task.generateParameters(method, parametersArray, request, path);
 	}
 
-	private static void setZRequestAndZResponse(final Object[] parameterArray, final ZRequest request, final ZRMethod zrmethod) {
-
-		if (parameterArray == null) {
-			return;
-		}
+	private static void setZRequestAndZResponse(final ZRequest request, final Object[] parameterArray) {
 
 		ZHttpContext.setZRequest(request);
 
+		if (AU.isEmpty(parameterArray)) {
+			return;
+		}
+
 		boolean sR = false;
-		for (final Object object : parameterArray) {
-			if (object == null) {
+		for (final Object param : parameterArray) {
+			if (param == null) {
 				continue;
 			}
 
-			if (ZResponse.class == object.getClass()) {
-				ZHttpContext.setZResponse((ZResponse) object);
+			if (ZResponse.class == param.getClass()) {
+				ZHttpContext.setZResponse((ZResponse) param);
 				sR = true;
 				break;
 			}

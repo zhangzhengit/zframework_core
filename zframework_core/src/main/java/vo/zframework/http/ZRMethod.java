@@ -72,8 +72,10 @@ public class ZRMethod {
 	private final boolean hasZETag;
 
 	private final ZCacheControl cacheControl;
-	
+
 	private final String cacheControlVString;
+	
+	private final ZQPSLimitation zqpsLimitation;
 
 	public ZRMethod(final Method method, final CTEnum ctEnum, final Object zcObject) {
 
@@ -82,6 +84,8 @@ public class ZRMethod {
 		this.methodHandle = ZRMethod.gMH(method, zcObject);
 
 		this.hasZETag = method.getAnnotation(ZETag.class) != null;
+
+		this.zqpsLimitation = method.getAnnotation(ZQPSLimitation.class);
 
 		this.cacheControl = method.getAnnotation(ZCacheControl.class);
 
@@ -243,7 +247,11 @@ public class ZRMethod {
 	}
 
 	public String getCacheControlVString() {
-		return cacheControlVString;
+		return this.cacheControlVString;
+	}
+
+	public ZQPSLimitation getZqpsLimitation() {
+		return this.zqpsLimitation;
 	}
 
 }

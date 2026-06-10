@@ -25,6 +25,10 @@ public class ZHttpContext {
 		return ZHttpContext.REQUEST.get();
 	}
 
+	public static ZResponse getZResponse() {
+		return ZHttpContext.RESPONSE.get();
+	}
+
 	public static ZResponse getZResponseAndRemove() {
 		final ZResponse v = ZHttpContext.RESPONSE.get();
 		ZHttpContext.RESPONSE.remove();
