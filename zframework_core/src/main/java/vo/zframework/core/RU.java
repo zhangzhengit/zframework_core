@@ -15,6 +15,11 @@ import java.util.Optional;
  */
 public class RU {
 
+	public static <T> Class<?> getSuperclass( final Class<T> cls) {
+		final String key = cls.getName();
+		return ZRC.singleton().computeIfAbsent(key, () -> cls.getSuperclass());
+	}
+
 	public static <T extends Annotation> boolean isAnnotationPresent(final Parameter parameter,
 			final Class<T> annoClass) {
 		final T t = getAnnotation(parameter, annoClass);
