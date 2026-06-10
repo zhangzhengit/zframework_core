@@ -83,9 +83,6 @@ public class Task {
 	public static final String SP = "&";
 	public static final String DEFAULT_CHARSET_NAME = Charset.defaultCharset().displayName();
 	public static final String VOID = "void";
-	public static final String HTTP_200 = "HTTP/1.1 200";
-	public static final int HTTP_STATUS_500 = 500;
-	public static final String INTERNAL_SERVER_ERROR = "Internal Server Error";
 	public static final ContentTypeEnum DEFAULT_CONTENT_TYPE = ContentTypeEnum.APPLICATION_JSON;
 
 	private Task() {
