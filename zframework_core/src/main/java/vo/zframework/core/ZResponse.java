@@ -112,7 +112,7 @@ public class ZResponse {
 
 	private static final byte[] HTTP_1_1_BYTES = HTTP_1_1.getBytes();
 
-	public final static int D_A_C = 1024 * 4;
+	public final static int D_A_C = 1024 * 8;
 
 	private final ZArray array = SocketTL.get().getArray();
 
@@ -342,7 +342,11 @@ public class ZResponse {
 	}
 
 	private void resetZArray() {
-		this.array.reset();
+		if (this.array.length() >= D_A_C) {
+			this.array.reset(D_A_C);
+		} else {
+			this.array.reset();
+		}
 	}
 
 	/**
