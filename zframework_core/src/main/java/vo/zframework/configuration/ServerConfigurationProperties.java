@@ -112,8 +112,7 @@ public class ServerConfigurationProperties {
 	 * 是否启用QPS限制 (server.qps)
 	 */
 	@ZNotNull
-	@ZValue(name = "server.qps.limit.enabled", listenForChanges = true)
-	private boolean qpsLimitEnabled = true;
+	private boolean qpsLimitEnabled = false;
 
 	/**
 	 * 接受并且处理http请求的QPS最大值，超过此值会返回非200的status
