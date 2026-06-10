@@ -21,11 +21,6 @@ public class RU {
 		return t != null;
 	}
 
-	public static <T> Class<?> getSuperclass( final Class<T> cls) {
-		final String key = cls.getName();
-		return ZRC.singleton().computeIfAbsent(key, () -> cls.getSuperclass());
-	}
-
 	public static <T extends Annotation> T getAnnotation(final Parameter parameter, final Class<T> annoClass) {
 		final String key = parameter.hashCode() + '-' + parameter.getName() + '-' + annoClass.getName();
 		return ZRC.singleton().computeIfAbsent(key, () ->parameter.getAnnotation(annoClass) );
@@ -38,26 +33,6 @@ public class RU {
 				+ method.getModifiers() + '-' + method.getName();
 
 		return ZRC.singleton().computeIfAbsent(key, () -> method.getParameters());
-	}
-
-
-	public static <T extends Annotation>  Field getDeclaredFieldByAnnotation(final Class<?> type,final Class<T> annoClass) {
-		final String key = type.getName() + '-' + "getDeclaredFieldByAnnotation";
-
-		return ZRC.singleton().computeIfAbsent(key, () -> {
-			final Field[] fs = getDeclaredFields(type);
-			for (final Field field : fs) {
-				if (field.isAnnotationPresent(annoClass)) {
-					return field;
-				}
-			}
-			return null;
-		});
-	}
-
-	public static Field[] getDeclaredFields(final Class<?> type) {
-		final String key = type.getName() + '-' + "getDeclaredFields";
-		return ZRC.singleton().computeIfAbsent(key, () -> type.getDeclaredFields());
 	}
 
 	public static Optional<Field> getDeclaredField(final Class<?> type, final String javaFieldName)
