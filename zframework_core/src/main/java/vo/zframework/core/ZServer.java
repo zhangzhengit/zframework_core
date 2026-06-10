@@ -196,8 +196,13 @@ public class ZServer {
 
 
 	public static boolean allow() {
-		return ENABLE_SERVER_QPS_LIMITED && QC.allow(QCTimeEnum.SECOND, Z_SERVER_QPS,
-				SERVER_CONFIGURATIONPROPERTIES.getQps(), QPSHandlingEnum.SMOOTH);
+		if (!ENABLE_SERVER_QPS_LIMITED) {
+			return true;
+		}
+
+		return
+		ENABLE_SERVER_QPS_LIMITED && QC.allow(QCTimeEnum.SECOND, Z_SERVER_QPS, SERVER_CONFIGURATIONPROPERTIES.getQps(),
+				QPSHandlingEnum.SMOOTH);
 	}
 
 	private static void response(final ZRequest request, final ZArray array, final PD pd) {
