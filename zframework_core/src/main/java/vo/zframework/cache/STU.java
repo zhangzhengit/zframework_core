@@ -32,6 +32,7 @@ public class STU {
 	public static final byte[] COLON_C_BYTES = String.valueOf(COLON_C).getBytes();
 	public static final String EMPTY = "";
 	public static final String EQUALS = "=";
+	public static final int EQUALS_LENGTH = EQUALS.length();
 	public static final char EQUALS_C = '=';
 	public static final String SEMICOLON = ";";
 	public static final String SAPCE = " ";

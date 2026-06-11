@@ -303,6 +303,18 @@ public class ZRequest {
 			return new ZCookie[0];
 		}
 
+		final int si = cookisString.indexOf(STU.SEMICOLON);
+		if (si <= -1) {
+			final ZCookie[] c = new ZCookie[1];
+
+			final String[] c1 = cookisString.split(STU.EQUALS);
+			final ZCookie zCookie = new ZCookie(c1[0].trim(), c1[1].trim());
+
+			c[0] = zCookie;
+
+			return c;
+		}
+
 		final String[] a = cookisString.split(STU.SEMICOLON);
 		final ZCookie[] c = new ZCookie[a.length];
 		int cI = 0;
