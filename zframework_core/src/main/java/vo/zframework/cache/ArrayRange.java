@@ -11,6 +11,11 @@ public class ArrayRange {
 	private final int from;
 	private final int to;
 
+	/**
+	 * 本偏移量表示的header是否被解析过了，在延迟解析header时用到
+	 */
+	private boolean parsed;
+
 	public int getFrom() {
 		return this.from;
 	}
@@ -19,9 +24,18 @@ public class ArrayRange {
 		return this.to;
 	}
 
-	public ArrayRange(final int from, final int to) {
+	public boolean isParsed() {
+		return this.parsed;
+	}
+
+	public void setParsed(final boolean parsed) {
+		this.parsed = parsed;
+	}
+
+	public ArrayRange(final int from, final int to, final boolean parsed) {
 		this.from = from;
 		this.to = to;
+		this.parsed = parsed;
 	}
 
 }

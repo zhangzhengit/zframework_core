@@ -54,11 +54,6 @@ public class ZRequest {
 	private final List<ArrayRange> arList;
 
 	/**
-	 * 记录 arList 中非必须解析的头的位置，为了在延迟解析头是加速
-	 */
-	private final int[] notNecessaryHAR;
-
-	/**
 	 *	请求行一行完整内容如：GET / HTTP/1.1
 	 */
 	String original;
@@ -430,11 +425,6 @@ public class ZRequest {
 
 		this.arList = arList;
 
-		// 注意：notNecessaryHAR 初始化arlist.size - 1会浪费后面一部分空间完全用不到
-		// 写成-1是因为arList第一个是请求行，确定不会是头，
-		// 其实可以减去更大的数，因为正常的http请求会带有几个常见的头，但为了简单处理直接-1算了。
-		this.notNecessaryHAR = new int[arList.size() - 1];
-
 		// 构造参数逻辑考虑同上：
 		// 第一个是请求行，不是header，所以-1。headerMap最大存放数量就是size-1，
 		// 大多数情况可能不会用到全部的header，所以大多数header都是不会去解析的
@@ -459,7 +449,7 @@ public class ZRequest {
 
 		parsePath(requestLine, request, methodIndex);
 
-		parseHeaderAR(request);
+		parseHeader(request);
 
 		// HTTP1.1必须有 HOST 头
 		final String header = request.getHost();
@@ -602,13 +592,11 @@ public class ZRequest {
 		request.version = version;
 	}
 
-	private static void parseHeaderAR(final ZRequest request) {
+	private static void parseHeader(final ZRequest request) {
 		final List<ArrayRange> x = request.arList;
 
-		int nNHARI = 0;
-
 		// 第一个是请求行，不是header
-		for (int i = 1; i < x.size(); i++) {
+		for (int i = 1, size = x.size(); i < size; i++) {
 
 			final ArrayRange arrarRange = x.get(i);
 
@@ -638,9 +626,8 @@ public class ZRequest {
 				final String value = gHV(request.dataRawArray, cI, arrarRange);
 
 				request.headerMap.put(name, value);
-			} else {
-				request.notNecessaryHAR[nNHARI] = i;
-				nNHARI++;
+
+				arrarRange.setParsed(true);
 			}
 
 		}
@@ -687,17 +674,13 @@ public class ZRequest {
 
 		final List<ArrayRange> x = request.arList;
 
-		for (int i = 0; i < request.notNecessaryHAR.length; i++) {
-			final int nNHARI = request.notNecessaryHAR[i];
-			if (nNHARI == 0) {
-				// 后面有为0的位置，但正常情况应该走不到这里，除非getHeader时name根本不存在于头中
-				break;
+		for (int i = 1, size = x.size(); i < size; i++) {
+			final ArrayRange arrayRange = x.get(i);
+			if (arrayRange.isParsed()) {
+				continue;
 			}
 
-			final ArrayRange arrayRange = x.get(nNHARI);
-
 			final int cI = AU.search(request.dataRawArray, arrayRange.getTo(), STU.COLON_C_BYTES, 1, arrayRange.getFrom());
-
 			if (cI <= -1) {
 				continue;
 			}

@@ -215,7 +215,7 @@ public class STU {
 					nTo--;
 				}
 
-				ls.add(new ArrayRange(nFrom, nTo));
+				ls.add(new ArrayRange(nFrom, nTo, false));
 
 				break;
 			}
@@ -237,7 +237,7 @@ public class STU {
 				nTo--;
 			}
 
-			ls.add(new ArrayRange(nFrom, nTo));
+			ls.add(new ArrayRange(nFrom, nTo, false));
 
 			from = to + keywordBytes.length;
 		}
