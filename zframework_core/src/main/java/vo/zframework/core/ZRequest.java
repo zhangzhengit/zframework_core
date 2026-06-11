@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import vo.zframework.cache.AU;
 import vo.zframework.cache.ArrayRange;
@@ -33,6 +34,8 @@ public class ZRequest {
 	public static final String HTTP_11 = "HTTP/1.1";
 	public static final String BOUNDARY = "boundary=";
 	private static final char SPACE = STU.SPACE_CHAR;
+	private static final String HEADER_PARSED_NO_VALUE = "\u0000" + "\0" + "PARSED_NO_VALUE" + UUID.randomUUID();
+	private static final int HEADER_PARSED_NO_VALUE_LENGTH = HEADER_PARSED_NO_VALUE.length();
 	public static final ServerConfigurationProperties SERVERCONFIGURATIONPROPERTIES = ZContext
 			.getBean(ServerConfigurationProperties.class);
 	public static final int requestHeaderSizeLimit = SERVERCONFIGURATIONPROPERTIES.getRequestHeaderSizeLimit();
@@ -40,8 +43,20 @@ public class ZRequest {
 
 	// -------------------------------------------------------------------------------------------------
 
-	final List<ArrayRange> arList;
-	byte[] dataRawArray;
+	/**
+	 * 一个http请求的完整byte[]
+	 */
+	private final byte[] dataRawArray;
+
+	/**
+	 * 标记了 dataRawArray 里的每个header的起止位置
+	 */
+	private final List<ArrayRange> arList;
+
+	/**
+	 * 记录 arList 中非必须解析的头的位置，为了在延迟解析头是加速
+	 */
+	private final int[] notNecessaryHAR;
 
 	/**
 	 *	请求行一行完整内容如：GET / HTTP/1.1
@@ -80,7 +95,8 @@ public class ZRequest {
 	/**
 	 * 请求头,如： Accept-Encoding: gzip, deflate
 	 */
-	private final Map<String, String> headerMap = new HashMap<>();
+	// FIXME 2026年6月11日 19:52:40 zhangzhen : 解析和匹配时，要不要处理为大小写统一风格？
+	private final Map<String, String> headerMap;
 
 	/**
 	 * http完整的请求信息
@@ -353,9 +369,26 @@ public class ZRequest {
 	}
 
 	public String getHeader(final String name) {
-		// FIXME 2026年6月9日 05:10:03 zhangzhen : 要不要延迟解析？似乎不行，对于一个http服务器，要保证各个header合法，
-		// 但是提前全解析了又会有很多header用不到，做的全是无用功
-		return this.headerMap.get(name);
+
+		final String v = this.headerMap.get(name);
+		if (isHPNV(v)) {
+			return null;
+		}
+
+		if (v != null) {
+			return v;
+		}
+
+		final String nV = parseHeaderARHeader(this, name);
+		if (isHPNV(nV)) {
+			return null;
+		}
+
+		return nV;
+	}
+
+	private static boolean isHPNV(final String v) {
+		return (v != null) && (v.length() == HEADER_PARSED_NO_VALUE_LENGTH) && (v == HEADER_PARSED_NO_VALUE);
 	}
 
 	public boolean isKeepAlive() {
@@ -392,9 +425,23 @@ public class ZRequest {
 	}
 
 
-	public ZRequest(final List<ArrayRange> arList, final byte[] dataRawArray) {
-		this.arList = arList;
+	public ZRequest(final byte[] dataRawArray, final List<ArrayRange> arList) {
 		this.dataRawArray = dataRawArray;
+
+		this.arList = arList;
+
+		// 注意：notNecessaryHAR 初始化arlist.size - 1会浪费后面一部分空间完全用不到
+		// 写成-1是因为arList第一个是请求行，确定不会是头，
+		// 其实可以减去更大的数，因为正常的http请求会带有几个常见的头，但为了简单处理直接-1算了。
+		this.notNecessaryHAR = new int[arList.size() - 1];
+
+		// 构造参数逻辑考虑同上：
+		// 第一个是请求行，不是header，所以-1。headerMap最大存放数量就是size-1，
+		// 大多数情况可能不会用到全部的header，所以大多数header都是不会去解析的
+		// 所以即使容量设置size-1，也是浪费，尤其是带很多头的请求，可能只会有几分之一会用到
+		// 此时设置size-1更是浪费，尤其HashMap容量还会重置为大于此值的2的幂
+		this.headerMap = new HashMap<>(arList.size() - 1, 1F);
+
 		parseRequest(this);
 	}
 
@@ -410,11 +457,8 @@ public class ZRequest {
 
 		final int methodIndex = requestLine.indexOf(STU.SAPCE);
 
-		// path
 		parsePath(requestLine, request, methodIndex);
 
-		// paserHeader
-//		parseHeader(request);
 		parseHeaderAR(request);
 
 		// HTTP1.1必须有 HOST 头
@@ -560,69 +604,126 @@ public class ZRequest {
 
 	private static void parseHeaderAR(final ZRequest request) {
 		final List<ArrayRange> x = request.arList;
-		for (int i = x.size() - 1; i > 0; i--) {
 
-			final ArrayRange ar = x.get(i);
+		int nNHARI = 0;
 
-			final int cI = AU.search(request.dataRawArray, ar.getTo(), STU.COLON_C_BYTES, 1, ar.getFrom());
+		// 第一个是请求行，不是header
+		for (int i = 1; i < x.size(); i++) {
+
+			final ArrayRange arrarRange = x.get(i);
+
+			final int cI = AU.search(request.dataRawArray, arrarRange.getTo(), STU.COLON_C_BYTES, 1, arrarRange.getFrom());
+
+			if (cI <= -1) {
+				// FIXME 2026年6月11日 19:45:28 zhangzhen : 头无:符号，应该需要400
+				continue;
+			}
+
+			// 此时的ba已经去除了前后的空格了,现在只需要去除:符号旁边的空格
+			int nT = (cI - arrarRange.getFrom());
+			int nTrimSize = 0;
+			while ((nT > 0) && (request.dataRawArray[cI] == STU.SPACE_BYTE)) {
+				nT--;
+				nTrimSize++;
+			}
+
+			final int headerNameLength = cI - arrarRange.getFrom() - nTrimSize;
+			// FIXME 2026年6月11日 21:01:17 zhangzhen :  注意：下面方法只是简单判断了长度等同于必须解析的头的长度，
+			// 可能有很多误判导致解析了非必要的头而一直不使用浪费cpu和内存
+			if (isNPHNL(headerNameLength)) {
+
+				final String name = new String(request.dataRawArray, arrarRange.getFrom(), nT);
+
+				final String value = gHV(request.dataRawArray, cI, arrarRange);
+
+				request.headerMap.put(name, value);
+			} else {
+				request.notNecessaryHAR[nNHARI] = i;
+				nNHARI++;
+			}
+
+		}
+
+	}
+
+	/**
+	 * 是否必须解析的头的name的长度，即：以下这些头的长度，
+	 *
+	 * Host,Expect,Upgrade,Connection,Content-Length,Transfer-Encoding
+	 *
+	 * @param headerNameLength
+	 * @return
+	 */
+	private static boolean isNPHNL(final int headerNameLength) {
+		return (headerNameLength == 4)
+			|| (headerNameLength == 6)
+			|| (headerNameLength == 7)
+			|| (headerNameLength == 10)
+			|| (headerNameLength == 14)
+			|| (headerNameLength == 17);
+	}
+
+	/**
+	 * 解析指定的header，并且返回value
+	 *
+	 * @param request
+	 * @param headerName
+	 * @return
+	 */
+	private static String parseHeaderARHeader(final ZRequest request, final String headerName) {
+
+		final List<ArrayRange> x = request.arList;
+
+		for (int i = 0; i < request.notNecessaryHAR.length; i++) {
+			final int nNHARI = request.notNecessaryHAR[i];
+			if (nNHARI == 0) {
+				// 后面有为0的位置，但正常情况应该走不到这里，除非getHeader时name根本不存在于头中
+				break;
+			}
+
+			final ArrayRange arrayRange = x.get(i);
+
+			final int cI = AU.search(request.dataRawArray, arrayRange.getTo(), STU.COLON_C_BYTES, 1, arrayRange.getFrom());
 
 			if (cI <= -1) {
 				continue;
 			}
 
 			// 此时的ba已经去除了前后的空格了,现在只需要去除:符号旁边的空格
-			int nT = (cI - ar.getFrom());
-			while ((nT > 0) && (request.dataRawArray[cI] == STU.SPACE_BYTE)) {
-				nT--;
+			int nameTo = (cI - arrayRange.getFrom());
+			while ((nameTo > 0) && (request.dataRawArray[cI] == STU.SPACE_BYTE)) {
+				nameTo--;
 			}
 
-			int vF = cI + 1;
-			while ((vF < ar.getTo()) && (request.dataRawArray[vF] == STU.SPACE_BYTE)) {
-				vF++;
+			final String name = new String(request.dataRawArray, arrayRange.getFrom(), nameTo);
+			if ((headerName.length() == name.length()) && headerName.equals(name)) {
+
+				final String value = gHV(request.dataRawArray, cI, arrayRange);
+
+				request.headerMap.put(name, value);
+
+				return value;
 			}
 
-			final String key = new String(request.dataRawArray, ar.getFrom(), nT);
-
-			final String value = new String(request.dataRawArray, vF, ar.getTo() - vF);
-
-			request.headerMap.put(key, value);
 		}
 
+		return HEADER_PARSED_NO_VALUE;
 	}
 
-//	private static void parseHeader(final ZRequest request) {
-//		final List<byte[]> x = request.getBaList();
-//		for (int i = x.size() - 1; i > 0; i--) {
-//
-//			final byte[] ba = x.get(i);
-//			if (AU.isEmpty(ba)) {
-//				continue;
-//			}
-//
-//			final int cI = AU.search(ba, STU.COLON_C_BYTE);
-//			if(cI <= -1) {
-//				continue;
-//			}
-//
-//			// 此时的ba已经去除了前后的空格了,现在只需要去除:符号旁边的空格
-//			int nT = cI;
-//			while ((nT > 0) && (ba[nT - 1] == STU.SPACE_BYTE)) {
-//				nT--;
-//			}
-//
-//			int vF = cI + 1;
-//			while ((vF < ba.length) && (ba[vF] == STU.SPACE_BYTE)) {
-//				vF++;
-//			}
-//
-//			final String key = new String(ba, 0, nT);
-//
-//			final String value = new String(ba, vF, ba.length - vF);
-//
-//			request.headerMap.put(key, value);
-//		}
-//
-//	}
+	private static String gHV(final byte[] dataRawArray, final int cI, final ArrayRange arrayRange) {
+		int valueFromIndex = cI + 1;
+		while ((valueFromIndex < arrayRange.getTo()) && (dataRawArray[valueFromIndex] == STU.SPACE_BYTE)) {
+			valueFromIndex++;
+		}
+
+		final int hvLength = arrayRange.getTo() - valueFromIndex;
+		// value为null，则设为""
+		final String value =
+				hvLength == 0
+				? STU.EMPTY
+				: new String(dataRawArray, valueFromIndex, hvLength);
+		return value;
+	}
 
 	public String getOriginal() {
 		return this.original;
