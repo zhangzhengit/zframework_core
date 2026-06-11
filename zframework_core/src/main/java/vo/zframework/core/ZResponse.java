@@ -4,15 +4,12 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
 import vo.log.core.ZLog2;
 import vo.zframework.cache.AU;
-import vo.zframework.cache.CU;
 import vo.zframework.cache.STU;
 import vo.zframework.compression.Deflater;
 import vo.zframework.compression.ZGzip;
@@ -108,8 +105,7 @@ public class ZResponse {
 	private static final byte[] HTTP_1_1_BYTES = HTTP_1_1.getBytes();
 
 	public final static int RESPONSE_ARRAY_CAPACITY = SERVER_CONFIGURATIONPROPERTIES.getResponseArrayCapacity();
-
-	private final ZArray array = SocketTL.get().getArray();
+	public final static int HEADER_ARRAY_CAPACITY = (RESPONSE_ARRAY_CAPACITY / 4) * 3;
 
 	/**
 	 * write 方法是否执行过
@@ -122,7 +118,10 @@ public class ZResponse {
 
 	private final BufferedOutputStream bufferedOutputStream;
 
-	private final List<ZHeader> headerList = new ArrayList<>(DEFAULT_HEADERS_COUNT);
+	private final ZArray array = SocketTL.get().getArray();
+	private final ZArray headerArray = SocketTL.get().gethArray();
+
+	private ConnectionEnum connectionEnum;
 
 	private byte[] body;
 
@@ -154,19 +153,8 @@ public class ZResponse {
 		return this.body == null ? 0 : this.body.length;
 	}
 
-	public boolean isKeepAlive() {
-		if (CU.isEmpty(this.headerList)) {
-			return false;
-		}
-
-		for (int i = 0; i < this.headerList.size(); i++) {
-			final ZHeader h = this.headerList.get(i);
-			if (HeaderEnum.CONNECTION.getNameBytes().equals(h.getNameBytes())) {
-				return Arrays.equals(ConnectionEnum.KEEP_ALIVE.getValueBytes(), h.getValueBytes());
-			}
-		}
-
-		return false;
+	public ConnectionEnum getConnectionEnum() {
+		return this.connectionEnum;
 	}
 
 	/**
@@ -216,8 +204,25 @@ public class ZResponse {
 	}
 
 	public ZResponse header(final ZHeader zHeader) {
-		this.headerList.add(zHeader);
+
+		this.headerArray.add(zHeader.getNameBytes());
+		this.headerArray.add(STU.COLON_C_BYTES);
+		this.headerArray.add(zHeader.getValueBytes());
+		this.headerArray.add(STU.CRLF_BYTES);
+
+		this.setConnection(zHeader);
+
 		return this;
+	}
+
+	private void setConnection(final ZHeader zHeader) {
+		if (Arrays.equals(HeaderEnum.CONNECTION.getNameBytes(), zHeader.getNameBytes())) {
+			if (Arrays.equals(ConnectionEnum.CLOSE.getValueBytes(), zHeader.getValueBytes())) {
+				this.connectionEnum = ConnectionEnum.CLOSE;
+			} else if (Arrays.equals(ConnectionEnum.KEEP_ALIVE.getValueBytes(), zHeader.getValueBytes())) {
+				this.connectionEnum = ConnectionEnum.KEEP_ALIVE;
+			}
+		}
 	}
 
 	public ZResponse header(final byte[] nameBytes,final byte[] valueBytes) {
@@ -352,6 +357,13 @@ public class ZResponse {
 		} else {
 			this.array.reset();
 		}
+
+		if (this.headerArray.length() >= (HEADER_ARRAY_CAPACITY)) {
+			this.headerArray.reset(HEADER_ARRAY_CAPACITY);
+		} else {
+			this.headerArray.reset();
+		}
+
 	}
 
 	/**
@@ -476,26 +488,18 @@ public class ZResponse {
 	}
 
 	private void arrayAdd(final byte[] ba) {
-		this.array.add(ba);
+		this.arrayAdd(ba, 0, ba.length);
+	}
+
+	private void arrayAdd(final byte[] ba, final int from, final int to) {
+		this.array.add(ba, from, to);
 	}
 
 	/**
 	 * 写入header部分
 	 */
 	private void addHeaders() {
-		if (this.headerList.isEmpty()) {
-			return;
-		}
-
-		for (int i = 0; i < this.headerList.size(); i++) {
-			final ZHeader zHeader = this.headerList.get(i);
-
-			this.arrayAdd(zHeader.getNameBytes());
-			this.arrayAdd(STU.COLON_C_BYTES);
-			this.arrayAdd(zHeader.getValueBytes());
-			this.arrayAdd(STU.CRLF_BYTES);
-		}
-
+		this.arrayAdd(this.headerArray.getRawArray(),0,this.headerArray.length());
 		this.arrayAdd(CRLF_BYTES);
 	}
 
@@ -607,8 +611,18 @@ public class ZResponse {
 
 		final ZRequest request = ReqeustInfo.get();
 
-		if ((request != null) && request.isKeepAlive()) {
-			this.header(HeaderEnum.CONNECTION.getNameBytes(), ConnectionEnum.KEEP_ALIVE.getValueBytes());
+		// 到此，response中的Connection要优先于request中指定的，就是默认响应keep-alive
+		// 如果request指定了则按request中的来，response中手动设置了则按response中的来
+		// 优先级：response设置 > request中要求 >默认的keep-alive
+
+		final ConnectionEnum ce = this.getConnectionEnum();
+		// 本对象内未设置过Connection，才看request要求，最后设置默认的keep-alive
+		if (ce == null) {
+			if ((request != null) && !request.isKeepAlive()) {
+				this.header(HeaderEnum.CONNECTION.getNameBytes(), ConnectionEnum.CLOSE.getValueBytes());
+			} else {
+				this.header(HeaderEnum.CONNECTION.getNameBytes(), ConnectionEnum.KEEP_ALIVE.getValueBytes());
+			}
 		}
 
 		this.setCustomHeader();
@@ -691,6 +705,10 @@ public class ZResponse {
 
 	public String getContentType() {
 		return this.contentType;
+	}
+
+	public static int getDefaultHeadersCount() {
+		return DEFAULT_HEADERS_COUNT;
 	}
 
 }

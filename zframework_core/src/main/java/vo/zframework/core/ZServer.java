@@ -13,6 +13,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import vo.log.core.ZLog2;
 import vo.zframework.configuration.ServerConfigurationProperties;
+import vo.zframework.enums.ConnectionEnum;
 import vo.zframework.http.HttpStatusEnum;
 import vo.zframework.http.ZRMethod;
 
@@ -165,8 +166,8 @@ public class ZServer {
 					final ZResponse exception = pd.getException();
 					if (exception != null) {
 						exception.write();
-						if (!exception.isKeepAlive()
-						|| (exception.getHttpStatus() != HttpStatusEnum.HTTP_200.getStatus())) {
+						if ((exception.getHttpStatus() != HttpStatusEnum.HTTP_200.getStatus())
+						 || (exception.getConnectionEnum() == ConnectionEnum.CLOSE)) {
 							SocketTL.closeOutputStreamAndSocket();
 							closed = true;
 						}

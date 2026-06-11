@@ -3,6 +3,8 @@ package vo.zframework.core;
 import java.io.BufferedOutputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -21,6 +23,15 @@ public class SO {
 	 * 所以不得不添加一个辅助类(BAOS或者本对象)来先构造出一个完整的响应的byte[]然后一次性write
 	 */
 	private final ZArray array = new ZArray(ZResponse.RESPONSE_ARRAY_CAPACITY);
+
+	/**
+	 * 本属性是为了消除ZResponse中HeaderList的，似乎没必要在放入ZArray之前先放入List，
+	 * 但是改了一下，由于当前ZResponse建造模式没有指定方法顺序，所以直接把header()方法改为放入array不好处理，
+	 * 很可能顺序是乱的，因为调用header()方法时还没调用httpStatus方法，ZArray也没有insert的功能
+	 * 同时，把headerList改为和上面的array一样在连接内复用但List又没有reset的方法，也不好处理，
+	 * 所以再加一个ZArray对象专门放header
+	 */
+	private final ZArray headerArray = new ZArray(ZResponse.HEADER_ARRAY_CAPACITY);
 
 	public SO(final Socket socket, final OutputStream outputStream, final BufferedOutputStream bufferedOutputStream) {
 		this.socket = socket;
@@ -42,6 +53,10 @@ public class SO {
 
 	public ZArray getArray() {
 		return this.array;
+	}
+
+	public ZArray gethArray() {
+		return this.headerArray;
 	}
 
 }
