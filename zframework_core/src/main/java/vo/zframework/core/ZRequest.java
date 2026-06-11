@@ -681,7 +681,7 @@ public class ZRequest {
 				break;
 			}
 
-			final ArrayRange arrayRange = x.get(i);
+			final ArrayRange arrayRange = x.get(nNHARI);
 
 			final int cI = AU.search(request.dataRawArray, arrayRange.getTo(), STU.COLON_C_BYTES, 1, arrayRange.getFrom());
 
