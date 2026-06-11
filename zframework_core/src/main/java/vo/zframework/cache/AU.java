@@ -85,4 +85,13 @@ public class AU {
 		return -1;
 	}
 
+	public static int search(final byte[] bytes, final byte keyword) {
+		for (int i = 0; i < bytes.length; i++) {
+			if (bytes[i] == keyword) {
+				return i;
+			}
+		}
+		return -1;
+	}
+
 }

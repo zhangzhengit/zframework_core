@@ -106,7 +106,7 @@ public class Task {
 
 	public static <T extends Annotation> T getMethodAnnotation0(final ZRequest request, final Class<T> annoClass) {
 		// 匹配path
-		if (CU.isEmpty(request.getLineList())) {
+		if (STU.isEmpty(request.getPath())) {
 			return null;
 		}
 

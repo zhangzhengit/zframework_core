@@ -52,8 +52,8 @@ public class HttpRequestParser {
 	 */
 	public static ZRequest parse(final byte[] data, final int dataLength, final int headerEndIndex) {
 
-		final List<String> lineList = STU.split(data, headerEndIndex, STU.CRLF_BYTES);
-		final ZRequest request= new ZRequest(lineList);
+		final List<byte[]> baList = STU.splitBytes(data, headerEndIndex, STU.CRLF_BYTES);
+		final ZRequest request= new ZRequest(baList);
 
 		if ((headerEndIndex + STU.CRLFCRLF.length()) < dataLength) {
 			final byte[] bodyBA = Arrays.copyOfRange(data, headerEndIndex + STU.CRLFCRLF.length(), dataLength);
@@ -587,5 +587,21 @@ public class HttpRequestParser {
 		return false;
 	}
 
+
+	public static
+	boolean kenengxuyaoParse(final byte[] headerBA) {
+
+		if((headerBA.length == 4)
+		|| (headerBA.length == 6)
+		|| (headerBA.length == 7)
+		|| (headerBA.length == 10)
+		|| (headerBA.length == 14)
+		|| (headerBA.length == 17)
+				) {
+			return true;
+		}
+
+		return false;
+	}
 
 }

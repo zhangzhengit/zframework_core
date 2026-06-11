@@ -4,7 +4,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -17,8 +16,6 @@ import vo.zframework.cache.STU;
 import vo.zframework.configuration.ServerConfigurationProperties;
 import vo.zframework.enums.ConnectionEnum;
 import vo.zframework.enums.MethodEnum;
-import vo.zframework.exception.ParseHTTPRequestException;
-import vo.zframework.http.HttpStatusEnum;
 import vo.zframework.http.ZCookie;
 
 /**
@@ -41,7 +38,7 @@ public class ZRequest {
 	public static final String MULTIPART_FORM_DATA = "multipart/form-data";
 
 	// -------------------------------------------------------------------------------------------------
-	private List<String> lineList = null;
+	private List<byte[]> baList = null;
 
 	/**
 	 *	请求行一行完整内容如：GET / HTTP/1.1
@@ -379,22 +376,19 @@ public class ZRequest {
 		return null;
 	}
 
-	public List<String> getLineList() {
-		return this.lineList;
-	}
 
-	public ZRequest(final List<String> lineList) {
-		this.lineList = lineList;
+	public ZRequest(final List<byte[]> baList) {
+		this.setBaList(baList);
 		parseRequest(this);
 	}
 
 	private static ZRequest parseRequest(final ZRequest request) {
-		if (CU.isEmpty(request.getLineList())) {
+		if (CU.isEmpty(request.getBaList())) {
 			return request;
 		}
 
 		// 0 为 请求行
-		final String requestLine = request.getLineList().get(0);
+		final String requestLine = new String(request.getBaList().get(0));
 		request.original = requestLine;
 
 		final int methodIndex = requestLine.indexOf(STU.SAPCE);
@@ -547,43 +541,34 @@ public class ZRequest {
 	}
 
 	private static void parseHeader(final ZRequest request) {
-		final List<String> x = request.getLineList();
+		final List<byte[]> x = request.getBaList();
 		for (int i = x.size() - 1; i > 0; i--) {
-			final String l = x.get(i);
-			if (STU.EMPTY.equals(l)) {
+
+			final byte[] ba = x.get(i);
+			if (AU.isEmpty(ba)) {
 				continue;
 			}
 
-			final int k = l.indexOf(STU.COLON);
-			// : 出现位置不小于length了，说明:后面没东西了
-			if ((k + 1 + 1) >= l.length()) {
-				final String key = l.substring(0, k).trim();
-				request.headerMap.put(key, "");
+			final int cI = AU.search(ba, STU.COLON_C_BYTE);
+			if(cI <= -1) {
 				continue;
 			}
 
-			if (k <= -1) {
-				continue;
+			// 此时的ba已经去除了前后的空格了,现在只需要去除:符号旁边的空格
+			int nT = cI;
+			while ((nT > 0) && (ba[nT - 1] == STU.SPACE_BYTE)) {
+				nT--;
 			}
 
-//			final String key = l.substring(0, k).trim();
-			final String key =
-				(l.charAt(0)  == SPACE)
-				|| (l.charAt(k - 1) == SPACE)
-				? l.substring(0,k).trim()
-						: l.substring(0, k);
+			int vF = cI + 1;
+			while ((vF < ba.length) && (ba[vF] == STU.SPACE_BYTE)) {
+				vF++;
+			}
 
-//			final boolean mustParse = HttpRequestParser.mustParse(key);
-//			if (!mustParse) {
-//				continue;
-//			}
+			final String key = new String(ba, 0, nT);
 
-			final String value =
-					l.charAt(k + 1) == SPACE
-					? l.substring(k + 1 + 1)
-							: l.substring(k + 1);
+			final String value = new String(ba, vF, ba.length - vF);
 
-			// FIXME 2026年6月11日 06:35:42 zhangzhen : 注意：trim是内存热点第一,记得手动trim，现在只简单判断了前后有空格则trim
 			request.headerMap.put(key, value);
 		}
 
@@ -676,43 +661,12 @@ public class ZRequest {
 		this.methodEnum = methodEnum;
 	}
 
-	@Override
-	public String toString() {
-		final StringBuilder builder = new StringBuilder();
-		builder.append("ZRequest [lineList=");
-		builder.append(this.lineList);
-		builder.append(", original=");
-		builder.append(this.original);
-		builder.append(", queryString=");
-		builder.append(this.queryString);
-		builder.append(", tf=");
-		builder.append(this.tf);
-		builder.append(", methodEnum=");
-		builder.append(this.methodEnum);
-		builder.append(", requestURI=");
-		builder.append(this.requestURI);
-		builder.append(", path=");
-		builder.append(this.path);
-		builder.append(", paramSet=");
-		builder.append(this.paramSet);
-		builder.append(", version=");
-		builder.append(this.version);
-		builder.append(", headerMap=");
-		builder.append(this.headerMap);
-		builder.append(", originalRequestBytes=");
-		builder.append(Arrays.toString(this.originalRequestBytes));
-		builder.append(", body=");
-		builder.append(Arrays.toString(this.body));
-		builder.append(", clientIp=");
-		builder.append(this.clientIp);
-		builder.append(", cookies=");
-		builder.append(Arrays.toString(this.cookies));
-		builder.append(", userAgent=");
-		builder.append(this.userAgent);
-		builder.append(", keepAlive=");
-		builder.append(this.keepAlive);
-		builder.append("]");
-		return builder.toString();
+	public List<byte[]> getBaList() {
+		return this.baList;
+	}
+
+	public void setBaList(final List<byte[]> baList) {
+		this.baList = baList;
 	}
 
 }
