@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 import vo.zframework.cache.AU;
+import vo.zframework.cache.ArrayRange;
 import vo.zframework.cache.STU;
 import vo.zframework.configuration.ServerConfigurationProperties;
 import vo.zframework.configuration.TempDir;
@@ -45,18 +46,18 @@ public class HttpRequestParser {
 	/**
 	 * 从一个完整的http请求报文中解析出所有内容
 	 *
-	 * @param data 包含了一个完整的http请求的 byte[]，可能后面一部分全是0
+	 * @param dataRawArray 包含了一个完整的http请求的 byte[]，可能后面一部分全是0
 	 * @param dataLength data的实际有效长度，实际有数据的长度
 	 * @param headerEndIndex header截止index
 	 * @return
 	 */
-	public static ZRequest parse(final byte[] data, final int dataLength, final int headerEndIndex) {
+	public static ZRequest parse(final byte[] dataRawArray, final int dataLength, final int headerEndIndex) {
 
-		final List<byte[]> baList = STU.splitBytes(data, headerEndIndex, STU.CRLF_BYTES);
-		final ZRequest request= new ZRequest(baList);
+		final List<ArrayRange> arList = STU.splitBytesAR(dataRawArray, headerEndIndex, STU.CRLF_BYTES);
+		final ZRequest request= new ZRequest(arList, dataRawArray);
 
 		if ((headerEndIndex + STU.CRLFCRLF.length()) < dataLength) {
-			final byte[] bodyBA = Arrays.copyOfRange(data, headerEndIndex + STU.CRLFCRLF.length(), dataLength);
+			final byte[] bodyBA = Arrays.copyOfRange(dataRawArray, headerEndIndex + STU.CRLFCRLF.length(), dataLength);
 			request.setBody(bodyBA);
 		} else {
 			request.setBody(new byte[] {});

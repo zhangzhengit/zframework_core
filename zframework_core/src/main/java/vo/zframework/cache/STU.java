@@ -131,6 +131,7 @@ public class STU {
 
 	/**
 	 * 对byte[]的split，并且对分割后的行去除前后的空格
+	 * 注意：本方法arraycopy可能成为内存热点
 	 *
 	 * @param bytes        原数组
 	 * @param bytesTo      原数组截止位置
@@ -182,8 +183,60 @@ public class STU {
 				nTo--;
 			}
 
-			// FIXME 2026年6月11日 09:40:58 zhangzhen : 注意：arraycopy仍然是内存热点，记得继续改为零拷贝
 			ls.add(Arrays.copyOfRange(bytes, nFrom, nTo));
+
+			from = to + keywordBytes.length;
+		}
+
+		return ls;
+	}
+
+	public static List<ArrayRange> splitBytesAR(final byte[] bytes, final int bytesTo, final byte[] keywordBytes) {
+
+		final List<ArrayRange> ls = new ArrayList<>();
+
+		int from = 0;
+		int to = 0;
+
+		int fromIndex = 0;
+
+		while (true) {
+			final int i = AU.search(bytes, bytesTo, keywordBytes, 1, fromIndex);
+			if (i <= -1) {
+
+				int nFrom = to + keywordBytes.length;
+				int nTo = bytesTo;
+
+				while ((nFrom < nTo) && (bytes[nFrom] == SPACE_BYTE)) {
+					nFrom++;
+				}
+				while ((nTo > nFrom) && (bytes[nTo - 1] == SPACE_BYTE)) {
+					nTo--;
+				}
+
+				ls.add(new ArrayRange(nFrom, nTo));
+
+				break;
+			}
+
+			fromIndex = i + keywordBytes.length;
+			to = i;
+
+			if (from == to) {
+				break;
+			}
+
+			int nFrom = from;
+			int nTo = to;
+
+			while ((nFrom < nTo) && (bytes[nFrom] == SPACE_BYTE)) {
+				nFrom++;
+			}
+			while ((nTo > nFrom) && (bytes[nTo - 1] == SPACE_BYTE)) {
+				nTo--;
+			}
+
+			ls.add(new ArrayRange(nFrom, nTo));
 
 			from = to + keywordBytes.length;
 		}

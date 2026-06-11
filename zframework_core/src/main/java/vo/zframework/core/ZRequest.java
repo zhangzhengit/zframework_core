@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Set;
 
 import vo.zframework.cache.AU;
+import vo.zframework.cache.ArrayRange;
 import vo.zframework.cache.CU;
 import vo.zframework.cache.STU;
 import vo.zframework.configuration.ServerConfigurationProperties;
@@ -38,7 +39,9 @@ public class ZRequest {
 	public static final String MULTIPART_FORM_DATA = "multipart/form-data";
 
 	// -------------------------------------------------------------------------------------------------
-	private List<byte[]> baList = null;
+
+	final List<ArrayRange> arList;
+	byte[] dataRawArray;
 
 	/**
 	 *	请求行一行完整内容如：GET / HTTP/1.1
@@ -377,18 +380,20 @@ public class ZRequest {
 	}
 
 
-	public ZRequest(final List<byte[]> baList) {
-		this.setBaList(baList);
+	public ZRequest(final List<ArrayRange> arList, final byte[] dataRawArray) {
+		this.arList = arList;
+		this.dataRawArray = dataRawArray;
 		parseRequest(this);
 	}
 
 	private static ZRequest parseRequest(final ZRequest request) {
-		if (CU.isEmpty(request.getBaList())) {
+		if (CU.isEmpty(request.arList)) {
 			return request;
 		}
 
 		// 0 为 请求行
-		final String requestLine = new String(request.getBaList().get(0));
+		final String requestLine = new String(request.dataRawArray,
+				request.arList.get(0).getFrom(),request.arList.get(0).getTo());
 		request.original = requestLine;
 
 		final int methodIndex = requestLine.indexOf(STU.SAPCE);
@@ -397,7 +402,8 @@ public class ZRequest {
 		parsePath(requestLine, request, methodIndex);
 
 		// paserHeader
-		parseHeader(request);
+//		parseHeader(request);
+		parseHeaderAR(request);
 
 		// HTTP1.1必须有 HOST 头
 		final String header = request.getHost();
@@ -540,39 +546,71 @@ public class ZRequest {
 		request.version = version;
 	}
 
-	private static void parseHeader(final ZRequest request) {
-		final List<byte[]> x = request.getBaList();
+	private static void parseHeaderAR(final ZRequest request) {
+		final List<ArrayRange> x = request.arList;
 		for (int i = x.size() - 1; i > 0; i--) {
 
-			final byte[] ba = x.get(i);
-			if (AU.isEmpty(ba)) {
-				continue;
-			}
+			final ArrayRange ar = x.get(i);
 
-			final int cI = AU.search(ba, STU.COLON_C_BYTE);
-			if(cI <= -1) {
+			final int cI = AU.search(request.dataRawArray, ar.getTo(), STU.COLON_C_BYTES, 1, ar.getFrom());
+
+			if (cI <= -1) {
 				continue;
 			}
 
 			// 此时的ba已经去除了前后的空格了,现在只需要去除:符号旁边的空格
-			int nT = cI;
-			while ((nT > 0) && (ba[nT - 1] == STU.SPACE_BYTE)) {
+			int nT = (cI - ar.getFrom());
+			while ((nT > 0) && (request.dataRawArray[cI] == STU.SPACE_BYTE)) {
 				nT--;
 			}
 
 			int vF = cI + 1;
-			while ((vF < ba.length) && (ba[vF] == STU.SPACE_BYTE)) {
+			while ((vF < ar.getTo()) && (request.dataRawArray[vF] == STU.SPACE_BYTE)) {
 				vF++;
 			}
 
-			final String key = new String(ba, 0, nT);
+			final String key = new String(request.dataRawArray, ar.getFrom(), nT);
 
-			final String value = new String(ba, vF, ba.length - vF);
+			final String value = new String(request.dataRawArray, vF, ar.getTo() - vF);
 
 			request.headerMap.put(key, value);
 		}
 
 	}
+
+//	private static void parseHeader(final ZRequest request) {
+//		final List<byte[]> x = request.getBaList();
+//		for (int i = x.size() - 1; i > 0; i--) {
+//
+//			final byte[] ba = x.get(i);
+//			if (AU.isEmpty(ba)) {
+//				continue;
+//			}
+//
+//			final int cI = AU.search(ba, STU.COLON_C_BYTE);
+//			if(cI <= -1) {
+//				continue;
+//			}
+//
+//			// 此时的ba已经去除了前后的空格了,现在只需要去除:符号旁边的空格
+//			int nT = cI;
+//			while ((nT > 0) && (ba[nT - 1] == STU.SPACE_BYTE)) {
+//				nT--;
+//			}
+//
+//			int vF = cI + 1;
+//			while ((vF < ba.length) && (ba[vF] == STU.SPACE_BYTE)) {
+//				vF++;
+//			}
+//
+//			final String key = new String(ba, 0, nT);
+//
+//			final String value = new String(ba, vF, ba.length - vF);
+//
+//			request.headerMap.put(key, value);
+//		}
+//
+//	}
 
 	public String getOriginal() {
 		return this.original;
@@ -659,14 +697,6 @@ public class ZRequest {
 
 	public void setMethodEnum(final MethodEnum methodEnum) {
 		this.methodEnum = methodEnum;
-	}
-
-	public List<byte[]> getBaList() {
-		return this.baList;
-	}
-
-	public void setBaList(final List<byte[]> baList) {
-		this.baList = baList;
 	}
 
 }
