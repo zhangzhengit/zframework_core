@@ -646,11 +646,12 @@ public class Task {
 		int zpvPI = 0;
 
 		for (final Parameter p : zrMethod.getMethodParameters()) {
-			if (p.isAnnotationPresent(ZRequestHeader.class)) {
-				final ZRequestHeader a = RU.getAnnotation(p, ZRequestHeader.class);
-				final String name = a.value();
+
+			final ZRequestHeader requestHeader = p.getAnnotation(ZRequestHeader.class);
+			if (requestHeader != null) {
+				final String name = requestHeader.value();
 				final String headerValue = request.getHeader(name);
-				if ((headerValue == null) && a.required()) {
+				if ((headerValue == null) && requestHeader.required()) {
 					final String message = "请求方法[" + path + "]的header[" + p.getName() + "]不存在";
 					throw new FormPairParseException(message, HttpStatusEnum.HTTP_400.getStatus());
 				}
