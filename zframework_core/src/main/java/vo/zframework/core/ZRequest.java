@@ -152,7 +152,7 @@ public class ZRequest {
 
 	public int getServerPort() {
 
-		final String host = this.headerMap.get(HeaderEnum.HOST.getName());
+		final String host = this.getHeader(HeaderEnum.HOST.getName());
 
 		final int i = host.indexOf(STU.COLON);
 		if (i > -1) {
@@ -193,8 +193,8 @@ public class ZRequest {
 		if (!this.isContentTypeFormData()) {
 			return null;
 		}
-		final String ct = this.headerMap.get(HeaderEnum.CONTENT_TYPE.getName());
 
+		final String ct = this.getHeader(HeaderEnum.CONTENT_TYPE.getName());
 		final int i = ct.indexOf(BOUNDARY);
 		if (i > -1) {
 			return ct.substring(i + BOUNDARY.length());
@@ -295,7 +295,7 @@ public class ZRequest {
 	}
 
 	private ZCookie[] gc() {
-		final String cookisString = this.headerMap.get(HeaderEnum.COOKIE.getName());
+		final String cookisString = this.getHeader(HeaderEnum.COOKIE.getName());
 		if (STU.isEmpty(cookisString)) {
 			return new ZCookie[0];
 		}
@@ -331,7 +331,7 @@ public class ZRequest {
 
 	public String getUserAgent() {
 		if (this.userAgent == null) {
-			this.userAgent = this.headerMap.get(HeaderEnum.USER_AGENT.getName());
+			this.userAgent = this.getHeader(HeaderEnum.USER_AGENT.getName());
 		}
 
 		return this.userAgent;
