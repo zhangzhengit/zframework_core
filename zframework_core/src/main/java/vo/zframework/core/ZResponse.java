@@ -116,7 +116,7 @@ public class ZResponse {
 	private final AtomicReference<Integer> httpStatus = new AtomicReference<>(HttpStatusEnum.HTTP_200.getStatus());
 	private boolean contentTypeHasBeenSet = false;
 
-	private final BufferedOutputStream bufferedOutputStream;
+	private final BufferedOutputStream bufferedOutputStream = SocketTL.get().getBufferedOutputStream();
 
 	private final ZArray array = SocketTL.get().getArray();
 	private final ZArray headerArray = SocketTL.get().gethArray();
@@ -697,10 +697,6 @@ public class ZResponse {
 	private void wrieZArrayAndFlush() {
 		this.write(this.array.getRawArray(), this.array.length());
 		this.flush();
-	}
-
-	public ZResponse() {
-		this.bufferedOutputStream = SocketTL.get().getBufferedOutputStream();
 	}
 
 	public String getContentType() {
