@@ -67,4 +67,14 @@ public class ReU {
 		return r;
 	}
 
+	public static ZResponse response431(final String message, final boolean keepAlive) {
+		final ZResponse r = new ZResponse()
+				.header(HeaderEnum.CONNECTION.getNameBytes(),
+						keepAlive ? ConnectionEnum.KEEP_ALIVE.getValueBytes() : ConnectionEnum.CLOSE.getValueBytes())
+				.httpStatus(HttpStatusEnum.HTTP_431.getStatus())
+				.contentType(ContentTypeEnum.APPLICATION_JSON.getTypeBytes())
+				.body(J.toJSONString(CR.error(HttpStatusEnum.HTTP_431.getMessage() + "[" + message + "]")));
+		return r;
+	}
+
 }

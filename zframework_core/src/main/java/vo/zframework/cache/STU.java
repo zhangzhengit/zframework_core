@@ -1,5 +1,6 @@
 package vo.zframework.cache;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -32,7 +33,7 @@ public class STU {
 	public static final char EQUALS_C = '=';
 	public static final String SEMICOLON = ";";
 	public static final String SAPCE = " ";
-
+	public static final char SPACE_CHAR = ' ';
 
 	public static String toLowerCase(final String string) {
 		return ZRC.singleton().computeIfAbsent(string, () -> string.toLowerCase());
@@ -105,10 +106,8 @@ public class STU {
 
 		while (true) {
 			final int i = AU.search(ba, baTo, kba, 1, fromIndex);
-//			final int i = AU.search(ba, ba.length, kba, 1, fromIndex);
 			if (i <= -1) {
-				ls.add(new String(ba, to + kba.length, baTo - (to + kba.length)));
-//				ls.add(new String(ba, to + kba.length, ba.length - (to + kba.length)));
+				ls.add(new String(ba, to + kba.length, baTo - (to + kba.length),StandardCharsets.ISO_8859_1));
 				break;
 			}
 
@@ -119,12 +118,13 @@ public class STU {
 				break;
 			}
 
-			ls.add(new String(ba, from, to-from));
+			ls.add(new String(ba, from, to-from,StandardCharsets.ISO_8859_1));
 
 			from = to + kba.length;
 		}
 
 		return ls;
 	}
+
 
 }

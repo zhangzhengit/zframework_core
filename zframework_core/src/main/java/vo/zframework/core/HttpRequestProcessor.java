@@ -8,6 +8,8 @@ import vo.zframework.cache.AU;
 import vo.zframework.cache.STU;
 import vo.zframework.configuration.ServerConfigurationProperties;
 import vo.zframework.enums.MethodEnum;
+import vo.zframework.exception.ParseHTTPRequestException;
+import vo.zframework.http.HttpStatusEnum;
 import vo.zframework.http.ZControllerMap;
 import vo.zframework.http.ZRMethod;
 
@@ -202,6 +204,14 @@ public class HttpRequestProcessor {
 			// header 没结束，继续读
 			return HttpParseStatusEnum.PARSE_HEADER;
 		}
+
+		final int headerLength = headerEndIndex - (pd.getRequestLineEndIndex() + STU.CRLF_LENGTH);
+		if (headerLength > ZRequest.requestHeaderSizeLimit) {
+			final ZResponse response = ReU.response431("", false);
+			pd.setException(response);
+			return HttpParseStatusEnum.EXCEPTION;
+		}
+
 		pd.setHeaderEndIndex(headerEndIndex);
 
 		final String contentLength = gContentLength(array, pd);

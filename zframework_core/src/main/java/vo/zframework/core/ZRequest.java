@@ -34,6 +34,7 @@ public class ZRequest {
 
 	public static final String HTTP_11 = "HTTP/1.1";
 	public static final String BOUNDARY = "boundary=";
+	private static final char SPACE = STU.SPACE_CHAR;
 	public static final ServerConfigurationProperties SERVERCONFIGURATIONPROPERTIES = ZContext
 			.getBean(ServerConfigurationProperties.class);
 	public static final int requestHeaderSizeLimit = SERVERCONFIGURATIONPROPERTIES.getRequestHeaderSizeLimit();
@@ -561,25 +562,29 @@ public class ZRequest {
 				continue;
 			}
 
-			if (k > -1) {
-
-				final String value = l.substring(k + 1).trim();
-
-				if (STU.hasContent(value)) {
-
-					final int length = value.length();
-					// FIXME 2025年1月20日 下午8:45:36 zhangzhen : 要不要用value.getBytes().length 判断？
-					// 判断的话会太费性能
-					if (length > requestHeaderSizeLimit) {
-						throw new ParseHTTPRequestException(HttpStatusEnum.HTTP_431.getMessage(),
-								HttpStatusEnum.HTTP_431.getStatus());
-					}
-				}
-
-				final String key = l.substring(0, k).trim();
-				// FIXME 2026年6月7日 05:45:39 zhangzhen : 奇怪了，k和v去掉trim()反而变慢？
-				request.headerMap.put(key, value);
+			if (k <= -1) {
+				continue;
 			}
+
+//			final String key = l.substring(0, k).trim();
+			final String key =
+				(l.charAt(0)  == SPACE)
+				|| (l.charAt(k - 1) == SPACE)
+				? l.substring(0,k).trim()
+						: l.substring(0, k);
+
+//			final boolean mustParse = HttpRequestParser.mustParse(key);
+//			if (!mustParse) {
+//				continue;
+//			}
+
+			final String value =
+					l.charAt(k + 1) == SPACE
+					? l.substring(k + 1 + 1)
+							: l.substring(k + 1);
+
+			// FIXME 2026年6月11日 06:35:42 zhangzhen : 注意：trim是内存热点第一,记得手动trim，现在只简单判断了前后有空格则trim
+			request.headerMap.put(key, value);
 		}
 
 	}

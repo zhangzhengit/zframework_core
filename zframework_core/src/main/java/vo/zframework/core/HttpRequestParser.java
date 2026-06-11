@@ -465,4 +465,127 @@ public class HttpRequestParser {
 		return new Fm(false, "");
 	}
 
+	/**
+	 * 是否http1.1中必须解析的头
+	 *
+	 * 必须的：Host,Expect,Upgrade,Connection,Content-Length,Transfer-Encoding
+	 *
+	 * @param headerName
+	 * @return
+	 */
+	public static
+	boolean mustParse(final String headerName) {
+		if (STU.isEmpty(headerName)) {
+			return false;
+		}
+
+		final int length = headerName.length();
+		if (length > 17) {
+			return false;
+		}
+
+		// Host
+		if (length == 4) {
+			if((headerName.charAt(0) == 'H')
+			&& (headerName.charAt(1) == 'o')
+			&& (headerName.charAt(2) == 's')
+			&& (headerName.charAt(3) == 't')
+					) {
+				return true;
+			}
+		}
+
+		// Expect
+		if (length == 6) {
+			if((headerName.charAt(0) == 'E')
+					&& (headerName.charAt(1) == 'x')
+					&& (headerName.charAt(2) == 'p')
+					&& (headerName.charAt(3) == 'e')
+					&& (headerName.charAt(4) == 'c')
+					&& (headerName.charAt(5) == 't')
+					) {
+				return true;
+			}
+		}
+
+		// Upgrade
+		if (length == 7) {
+			if((headerName.charAt(0) == 'U')
+					&& (headerName.charAt(1) == 'p')
+					&& (headerName.charAt(2) == 'g')
+					&& (headerName.charAt(3) == 'r')
+					&& (headerName.charAt(4) == 'a')
+					&& (headerName.charAt(5) == 'd')
+					&& (headerName.charAt(6) == 'e')
+					) {
+				return true;
+			}
+		}
+
+		// Connection
+		if (length == 10) {
+			if((headerName.charAt(0) == 'C')
+					&& (headerName.charAt(1) == 'o')
+					&& (headerName.charAt(2) == 'n')
+					&& (headerName.charAt(3) == 'n')
+					&& (headerName.charAt(4) == 'e')
+					&& (headerName.charAt(5) == 'c')
+					&& (headerName.charAt(6) == 't')
+					&& (headerName.charAt(7) == 'i')
+					&& (headerName.charAt(8) == 'o')
+					&& (headerName.charAt(9) == 'n')
+					) {
+				return true;
+			}
+		}
+
+		// Content-Length
+		if (length == 14) {
+			if((headerName.charAt(0) == 'C')
+					&& (headerName.charAt(1) == 'o')
+					&& (headerName.charAt(2) == 'n')
+					&& (headerName.charAt(3) == 't')
+					&& (headerName.charAt(4) == 'e')
+					&& (headerName.charAt(5) == 'c')
+					&& (headerName.charAt(6) == 't')
+					&& (headerName.charAt(7) == '-')
+					&& (headerName.charAt(8) == 'L')
+					&& (headerName.charAt(9) == 'e')
+					&& (headerName.charAt(10) == 'n')
+					&& (headerName.charAt(11) == 'g')
+					&& (headerName.charAt(12) == 't')
+					&& (headerName.charAt(13) == 'h')
+					) {
+				return true;
+			}
+		}
+
+		// Transfer-Encoding
+		if (length == 17) {
+			if((headerName.charAt(0) == 'T')
+					&& (headerName.charAt(1) == 'r')
+					&& (headerName.charAt(2) == 'a')
+					&& (headerName.charAt(3) == 'n')
+					&& (headerName.charAt(4) == 's')
+					&& (headerName.charAt(5) == 'f')
+					&& (headerName.charAt(6) == 'e')
+					&& (headerName.charAt(7) == 'r')
+					&& (headerName.charAt(8) == '-')
+					&& (headerName.charAt(9) == 'E')
+					&& (headerName.charAt(10) == 'n')
+					&& (headerName.charAt(11) == 'c')
+					&& (headerName.charAt(12) == 'o')
+					&& (headerName.charAt(13) == 'd')
+					&& (headerName.charAt(14) == 'i')
+					&& (headerName.charAt(15) == 'n')
+					&& (headerName.charAt(16) == 'g')
+			) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+
 }

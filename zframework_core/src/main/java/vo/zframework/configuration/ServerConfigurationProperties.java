@@ -141,12 +141,12 @@ public class ServerConfigurationProperties {
 
 	/**
 	 * 请求信息的header的大小限制，单位：字节
-	 * 任意一个header的value超过此值，会响应431
+	 * header部分的长度超过此值则响应431
 	 */
 	@ZNotNull
-	@ZMin(min = 1)
+	@ZMin(min = 512)
 	@ZMax(max = 1024 * 16)
-	private int requestHeaderSizeLimit = 500;
+	private int requestHeaderSizeLimit = 1024 * 4;
 
 	/**
 	 * 是否启用对一个client的qps限制
