@@ -51,7 +51,7 @@ public class ServerConfigurationProperties {
 	 * response 响应头中是否包含 Cookie (ZSESSIONID)
 	 */
 	@ZNotNull
-	private boolean responseZSessionId = true;
+	private boolean responseZSessionId = false;
 
 	/**
 	 * server的name，用于响应头中的Server字段
