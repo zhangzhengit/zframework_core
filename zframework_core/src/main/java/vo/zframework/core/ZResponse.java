@@ -107,7 +107,7 @@ public class ZResponse {
 
 	private static final byte[] HTTP_1_1_BYTES = HTTP_1_1.getBytes();
 
-	public final static int D_A_C = 1024 * 8;
+	public final static int RESPONSE_ARRAY_CAPACITY = SERVER_CONFIGURATIONPROPERTIES.getResponseArrayCapacity();
 
 	private final ZArray array = SocketTL.get().getArray();
 
@@ -347,8 +347,8 @@ public class ZResponse {
 	}
 
 	private void resetZArray() {
-		if (this.array.length() >= D_A_C) {
-			this.array.reset(D_A_C);
+		if (this.array.length() >= RESPONSE_ARRAY_CAPACITY) {
+			this.array.reset(RESPONSE_ARRAY_CAPACITY);
 		} else {
 			this.array.reset();
 		}

@@ -16,7 +16,11 @@ public class SO {
 	private final OutputStream outputStream;
 	private final BufferedOutputStream bufferedOutputStream;
 
-	private final ZArray array = new ZArray(ZResponse.D_A_C);
+	/**
+	 * 此对象是为了[一次性OS.write]而存在，因为多次OS.write会导致严重性能问题，
+	 * 所以不得不添加一个辅助类(BAOS或者本对象)来先构造出一个完整的响应的byte[]然后一次性write
+	 */
+	private final ZArray array = new ZArray(ZResponse.RESPONSE_ARRAY_CAPACITY);
 
 	public SO(final Socket socket, final OutputStream outputStream, final BufferedOutputStream bufferedOutputStream) {
 		this.socket = socket;

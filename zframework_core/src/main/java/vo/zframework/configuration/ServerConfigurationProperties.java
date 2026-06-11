@@ -326,7 +326,7 @@ public class ServerConfigurationProperties {
 			;
 
 	/**
-	 * body达到多少KB才对响应body进行压缩
+	 * body达到多少KB才对响应body进行压缩，单位：KB
 	 */
 	@ZNotNull
 	@ZMin(min = 1)
@@ -338,6 +338,18 @@ public class ServerConfigurationProperties {
 	 * server.responseHeaders.Access-Control-Allow-Origin=*
 	 */
 	private Map<String, String> responseHeaders;
+
+	/**
+	 * response中用于暂存响应的byte[]的动态数组的默认初始容量，单位：字节
+	 * 此值只是默认容量，不影响后续的扩容，但是扩容后实际存储的byte个数>此值时，
+	 * 动态数组会重置为此值
+	 * 即：
+	 * 	此值设置过小，容易导致频繁的扩容和缩容的arraycopy成为内存热点；
+	 *	此值设置过大，又会导致连接存活期间动态数组一直浪费内存
+	 */
+	@ZMin(min = 512)
+	@ZMax(max = 1024 * 8)
+	private Integer responseArrayCapacity = 1024 * 4;
 
 	/**
 	 * 程序启动时是否打印 @ZConfigurationProperties 配置类信息
@@ -721,87 +733,13 @@ public class ServerConfigurationProperties {
 		this.uploadFileToTempSize = uploadFileToTempSize;
 	}
 
-	@Override
-	public String toString() {
-		final StringBuilder builder = new StringBuilder();
-		builder.append("ServerConfigurationProperties [port=");
-		builder.append(this.port);
-		builder.append(", responseZSessionId=");
-		builder.append(this.responseZSessionId);
-		builder.append(", name=");
-		builder.append(this.name);
-		builder.append(", byteBufferSize=");
-		builder.append(this.byteBufferSize);
-		builder.append(", uploadFileSize=");
-		builder.append(this.uploadFileSize);
-		builder.append(", uploadFileToTempSize=");
-		builder.append(this.uploadFileToTempSize);
-		builder.append(", uploadTempDir=");
-		builder.append(this.uploadTempDir);
-		builder.append(", threadName=");
-		builder.append(this.threadName);
-		builder.append(", staticResourceCacheEnable=");
-		builder.append(this.staticResourceCacheEnable);
-		builder.append(", scanPackage=");
-		builder.append(this.scanPackage);
-		builder.append(", qpsLimitEnabled=");
-		builder.append(this.qpsLimitEnabled);
-		builder.append(", qps=");
-		builder.append(this.qps);
-		builder.append(", qpsExceedMessage=");
-		builder.append(this.qpsExceedMessage);
-		builder.append(", requestHeaderSizeLimit=");
-		builder.append(this.requestHeaderSizeLimit);
-		builder.append(", enableClientQps=");
-		builder.append(this.enableClientQps);
-		builder.append(", clientQps=");
-		builder.append(this.clientQps);
-		builder.append(", sessionIdQps=");
-		builder.append(this.sessionIdQps);
-		builder.append(", method=");
-		builder.append(this.method);
-		builder.append(", staticControllerEnable=");
-		builder.append(this.staticControllerEnable);
-		builder.append(", staticControllerContentType=");
-		builder.append(this.staticControllerContentType);
-		builder.append(", staticControllerReferersAllowed=");
-		builder.append(this.staticControllerReferersAllowed);
-		builder.append(", staticControllerMemoryCacheCapacity=");
-		builder.append(this.staticControllerMemoryCacheCapacity);
-		builder.append(", staticResponseBufferSize=");
-		builder.append(this.staticResponseBufferSize);
-		builder.append(", keepAliveTimeout=");
-		builder.append(this.keepAliveTimeout);
-		builder.append(", sessionStorageType=");
-		builder.append(this.sessionStorageType);
-		builder.append(", sessionTimeout=");
-		builder.append(this.sessionTimeout);
-		builder.append(", sessionMaxTimeout=");
-		builder.append(this.sessionMaxTimeout);
-		builder.append(", sessionMaxActive=");
-		builder.append(this.sessionMaxActive);
-		builder.append(", sessionMaxActiveInMemory=");
-		builder.append(this.sessionMaxActiveInMemory);
-		builder.append(", staticPath=");
-		builder.append(this.staticPath);
-		builder.append(", staticPrefix=");
-		builder.append(this.staticPrefix);
-		builder.append(", compressionEnable=");
-		builder.append(this.compressionEnable);
-		builder.append(", compressionTypes=");
-		builder.append(this.compressionTypes);
-		builder.append(", compressionMinLength=");
-		builder.append(this.compressionMinLength);
-		builder.append(", responseHeaders=");
-		builder.append(this.responseHeaders);
-		builder.append(", printConfigurationProperties=");
-		builder.append(this.printConfigurationProperties);
-		builder.append(", printProxyClass=");
-		builder.append(this.printProxyClass);
-		builder.append(", showHttpHeader=");
-		builder.append(this.showHttpHeader);
-		builder.append("]");
-		return builder.toString();
+	public int getResponseArrayCapacity() {
+		return this.responseArrayCapacity;
 	}
+
+	public void setResponseArrayCapacity(final Integer responseArrayCapacity) {
+		this.responseArrayCapacity = responseArrayCapacity;
+	}
+
 
 }
