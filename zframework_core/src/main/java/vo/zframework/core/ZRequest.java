@@ -628,9 +628,10 @@ public class ZRequest {
 			}
 
 			final int headerNameLength = cI - arrarRange.getFrom() - nTrimSize;
-			// FIXME 2026年6月11日 21:01:17 zhangzhen :  注意：下面方法只是简单判断了长度等同于必须解析的头的长度，
+
+			// FIXME 2026年6月11日 21:39:49 zhangzhen : 注意：下面方法不是完整匹配,
 			// 可能有很多误判导致解析了非必要的头而一直不使用浪费cpu和内存
-			if (isNPHNL(headerNameLength)) {
+			if (isNPHNL(headerNameLength, request.dataRawArray, arrarRange.getFrom())) {
 
 				final String name = new String(request.dataRawArray, arrarRange.getFrom(), nT);
 
@@ -652,15 +653,27 @@ public class ZRequest {
 	 * Host,Expect,Upgrade,Connection,Content-Length,Transfer-Encoding
 	 *
 	 * @param headerNameLength
+	 * @param dataRawArray TODO
+	 * @param from TODO
 	 * @return
 	 */
+	private static boolean isNPHNL(final int headerNameLength, final byte[] dataRawArray, final int from) {
+		// 暂时只比较几个字符，不比较整个长度的
+		return ((headerNameLength == 4) && (dataRawArray[from] == 'H') && (dataRawArray[from + 2] == 's'))
+				|| ((headerNameLength == 6) && (dataRawArray[from] == 'E') && (dataRawArray[from + 2] == 'p'))
+				|| ((headerNameLength == 7) && (dataRawArray[from] == 'U') && (dataRawArray[from + 2] == 'g'))
+				|| ((headerNameLength == 10) && (dataRawArray[from] == 'C') && (dataRawArray[from + 2] == 'n'))
+				|| ((headerNameLength == 14) && (dataRawArray[from] == 'C') && (dataRawArray[from + 3] == 't'))
+				|| ((headerNameLength == 17) && (dataRawArray[from] == 'T') && (dataRawArray[from + 1] == 'r'));
+	}
+
 	private static boolean isNPHNL(final int headerNameLength) {
 		return (headerNameLength == 4)
-			|| (headerNameLength == 6)
-			|| (headerNameLength == 7)
-			|| (headerNameLength == 10)
-			|| (headerNameLength == 14)
-			|| (headerNameLength == 17);
+				|| (headerNameLength == 6)
+				|| (headerNameLength == 7)
+				|| (headerNameLength == 10)
+				|| (headerNameLength == 14)
+				|| (headerNameLength == 17);
 	}
 
 	/**
