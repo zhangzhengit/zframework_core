@@ -45,7 +45,7 @@ public enum MethodEnum {
 	}
 
 	public static MethodEnum valueOfMethodStringUpper(final String string) {
-		if ((string == null) || string.isEmpty() || (string.length() < 3)) {
+		if ((string == null) || string.isEmpty() || (string.length() < 3) || (string.length() > 7)) {
 			return null;
 		}
 
@@ -81,20 +81,16 @@ public enum MethodEnum {
 			if ("DELETE".equals(string)) {
 				return MethodEnum.DELETE;
 			}
+		}
+
+		if (length == 7) {
+			if ("OPTIONS".equals(string)) {
+				return MethodEnum.OPTIONS;
+			}
 			if ("CONNECT".equals(string)) {
 				return MethodEnum.CONNECT;
 			}
 		}
-
-		if ((length == 7) && "OPTIONS".equals(string)) {
-			return MethodEnum.OPTIONS;
-		}
-
-		if ((length == 7) && "CONNECT".equals(string)) {
-			return MethodEnum.CONNECT;
-		}
-
-
 
 		return null;
 	}
