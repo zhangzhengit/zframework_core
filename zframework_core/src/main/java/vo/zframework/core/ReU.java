@@ -22,7 +22,7 @@ public class ReU {
 			.header(HeaderEnum.CONNECTION.getNameBytes(),
 					keepAlive ? ConnectionEnum.KEEP_ALIVE.getValueBytes() : ConnectionEnum.CLOSE.getValueBytes())
 			.httpStatus(HttpStatusEnum.HTTP_429.getStatus())
-			.body(J.toJSONString(CR.error(message), Include.NON_NULL))
+			.body(J.toJSONString(CR.error(message)))
 			;
 	}
 
@@ -32,7 +32,7 @@ public class ReU {
 		.header(HeaderEnum.CONNECTION.getNameBytes(),
 				keepAlive ? ConnectionEnum.KEEP_ALIVE.getValueBytes() : ConnectionEnum.CLOSE.getValueBytes())
 		.httpStatus(HttpStatusEnum.HTTP_429.getStatus())
-		.body(J.toJSONString(CR.error(message), Include.NON_NULL));
+		.body(J.toJSONString(CR.error(message)));
 
 	}
 

@@ -22,13 +22,13 @@ public class ZRC {
 	/**
 	 * 从写入开算的超时秒数
 	 */
-	private static final int expireAfterWriteSECONDS = 10;
-	
+	private static final int EXPIRE_AFTER_WRITE_SECONDS = 10;
+
 	/**
 	 * 缓存最大容量，超过则自动淘汰最近最少访问的
 	 */
-	private static final int DEFAULT_CAPACITY = 10000 * 2;
-	
+	private static final int DEFAULT_CAPACITY = 10000 * 1;
+
 	private final static String STORE_NULL_VALUE = "ZRC@STORE_NULL_VALUE-" + UUID.randomUUID();
 
 	private final Map<String, Object> CACHE;
@@ -40,6 +40,10 @@ public class ZRC {
 	}
 
 	public ZRC(final int capacity) {
+		this(capacity, EXPIRE_AFTER_WRITE_SECONDS);
+	}
+
+	public ZRC(final int capacity,final int expireAfterWriteSECONDS) {
 		if (capacity < 0) {
 			throw new IllegalArgumentException("capacity不能小于0");
 		}

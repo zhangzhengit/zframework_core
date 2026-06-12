@@ -477,7 +477,7 @@ public class Task {
 		final ZResponse response = new ZResponse();
 		response.contentType(ContentTypeEnum.APPLICATION_JSON.getTypeBytes())
 		.httpStatus(HttpStatusEnum.HTTP_429.getStatus())
-		.body(J.toJSONString(error, Include.NON_NULL));
+		.body(J.toJSONString(error));
 
 		if (SERVER_CONFIGURATIONPROPERTIES.isResponseZSessionId()) {
 			HTTPResponseProcessor.setZSessionId(request, response);
@@ -492,7 +492,7 @@ public class Task {
 		final ZResponse response = new ZResponse();
 		response.contentType(ContentTypeEnum.APPLICATION_JSON.getTypeBytes())
 		.httpStatus(HttpStatusEnum.HTTP_429.getStatus())
-		.body(J.toJSONString(error, Include.NON_NULL));
+		.body(J.toJSONString(error));
 
 		return response;
 	}
@@ -594,7 +594,7 @@ public class Task {
 	}
 
 	private static ZResponse responseAppJSON(final Object r) {
-		final String json = J.toJSONString(r, Include.NON_NULL);
+		final String json = J.toJSONString(r);
 		return new ZResponse().contentType(DEFAULT_CONTENT_TYPE.getTypeBytes()).body(json);
 	}
 
@@ -617,13 +617,13 @@ public class Task {
 				return new ZResponse()
 						.httpStatus(ex.getHttpStatus())
 						.contentType(DEFAULT_CONTENT_TYPE.getTypeBytes())
-						.body(J.toJSONString(CR.error(ex.getMessagezf()),Include.NON_NULL));
+						.body(J.toJSONString(CR.error(ex.getMessagezf())));
 			}
 
 			return new ZResponse()
 					.httpStatus(HttpStatusEnum.HTTP_500.getStatus())
 					.contentType(DEFAULT_CONTENT_TYPE.getTypeBytes())
-					.body(J.toJSONString(CR.error(em),Include.NON_NULL));
+					.body(J.toJSONString(CR.error(em)));
 		}
 	}
 

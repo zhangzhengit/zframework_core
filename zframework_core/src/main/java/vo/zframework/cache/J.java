@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * @date 2023年11月12日
  *
  */
+// FIXME 2026年6月12日 20:29:16 zhangzhen : 本类方法是内存热点
 public class J {
 
 	private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -33,7 +34,6 @@ public class J {
 		} catch (final JsonProcessingException e) {
 			e.printStackTrace();
 		}
-		
 		return null;
 	}
 

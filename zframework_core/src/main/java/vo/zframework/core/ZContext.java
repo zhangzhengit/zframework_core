@@ -17,12 +17,10 @@ import vo.zframework.zclass.ZClass;
  */
 public class ZContext {
 
-	// FIXME 2025年9月1日 上午3:22:21 zhangzhen: 记得去除guava依赖，
-	
 	private static final ConcurrentMap<String, Object> BEAN_MAP = new ConcurrentHashMap<>();
 	private static final ConcurrentMap<String, ZClass> ZCLASS_MAP = new ConcurrentHashMap<>();
 
-	@SuppressWarnings("unchecked")	
+	@SuppressWarnings("unchecked")
 	public synchronized static <T> T getBean(final Class<T> beanClass) {
 		return (T) getBean(gUK(beanClass));
 	}
@@ -37,7 +35,8 @@ public class ZContext {
 		//		c.get(beanClass)
 
 		// FIXME 2024年12月23日 上午1:48:55 zhangzhen : 考虑好用什么比较好
-		return beanClass.getName()+ "-bean";
+		return beanClass.getName();
+//		return beanClass.getName()+ "-bean";
 		//		return beanClass.getCanonicalName();
 	}
 
