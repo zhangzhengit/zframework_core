@@ -61,7 +61,6 @@ public class ZComponentScanner {
 
 				// 放代理类
 				ZContext.addBean(newComponent.getClass(), newInstanceProxy);
-				ZContext.addZClassBean(newComponent.getClass().getCanonicalName(), proxyClass, newInstanceProxy);
 			} else {
 
 				// 1、@ZComponent 类中方法的参数是否带有 @ZValidated 注解，有则插入校验代码，无则super.xx(xx);
@@ -122,7 +121,7 @@ public class ZComponentScanner {
 			final ArrayList<ZMethodArg> argList = ZMethod.getArgListFromMethod(m);
 			final String a = argList.stream().map(ZMethodArg::getName).collect(Collectors.joining(","));
 			final Class<?> returnType = m.getReturnType();
-			
+
 			if (Arrays.stream(m.getParameterTypes()).filter(pa -> pa.isAnnotationPresent(ZValidated.class)).findAny().isPresent()) {
 
 				final StringBuilder insert = new StringBuilder();

@@ -44,10 +44,6 @@ public class ZContext {
 		return BEAN_MAP.get(beanName);
 	}
 
-	public synchronized static ZClass getZClass(final String beanName) {
-		return ZCLASS_MAP.get(beanName);
-	}
-
 	public synchronized static void addBean(final Class<?> beanClass, final Object bean) {
 		addBean(gUK(beanClass), bean);
 	}
@@ -65,8 +61,4 @@ public class ZContext {
 		return Collections.unmodifiableMap(BEAN_MAP);
 	}
 
-	public synchronized static void addZClassBean(final String beanName, final ZClass zClass, final Object bean) {
-		addBean(beanName, bean);
-		ZCLASS_MAP.put(beanName, zClass);
-	}
 }
