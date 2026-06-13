@@ -6,7 +6,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import vo.zframework.exception.BeanAlreadyEexistsException;
-import vo.zframework.zclass.ZClass;
 
 /**
  * 存取 Bean。可使用addBean方法手动注入一个bean让容器管理，使用getBean方法获取一个由容器管理的bean
@@ -17,8 +16,9 @@ import vo.zframework.zclass.ZClass;
  */
 public class ZContext {
 
-	private static final ConcurrentMap<String, Object> BEAN_MAP = new ConcurrentHashMap<>();
-	private static final ConcurrentMap<String, ZClass> ZCLASS_MAP = new ConcurrentHashMap<>();
+	// FIXME 2026年6月13日 06:34:51 zhangzhen : 似乎没必要用con的，因为启动过程是单线程的，
+	// 启动后就只有get操作了，所以整个生命周期中它都是安全的
+	private static final ConcurrentMap<String, Object> BEAN_MAP = new ConcurrentHashMap<>(32, 1F);
 
 	@SuppressWarnings("unchecked")
 	public synchronized static <T> T getBean(final Class<T> beanClass) {
