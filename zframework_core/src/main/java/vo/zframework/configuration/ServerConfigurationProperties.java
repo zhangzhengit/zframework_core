@@ -152,7 +152,6 @@ public class ServerConfigurationProperties {
 	 * 是否启用对一个client的qps限制
 	 */
 	@ZNotNull
-	@ZValue(name = "server.enable.client.qps", listenForChanges = true)
 	private boolean enableClientQps = false;
 
 	/**
