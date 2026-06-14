@@ -17,6 +17,8 @@ import vo.zframework.http.AccessDeniedCodeEnum;
  */
 abstract class AbstractRequestValidator {
 
+	private static final boolean ENABLE_CLIENT_QPS = ZContext.getBean(ServerConfigurationProperties.class).getEnableClientQps();
+
 	private static final boolean RESPONSE_Z_SESSION_ID = ZContext.getBean(ServerConfigurationProperties.class)
 			.isResponseZSessionId();
 
@@ -56,48 +58,58 @@ abstract class AbstractRequestValidator {
 	 */
 	public RequestVerificationResult validated(final ZRequest request) {
 
-		final boolean enableClientQps = ZContext.getBean(ServerConfigurationProperties.class).getEnableClientQps();
-		if (!enableClientQps) {
+		if (!ENABLE_CLIENT_QPS) {
 			return ALLOW;
 		}
-
-		final String userAgent = request.getUserAgent();
 
 		// 启用了响应
 		// ZSESSIONID，则认为ZSESSIONID相同就是同一个客户端(前提是服务器中存在对应的session，因为session可能是伪造的等，服务器重启就重启就认为是无效session)
 		if (RESPONSE_Z_SESSION_ID) {
-			final ZSession session = request.getSession(false);
-			if (session != null) {
-				// getsessionId 放在active前面了，即使超时销毁了，在此用一次也无所谓
-				final String sessionId = session.getId();
-
-				ZSessionMap.active(sessionId);
-
-				final String smoothUserAgentKeyword = "zsid@" + sessionId;
-				final QPSHandlingEnum handlingEnum = this.requestValidatorConfigurationProperties
-						.getHandlingEnum(userAgent);
-				final boolean allow = QC.allow(QCTimeEnum.SECOND, smoothUserAgentKeyword, AbstractRequestValidator.getSessionIdQps(),
-						handlingEnum);
-
-				if (allow) {
-					return ALLOW;
-				}
-
-				return new RequestVerificationResult(false, AccessDeniedCodeEnum.ZSESSIONID.getInternalMessage(),
-						request.getClientIp(), request.getUserAgent());
-			}
+			return this.hRZSID(request);
 		}
 
-		final String keyword = request.getClientIp() + "@" + userAgent;
 
-		final QPSHandlingEnum handlingEnum = this.requestValidatorConfigurationProperties.getHandlingEnum(userAgent);
+		// 到此时不响应 ZSESSIONID的，就根据客户端ip+UserAgent来判断
+
+		final String keyword = request.getClientIp() + "@" + request.getUserAgent();
+		final QPSHandlingEnum handlingEnum = this.requestValidatorConfigurationProperties.getHandlingEnum(request.getUserAgent());
 		final boolean allow = QC.allow(QCTimeEnum.SECOND,keyword, AbstractRequestValidator.getClientQps(), handlingEnum);
 
 		if (allow) {
 			return ALLOW;
 		}
 
+		// 最后：不允许
 		return new RequestVerificationResult(false, AccessDeniedCodeEnum.CLIENT.getInternalMessage(),
+				request.getClientIp(), request.getUserAgent());
+	}
+
+	private RequestVerificationResult hRZSID(final ZRequest request) {
+		final ZSession session = request.getSession(false);
+		if (session == null) {
+			return ALLOW;
+		}
+
+		// getsessionId 放在active前面了，即使超时销毁了，在此用一次也无所谓
+		final String sessionId = session.getId();
+
+		ZSessionMap.active(sessionId);
+
+		final String userAgent = request.getUserAgent();
+
+		final QPSHandlingEnum handlingEnum = this.requestValidatorConfigurationProperties
+				.getHandlingEnum(userAgent);
+
+		final String smoothUserAgentKeyword = "zsid@" + sessionId;
+
+		final boolean allow = QC.allow(QCTimeEnum.SECOND, smoothUserAgentKeyword,
+				AbstractRequestValidator.getSessionIdQps(), handlingEnum);
+
+		if (allow) {
+			return ALLOW;
+		}
+
+		return new RequestVerificationResult(false, AccessDeniedCodeEnum.ZSESSIONID.getInternalMessage(),
 				request.getClientIp(), request.getUserAgent());
 	}
 
