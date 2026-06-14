@@ -592,6 +592,10 @@ public class ZRequest {
 		request.version = version;
 	}
 
+	// FIXME 2026年6月15日 06:43:20 zhangzhen : 这个方法默认用isNPHNL方法过滤需要解析的，
+	// 但是就本程序本身的实现来说，就有问题，比如server.enable.client.qps=true的话,
+	// AbstractRequestValidator.validated 中的request.getClientIp和getUserAgent都会导致再次解析
+	// 所以，要不直接再加一个配置项：哪些头直接解析。反正这些头已经明确会用到，早晚都要解析，延迟解析还会带来额外开销
 	private static void parseHeader(final ZRequest request) {
 		final List<ArrayRange> x = request.arList;
 
