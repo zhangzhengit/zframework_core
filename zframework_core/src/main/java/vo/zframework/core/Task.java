@@ -111,10 +111,10 @@ public class Task {
 		}
 
 		final String path = request.getPath();
-		final ZRMethod zrMethod = ZControllerMap.getMethodByMethodEnumAndPath(request.getMethodEnum(), path);
+		final ZRMethod zrMethod = ZControllerMap.getMethodByMethodEnumAndPath(request.getMethodName(), path);
 		if (zrMethod == null) {
 
-			final Map<String, ZRMethod> rowMap = ZControllerMap.getByMethodEnum(request.getMethodEnum());
+			final Map<String, ZRMethod> rowMap = ZControllerMap.getByMethodEnum(request.getMethodName());
 			final Set<Entry<String, ZRMethod>> entrySet = rowMap.entrySet();
 			for (final Entry<String, ZRMethod> entry : entrySet) {
 				final ZRMethod methodTarget = entry.getValue();
@@ -159,19 +159,19 @@ public class Task {
 	/**
 	 * 使用 server.method的配置值中非参数 methodEnum的选项 和 URI来匹配目标接口Method
 	 *
-	 * @param methodEnumP 请求用的METHOD
+	 * @param methodName 请求用的METHOD
 	 * @param path
 	 *
 	 * @return
 	 */
-	public static ZRMethod matchWithServerMethod(final MethodEnum methodEnumP, final String path) {
+	public static ZRMethod matchWithServerMethod(final String methodName, final String path) {
 
 		final ZRMethod noRequestMethodMethod = ZRC.singleton().computeIfAbsent("MethodEnum.values-" + path, () -> {
 			final String serverMethod = SERVER_CONFIGURATIONPROPERTIES.getMethod();
 			for (final String m : serverMethod.split(",")) {
 				final MethodEnum me = MethodEnum.valueOfMethodStringUpper(m);
-				if (me != methodEnumP) {
-					final ZRMethod methodT = ZControllerMap.getMethodByMethodEnumAndPath(me, path);
+				if (!me.name().equals(methodName)) {
+					final ZRMethod methodT = ZControllerMap.getMethodByMethodEnumAndPath(methodName, path);
 					if (methodT != null) {
 						return methodT;
 					}
@@ -184,10 +184,10 @@ public class Task {
 
 	}
 
-	public static ZRMethod getMatcheMethod(final MethodEnum methodEnum, final String path) {
+	public static ZRMethod getMatcheMethod(final String methodName, final String path) {
 
 		final Supplier<ZRMethod> supplier = () -> {
-			final Map<String, ZRMethod> rowMap = ZControllerMap.getByMethodEnum(methodEnum);
+			final Map<String, ZRMethod> rowMap = ZControllerMap.getByMethodEnum(methodName);
 			final Set<Entry<String, ZRMethod>> entrySet = rowMap.entrySet();
 			for (final Entry<String, ZRMethod> entry : entrySet) {
 				final ZRMethod methodTarget = entry.getValue();

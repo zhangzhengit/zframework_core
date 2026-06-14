@@ -24,7 +24,7 @@ import vo.zframework.exception.StartupException;
  *
  */
 public class ZControllerMap {
-	static final HashBasedTable<MethodEnum, String, ZRMethod> methodPathTable = HashBasedTable.create();
+	static final HashBasedTable<String, String, ZRMethod> methodPathTable = HashBasedTable.create();
 	static final HashBasedTable<Method, String, Boolean> methodIsregexTable = HashBasedTable.create();
 	static final HashMap<Method, Object> objectMap = new HashMap<>(16, 1F);
 	static final HashSet<String> mappingSet = new HashSet<>();
@@ -65,7 +65,7 @@ public class ZControllerMap {
 
 		}
 
-		methodPathTable.put(methodEnum, mapping, new ZRMethod(method, cte, zcObject));
+		methodPathTable.put(methodEnum.name(), mapping, new ZRMethod(method, cte, zcObject));
 
 		methodIsregexTable.put(method, mapping, isRegex);
 
@@ -118,23 +118,23 @@ public class ZControllerMap {
 		return objectMap.get(method);
 	}
 
-	public static ZRMethod getMethodByMethodEnumAndPath(final MethodEnum methodEnum, final String path) {
+	public static ZRMethod getMethodByMethodEnumAndPath(final String methodName, final String path) {
 
 
-		final ZRMethod method = methodPathTable.get(methodEnum, path);
+		final ZRMethod method = methodPathTable.get(methodName, path);
 
 		if (method != null) {
 			return method;
 		}
 
-		final Set<String> keySet = methodPathTable.row(methodEnum).keySet();
+		final Set<String> keySet = methodPathTable.row(methodName).keySet();
 		// FIXME 2025年1月22日 下午3:21:16 zhangzhen : 访问 @ZPV的接口值，jp分析getx方法耗时比较长
 		final String pathM = getx(path, keySet);
 		if (STU.isEmpty(pathM)) {
 			return null;
 		}
 
-		final ZRMethod method2 = methodPathTable.get(methodEnum, pathM);
+		final ZRMethod method2 = methodPathTable.get(methodName, pathM);
 		return method2;
 	}
 
@@ -179,8 +179,8 @@ public class ZControllerMap {
 		return null;
 	}
 
-	public static Map<String, ZRMethod> getByMethodEnum(final MethodEnum methodEnum) {
-		return methodPathTable.row(methodEnum);
+	public static Map<String, ZRMethod> getByMethodEnum(final String methodName) {
+		return methodPathTable.row(methodName);
 	}
 
 	public static Boolean getIsregexByMethodEnumAndPath(final Method method, final String path) {

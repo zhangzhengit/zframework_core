@@ -1,9 +1,7 @@
 package vo.zframework.core;
 
 import java.io.BufferedInputStream;
-import java.net.Socket;
 
-import vo.zframework.enums.MethodEnum;
 import vo.zframework.http.ZRMethod;
 
 /**
@@ -30,7 +28,10 @@ public class PD {
 	private String requestLine;
 	private String httpVersion;
 
-	private MethodEnum methodEnum;
+	/**
+	 * http METHOD
+	 */
+	private String methodName;
 
 	private ZRequest request;
 
@@ -101,12 +102,12 @@ public class PD {
 		this.exception = exception;
 	}
 
-	public MethodEnum getMethodEnum() {
-		return this.methodEnum;
+	public String getMethodName() {
+		return this.methodName;
 	}
 
-	public void setMethodEnum(final MethodEnum methodEnum) {
-		this.methodEnum = methodEnum;
+	public void setMethodName(final String methodName) {
+		this.methodName = methodName;
 	}
 
 	public BufferedInputStream getBufferedInputStream() {

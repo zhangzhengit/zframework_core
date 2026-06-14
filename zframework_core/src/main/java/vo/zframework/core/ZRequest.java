@@ -68,7 +68,7 @@ public class ZRequest {
 	/**
 	 * 请求方法
 	 */
-	private MethodEnum methodEnum;
+	private String methodName;
 
 	/**
 	 * 完整的requestURI，如：/hello?name=z&age=20
@@ -157,7 +157,7 @@ public class ZRequest {
 	}
 
 	public String getMethod() {
-		return this.getMethodEnum().getMethod();
+		return this.getMethodName();
 	}
 
 	public byte[] getBody() {
@@ -604,7 +604,7 @@ public class ZRequest {
 
 			final ArrayRange arrarRange = x.get(i);
 
-			final int cI = AU.search(request.dataRawArray, arrarRange.getTo(), STU.COLON_C_BYTES, 1, arrarRange.getFrom());
+			final int cI = AU.indexOfKeyword(request.dataRawArray,arrarRange.getFrom(), STU.COLON_C_BYTE);
 
 			if (cI <= -1) {
 				// FIXME 2026年6月11日 19:45:28 zhangzhen : 头无:符号，应该需要400
@@ -741,8 +741,8 @@ public class ZRequest {
 		this.tf = tf;
 	}
 
-	public MethodEnum getMethodEnum() {
-		return this.methodEnum;
+	public String getMethodName() {
+		return this.methodName;
 	}
 
 
@@ -808,8 +808,8 @@ public class ZRequest {
 
 	}
 
-	public void setMethodEnum(final MethodEnum methodEnum) {
-		this.methodEnum = methodEnum;
+	public void setMethodName(final String methodName) {
+		this.methodName = methodName;
 	}
 
 }

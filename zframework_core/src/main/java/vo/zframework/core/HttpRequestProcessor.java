@@ -1,15 +1,15 @@
 package vo.zframework.core;
 
 import java.io.BufferedInputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 
 import vo.zframework.anno.ZComponent;
 import vo.zframework.cache.AU;
 import vo.zframework.cache.STU;
 import vo.zframework.configuration.ServerConfigurationProperties;
 import vo.zframework.enums.MethodEnum;
-import vo.zframework.exception.ParseHTTPRequestException;
-import vo.zframework.http.HttpStatusEnum;
 import vo.zframework.http.ZControllerMap;
 import vo.zframework.http.ZRMethod;
 
@@ -34,9 +34,22 @@ public class HttpRequestProcessor {
 
 	private static final ServerConfigurationProperties SERVER_CONFIGURATIONPROPERTIES= ZContext.getBean(ServerConfigurationProperties.class);
 
-	private static final String[] SUPPORTED_METHOD = SERVER_CONFIGURATIONPROPERTIES.getMethod().split(",");
+	private static final String[] METHOD = SERVER_CONFIGURATIONPROPERTIES.getMethod().split(",");
 
 	private static final int UPLOAD_FILE_TO_TEMP_SIZE = SERVER_CONFIGURATIONPROPERTIES.getUploadFileToTempSize();
+
+	private static final ArrayList<String> supportMethodL = new ArrayList<>();
+
+	static {
+		for (final String m : METHOD) {
+			if (STU.isNotEmpty(m)) {
+				supportMethodL.add(m);
+			}
+		}
+		supportMethodL.trimToSize();
+
+		supportMethodL.sort(Comparator.comparing(String::length));
+	}
 
 	/**
 	 * 用于在一次http请求读取解析之前初始化和校验一些服务器限制等等
@@ -95,9 +108,9 @@ public class HttpRequestProcessor {
 
 		final String method = requestLine.substring(0, i);
 
-		final MethodEnum methodEnum = this.methodSupport(method);
-		if (methodEnum != null) {
-			pd.setMethodEnum(methodEnum);
+		final boolean methodEnum = HttpRequestProcessor.methodSupport(method);
+		if (methodEnum) {
+			pd.setMethodName(method);
 			return HttpParseStatusEnum.CHECK_URI;
 		}
 
@@ -108,15 +121,18 @@ public class HttpRequestProcessor {
 		return HttpParseStatusEnum.EXCEPTION;
 	}
 
-	private MethodEnum methodSupport(final String method) {
-
-		for (final String m : SUPPORTED_METHOD) {
-			if (method.equals(m)) {
-				return MethodEnum.valueOfMethodStringUpper(method);
+	private static boolean methodSupport(final String method) {
+		final int length = method.length();
+		for (int i = 0; i < supportMethodL.size(); i++) {
+			final String m = supportMethodL.get(i);
+			if ((length == m.length())
+					&& (method.charAt(0) == m.charAt(0))
+					&& method.equals(m)) {
+				return true;
 			}
 		}
 
-		return null;
+		return false;
 	}
 
 	/**
@@ -131,7 +147,7 @@ public class HttpRequestProcessor {
 		final String path = ZRequest.parsePATH(requestLine);
 
 		// 1、精确匹配
-		final ZRMethod zrMethod = ZControllerMap.getMethodByMethodEnumAndPath(pd.getMethodEnum(), path);
+		final ZRMethod zrMethod = ZControllerMap.getMethodByMethodEnumAndPath(pd.getMethodName(), path);
 		if (zrMethod != null) {
 			// 精确匹配到了
 			pd.setZrMethod(zrMethod);
@@ -139,13 +155,13 @@ public class HttpRequestProcessor {
 		}
 
 		// 2、URI正则匹配
-		final ZRMethod matcheZRMethod = Task.getMatcheMethod(pd.getMethodEnum(), path);
+		final ZRMethod matcheZRMethod = Task.getMatcheMethod(pd.getMethodName(), path);
 		if (matcheZRMethod == null) {
 
 			// 3、继续URI正则匹配，依然没匹配到，但用非请求的METHOD和URI精确匹配到了，响应405
-			final ZRMethod matchWithServerMethod = Task.matchWithServerMethod(pd.getMethodEnum(), path);
+			final ZRMethod matchWithServerMethod = Task.matchWithServerMethod(pd.getMethodName(), path);
 			if (matchWithServerMethod != null) {
-				final ZResponse response405 = ReU.response405(pd.getMethodEnum().getMethod(), false);
+				final ZResponse response405 = ReU.response405(pd.getMethodName(), false);
 				pd.setException(response405);
 				return HttpParseStatusEnum.EXCEPTION;
 			}
@@ -254,7 +270,7 @@ public class HttpRequestProcessor {
 
 		final ZRequest request = HttpRequestParser.parse(array.getRawArray(), array.length(), pd.getHeaderEndIndex());
 
-		request.setMethodEnum(pd.getMethodEnum());
+		request.setMethodName(pd.getMethodName());
 
 		pd.setRequest(request);
 

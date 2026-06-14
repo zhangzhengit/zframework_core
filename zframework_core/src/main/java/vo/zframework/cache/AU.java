@@ -86,7 +86,11 @@ public class AU {
 	}
 
 	public static int indexOfKeyword(final byte[] bytes, final byte keyword) {
-		for (int i = 0; i < bytes.length; i++) {
+		return indexOfKeyword(bytes, 0, keyword);
+	}
+
+	public static int indexOfKeyword(final byte[] bytes,final int bytesFrom, final byte keyword) {
+		for (int i = bytesFrom; i < bytes.length; i++) {
 			if (bytes[i] == keyword) {
 				return i;
 			}
