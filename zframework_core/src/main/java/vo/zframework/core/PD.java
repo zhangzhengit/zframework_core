@@ -26,7 +26,8 @@ public class PD {
 	private BufferedInputStream bufferedInputStream;
 
 	private String requestLine;
-	private String httpVersion;
+	private byte[] requestLineBytes;
+	private byte[] httpVersionBytes;
 
 	/**
 	 * http METHOD
@@ -142,12 +143,20 @@ public class PD {
 		this.searchHeaderEndIndexFromIndex = searchHeaderEndIndexFromIndex;
 	}
 
-	public String getHttpVersion() {
-		return this.httpVersion;
+	public byte[] getRequestLineBytes() {
+		return this.requestLineBytes;
 	}
 
-	public void setHttpVersion(final String httpVersion) {
-		this.httpVersion = httpVersion;
+	public void setRequestLineBytes(final byte[] requestLineBytes) {
+		this.requestLineBytes = requestLineBytes;
+	}
+
+	public byte[] getHttpVersionBytes() {
+		return this.httpVersionBytes;
+	}
+
+	public void setHttpVersionBytes(final byte[] httpVersionBytes) {
+		this.httpVersionBytes = httpVersionBytes;
 	}
 
 }

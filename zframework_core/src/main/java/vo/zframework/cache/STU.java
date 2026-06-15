@@ -37,6 +37,8 @@ public class STU {
 	public static final String SEMICOLON = ";";
 	public static final String SAPCE = " ";
 	public static final char SPACE_CHAR = ' ';
+	public static final char Q_CHAR = '?';
+	public static final byte Q_BYTE = Q_CHAR;
 	public static final byte SPACE_BYTE = SPACE_CHAR;
 
 	public static String toLowerCase(final String string) {

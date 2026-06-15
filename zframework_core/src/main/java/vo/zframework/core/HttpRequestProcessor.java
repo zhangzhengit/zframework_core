@@ -9,7 +9,6 @@ import vo.zframework.anno.ZComponent;
 import vo.zframework.cache.AU;
 import vo.zframework.cache.STU;
 import vo.zframework.configuration.ServerConfigurationProperties;
-import vo.zframework.enums.MethodEnum;
 import vo.zframework.http.ZControllerMap;
 import vo.zframework.http.ZRMethod;
 
@@ -30,6 +29,10 @@ public class HttpRequestProcessor {
 
 	// FIXME 2026年5月30日 16:00:48 zhangzhen : 这个里面所有的search，如果返回-1了 ，可以设置一个当前length A,下次search从A开始，就少做很多重复的无用功
 
+	private static final String HTTP = "HTTP/";
+
+	private static final  byte[] HTTP_BYTES = HTTP.getBytes();
+
 	private static final byte[] CONTENT_LENGTH_BYTES = HeaderEnum.CONTENT_LENGTH.getName().getBytes();
 
 	private static final ServerConfigurationProperties SERVER_CONFIGURATIONPROPERTIES= ZContext.getBean(ServerConfigurationProperties.class);
@@ -38,17 +41,16 @@ public class HttpRequestProcessor {
 
 	private static final int UPLOAD_FILE_TO_TEMP_SIZE = SERVER_CONFIGURATIONPROPERTIES.getUploadFileToTempSize();
 
-	private static final ArrayList<String> supportMethodL = new ArrayList<>();
+	private static final ArrayList<byte[]> x = new ArrayList<>();
 
 	static {
 		for (final String m : METHOD) {
 			if (STU.isNotEmpty(m)) {
-				supportMethodL.add(m);
+				x.add(m.getBytes());
 			}
 		}
-		supportMethodL.trimToSize();
-
-		supportMethodL.sort(Comparator.comparing(String::length));
+		x.trimToSize();
+		x.sort(Comparator.comparing(a -> a.length));
 	}
 
 	/**
@@ -76,13 +78,13 @@ public class HttpRequestProcessor {
 	 * @param array
 	 */
 	public HttpParseStatusEnum parseRquestLine(final PD pd, final ZArray array) {
-		final String requestLine = parseRequestLine(pd, array);
+		final byte[] requestLineBA = parseRequestLine(pd, array);
 		if (pd.getRequestLineEndIndex() <= -1) {
 			// FIXME 2026Ln : 没找到，继续读(buffer容量太小)？还是抛异常(恶意制造的不合法请求)？
 			return HttpParseStatusEnum.PARSE_REQUEST_LINE;
 		}
 
-		pd.setRequestLine(requestLine);
+		pd.setRequestLineBytes(requestLineBA);
 
 		// FIXME 2026年5月26日 09:56:12 zhangzhen : 除了METHOD，还看版本，不支持响应505
 		return HttpParseStatusEnum.CHECK_METHOD;
@@ -92,13 +94,12 @@ public class HttpRequestProcessor {
 	 * 从请求行中校验METHOD，支持则继续下一步[PARSE_HEADER]，不支持则响应405并且结束
 	 *
 	 * @param pd
-	 * @param requestLine
-	 *
+	 * @param requestLineBytes TODO
 	 * @return
 	 */
-	public HttpParseStatusEnum checkMethod(final PD pd, final String requestLine) {
+	public HttpParseStatusEnum checkMethod(final PD pd, final byte[] requestLineBytes) {
 
-		final int i = requestLine.indexOf(STU.SAPCE);
+		final int i = AU.indexOfKeyword(requestLineBytes, 0, STU.SPACE_BYTE);
 		if (i <= -1) {
 			// 到此，requestLine 里连一个空格都没有
 			final ZResponse response = ReU.response400("requestLine错误", false);
@@ -106,45 +107,49 @@ public class HttpRequestProcessor {
 			return HttpParseStatusEnum.EXCEPTION;
 		}
 
-		final String method = requestLine.substring(0, i);
+		final byte[] methodBytes = Arrays.copyOfRange(requestLineBytes, 0, i);
 
-		final boolean methodEnum = HttpRequestProcessor.methodSupport(method);
-		if (methodEnum) {
+		if (HttpRequestProcessor.methodSupportBytes(methodBytes)) {
+			final String method = new String(methodBytes);
 			pd.setMethodName(method);
+			pd.setRequestLine(new String(requestLineBytes));
+
 			return HttpParseStatusEnum.CHECK_URI;
 		}
 
 		// 到此，METHOD 不支持
-		final ZResponse response = ReU.response405(method, false);
+		final ZResponse response = ReU.response405(new String(methodBytes), false);
 		pd.setException(response);
 
 		return HttpParseStatusEnum.EXCEPTION;
 	}
 
-	private static boolean methodSupport(final String method) {
-		final int length = method.length();
-		for (int i = 0; i < supportMethodL.size(); i++) {
-			final String m = supportMethodL.get(i);
-			if ((length == m.length())
-					&& (method.charAt(0) == m.charAt(0))
-					&& method.equals(m)) {
+	private static boolean methodSupportBytes(final byte[] methodBytes) {
+		final int length = methodBytes.length;
+		for (int i = 0; i < x.size(); i++) {
+			final byte[] mbs = x.get(i);
+			if ((length == mbs.length)) {
+				for (int k = 0; k < mbs.length; k++) {
+					if (mbs[k] != methodBytes[k]) {
+						return false;
+					}
+				}
+
 				return true;
 			}
 		}
 
 		return false;
 	}
-
 	/**
 	 * 校验请求行中的URI是否存在
 	 *
 	 * @param pd
-	 * @param requestLine
 	 * @return
 	 */
-	public HttpParseStatusEnum checkURI(final PD pd, final String requestLine) {
+	public HttpParseStatusEnum checkURI(final PD pd) {
 
-		final String path = ZRequest.parsePATH(requestLine);
+		final String path = ZRequest.parsePATH(pd.getRequestLineBytes());
 
 		// 1、精确匹配
 		final ZRMethod zrMethod = ZControllerMap.getMethodByMethodEnumAndPath(pd.getMethodName(), path);
@@ -181,22 +186,28 @@ public class HttpRequestProcessor {
 		return HttpParseStatusEnum.CHECK_VERSION;
 	}
 
-	public HttpParseStatusEnum checkVersion(final PD pd, final String requestLine) {
+	public HttpParseStatusEnum checkVersion(final PD pd, final byte[] requestLineBytes) {
 
-		final int hI = requestLine.lastIndexOf("HTTP/");
+		final int hI = AU.search(requestLineBytes, requestLineBytes.length, HTTP_BYTES, 1, 4);
 		if (hI <= -1) {
 			throw new IllegalArgumentException("请求行错误：找不到HTTP版本");
 		}
 
-		final String version = requestLine.substring(hI);
-		if (!ZRequest.HTTP_11.equalsIgnoreCase(version)) {
+		final byte[] versionBytes = Arrays.copyOfRange(requestLineBytes, hI, requestLineBytes.length);
+		if (!isHttp11(versionBytes)) {
 			// FIXME 2024年12月19日 下午1:41:45 zhangzhen : ab 命令测试会走到异常，要不要抛异常以后再看
-			//				throw new IllegalArgumentException("请求行错误：HTTP版本错误,本服务器支持HTTP/1.1");
+						//				throw new IllegalArgumentException("请求行错误：HTTP版本错误,本服务器支持HTTP/1.1")
 		}
 
-		pd.setHttpVersion(version);
+		pd.setHttpVersionBytes(versionBytes);
 
 		return HttpParseStatusEnum.PARSE_HEADER;
+	}
+
+
+	private static boolean isHttp11(final byte[] httpVersionBytes) {
+		return (ZRequest.HTTP_11_BYTES.length == httpVersionBytes.length)
+				&& Arrays.equals(ZRequest.HTTP_11_BYTES, httpVersionBytes);
 	}
 
 	/**
@@ -277,7 +288,7 @@ public class HttpRequestProcessor {
 		return HttpParseStatusEnum.START;
 	}
 
-	private static String parseRequestLine(final PD pd, final ZArray array) {
+	private static byte[] parseRequestLine(final PD pd, final ZArray array) {
 		final int requestLineEndIndex = AU.search(array.getRawArray(), array.length(), STU.CRLF_BYTES, 1, 3);
 
 		if (requestLineEndIndex <= -1) {
@@ -285,8 +296,9 @@ public class HttpRequestProcessor {
 		}
 
 		pd.setRequestLineEndIndex(requestLineEndIndex);
-		final String requestLine = new String(array.getRawArray(), 0, requestLineEndIndex);
-		return requestLine;
+
+		final byte[] requestLineBytes = Arrays.copyOfRange(array.getRawArray(), 0, requestLineEndIndex);
+		return requestLineBytes;
 	}
 
 	private static String gContentLength(final ZArray array, final PD pd) {

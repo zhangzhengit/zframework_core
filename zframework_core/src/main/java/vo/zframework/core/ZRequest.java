@@ -4,6 +4,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -32,6 +33,7 @@ import vo.zframework.http.ZCookie;
 public class ZRequest {
 
 	public static final String HTTP_11 = "HTTP/1.1";
+	public static final byte[] HTTP_11_BYTES = HTTP_11.getBytes();
 	public static final String BOUNDARY = "boundary=";
 	private static final char SPACE = STU.SPACE_CHAR;
 	private static final String HEADER_PARSED_NO_VALUE = "\u0000" + "\0" + "PARSED_NO_VALUE" + UUID.randomUUID();
@@ -502,19 +504,20 @@ public class ZRequest {
 		}
 	}
 
-	public static String parsePATH(final String requestLine) {
-		final int si = requestLine.indexOf(STU.SAPCE);
+	public static String parsePATH(final byte[] requestLineBytes) {
+		final int si = AU.indexOfKeyword(requestLineBytes, STU.SPACE_BYTE);
 		if (si > -1) {
-			final int s2i = requestLine.indexOf(STU.SAPCE, si + 1);
+			final int s2i = AU.indexOfKeyword(requestLineBytes, si + 1, STU.SPACE_BYTE);
 			if (s2i > -1) {
-				final String uri = requestLine.substring(si + 1, s2i);
-				if (STU.isNotEmpty(uri)) {
-					final int wenI = uri.indexOf("?");
+				final byte[] uriBytes = Arrays.copyOfRange(requestLineBytes, si + 1, s2i);
+				if (AU.isNotEmpty(uriBytes)) {
+					final int wenI = AU.indexOfKeyword(uriBytes, STU.Q_BYTE);
 					if (wenI > -1) {
-						final String path = uri.substring(0, wenI);
+						final byte[] pathBytes = Arrays.copyOf(uriBytes, wenI);
+						final String path = new String(pathBytes);
 						return path;
 					}
-					return uri;
+					return new String(uriBytes);
 				}
 			}
 		}

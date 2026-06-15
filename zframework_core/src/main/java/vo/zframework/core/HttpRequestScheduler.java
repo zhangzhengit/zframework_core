@@ -91,7 +91,7 @@ public class HttpRequestScheduler {
 	}
 
 	private HttpParseStatusEnum checkMethod(final PD pd, final ZArray array) {
-		final HttpParseStatusEnum checkMethodStatus = this.processor.checkMethod(pd, pd.getRequestLine());
+		final HttpParseStatusEnum checkMethodStatus = this.processor.checkMethod(pd, pd.getRequestLineBytes());
 
 		if (checkMethodStatus == HttpParseStatusEnum.CHECK_URI) {
 			return this.checkURI(pd, array);
@@ -109,10 +109,10 @@ public class HttpRequestScheduler {
 	}
 
 	private HttpParseStatusEnum checkURI(final PD pd, final ZArray array) {
-		final HttpParseStatusEnum parseHeaderStatus = this.processor.checkURI(pd, pd.getRequestLine());
+		final HttpParseStatusEnum parseHeaderStatus = this.processor.checkURI(pd);
 
 		if (parseHeaderStatus == HttpParseStatusEnum.CHECK_VERSION) {
-			final HttpParseStatusEnum checkVersion = this.processor.checkVersion(pd, pd.getRequestLine());
+			final HttpParseStatusEnum checkVersion = this.processor.checkVersion(pd, pd.getRequestLineBytes());
 			if (checkVersion == HttpParseStatusEnum.PARSE_HEADER) {
 				return this.parseHeader(pd, array);
 			}
