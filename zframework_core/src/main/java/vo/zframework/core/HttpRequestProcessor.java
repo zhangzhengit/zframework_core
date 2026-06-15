@@ -110,8 +110,7 @@ public class HttpRequestProcessor {
 		final byte[] methodBytes = Arrays.copyOfRange(requestLineBytes, 0, i);
 
 		if (HttpRequestProcessor.methodSupportBytes(methodBytes)) {
-			final String method = new String(methodBytes);
-			pd.setMethodName(method);
+			pd.setMethodNameBytes(methodBytes);
 			pd.setRequestLine(new String(requestLineBytes));
 
 			return HttpParseStatusEnum.CHECK_URI;
@@ -124,13 +123,13 @@ public class HttpRequestProcessor {
 		return HttpParseStatusEnum.EXCEPTION;
 	}
 
-	private static boolean methodSupportBytes(final byte[] methodBytes) {
-		final int length = methodBytes.length;
+	public static boolean methodSupportBytes(final byte[] methodBytes) {
+		final int mbLength = methodBytes.length;
 		for (int i = 0; i < x.size(); i++) {
-			final byte[] mbs = x.get(i);
-			if ((length == mbs.length)) {
-				for (int k = 0; k < mbs.length; k++) {
-					if (mbs[k] != methodBytes[k]) {
+			final byte[] b = x.get(i);
+			if ((mbLength == b.length)) {
+				for (int k = 0; k < b.length; k++) {
+					if (b[k] != methodBytes[k]) {
 						return false;
 					}
 				}
@@ -141,6 +140,7 @@ public class HttpRequestProcessor {
 
 		return false;
 	}
+
 	/**
 	 * 校验请求行中的URI是否存在
 	 *
@@ -152,7 +152,7 @@ public class HttpRequestProcessor {
 		final String path = ZRequest.parsePATH(pd.getRequestLineBytes());
 
 		// 1、精确匹配
-		final ZRMethod zrMethod = ZControllerMap.getMethodByMethodEnumAndPath(pd.getMethodName(), path);
+		final ZRMethod zrMethod = ZControllerMap.getMethodByMethodEnumAndPath(pd.getMethodNameBytes(), path);
 		if (zrMethod != null) {
 			// 精确匹配到了
 			pd.setZrMethod(zrMethod);
@@ -160,13 +160,13 @@ public class HttpRequestProcessor {
 		}
 
 		// 2、URI正则匹配
-		final ZRMethod matcheZRMethod = Task.getMatcheMethod(pd.getMethodName(), path);
+		final ZRMethod matcheZRMethod = Task.getMatcheMethod(pd.getMethodNameBytes(), path);
 		if (matcheZRMethod == null) {
 
 			// 3、继续URI正则匹配，依然没匹配到，但用非请求的METHOD和URI精确匹配到了，响应405
-			final ZRMethod matchWithServerMethod = Task.matchWithServerMethod(pd.getMethodName(), path);
+			final ZRMethod matchWithServerMethod = Task.matchWithServerMethod(pd.getMethodNameBytes(), path);
 			if (matchWithServerMethod != null) {
-				final ZResponse response405 = ReU.response405(pd.getMethodName(), false);
+				final ZResponse response405 = ReU.response405(new String(pd.getMethodNameBytes()), false);
 				pd.setException(response405);
 				return HttpParseStatusEnum.EXCEPTION;
 			}
@@ -281,7 +281,7 @@ public class HttpRequestProcessor {
 
 		final ZRequest request = HttpRequestParser.parse(array.getRawArray(), array.length(), pd.getHeaderEndIndex());
 
-		request.setMethodName(pd.getMethodName());
+		request.setMethodNameBytes(pd.getMethodNameBytes());
 
 		pd.setRequest(request);
 

@@ -30,9 +30,9 @@ public class PD {
 	private byte[] httpVersionBytes;
 
 	/**
-	 * http METHOD
+	 * http METHOD bytes
 	 */
-	private String methodName;
+	private byte[] methodNameBytes;
 
 	private ZRequest request;
 
@@ -103,14 +103,6 @@ public class PD {
 		this.exception = exception;
 	}
 
-	public String getMethodName() {
-		return this.methodName;
-	}
-
-	public void setMethodName(final String methodName) {
-		this.methodName = methodName;
-	}
-
 	public BufferedInputStream getBufferedInputStream() {
 		return this.bufferedInputStream;
 	}
@@ -157,6 +149,14 @@ public class PD {
 
 	public void setHttpVersionBytes(final byte[] httpVersionBytes) {
 		this.httpVersionBytes = httpVersionBytes;
+	}
+
+	public byte[] getMethodNameBytes() {
+		return this.methodNameBytes;
+	}
+
+	public void setMethodNameBytes(final byte[] methodNameBytes) {
+		this.methodNameBytes = methodNameBytes;
 	}
 
 }

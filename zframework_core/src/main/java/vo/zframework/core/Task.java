@@ -109,36 +109,31 @@ public class Task {
 
 	/**
 	 * 使用 server.method的配置值中非参数 methodEnum的选项 和 URI来匹配目标接口Method
-	 *
-	 * @param methodName 请求用的METHOD
+	 * @param methodNameBytes
 	 * @param path
-	 *
 	 * @return
 	 */
-	public static ZRMethod matchWithServerMethod(final String methodName, final String path) {
+	public static ZRMethod matchWithServerMethod(final byte[] methodNameBytes, final String path) {
 
-		final ZRMethod noRequestMethodMethod = ZRC.singleton().computeIfAbsent("MethodEnum.values-" + path, () -> {
-			final String serverMethod = SERVER_CONFIGURATIONPROPERTIES.getMethod();
-			for (final String m : serverMethod.split(",")) {
-				final MethodEnum me = MethodEnum.valueOfMethodStringUpper(m);
-				if (!me.name().equals(methodName)) {
-					final ZRMethod methodT = ZControllerMap.getMethodByMethodEnumAndPath(methodName, path);
-					if (methodT != null) {
-						return methodT;
-					}
+		final MethodEnum[] es = MethodEnum.values();
+		for (final MethodEnum methodEnum : es) {
+			final byte[] meNameBytes = methodEnum.getMethodBytes();
+			final boolean methodSupportBytes = HttpRequestProcessor.methodSupportBytes(meNameBytes);
+			if (methodSupportBytes && !Arrays.equals(meNameBytes, methodNameBytes)) {
+				final ZRMethod methodT = ZControllerMap.getMethodByMethodEnumAndPath(meNameBytes, path);
+				if (methodT != null) {
+					return methodT;
 				}
 			}
+		}
 
-			return null;
-		}, true);
-		return noRequestMethodMethod;
-
+		return null;
 	}
 
-	public static ZRMethod getMatcheMethod(final String methodName, final String path) {
+	public static ZRMethod getMatcheMethod(final byte[] methodNameBytes, final String path) {
 
 		final Supplier<ZRMethod> supplier = () -> {
-			final Map<String, ZRMethod> rowMap = ZControllerMap.getByMethodEnum(methodName);
+			final Map<String, ZRMethod> rowMap = ZControllerMap.getByMethodEnum(methodNameBytes);
 			final Set<Entry<String, ZRMethod>> entrySet = rowMap.entrySet();
 			for (final Entry<String, ZRMethod> entry : entrySet) {
 				final ZRMethod methodTarget = entry.getValue();

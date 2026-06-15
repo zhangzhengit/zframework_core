@@ -11,27 +11,28 @@ import java.util.StringJoiner;
  */
 public enum MethodEnum {
 
-	GET("GET"),
+	GET("GET","GET".getBytes()),
 
-	POST("POST"),
+	POST("POST","POST".getBytes()),
 
-	PUT("PUT"),
+	PUT("PUT", "PUT".getBytes()),
 
-	DELETE("DELETE"),
+	DELETE("DELETE","DELETE".getBytes()),
 
-	HEAD("HEAD"),
+	HEAD("HEAD","HEAD".getBytes()),
 
-	CONNECT("CONNECT"),
+	CONNECT("CONNECT","CONNECT".getBytes()),
 
-	TRACE("TRACE"),
+	TRACE("TRACE","TRACE".getBytes()),
 
-	OPTIONS("OPTIONS"),
+	OPTIONS("OPTIONS","OPTIONS".getBytes()),
 
-	PATCH("PATCH")
+	PATCH("PATCH","PATCH".getBytes())
 
 	;
 
 	private final String method;
+	private final byte[] methodBytes;
 
 	public static boolean isMethodStringUpper(final String string) {
 		if ((string == null) || string.isEmpty() || (string.length() < 3)) {
@@ -110,8 +111,14 @@ public enum MethodEnum {
 		return this.method;
 	}
 
-	MethodEnum(final String method) {
+	MethodEnum(final String method, final byte[] methodBytes) {
 		this.method = method;
+		this.methodBytes = methodBytes;
 	}
+
+	public byte[] getMethodBytes() {
+		return methodBytes;
+	}
+
 
 }

@@ -68,9 +68,12 @@ public class ZRequest {
 	TF tf;
 
 	/**
-	 * 请求方法
+	 * 请求方法 byte[]
 	 */
-	private String methodName;
+	private byte[] methodNameBytes;
+
+	private
+	String methodCache;
 
 	/**
 	 * 完整的requestURI，如：/hello?name=z&age=20
@@ -159,7 +162,11 @@ public class ZRequest {
 	}
 
 	public String getMethod() {
-		return this.getMethodName();
+		if (this.methodCache == null) {
+			this.methodCache = new String(this.methodNameBytes);
+		}
+
+		return this.methodCache;
 	}
 
 	public byte[] getBody() {
@@ -744,11 +751,6 @@ public class ZRequest {
 		this.tf = tf;
 	}
 
-	public String getMethodName() {
-		return this.methodName;
-	}
-
-
 	public String getPath() {
 		return this.path;
 	}
@@ -811,8 +813,12 @@ public class ZRequest {
 
 	}
 
-	public void setMethodName(final String methodName) {
-		this.methodName = methodName;
+	public byte[] getMethodNameBytes() {
+		return this.methodNameBytes;
+	}
+
+	public void setMethodNameBytes(final byte[] methodNameBytes) {
+		this.methodNameBytes = methodNameBytes;
 	}
 
 }
