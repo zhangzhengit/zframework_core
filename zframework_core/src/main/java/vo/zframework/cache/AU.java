@@ -1,5 +1,7 @@
 package vo.zframework.cache;
 
+import java.util.Arrays;
+
 /**
  * 数组相关
  *
@@ -96,6 +98,28 @@ public class AU {
 			}
 		}
 		return -1;
+	}
+
+	public static byte[] trim(final byte[] bytes) {
+		if(isEmpty(bytes)) {
+			return null;
+		}
+
+		int from = 0;
+		while((from < bytes.length) && (bytes[from] == STU.SPACE_BYTE)) {
+			from++;
+		}
+
+		int to = bytes.length-1;
+		while((to > 0) && (bytes[to] == STU.SPACE_BYTE)) {
+			to--;
+		}
+
+		if (to > from) {
+			return Arrays.copyOfRange(bytes, from, to + 1);
+		}
+
+		return null;
 	}
 
 }

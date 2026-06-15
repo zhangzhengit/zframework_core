@@ -241,8 +241,8 @@ public class HttpRequestProcessor {
 
 		pd.setHeaderEndIndex(headerEndIndex);
 
-		final String contentLength = gContentLength(array, pd);
-		if (STU.isEmpty(contentLength)) {
+		final long contentLength = gContentLength(array, pd);
+		if (contentLength <= -1) {
 			// 无Content-Length，直接跳到结束
 			return HttpParseStatusEnum.PARSE_END;
 		}
@@ -301,22 +301,46 @@ public class HttpRequestProcessor {
 		return requestLineBytes;
 	}
 
-	private static String gContentLength(final ZArray array, final PD pd) {
-		final int clIndex = AU.search(array.getRawArray(), array.length()
-				, CONTENT_LENGTH_BYTES, 1, pd.getRequestLineEndIndex() + STU.CRLF.length());
+	private static long gContentLength(final ZArray array, final PD pd) {
+		final int clIndex = AU.search(array.getRawArray(), array.length(), CONTENT_LENGTH_BYTES, 1,
+				pd.getRequestLineEndIndex() + STU.CRLF.length());
 		if (clIndex > -1) {
 			final int clEIndex = AU.search(array.getRawArray(), array.length(), STU.CRLF_BYTES, 1, clIndex);
 			if (clEIndex > clIndex) {
 
-				final String contentLengthS = new String(array.getRawArray(), clIndex, clEIndex - clIndex);
+				final int cI = AU.indexOfKeyword(array.getRawArray(), clIndex, STU.COLON_C_BYTE);
+				if (cI > -1) {
 
-				final long contentLength = Long.parseLong(contentLengthS.split(":")[1].trim());
-				pd.setContentLength(contentLength);
-				return contentLengthS;
+					// FIXME 2026年6月15日 22:21:31 zhangzhen : arraycopy和trim都可以去掉，继续用偏移量
+					final byte[] lBAX = Arrays.copyOfRange(array.getRawArray(), cI + 1, clEIndex);
+					final byte[] trimx = AU.trim(lBAX);
+
+					final long contentLength = parseContentLength(trimx, 0, trimx.length);
+
+					pd.setContentLength(contentLength);
+
+					return contentLength;
+				}
 			}
 		}
 
-		return null;
+		return -1;
+	}
+
+	public static long parseContentLength(final byte[] bytes, final int offset, final int length) {
+	    long value = 0;
+	    for (int i = offset; i < length; i++) {
+	        final byte b = bytes[offset + i];
+	        if ((b < '0') || (b > '9')) {
+	            throw new NumberFormatException("Invalid Content-Length");
+	        }
+	        value = (value * 10) + (b - '0');
+	        // 可选：检查 overflow
+	        if (value < 0) {
+				throw new NumberFormatException("Value too large");
+			}
+	    }
+	    return value;
 	}
 
 	public static HttpParseStatusEnum parseBody(final BufferedInputStream bufferedInputStream,
