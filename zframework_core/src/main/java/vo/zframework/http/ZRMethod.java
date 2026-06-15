@@ -74,6 +74,7 @@ public class ZRMethod {
 	private final boolean hasZETag;
 
 	private final ZCacheControl cacheControl;
+	private final ZLastModified lastModified;
 
 	private final String cacheControlVString;
 	private final byte[] cacheControlVStringBytes;
@@ -95,6 +96,8 @@ public class ZRMethod {
 		this.zqpsLimitation = method.getAnnotation(ZQPSLimitation.class);
 
 		this.cacheControl = method.getAnnotation(ZCacheControl.class);
+
+		this.lastModified =  method.getAnnotation(ZLastModified.class);
 
 		this.zRequestMapping = method.getAnnotation(ZRequestMapping.class);
 
@@ -275,6 +278,10 @@ public class ZRMethod {
 
 	public byte[] getCacheControlVStringBytes() {
 		return this.cacheControlVStringBytes;
+	}
+
+	public ZLastModified getLastModified() {
+		return this.lastModified;
 	}
 
 }

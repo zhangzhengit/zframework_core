@@ -122,7 +122,7 @@ public class HTTPResponseProcessor {
 		// 以后再看要不要做
 	private static void setLastModified(final ZRequest request,final ZResponse response) {
 
-		final ZLastModified lastModified = Task.getMethodAnnotation(request, ZLastModified.class);
+		final ZLastModified lastModified = PDTL.get().getZrMethod().getLastModified();
 		if (lastModified == null) {
 			return;
 		}

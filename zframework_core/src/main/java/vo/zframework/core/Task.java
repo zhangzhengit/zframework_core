@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Parameter;
@@ -25,8 +24,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
-
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 import vo.zframework.anno.ZCookieValue;
 import vo.zframework.anno.ZRequestBody;
@@ -84,52 +81,6 @@ public class Task {
 	public static final String DEFAULT_CHARSET_NAME = Charset.defaultCharset().displayName();
 	public static final String VOID = "void";
 	public static final ContentTypeEnum DEFAULT_CONTENT_TYPE = ContentTypeEnum.APPLICATION_JSON;
-
-	private Task() {
-	}
-
-	/**
-	 * 根据请求头信息获取目标接口方法的特定注解
-	 *
-	 * @param request
-	 * @param annoClass TODO
-	 * @return
-	 * @throws Exception
-	 */
-	// FIXME 2026年6月10日 06:47:53 zhangzhen : 截止现在，本方法只有一个调用者，看是不是可以删掉本方法？
-	static <T extends Annotation> T getMethodAnnotation(final ZRequest request, final Class<T> annoClass) {
-
-		final String key = request.getRequestURI() + '@' + annoClass.getName()  + '-' + annoClass.hashCode();
-
-		return ZRC.singleton().computeIfAbsent(key, () -> getMethodAnnotation0(request, annoClass));
-	}
-
-	public static <T extends Annotation> T getMethodAnnotation0(final ZRequest request, final Class<T> annoClass) {
-		// 匹配path
-		if (STU.isEmpty(request.getPath())) {
-			return null;
-		}
-
-		final String path = request.getPath();
-		final ZRMethod zrMethod = ZControllerMap.getMethodByMethodEnumAndPath(request.getMethodName(), path);
-		if (zrMethod == null) {
-
-			final Map<String, ZRMethod> rowMap = ZControllerMap.getByMethodEnum(request.getMethodName());
-			final Set<Entry<String, ZRMethod>> entrySet = rowMap.entrySet();
-			for (final Entry<String, ZRMethod> entry : entrySet) {
-				final ZRMethod methodTarget = entry.getValue();
-				final String requestMapping = entry.getKey();
-				if (Boolean.TRUE.equals(ZControllerMap.getIsregexByMethodEnumAndPath(methodTarget.getMethod(), requestMapping))
-						&& path.matches(requestMapping)) {
-					return methodTarget.getMethod().getAnnotation(annoClass);
-				}
-			}
-
-			return null;
-		}
-
-		return zrMethod.getMethod().getAnnotation(annoClass);
-	}
 
 	/**
 	 * 执行目标方法（接口Method）
@@ -234,12 +185,6 @@ public class Task {
 		}
 
 		return e.getLocalizedMessage();
-	}
-
-	private void close() {
-		// socketChannel 不关闭
-		//		if (this.socketChannel != null) {
-		//		}
 	}
 
 	private static ZResponse invokeAndResponse(
