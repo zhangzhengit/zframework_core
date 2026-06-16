@@ -113,6 +113,7 @@ public class ZResponse {
 	private volatile boolean write = false;
 
 	private String contentType;
+	private byte[] contentTypeBytes;
 	private final AtomicReference<Integer> httpStatus = new AtomicReference<>(HttpStatusEnum.HTTP_200.getStatus());
 	private boolean contentTypeHasBeenSet = false;
 
@@ -168,11 +169,13 @@ public class ZResponse {
 		return this.body;
 	}
 
-	public synchronized ZResponse contentType(final byte[] contentTypePBytes) {
+	public synchronized ZResponse contentType(final byte[] contentTypeBytes) {
 		this.contentTypeHasBeenSet = true;
+		this.contentTypeBytes = contentTypeBytes;
+
 		// 注意：这个就是故意不调用 public ZResponse header(final byte[] nameBytes,final byte[] valueBytes)
 		// 防止它里面的那个throw异常
-		this.header(new ZHeader(HeaderEnum.CONTENT_TYPE.getName().getBytes(), contentTypePBytes));
+		this.header(new ZHeader(HeaderEnum.CONTENT_TYPE.getName().getBytes(), contentTypeBytes));
 
 		return this;
 	}
@@ -700,7 +703,15 @@ public class ZResponse {
 	}
 
 	public String getContentType() {
-		return this.contentType;
+		if (this.contentType != null) {
+			return this.contentType;
+		}
+
+		if (this.contentTypeBytes != null) {
+			return new String(this.contentTypeBytes);
+		}
+
+		return null;
 	}
 
 	public static int getDefaultHeadersCount() {
