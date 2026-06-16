@@ -250,6 +250,9 @@ public class ZResponse {
 		}
 	}
 
+	// FIXME 2026年6月17日 01:17:46 zhangzhen ：header方法实现的还不行，应该使用Map来放用写好的BAKW类
+	// 这样就直接put就行，就是简单的[后面覆盖前面]的逻辑，也不需要判断哪些允许重复以及重复了如何合并等问题，
+	// 并对于特殊的Set-Cookie头的cookie方法也要修改合并的逻辑
 	public ZResponse header(final byte[] nameBytes,final byte[] valueBytes) {
 		if (Arrays.equals(HeaderEnum.CONTENT_TYPE.getNameBytes(), nameBytes)) {
 			throw new IllegalArgumentException(HeaderEnum.CONTENT_TYPE.getName() + " 使用 contentType 方法来设置");
