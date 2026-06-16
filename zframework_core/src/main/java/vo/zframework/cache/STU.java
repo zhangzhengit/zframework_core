@@ -29,7 +29,7 @@ public class STU {
 	public static final char COLON_C = ':';
 
 	public static final byte COLON_C_BYTE = COLON_C;
-	public static final byte[] COLON_C_BYTES = String.valueOf(COLON_C).getBytes();
+	public static final byte[] COLON_C_BYTES = {COLON_C_BYTE};
 	public static final String EMPTY = "";
 	public static final String EQUALS = "=";
 	public static final int EQUALS_LENGTH = EQUALS.length();

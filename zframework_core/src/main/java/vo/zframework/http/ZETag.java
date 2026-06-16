@@ -11,11 +11,12 @@ import java.lang.annotation.Target;
  * 并且请求此方法时，根据请求头的If-None-Match值来判断资源是否变动，
  * 没变动则返回304，变了则正常返回并返回新的ETag头
  *
+ * 注意：代码优先级高于本注解，如：response.header("ETag", xxx);则本注解自动失效
+ *
  * @author zhangzhen
  * @date 2024年12月7日 上午12:10:07
  *
  */
-// FIXME 2024年12月7日 上午12:10:46 zhangzhen : 补充javadoc，比如同时有次注解，方法里又手动设置etag头，会怎么样。等等
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.METHOD })

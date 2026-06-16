@@ -206,6 +206,28 @@ public class ZResponse {
 		return this;
 	}
 
+	public boolean containsHeader(final String header) {
+		final byte[] hb = header.getBytes();
+
+		final int i = AU.search(this.headerArray.getRawArray(), this.headerArray.length(), hb, 1, 0);
+
+		if (i > -1) {
+			final int ci = AU.search(this.headerArray.getRawArray(), this.headerArray.length(), STU.COLON_C_BYTES, 1,
+					i + hb.length);
+			if (ci > -1) {
+				final int crlfi = AU.search(this.headerArray.getRawArray(), this.headerArray.length(), STU.CRLF_BYTES,
+						1, ci + 1);
+
+				if (crlfi > -1) {
+					return true;
+				}
+
+			}
+		}
+
+		return false;
+	}
+
 	public ZResponse header(final ZHeader zHeader) {
 
 		this.headerArray.add(zHeader.getNameBytes());
@@ -304,7 +326,7 @@ public class ZResponse {
 				if (readFirst) {
 					// FIXME 2025年12月13日 00:14:31 zhangzhen :  这里逻辑不对，304了，就不应该继续读写body了
 					// 要不先读一次，和if-none-match比较，否再读写body，是则直接304？
-					this.setETag(request, buffer, ETagEnum.WEAK);
+					this.setETagIfZETagPresent(request, buffer, ETagEnum.WEAK);
 
 					final byte[] contentEncodingBytes = this.getContentEncodingBytes(request, exceedsCompressionMinLength);
 					if (AU.isNotEmpty(contentEncodingBytes)) {
@@ -370,7 +392,7 @@ public class ZResponse {
 	}
 
 	/**
-	 * 根据请求对象来计算ETag
+	 * 如果目标接口上存在 @ZETag 则自动设置ETag头
 	 *
 	 * @param request
 	 * @param ba       用于计算ETag的部分字节
@@ -381,7 +403,7 @@ public class ZResponse {
 	// 则每个文件读一次的byte[]很可能是相同的，从而算出来的ETag也是相同的。
 	// 显然是错的，现在还没取到文件的size和最后修改日期/名称/等等内容
 	// FIXME 2026年6月7日 03:16:22 zhangzhen : 这个方法不好，违反了单一功能原则，改掉，并且返回返回header
-	void setETag(final ZRequest request, final byte[] ba, final ETagEnum eTagEnum) {
+	void setETagIfZETagPresent(final ZRequest request, final byte[] ba, final ETagEnum eTagEnum) {
 
 		if (!PDTL.get().getZrMethod().hasZETag()) {
 			return;

@@ -87,7 +87,9 @@ public class HTTPResponseProcessor {
 
 			final int httpStatus = response.getHttpStatus();
 			if (httpStatus == HttpStatusEnum.HTTP_200.getStatus()) {
-				response.setETag(request, response.getBody(), ETagEnum.STRONG);
+				if (!response.containsHeader(HeaderEnum.ETAG.getName())) {
+					response.setETagIfZETagPresent(request, response.getBody(), ETagEnum.STRONG);
+				}
 			}
 
 			// FIXME 2025年1月3日 上午3:22:26 zhangzhen : Last-Modified
