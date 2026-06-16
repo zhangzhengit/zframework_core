@@ -597,137 +597,139 @@ public class Task {
 				}
 				parameters[pI] = headerValue;
 				pI++;
-			} else {
-				final Class<?> pType = p.getType();
-				if (RU.isAnnotationPresent(p, ZCookieValue.class)) {
-					final ZCookieValue cookieValue = RU.getAnnotation(p, ZCookieValue.class);
-					final String cookieName = STU.isEmpty(cookieValue.name()) ? p.getName() : cookieValue.name();
-					final ZCookie[] cookies = request.getCookies();
-					final String message = "请求方法[" + path + "]缺少名为[" + cookieName + "]的Cookie";
-					if (AU.isEmpty(cookies)) {
+				continue;
+			}
+
+			final Class<?> pType = p.getType();
+
+			final ZCookieValue cookieValue = RU.getAnnotation(p, ZCookieValue.class);
+
+			if (cookieValue!=null) {
+				final String cookieName = STU.isEmpty(cookieValue.name()) ? p.getName() : cookieValue.name();
+				final ZCookie[] cookies = request.getCookies();
+				final String message = "请求方法[" + path + "]缺少名为[" + cookieName + "]的Cookie";
+				if (AU.isEmpty(cookies)) {
+					if (cookieValue.required()) {
+						throw new FormPairParseException(message, HttpStatusEnum.HTTP_400.getStatus());
+					}
+				} else {
+
+					final Optional<ZCookie> c = Arrays.stream(cookies)
+							.filter(cookie -> Objects.equals(cookie.getName(), cookieName)).findAny();
+					if (c.isPresent()) {
+						if (pType == String.class) {
+							parameters[pI] = c.get().getValue();
+							pI++;
+						} else if (pType == ZCookie.class) {
+							parameters[pI] = c.get();
+							pI++;
+						}
+					} else {
 						if (cookieValue.required()) {
 							throw new FormPairParseException(message, HttpStatusEnum.HTTP_400.getStatus());
 						}
-					} else {
-
-						final Optional<ZCookie> c = Arrays.stream(cookies)
-								.filter(cookie -> Objects.equals(cookie.getName(), cookieName)).findAny();
-						if (c.isPresent()) {
-							if (pType == String.class) {
-								parameters[pI] = c.get().getValue();
-								pI++;
-							} else if (pType == ZCookie.class) {
-								parameters[pI] = c.get();
-								pI++;
-							}
-						} else {
-							if (cookieValue.required()) {
-								throw new FormPairParseException(message, HttpStatusEnum.HTTP_400.getStatus());
-							}
-							parameters[pI] = null;
-							pI++;
-						}
+						parameters[pI] = null;
+						pI++;
 					}
-
-				} else if (ZRequest.class == pType) {
-					parameters[pI] = request;
-					pI++;
-				} else if (pType == ZResponse.class) {
-					final ZResponse response = new ZResponse();
-					parameters[pI] = response;
-					pI++;
-				} else if (pType == ZModel.class) {
-					final ZModel model = new ZModel();
-					parameters[pI] = model;
-					pI++;
-				} else if (RU.isAnnotationPresent(p, ZRequestBody.class)) {
-					final byte[] body = request.getBody();
-					if (AU.isEmpty(body)) {
-						final String simpleName = pType.getSimpleName();
-						throw new FormPairParseException(
-								"@" + ZRequestBody.class.getSimpleName() + " 参数 " + simpleName + " 不存在");
-					}
-
-					final Object object = J.parseObject(new String(body), pType);
-					if (object == null) {
-						final String simpleName = pType.getSimpleName();
-						throw new FormPairParseException(
-								"@" + ZRequestBody.class.getSimpleName() + " 参数 " + simpleName + " 错误");
-					}
-
-					Task.checkZValidated(p, object);
-
-					parameters[pI] = object;
-					pI++;
-
-				} else if (RU.isAnnotationPresent(p, ZRequestParam.class)) {
-					pI = Task.hZRequestParam(parameters, request, path, pI, p);
-				} else if (RU.isAnnotationPresent(p, ZPathVariable.class)) {
-					final List<Object> list = ZPVTL.get();
-					final Class<?> type = pType;
-					// FIXME 2023年11月8日 下午4:39:18 zhanghen: @ZRM 启动校验是否此类型
-					final Object v = list.get(zpvPI);
-					try {
-						Task.setZPathVariableValue(parameters, pI, type, v);
-						zpvPI++;
-					} catch (final NumberFormatException e) {
-						throw new PathVariableException(p.getName() + STU.EQUALS + v, HttpStatusEnum.HTTP_400.getStatus());
-					}
-
-					// FIXME 2023年11月8日 下午10:47:54 zhanghen: TODO 继续支持 校验注解
-					if (RU.isAnnotationPresent(p, ZMax.class)) {
-						ZValidator.validatedZMax(p, parameters[pI], RU.getAnnotation(p, ZMax.class).max());
-					}
-
-					if (RU.isAnnotationPresent(p, ZPositive.class)) {
-						ZValidator.validatedZPositive(p, parameters[pI]);
-					}
-
-					if (RU.isAnnotationPresent(p, ZMin.class)) {
-						ZValidator.validatedZMin(p, parameters[pI], RU.getAnnotation(p, ZMin.class).min());
-					}
-
-
-					pI++;
-				} else if (pType == ZMultipartFile.class) {
-
-					// FIXME 2024年12月23日 上午2:09:28 zhangzhen : 下面代码有一个可以正常运行的bug
-					// 就是一个form-data如果只有一个文件而无其他内容，到此 request.getOriginalRequestBytes()
-					// 内容其实header 下面一个空行 再下面是 --boundary--
-					// 以后再看要不要修复，反正这个bug可以正常运行
-
-					if (AU.isEmpty(request.getOriginalRequestBytes())) {
-						throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在", HttpStatusEnum.HTTP_400.getStatus());
-					}
-
-					final List<FormData> fdList = HttpRequestParser.readFileFormData(request.getOriginalRequestBytes(),
-							request.getContentType(), request.getBoundary());
-					final Optional<FormData> findAny = fdList.stream().filter(fd -> fd.getName().equals(p.getName()))
-							.findAny();
-					if (!findAny.isPresent()) {
-						throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在", HttpStatusEnum.HTTP_400.getStatus());
-					}
-
-					if (request.getTf() != null) {
-						pI = tf(parameters, request, path, zpvPI, p);
-					} else {
-						// 走到这，说明是读到内存的，所以构造ByteArrayInputStream
-						if (findAny.get().getBody() == null) {
-							throw new FormPairParseException("上传文件的[" + p.getName() + "]的内容不存在",
-									HttpStatusEnum.HTTP_400.getStatus());
-						}
-
-						final InputStream inputStream = new ByteArrayInputStream(findAny.get().getBody());
-						final ZMultipartFile file = new ZMultipartFile(findAny.get().getName(),
-								null,
-								findAny.get().getFileName(),
-								findAny.get().getBody(), false,
-								findAny.get().getContentType(), inputStream, findAny.get().getBody().length);
-
-						pI = Task.setValue(parameters, pI, p, file);
-					}
-
 				}
+
+			} else if (ZRequest.class == pType) {
+				parameters[pI] = request;
+				pI++;
+			} else if (pType == ZResponse.class) {
+				final ZResponse response = new ZResponse();
+				parameters[pI] = response;
+				pI++;
+			} else if (pType == ZModel.class) {
+				final ZModel model = new ZModel();
+				parameters[pI] = model;
+				pI++;
+			} else if (RU.isAnnotationPresent(p, ZRequestBody.class)) {
+				final byte[] body = request.getBody();
+				if (AU.isEmpty(body)) {
+					final String simpleName = pType.getSimpleName();
+					throw new FormPairParseException(
+							"@" + ZRequestBody.class.getSimpleName() + " 参数 " + simpleName + " 不存在");
+				}
+
+				final Object object = J.parseObject(new String(body), pType);
+				if (object == null) {
+					final String simpleName = pType.getSimpleName();
+					throw new FormPairParseException(
+							"@" + ZRequestBody.class.getSimpleName() + " 参数 " + simpleName + " 错误");
+				}
+
+				Task.checkZValidated(p, object);
+
+				parameters[pI] = object;
+				pI++;
+
+			} else if (RU.isAnnotationPresent(p, ZRequestParam.class)) {
+				pI = Task.hZRequestParam(parameters, request, path, pI, p);
+			} else if (RU.isAnnotationPresent(p, ZPathVariable.class)) {
+				final List<Object> list = ZPVTL.get();
+				final Class<?> type = pType;
+				// FIXME 2023年11月8日 下午4:39:18 zhanghen: @ZRM 启动校验是否此类型
+				final Object v = list.get(zpvPI);
+				try {
+					Task.setZPathVariableValue(parameters, pI, type, v);
+					zpvPI++;
+				} catch (final NumberFormatException e) {
+					throw new PathVariableException(p.getName() + STU.EQUALS + v, HttpStatusEnum.HTTP_400.getStatus());
+				}
+
+				// FIXME 2023年11月8日 下午10:47:54 zhanghen: TODO 继续支持 校验注解
+				if (RU.isAnnotationPresent(p, ZMax.class)) {
+					ZValidator.validatedZMax(p, parameters[pI], RU.getAnnotation(p, ZMax.class).max());
+				}
+
+				if (RU.isAnnotationPresent(p, ZPositive.class)) {
+					ZValidator.validatedZPositive(p, parameters[pI]);
+				}
+
+				if (RU.isAnnotationPresent(p, ZMin.class)) {
+					ZValidator.validatedZMin(p, parameters[pI], RU.getAnnotation(p, ZMin.class).min());
+				}
+
+				pI++;
+			} else if (pType == ZMultipartFile.class) {
+
+				// FIXME 2024年12月23日 上午2:09:28 zhangzhen : 下面代码有一个可以正常运行的bug
+				// 就是一个form-data如果只有一个文件而无其他内容，到此 request.getOriginalRequestBytes()
+				// 内容其实header 下面一个空行 再下面是 --boundary--
+				// 以后再看要不要修复，反正这个bug可以正常运行
+
+				if (AU.isEmpty(request.getOriginalRequestBytes())) {
+					throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在", HttpStatusEnum.HTTP_400.getStatus());
+				}
+
+				final List<FormData> fdList = HttpRequestParser.readFileFormData(request.getOriginalRequestBytes(),
+						request.getContentType(), request.getBoundary());
+				final Optional<FormData> findAny = fdList.stream().filter(fd -> fd.getName().equals(p.getName()))
+						.findAny();
+				if (!findAny.isPresent()) {
+					throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在", HttpStatusEnum.HTTP_400.getStatus());
+				}
+
+				if (request.getTf() != null) {
+					pI = tf(parameters, request, path, zpvPI, p);
+				} else {
+					// 走到这，说明是读到内存的，所以构造ByteArrayInputStream
+					if (findAny.get().getBody() == null) {
+						throw new FormPairParseException("上传文件的[" + p.getName() + "]的内容不存在",
+								HttpStatusEnum.HTTP_400.getStatus());
+					}
+
+					final InputStream inputStream = new ByteArrayInputStream(findAny.get().getBody());
+					final ZMultipartFile file = new ZMultipartFile(findAny.get().getName(),
+							null,
+							findAny.get().getFileName(),
+							findAny.get().getBody(), false,
+							findAny.get().getContentType(), inputStream, findAny.get().getBody().length);
+
+					pI = Task.setValue(parameters, pI, p, file);
+				}
+
 			}
 
 		}
