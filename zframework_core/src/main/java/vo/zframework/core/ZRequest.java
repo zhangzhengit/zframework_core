@@ -292,9 +292,9 @@ public class ZRequest {
 		return new ZSession();
 	}
 
-	public int getContentLength() {
+	public long getContentLength() {
 		final String s = this.getHeader(HeaderEnum.CONTENT_LENGTH.getName());
-		return s == null ? -1 : Integer.parseInt(s);
+		return s == null ? -1 : Long.parseLong(s);
 	}
 
 	public ZCookie getCookie(final String name) {
