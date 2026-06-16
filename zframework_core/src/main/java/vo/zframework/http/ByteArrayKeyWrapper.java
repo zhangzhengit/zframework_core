@@ -46,4 +46,17 @@ public class ByteArrayKeyWrapper {
 		return Arrays.equals(this.bytes, other.bytes);
 	}
 
+	@Override
+	public String toString() {
+		final StringBuilder builder = new StringBuilder();
+		builder.append("ByteArrayKeyWrapper [bytes=");
+		builder.append(new String(this.bytes));
+		builder.append(", hash=");
+		builder.append(this.hash);
+		builder.append("]");
+		return builder.toString();
+	}
+
+
+
 }
