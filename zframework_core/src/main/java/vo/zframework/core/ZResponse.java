@@ -443,8 +443,8 @@ public class ZResponse {
 	}
 
 	private boolean compress(final boolean exceedsCompressionMinLength) {
-		return exceedsCompressionMinLength
-				&& SERVER_CONFIGURATIONPROPERTIES.getCompressionEnable()
+		return compressionEnable
+				&& exceedsCompressionMinLength
 				&& SERVER_CONFIGURATIONPROPERTIES.compressionContains(this.getContentType());
 	}
 
