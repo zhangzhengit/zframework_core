@@ -27,8 +27,7 @@ public class RU {
 	}
 
 	public static <T extends Annotation> T getAnnotation(final Parameter parameter, final Class<T> annoClass) {
-		final String key = parameter.hashCode() + '-' + parameter.getName() + '-' + annoClass.getName();
-		return ZRC.singleton().computeIfAbsent(key, () ->parameter.getAnnotation(annoClass) );
+		return parameter.getAnnotation(annoClass);
 	}
 
 	public static Parameter[] getParameters(final Method method){
