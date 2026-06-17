@@ -610,7 +610,7 @@ public class Task {
 
 			final ZCookieValue zcv = RU.getAnnotation(p, ZCookieValue.class);
 			if (zcv != null) {
-				final String cookieName = STU.isEmpty(zcv.name()) ? p.getName() : zcv.name();
+				final String cookieName = ZCookieValue.DEFAULT_NONE.equals(zcv.name()) ? p.getName() : zcv.name();
 				final ZCookie ck = request.getCookie(cookieName);
 				if ((ck == null) && zcv.required()) {
 					final String message = "请求方法[" + path + "]缺少名为[" + cookieName + "]的Cookie";
