@@ -652,8 +652,6 @@ public class Task {
 				parameters[pI] = object;
 				pI++;
 
-			} else if (RU.isAnnotationPresent(p, ZRequestParam.class)) {
-				pI = Task.hZRequestParam(parameters, request, path, pI, p);
 			} else if (RU.isAnnotationPresent(p, ZPathVariable.class)) {
 				final List<Object> list = ZPVTL.get();
 				final Class<?> type = pType;
@@ -716,6 +714,12 @@ public class Task {
 							findAny.get().getContentType(), inputStream, findAny.get().getBody().length);
 
 					pI = Task.setValue(parameters, pI, p, file);
+				}
+
+			} else {
+				final ZRequestParam requestParam = RU.getAnnotation(p, ZRequestParam.class);
+				if (requestParam != null) {
+					pI = Task.hZRequestParam(parameters, request, path, pI, p, requestParam);
 				}
 
 			}
@@ -788,78 +792,71 @@ public class Task {
 	}
 
 	private static int hZRequestParam(final Object[] parameters, final ZRequest request, final String path,
-			final int pI, final Parameter p) {
+			final int pI, final Parameter p, final ZRequestParam requestParam) {
 
-		int piR = 0;
-		final Set<RequestParam> paramSet = request.getParamSet();
-		if (CU.isNotEmpty(paramSet)) {
-			final Optional<RequestParam> findAny = paramSet.stream()
-					.filter(rp -> rp.getName().equals(p.getName()))
-					.findAny();
-			if (!findAny.isPresent()) {
+		final List<RequestParam> params = request.getParams();
+		if (CU.isNotEmpty(params)) {
+
+			final RequestParam rp = findRequestParam(p, params);
+			if (rp == null) {
 				throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在",
 						HttpStatusEnum.HTTP_400.getStatus());
 			}
 
-			final Object value = findAny.get().getValue();
-			if (value != null) {
+			final Object value = rp.getValue() != null ? rp.getValue() : requestParam.defaultValue();
+			try {
+				return Task.setValue(parameters, pI, p, value);
+			} catch (final NumberFormatException e) {
+				throw new ParsingRequestParamException(p.getName() + STU.EQUALS + rp.getValue(),
+						HttpStatusEnum.HTTP_400.getStatus());
+			}
+
+		}
+
+		final byte[] body = request.getBody();
+		if (AU.isEmpty(body)) {
+			final String defaultValue = requestParam.defaultValue();
+			if (defaultValue != null) {
 				try {
-					piR = Task.setValue(parameters, pI, p, findAny.get().getValue());
-				} catch (final NumberFormatException e) {
-					throw new ParsingRequestParamException(p.getName() + STU.EQUALS + findAny.get().getValue(),
+					return Task.setValue(parameters, pI, p, defaultValue);
+				} catch (final Exception e) {
+					throw new FormPairParseException(p.getName() + " = " + defaultValue,
 							HttpStatusEnum.HTTP_400.getStatus());
 				}
-			} else {
-				final String defaultValue = p.getAnnotation(ZRequestParam.class).defaultValue();
-				if (defaultValue != null) {
-					try {
-						piR = Task.setValue(parameters, pI, p, defaultValue);
-					} catch (final Exception e) {
-						e.printStackTrace();
-						throw new FormPairParseException(p.getName() + " = " + defaultValue,
-								HttpStatusEnum.HTTP_400.getStatus());
-					}
-				}
 			}
-
-		} else {
-			final byte[] body = request.getBody();
-			if (AU.isEmpty(body)) {
-				final String defaultValue = p.getAnnotation(ZRequestParam.class).defaultValue();
-				if (defaultValue != null) {
-					try {
-						piR = Task.setValue(parameters, pI, p, defaultValue);
-					} catch (final Exception e) {
-						throw new FormPairParseException(p.getName() + " = " + defaultValue,
-								HttpStatusEnum.HTTP_400.getStatus());
-					}
-					return piR;
-				}
-				throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在",
-						HttpStatusEnum.HTTP_400.getStatus());
-			}
-
-			final List<FormData> fdList = HttpRequestParser.readFileFormData(request.getOriginalRequestBytes(),
-					request.getContentType(), request.getBoundary());
-			if (CU.isEmpty(fdList)) {
-				throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在",
-						HttpStatusEnum.HTTP_400.getStatus());
-			}
-
-			final Optional<FormData> findAny = fdList.stream()
-					// FIXME 2024年12月21日 下午10:05:21 zhangzhen : 这个是isEmpty？是当时手误写错了？记得debug看下
-					.filter(f -> STU.isEmpty(f.getFileName()))
-					.filter(f -> f.getName().equals(p.getName()))
-					.findAny();
-			if (!findAny.isPresent()) {
-
-				throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在",
-						HttpStatusEnum.HTTP_400.getStatus());
-			}
-
-			piR = Task.setValue(parameters, pI, p, findAny.get().getValue());
+			throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在",
+					HttpStatusEnum.HTTP_400.getStatus());
 		}
-		return piR;
+
+		final List<FormData> fdList = HttpRequestParser.readFileFormData(request.getOriginalRequestBytes(),
+				request.getContentType(), request.getBoundary());
+		if (CU.isEmpty(fdList)) {
+			throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在",
+					HttpStatusEnum.HTTP_400.getStatus());
+		}
+
+		final Optional<FormData> findAny = fdList.stream()
+				// FIXME 2024年12月21日 下午10:05:21 zhangzhen : 这个是isEmpty？是当时手误写错了？记得debug看下
+				.filter(f -> STU.isEmpty(f.getFileName()))
+				.filter(f -> f.getName().equals(p.getName()))
+				.findAny();
+		if (!findAny.isPresent()) {
+
+			throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在",
+					HttpStatusEnum.HTTP_400.getStatus());
+		}
+
+		return Task.setValue(parameters, pI, p, findAny.get().getValue());
+	}
+
+	private static RequestParam findRequestParam(final Parameter p, final List<RequestParam> paramlist) {
+		for (final RequestParam requestParam : paramlist) {
+			if(requestParam.getName().equals(p.getName())) {
+				return requestParam;
+			}
+		}
+
+		return null;
 	}
 
 	private static void checkZValidated(final Parameter p, final Object object) {

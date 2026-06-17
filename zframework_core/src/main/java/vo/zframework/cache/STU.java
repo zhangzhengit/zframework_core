@@ -39,6 +39,8 @@ public class STU {
 	public static final String SAPCE = " ";
 	public static final char SPACE_CHAR = ' ';
 	public static final char Q_CHAR = '?';
+	public static final String Q = String.valueOf(Q_CHAR);
+	public static final int Q_LENGTH = Q.length();
 	public static final byte Q_BYTE = Q_CHAR;
 	public static final byte SPACE_BYTE = SPACE_CHAR;
 

@@ -4,12 +4,11 @@ import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 import vo.zframework.cache.AU;
@@ -18,7 +17,6 @@ import vo.zframework.cache.CU;
 import vo.zframework.cache.STU;
 import vo.zframework.configuration.ServerConfigurationProperties;
 import vo.zframework.enums.ConnectionEnum;
-import vo.zframework.enums.MethodEnum;
 import vo.zframework.http.ZCookie;
 
 /**
@@ -86,7 +84,7 @@ public class ZRequest {
 	 */
 	String path;
 
-	Set<RequestParam> paramSet;
+	List<RequestParam> params;
 
 	/**
 	 * http版本
@@ -433,7 +431,7 @@ public class ZRequest {
 	public Object getParameter(final String name) {
 		// FIXME 2024年12月9日 下午6:30:42 zhangzhen : 这个方法是否要改
 		// 因为@ZRequestParam加入了默认值，用此方法取还是原值而非默认值
-		final Set<RequestParam> ps = this.getParamSet();
+		final List<RequestParam> ps = this.getParams();
 		if (CU.isEmpty(ps)) {
 			return null;
 		}
@@ -559,12 +557,9 @@ public class ZRequest {
 
 		final String requestURI = requestLine.substring(methodIndex  + 1, pathI);
 
-		final int wenI = requestURI.indexOf("?");
-		if (wenI > -1) {
-			request.queryString = requestURI.substring(("?".length() + wenI) - 1);
-			final Set<RequestParam> paramSet = new HashSet<>();
-			final String param = requestURI.substring("?".length() + wenI);
-			final String simplePath = requestURI.substring(0,wenI);
+		final int wI = requestURI.indexOf(STU.Q);
+		if (wI > -1) {
+			final String simplePath = requestURI.substring(0, wI);
 
 			try {
 				request.path = java.net.URLDecoder.decode(simplePath, Task.DEFAULT_CHARSET_NAME);
@@ -572,27 +567,17 @@ public class ZRequest {
 				e.printStackTrace();
 			}
 
-			final String[] paramArray = param.split(Task.SP);
-			for (final String p : paramArray) {
-				final String[] p0 = p.split(STU.EQUALS);
-				final ZRequest.RequestParam requestParam = new ZRequest.RequestParam();
-				requestParam.setName(p0[0]);
-				if (p0.length >= 2) {
-					try {
-						final String v = STU.isEmpty(p0[1]) ? STU.EMPTY
-								: java.net.URLDecoder.decode(p0[1], Task.DEFAULT_CHARSET_NAME);
-						requestParam.setValue(v);
-					} catch (final UnsupportedEncodingException e) {
-						e.printStackTrace();
-					}
-				} else {
-					requestParam.setValue(STU.EMPTY);
-				}
+			request.queryString = requestURI.substring((wI + STU.Q_LENGTH) - 1);
+			final String paramS = requestURI.substring(wI + STU.Q_LENGTH);
 
-				paramSet.add(requestParam);
+			final String[] pa = paramS.split(Task.SP);
+			final List<RequestParam> params = new ArrayList<>(pa.length);
+			for (final String param : pa) {
+				final ZRequest.RequestParam requestParam = hParam(param);
+				params.add(requestParam);
 			}
 
-			request.paramSet = paramSet;
+			request.params = params;
 
 		} else {
 			try {
@@ -602,6 +587,24 @@ public class ZRequest {
 			}
 		}
 		return requestURI;
+	}
+
+	private static ZRequest.RequestParam hParam(final String param) {
+		final String[] p0 = param.split(STU.EQUALS);
+		final ZRequest.RequestParam requestParam = new ZRequest.RequestParam();
+		requestParam.setName(p0[0]);
+		if (p0.length >= 2) {
+			try {
+				final String v = STU.isEmpty(p0[1]) ? STU.EMPTY
+						: java.net.URLDecoder.decode(p0[1], Task.DEFAULT_CHARSET_NAME);
+				requestParam.setValue(v);
+			} catch (final UnsupportedEncodingException e) {
+				e.printStackTrace();
+			}
+		} else {
+			requestParam.setValue(STU.EMPTY);
+		}
+		return requestParam;
 	}
 
 	private static void parseHost(final String line, final ZRequest request) {
@@ -774,8 +777,8 @@ public class ZRequest {
 		return this.path;
 	}
 
-	public Set<RequestParam> getParamSet() {
-		return this.paramSet;
+	public List<RequestParam> getParams() {
+		return this.params;
 	}
 
 	public String getVersion() {

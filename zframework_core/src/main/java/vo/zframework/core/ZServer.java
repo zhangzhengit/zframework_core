@@ -210,7 +210,8 @@ public class ZServer {
 		request.setTf(pd.getTf());
 
 		final ZRMethod zrMethod = pd.getZrMethod();
-		if (zrMethod.hasZRequestParam() || zrMethod.hasZMultipartFile()) {
+		if (zrMethod.hasZMultipartFile()) {
+			// FIXME 2026年6月18日 05:22:38 zhangzhen : 即使判断了if了 toByteArray仍是内存热点，要不要继续改为偏移量？
 			request.setOriginalRequestBytes(array.toByteArray());
 		}
 
