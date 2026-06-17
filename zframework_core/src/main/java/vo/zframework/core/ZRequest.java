@@ -591,19 +591,25 @@ public class ZRequest {
 
 	private static ZRequest.RequestParam hParam(final String param) {
 		final String[] p0 = param.split(STU.EQUALS);
+
 		final ZRequest.RequestParam requestParam = new ZRequest.RequestParam();
 		requestParam.setName(p0[0]);
+
 		if (p0.length >= 2) {
-			try {
-				final String v = STU.isEmpty(p0[1]) ? STU.EMPTY
-						: java.net.URLDecoder.decode(p0[1], Task.DEFAULT_CHARSET_NAME);
-				requestParam.setValue(v);
-			} catch (final UnsupportedEncodingException e) {
-				e.printStackTrace();
+
+			if (STU.isEmpty(p0[1])) {
+				requestParam.setValue(STU.EMPTY);
+			} else {
+
+				try {
+					final String value = java.net.URLDecoder.decode(p0[1], Task.DEFAULT_CHARSET_NAME);
+					requestParam.setValue(value);
+				} catch (final UnsupportedEncodingException e) {
+					e.printStackTrace();
+				}
 			}
-		} else {
-			requestParam.setValue(STU.EMPTY);
 		}
+
 		return requestParam;
 	}
 
