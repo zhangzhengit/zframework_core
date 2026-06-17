@@ -21,10 +21,20 @@ import java.lang.annotation.Target;
 @Target({ ElementType.PARAMETER })
 public @interface ZRequestParam {
 
+	public static final String DEFAULT_NONE = "本字段表示未设置值_NONE_36262b18-c19c-4887-9d38-ad817da1efe7_这是一个UUID";
+
 	/**
 	 * 给的初始默认值，如果接口没传此值，则使用默认值
 	 *
 	 * @return
 	 */
-	String defaultValue();
+	String defaultValue() default DEFAULT_NONE;
+
+	/**
+	 * 是否必填
+	 *
+	 * @return
+	 */
+	boolean required() default true;
+
 }

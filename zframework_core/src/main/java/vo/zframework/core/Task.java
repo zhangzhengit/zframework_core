@@ -502,8 +502,14 @@ public class Task {
 	private static void closeZMFInputStreamAndDeleteTempFile(final Object[] arraygP) throws IOException {
 
 		for (int i = arraygP.length - 1; i >= 0; i--) {
-			if (ZMultipartFile.class.equals(arraygP[i].getClass())) {
-				final ZMultipartFile file = (ZMultipartFile) arraygP[i];
+			final Object p = arraygP[i];
+			if (p == null) {
+				// 可能是 @ZRequestParam 参数，可能是null
+				continue;
+			}
+
+			if (ZMultipartFile.class.equals(p.getClass())) {
+				final ZMultipartFile file = (ZMultipartFile) p;
 				try (final InputStream inputStream2 = file.getInputStream()) {
 				}
 
@@ -803,7 +809,16 @@ public class Task {
 						HttpStatusEnum.HTTP_400.getStatus());
 			}
 
-			final Object value = rp.getValue() != null ? rp.getValue() : requestParam.defaultValue();
+
+			final Object value = rp.getValue() != null ? rp.getValue() :
+					(ZRequestParam.DEFAULT_NONE.equals(requestParam.defaultValue())) ? null
+							: requestParam.defaultValue();
+
+			if (requestParam.required() && (value == null)) {
+				throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在",
+						HttpStatusEnum.HTTP_400.getStatus());
+			}
+
 			try {
 				return Task.setValue(parameters, pI, p, value);
 			} catch (final NumberFormatException e) {
@@ -920,28 +935,44 @@ public class Task {
 		final Class<?> parameterType = parameter.getType();
 		final AtomicInteger nI = new AtomicInteger(pI);
 		if (parameterType == Byte.class) {
-			parameters[nI.getAndIncrement()] = Byte.valueOf(
+			parameters[nI.getAndIncrement()] =
+					value == null ? null :
+					Byte.valueOf(
 					value instanceof String ? (String)value : String.valueOf(value));
 		} else if (parameterType == Short.class) {
-			parameters[nI.getAndIncrement()] = Short.valueOf(
+			parameters[nI.getAndIncrement()] =
+					value == null ? null :
+					Short.valueOf(
 					value instanceof String ? (String)value : String.valueOf(value));
 		} else if (parameterType == Integer.class) {
-			parameters[nI.getAndIncrement()] = Integer.valueOf(
+			parameters[nI.getAndIncrement()] =
+					value == null ? null :
+					Integer.valueOf(
 					value instanceof String ? (String)value : String.valueOf(value));
 		} else if (parameterType == Long.class) {
-			parameters[nI.getAndIncrement()] = Long.valueOf(
+			parameters[nI.getAndIncrement()] =
+					value == null ? null :
+					Long.valueOf(
 					value instanceof String ? (String)value : String.valueOf(value));
 		} else if (parameterType == Float.class) {
-			parameters[nI.getAndIncrement()] = Float.valueOf(
+			parameters[nI.getAndIncrement()] =
+					value == null ? null :
+					Float.valueOf(
 					value instanceof String ? (String)value : String.valueOf(value));
 		} else if (parameterType == Double.class) {
-			parameters[nI.getAndIncrement()] = Double.valueOf(
+			parameters[nI.getAndIncrement()] =
+					value == null ? null :
+					Double.valueOf(
 					value instanceof String ? (String)value : String.valueOf(value));
 		} else if (parameterType == Character.class) {
-			parameters[nI.getAndIncrement()] = Character.valueOf((
+			parameters[nI.getAndIncrement()] =
+					value == null ? null :
+					Character.valueOf((
 					value instanceof String ? (String)value : String.valueOf(value)).charAt(0));
 		} else if (parameterType == Boolean.class) {
-			parameters[nI.getAndIncrement()] = Boolean.valueOf(
+			parameters[nI.getAndIncrement()] =
+					value == null ? null :
+					Boolean.valueOf(
 					value instanceof String ? (String)value : String.valueOf(value));
 		} else {
 			parameters[nI.getAndIncrement()] = value;
