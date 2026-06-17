@@ -375,9 +375,9 @@ public class ServerConfigurationProperties {
 	private boolean showHttpHeader = false;
 
 	public boolean compressionContains(final String contentType) {
-		final String[] a = this.getCompressionType();
-		for (final String string : a) {
-			if (string.equals(contentType)) {
+		final String[] cta = this.getCompressionType();
+		for (final String ct : cta) {
+			if (contentType.startsWith(ct)) {
 				return true;
 			}
 		}
