@@ -52,6 +52,7 @@ public class ZRMethod {
 	/**
 	 * method 返回类型是否String
 	 */
+	// FIXME 2026年6月18日 07:30:21 zhangzhen : 想过但是又否定了：就是严格匹配String，不要其他的StringBuilder/buffer/CharSequence等等
 	private final boolean isRTString;
 
 	/**
@@ -323,7 +324,7 @@ public class ZRMethod {
 	}
 
 	public boolean isRTPrimitiveType() {
-		return isRTPrimitiveType;
+		return this.isRTPrimitiveType;
 	}
 
 }
