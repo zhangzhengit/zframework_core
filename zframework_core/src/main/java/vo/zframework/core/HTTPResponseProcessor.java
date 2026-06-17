@@ -113,11 +113,10 @@ public class HTTPResponseProcessor {
 	public static void setCacheControl(final ZResponse response) {
 
 		final ZCacheControl cacheControl = PDTL.get().getZrMethod().getCacheControl();
-		if (cacheControl == null) {
-			return;
+		if (cacheControl != null) {
+			response.header(HeaderEnum.CACHE_CONTROL.getNameBytes(), PDTL.get().getZrMethod().getCacheControlVStringBytes());
 		}
 
-		response.header(HeaderEnum.CACHE_CONTROL.getNameBytes(), PDTL.get().getZrMethod().getCacheControlVStringBytes());
 	}
 
 	// FIXME 2026年5月25日 14:42:26 zhangzhen : 注意：这个不要删，黄了也不删，这是以前打算过的功能，
