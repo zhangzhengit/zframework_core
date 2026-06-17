@@ -36,6 +36,7 @@ public class ZRequest {
 	public static final byte[] HTTP_11_BYTES = HTTP_11.getBytes();
 	public static final String BOUNDARY = "boundary=";
 	private static final char SPACE = STU.SPACE_CHAR;
+	private static final ZCookie[] EMPTY_ZCOOKIE = {};
 	private static final String HEADER_PARSED_NO_VALUE = "\u0000" + "\0" + "PARSED_NO_VALUE" + UUID.randomUUID();
 	private static final int HEADER_PARSED_NO_VALUE_LENGTH = HEADER_PARSED_NO_VALUE.length();
 	public static final ServerConfigurationProperties SERVERCONFIGURATIONPROPERTIES = ZContext
@@ -298,29 +299,58 @@ public class ZRequest {
 	}
 
 	public ZCookie getCookie(final String name) {
-		final ZCookie[] cs = this.getCookies();
-		for (final ZCookie zCookie : cs) {
-			if (zCookie.getName().equals(name)) {
-				return zCookie;
-			}
-		}
-
-		return null;
+		return this.gcn(name);
 	}
 
 	public ZCookie[] getCookies() {
 
 		if (this.cookies == null) {
-			this.cookies = this.gc();
+			this.cookies = this.gcs();
 		}
 
 		return this.cookies;
 	}
 
-	private ZCookie[] gc() {
+	private ZCookie gcn(final String cookieName) {
+		final String cookieString = this.getHeader(HeaderEnum.COOKIE.getName());
+		if (STU.isEmpty(cookieString)) {
+			return null;
+		}
+
+		final int nI = cookieString.indexOf(cookieName);
+		if (nI <= -1) {
+			return null;
+		}
+
+		final int dI = cookieString.indexOf("=", nI + cookieName.length());
+		if (dI <= -1) {
+			return null;
+		}
+
+		final int fI = cookieString.indexOf(";", dI + 1);
+		if (fI <= -1) {
+			if (cookieString.length() > dI) {
+				final String substring = cookieString.substring(nI);
+				final String[] c1 = substring.split(STU.EQUALS);
+				final ZCookie zCookie = new ZCookie(c1[0].trim(), c1[1].trim());
+				return zCookie;
+			}
+			if (cookieString.length() == dI) {
+				return null;
+			}
+		}
+
+		final String substring = cookieString.substring(nI, fI);
+		final String[] c1 = substring.split(STU.EQUALS);
+		final ZCookie zCookie = new ZCookie(c1[0].trim(), c1[1].trim());
+
+		return zCookie;
+	}
+
+	private ZCookie[] gcs() {
 		final String cookisString = this.getHeader(HeaderEnum.COOKIE.getName());
 		if (STU.isEmpty(cookisString)) {
-			return new ZCookie[0];
+			return EMPTY_ZCOOKIE;
 		}
 
 		final int si = cookisString.indexOf(STU.SEMICOLON);
@@ -350,18 +380,7 @@ public class ZRequest {
 	}
 
 	public ZCookie getZSESSIONID() {
-		final ZCookie[] cookies = this.getCookies();
-		if (AU.isEmpty(cookies)) {
-			return null;
-		}
-
-		for (final ZCookie zCookie : cookies) {
-			if(HeaderEnum.Z_SESSION_ID.getName().equals(zCookie.getName())) {
-				return zCookie;
-			}
-		}
-
-		return null;
+		return this.gcn(HeaderEnum.Z_SESSION_ID.getName());
 	}
 
 	public String getUserAgent() {

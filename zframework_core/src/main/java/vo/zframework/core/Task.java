@@ -602,33 +602,21 @@ public class Task {
 
 			final Class<?> pType = p.getType();
 
-			final ZCookieValue cookieValue = RU.getAnnotation(p, ZCookieValue.class);
+			final ZCookieValue zcv = RU.getAnnotation(p, ZCookieValue.class);
+			if (zcv != null) {
+				final String cookieName = STU.isEmpty(zcv.name()) ? p.getName() : zcv.name();
+				final ZCookie ck = request.getCookie(cookieName);
+				if ((ck == null) && zcv.required()) {
+					final String message = "请求方法[" + path + "]缺少名为[" + cookieName + "]的Cookie";
+					throw new FormPairParseException(message, HttpStatusEnum.HTTP_400.getStatus());
+				}
 
-			if (cookieValue!=null) {
-				final String cookieName = STU.isEmpty(cookieValue.name()) ? p.getName() : cookieValue.name();
-				final ZCookie[] cookies = request.getCookies();
-				final String message = "请求方法[" + path + "]缺少名为[" + cookieName + "]的Cookie";
-				if (AU.isEmpty(cookies)) {
-					if (cookieValue.required()) {
-						throw new FormPairParseException(message, HttpStatusEnum.HTTP_400.getStatus());
-					}
-				} else {
-
-					final Optional<ZCookie> c = Arrays.stream(cookies)
-							.filter(cookie -> Objects.equals(cookie.getName(), cookieName)).findAny();
-					if (c.isPresent()) {
-						if (pType == String.class) {
-							parameters[pI] = c.get().getValue();
-							pI++;
-						} else if (pType == ZCookie.class) {
-							parameters[pI] = c.get();
-							pI++;
-						}
-					} else {
-						if (cookieValue.required()) {
-							throw new FormPairParseException(message, HttpStatusEnum.HTTP_400.getStatus());
-						}
-						parameters[pI] = null;
+				if (ck != null) {
+					if (pType == String.class) {
+						parameters[pI] = ck.getValue();
+						pI++;
+					} else if (pType == ZCookie.class) {
+						parameters[pI] = ck;
 						pI++;
 					}
 				}
