@@ -5,7 +5,10 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 import vo.log.core.ZLog2;
@@ -17,6 +20,7 @@ import vo.zframework.compression.ZSTD;
 import vo.zframework.configuration.ServerConfigurationProperties;
 import vo.zframework.enums.ConnectionEnum;
 import vo.zframework.enums.TransferEncodingEnum;
+import vo.zframework.http.ByteArrayKeyWrapper;
 import vo.zframework.http.HttpStatusEnum;
 import vo.zframework.http.ZCookie;
 
@@ -76,10 +80,16 @@ import vo.zframework.http.ZCookie;
 // 或者用户实现特殊需求，比如某些接口响应某些header，可以覆盖某个方法来很简单的实现
 public class ZResponse {
 
+	private final static ZLog2 LOG = ZLog2.getInstance();
 
-	static ZLog2 LOG = ZLog2.getInstance();
+	private final BufferedOutputStream bufferedOutputStream = SocketTL.get().getBufferedOutputStream();
 
-	private static final int DEFAULT_HEADERS_COUNT = 16;
+	private final ZArray array = SocketTL.get().getArray();
+
+	/**
+	 * 放header
+	 */
+	private final Map<ByteArrayKeyWrapper, byte[]> headerMap = SocketTL.get().getHeaderMap();
 
 	private static final byte[] CRLF_BYTES = STU.CRLF_BYTES;
 
@@ -105,7 +115,7 @@ public class ZResponse {
 	private static final byte[] HTTP_1_1_BYTES = HTTP_1_1.getBytes();
 
 	public final static int RESPONSE_ARRAY_CAPACITY = SERVER_CONFIGURATIONPROPERTIES.getResponseArrayCapacity();
-	public final static int HEADER_ARRAY_CAPACITY = (RESPONSE_ARRAY_CAPACITY / 4) * 3;
+	public final static int HEADER_MAP_CAPACITY = 16;
 
 	/**
 	 * write 方法是否执行过
@@ -117,10 +127,10 @@ public class ZResponse {
 	private final AtomicReference<Integer> httpStatus = new AtomicReference<>(HttpStatusEnum.HTTP_200.getStatus());
 	private boolean contentTypeHasBeenSet = false;
 
-	private final BufferedOutputStream bufferedOutputStream = SocketTL.get().getBufferedOutputStream();
-
-	private final ZArray array = SocketTL.get().getArray();
-	private final ZArray headerArray = SocketTL.get().gethArray();
+	/**
+	 * 与headerMap分开，本属性专门存放Set-Cookie头，因为此头可以重复，且响应多个Cookie的话必须重复
+	 */
+	private ZArray cookieArray = null;
 
 	private ConnectionEnum connectionEnum;
 
@@ -202,38 +212,34 @@ public class ZResponse {
 	}
 
 	public ZResponse cookie(final String name,final String value) {
-		this.header(HeaderEnum.SET_COOKIE.getNameBytes(), (name + STU.EQUALS + value).getBytes());
+
+		if (this.cookieArray == null) {
+			this.cookieArray = new ZArray(512);
+		}
+
+		this.cookieArray.add(HeaderEnum.SET_COOKIE.getNameBytes());
+		this.cookieArray.add(STU.COLON_BYTES);
+		this.cookieArray.add(name.getBytes());
+		this.cookieArray.add(STU.EQUALS_BYTES);
+		this.cookieArray.add(value.getBytes());
+		this.cookieArray.add(STU.CRLF_BYTES);
+
 		return this;
 	}
 
 	public boolean containsHeader(final String header) {
-		final byte[] hb = header.getBytes();
+		return this.containsHeader(header.getBytes());
+	}
 
-		final int i = AU.search(this.headerArray.getRawArray(), this.headerArray.length(), hb, 1, 0);
-
-		if (i > -1) {
-			final int ci = AU.search(this.headerArray.getRawArray(), this.headerArray.length(), STU.COLON_C_BYTES, 1,
-					i + hb.length);
-			if (ci > -1) {
-				final int crlfi = AU.search(this.headerArray.getRawArray(), this.headerArray.length(), STU.CRLF_BYTES,
-						1, ci + 1);
-
-				if (crlfi > -1) {
-					return true;
-				}
-
-			}
-		}
-
-		return false;
+	public boolean containsHeader(final byte[] headerBytes) {
+		final ByteArrayKeyWrapper keyWrapper = new ByteArrayKeyWrapper(headerBytes);
+		return this.headerMap.containsKey(keyWrapper);
 	}
 
 	public ZResponse header(final ZHeader zHeader) {
 
-		this.headerArray.add(zHeader.getNameBytes());
-		this.headerArray.add(STU.COLON_C_BYTES);
-		this.headerArray.add(zHeader.getValueBytes());
-		this.headerArray.add(STU.CRLF_BYTES);
+		final byte[] vbs = AU.concat(zHeader.getValueBytes(), STU.CRLF_BYTES);
+		this.headerMap.put(new ByteArrayKeyWrapper(zHeader.getNameBytes()), vbs);
 
 		this.setConnection(zHeader);
 
@@ -250,9 +256,6 @@ public class ZResponse {
 		}
 	}
 
-	// FIXME 2026年6月17日 01:17:46 zhangzhen ：header方法实现的还不行，应该使用Map来放用写好的BAKW类
-	// 这样就直接put就行，就是简单的[后面覆盖前面]的逻辑，也不需要判断哪些允许重复以及重复了如何合并等问题，
-	// 并对于特殊的Set-Cookie头的cookie方法也要修改合并的逻辑
 	public ZResponse header(final byte[] nameBytes,final byte[] valueBytes) {
 		if (Arrays.equals(HeaderEnum.CONTENT_TYPE.getNameBytes(), nameBytes)) {
 			throw new IllegalArgumentException(HeaderEnum.CONTENT_TYPE.getName() + " 使用 contentType 方法来设置");
@@ -364,7 +367,7 @@ public class ZResponse {
 
 		this.write = true;
 
-		this.resetZArray();
+		ZResponse.reset();
 
 		try {
 			bufferedInputStream.close();
@@ -379,19 +382,8 @@ public class ZResponse {
 
 	}
 
-	private void resetZArray() {
-		if (this.array.length() >= RESPONSE_ARRAY_CAPACITY) {
-			this.array.reset(RESPONSE_ARRAY_CAPACITY);
-		} else {
-			this.array.reset();
-		}
-
-		if (this.headerArray.length() >= (HEADER_ARRAY_CAPACITY)) {
-			this.headerArray.reset(HEADER_ARRAY_CAPACITY);
-		} else {
-			this.headerArray.reset();
-		}
-
+	private static void reset() {
+		SocketTL.get().reset();
 	}
 
 	/**
@@ -527,7 +519,19 @@ public class ZResponse {
 	 * 写入header部分
 	 */
 	private void addHeaders() {
-		this.arrayAdd(this.headerArray.getRawArray(),0,this.headerArray.length());
+
+		final Set<Entry<ByteArrayKeyWrapper, byte[]>> es = this.headerMap.entrySet();
+		for (final Entry<ByteArrayKeyWrapper, byte[]> entry : es) {
+			final ByteArrayKeyWrapper kw = entry.getKey();
+			this.arrayAdd(kw.getBytes());
+			this.arrayAdd(STU.COLON_BYTES);
+			this.arrayAdd(entry.getValue());
+		}
+
+		if (this.cookieArray != null) {
+			this.arrayAdd(this.cookieArray.getRawArray(), 0, this.cookieArray.length());
+		}
+
 		this.arrayAdd(CRLF_BYTES);
 	}
 
@@ -626,7 +630,7 @@ public class ZResponse {
 
 		this.write = true;
 
-		this.resetZArray();
+		ZResponse.reset();
 
 		ZResponseStatus.written();
 
@@ -737,10 +741,6 @@ public class ZResponse {
 		}
 
 		return null;
-	}
-
-	public static int getDefaultHeadersCount() {
-		return DEFAULT_HEADERS_COUNT;
 	}
 
 }

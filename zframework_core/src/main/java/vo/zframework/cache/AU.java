@@ -122,4 +122,26 @@ public class AU {
 		return null;
 	}
 
+	/**
+	 * 多个byte[]合并为一个
+	 *
+	 * @param bs
+	 * @return
+	 */
+	public static byte[] concat(final byte[]... bs) {
+		int length = 0;
+		for (final byte[] b : bs) {
+			length += b.length;
+		}
+
+		final byte[] r = new byte[length];
+		int i = 0;
+		for (final byte[] b : bs) {
+			System.arraycopy(b, 0, r, i, b.length);
+			i += b.length;
+		}
+
+		return r;
+	}
+
 }

@@ -3,8 +3,10 @@ package vo.zframework.core;
 import java.io.BufferedOutputStream;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
+
+import vo.zframework.http.ByteArrayKeyWrapper;
 
 /**
  *
@@ -25,13 +27,9 @@ public class SO {
 	private final ZArray array = new ZArray(ZResponse.RESPONSE_ARRAY_CAPACITY);
 
 	/**
-	 * 本属性是为了消除ZResponse中HeaderList的，似乎没必要在放入ZArray之前先放入List，
-	 * 但是改了一下，由于当前ZResponse建造模式没有指定方法顺序，所以直接把header()方法改为放入array不好处理，
-	 * 很可能顺序是乱的，因为调用header()方法时还没调用httpStatus方法，ZArray也没有insert的功能
-	 * 同时，把headerList改为和上面的array一样在连接内复用但List又没有reset的方法，也不好处理，
-	 * 所以再加一个ZArray对象专门放header
+	 * 存放header
 	 */
-	private final ZArray headerArray = new ZArray(ZResponse.HEADER_ARRAY_CAPACITY);
+	private  Map<ByteArrayKeyWrapper, byte[]> headerMap = new HashMap<>(ZResponse.HEADER_MAP_CAPACITY, 1F);
 
 	public SO(final Socket socket, final OutputStream outputStream, final BufferedOutputStream bufferedOutputStream) {
 		this.socket = socket;
@@ -55,8 +53,23 @@ public class SO {
 		return this.array;
 	}
 
-	public ZArray gethArray() {
-		return this.headerArray;
+	public Map<ByteArrayKeyWrapper, byte[]> getHeaderMap() {
+		return this.headerMap;
+	}
+
+	public void reset() {
+		if (this.array.length() >= ZResponse.RESPONSE_ARRAY_CAPACITY) {
+			this.array.reset(ZResponse.RESPONSE_ARRAY_CAPACITY);
+		} else {
+			this.array.reset();
+		}
+
+		if (this.headerMap.size() > ZResponse.HEADER_MAP_CAPACITY) {
+			this.headerMap = new HashMap<>(ZResponse.HEADER_MAP_CAPACITY, 1F);
+		} else {
+			this.headerMap.clear();
+		}
+
 	}
 
 }
