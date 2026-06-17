@@ -53,6 +53,12 @@ public class ZRMethod {
 	 * method 返回类型是否String
 	 */
 	private final boolean isRTString;
+
+	/**
+	 * method 返回类型是否基本类型(包含包装类型)
+	 */
+	private final boolean isRTPrimitiveType;
+
 	/**
 	 * method是否存在 @ZResponseBody注解
 	 */
@@ -83,6 +89,11 @@ public class ZRMethod {
 
 	private final ZRequestMapping zRequestMapping;
 
+	/**
+	 * @param method
+	 * @param ctEnum
+	 * @param zcObject
+	 */
 	public ZRMethod(final Method method, final CTEnum ctEnum, final Object zcObject) {
 
 		this.method = method;
@@ -120,6 +131,9 @@ public class ZRMethod {
 
 		this.isVoid = method.getReturnType() == void.class;
 		this.isRTString = method.getReturnType().getName().equals(STRING_NAME);
+
+		this.isRTPrimitiveType = ZRMethod.isPT(method.getReturnType().getName());
+
 		this.hasResponseBody = method.isAnnotationPresent(ZResponseBody.class);
 		if (this.produces.length > 0) {
 			this.ctea = new ContentTypeEnum[this.produces.length];
@@ -138,6 +152,30 @@ public class ZRMethod {
 		}
 
 		this.ctEnum = ctEnum;
+	}
+
+	private static boolean isPT(final String mRTN) {
+		if (mRTN.equals(Byte.class.getCanonicalName())
+		|| "byte".equals(mRTN)
+		|| mRTN.equals(Short.class.getCanonicalName())
+		|| "short".equals(mRTN)
+		|| mRTN.equals(Integer.class.getCanonicalName())
+		|| "int".equals(mRTN)
+		|| mRTN.equals(Long.class.getCanonicalName())
+		|| "long".equals(mRTN)
+		|| mRTN.equals(Float.class.getCanonicalName())
+		|| "float".equals(mRTN)
+		|| mRTN.equals(Double.class.getCanonicalName())
+		|| "double".equals(mRTN)
+		|| mRTN.equals(Character.class.getCanonicalName())
+		|| "char".equals(mRTN)
+		|| mRTN.equals(Boolean.class.getCanonicalName())
+		|| "boolean".equals(mRTN)
+				) {
+			return true;
+		}
+
+		return false;
 	}
 
 	private String gCCVS() {
@@ -282,6 +320,10 @@ public class ZRMethod {
 
 	public ZLastModified getLastModified() {
 		return this.lastModified;
+	}
+
+	public boolean isRTPrimitiveType() {
+		return isRTPrimitiveType;
 	}
 
 }

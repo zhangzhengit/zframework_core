@@ -269,14 +269,13 @@ public class Task {
 		}
 
 		// 第4优先：@ZRestCon还是@ZCon注解,ZC则默认为html名称，
-		// ZRC则区分returnType为String则CT为text/plain，其他一律json
+		// ZRC则区分returnType为String/基本类型则CT为text/plain，其他一律json
 		final CTEnum ctEnum = zrMethod.getCtEnum();
-		// 响应 html
-		if (ctEnum == CTEnum.NORMAL ) {
+		if (ctEnum == CTEnum.NORMAL) {
 			return responseHtml(r);
 		}
 
-		if ((ctEnum == CTEnum.REST) && zrMethod.isRTString()) {
+		if ((ctEnum == CTEnum.REST) && (zrMethod.isRTString() || zrMethod.isRTPrimitiveType())) {
 			return responseTextPlain(r);
 		}
 
