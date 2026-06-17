@@ -298,6 +298,13 @@ public class ServerConfigurationProperties {
 	private String staticPrefix = "/static";
 
 	/**
+	 * 在读完了请求后，立即解析的请求头
+	 */
+	@ZNotEmtpy
+	// FIXME 2026年6月18日 04:31:38 zhangzhen : 这个记得用上，现在还没用上
+	private String immediatelyParsedRequestHeaders = "Host,Expect,Upgrade,Connection,Content-Length,Transfer-Encoding";
+
+	/**
 	 * 是否开启对响应body的压缩
 	 */
 	@ZNotNull
@@ -451,6 +458,14 @@ public class ServerConfigurationProperties {
 
 	public void setStaticResourceCacheEnable(final boolean staticResourceCacheEnable) {
 		this.staticResourceCacheEnable = staticResourceCacheEnable;
+	}
+
+	public String getImmediatelyParsedRequestHeaders() {
+		return this.immediatelyParsedRequestHeaders;
+	}
+
+	public void setImmediatelyParsedRequestHeaders(final String immediatelyParsedRequestHeaders) {
+		this.immediatelyParsedRequestHeaders = immediatelyParsedRequestHeaders;
 	}
 
 	public String getScanPackage() {
