@@ -262,7 +262,7 @@ public class Task {
 		// 第三优先：@ZResponseBody 注解，返回类型String则响应text/plain
 		// 否则一律application/json
 		if (zrMethod.hasResponseBody()) {
-			if (zrMethod.isRTString()) {
+			if (zrMethod.isRTString() || zrMethod.isRTPrimitiveType()) {
 				return responseTextPlain(r);
 			}
 			return responseAppJSON(r);
