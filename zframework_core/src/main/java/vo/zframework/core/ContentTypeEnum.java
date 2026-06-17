@@ -12,7 +12,7 @@ import vo.zframework.cache.J;
 public enum ContentTypeEnum {
 
 
-	TEXT_PLAIN("Content-Type: text/plain;charset=UTF-8", "text/plain","text/plain".getBytes()),
+	TEXT_PLAIN("Content-Type: text/plain;charset=UTF-8", "text/plain","text/plain;charset=UTF-8".getBytes()),
 
 	MULTIPART_FORM_DATA("Content-Type: multipart/form-data", "multipart/form-data","multipart/form-data".getBytes()),
 
