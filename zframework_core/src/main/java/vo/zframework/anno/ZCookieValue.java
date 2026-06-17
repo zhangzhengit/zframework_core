@@ -14,8 +14,6 @@ import vo.zframework.http.ZRequestParam;
  * 	为String类型时，String参数表示的Cookie的value；
  * 	为ZCookie类型时，ZCookie参数表示的Cookie对象。
  *
- * 	String name() 是必填项，表示Cookie的name
- *
  * @author zhangzhen
  * @date 2023年12月4日
  *
