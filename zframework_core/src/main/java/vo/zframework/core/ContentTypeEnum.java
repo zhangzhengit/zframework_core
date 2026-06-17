@@ -20,7 +20,7 @@ public enum ContentTypeEnum {
 
 	APPLICATION_OCTET_STREAM("Content-Type: application/octet-stream", "application/octet-stream","application/octet-stream".getBytes()),
 
-	APPLICATION_JSON("Content-Type: application/json;charset=UTF-8", "application/json","application/json".getBytes()){
+	APPLICATION_JSON("Content-Type: application/json;charset=UTF-8", "application/json","application/json;charset=UTF-8".getBytes()){
 		@Override
 		public void body(final Object r, final ZResponse rx) {
 			rx.body(J.toJSONString(r));
@@ -37,13 +37,13 @@ public enum ContentTypeEnum {
 		}
 	},
 
-	TEXT_HTML("Content-Type: text/html;charset=UTF-8", "text/html","text/html".getBytes()),
+	TEXT_HTML("Content-Type: text/html;charset=UTF-8", "text/html","text/html;charset=UTF-8".getBytes()),
 
 	AUDIO_MP3("Content-Type: audio/mp3;", "audio/mp3","audio/mp3".getBytes()),
 
 	AUDIO_WAV("Content-Type: audio/wav;", "audio/wav","audio/wav".getBytes()),
 
-	TEXT_CSS("Content-Type: text/css;", "text/css","text/css".getBytes()),
+	TEXT_CSS("Content-Type: text/css;", "text/css","text/css;charset=UTF-8".getBytes()),
 
 	IMAGE_GIF("Content-Type: image/gif;", "image/gif","image/gif".getBytes()),
 
