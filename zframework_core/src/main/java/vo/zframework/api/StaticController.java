@@ -50,7 +50,7 @@ public class StaticController {
 
 	@ZETag
 	@ZQPSLimitation(count = 2000, type = ZQPSLimitationEnum.ZSESSIONID)
-	@ZCacheControl(value = { CacheControlEnum.PRIVATE, CacheControlEnum.MUST_REVALIDATE }, maxAge = 60 * 10)
+	@ZCacheControl(value = { CacheControlEnum.PUBLIC, CacheControlEnum.MUST_REVALIDATE }, maxAge = 60 * 10)
 	public void staticResources(final ZResponse response, final ZRequest request) {
 
 		if (!checkReferer(request)) {
