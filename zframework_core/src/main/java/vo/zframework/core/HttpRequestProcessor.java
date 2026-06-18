@@ -111,7 +111,6 @@ public class HttpRequestProcessor {
 
 		if (HttpRequestProcessor.methodSupportBytes(methodBytes)) {
 			pd.setMethodNameBytes(methodBytes);
-			pd.setRequestLine(new String(requestLineBytes));
 
 			return HttpParseStatusEnum.CHECK_URI;
 		}

@@ -25,7 +25,6 @@ public class PD {
 
 	private BufferedInputStream bufferedInputStream;
 
-	private String requestLine;
 	private byte[] requestLineBytes;
 	private byte[] httpVersionBytes;
 
@@ -77,14 +76,6 @@ public class PD {
 
 	public void setParseStatusEnum(final HttpParseStatusEnum parseStatusEnum) {
 		this.parseStatusEnum = parseStatusEnum;
-	}
-
-	public String getRequestLine() {
-		return this.requestLine;
-	}
-
-	public void setRequestLine(final String requestLine) {
-		this.requestLine = requestLine;
 	}
 
 	public ZRequest getRequest() {
