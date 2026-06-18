@@ -329,25 +329,23 @@ public class ZResponse {
 			final long lastModified = (file.lastModified() / 1000) * 1000;
 			this.header(HeaderEnum.LAST_MODIFIED.getNameBytes(), ZDateUtil.gmt(new Date(lastModified)).getBytes());
 
-			// 先判断 IF_MODIFIED_SINCE
-			final String IF_MODIFIED_SINCE = request.getHeader(HeaderEnum.IF_MODIFIED_SINCE.getName());
-			if (IF_MODIFIED_SINCE != null) {
-				final long IF_MODIFIED_SINCE_TIME = ZDateUtil.toTimestampMillis(IF_MODIFIED_SINCE);
-				if (lastModified > IF_MODIFIED_SINCE_TIME) {
-					this.httpStatus(HttpStatusEnum.HTTP_304.getStatus());
-					r304 = true;
-				}
-				final int d = 10;
-			}
-
-			// 再判断 IF_NONE_MATCH
+			// 先判断 IF_NONE_MATCH
 			final String IF_NONE_MATCH = request.getHeader(HeaderEnum.IF_NONE_MATCH.getName());
 			if (IF_NONE_MATCH != null) {
 				final String eTag = ETagEnum.STRONG.handle(file.length() + "-" + file.lastModified());
-				if(eTag.equals(IF_NONE_MATCH)) {
-					final int x = 0;
+				if (eTag.equals(IF_NONE_MATCH)) {
 					this.httpStatus(HttpStatusEnum.HTTP_304.getStatus());
 					r304 = true;
+				}
+			} else {
+				// 无 IF_NONE_MATCH 再判断 IF_MODIFIED_SINCE
+				final String IF_MODIFIED_SINCE = request.getHeader(HeaderEnum.IF_MODIFIED_SINCE.getName());
+				if (IF_MODIFIED_SINCE != null) {
+					final long IF_MODIFIED_SINCE_TIME = ZDateUtil.toTimestampMillis(IF_MODIFIED_SINCE);
+					if (lastModified > IF_MODIFIED_SINCE_TIME) {
+						this.httpStatus(HttpStatusEnum.HTTP_304.getStatus());
+						r304 = true;
+					}
 				}
 			}
 
