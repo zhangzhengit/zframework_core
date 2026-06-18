@@ -342,7 +342,7 @@ public class ZResponse {
 					this.header(HeaderEnum.TRANSFER_ENCODING.getNameBytes(), TransferEncodingEnum.CHUNKED.getValueBytes());
 					this.addStatusLineAndHeaders();
 
-					this.wrieZArrayAndFlush();
+					this.writeZArrayAndFlush();
 
 				}
 
@@ -723,10 +723,10 @@ public class ZResponse {
 
 		this.addBody();
 
-		this.wrieZArrayAndFlush();
+		this.writeZArrayAndFlush();
 	}
 
-	private void wrieZArrayAndFlush() {
+	private void writeZArrayAndFlush() {
 		this.write(this.array.getRawArray(), this.array.length());
 		this.flush();
 	}
