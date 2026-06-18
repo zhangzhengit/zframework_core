@@ -27,6 +27,7 @@ public class PD {
 
 	private byte[] requestLineBytes;
 	private byte[] httpVersionBytes;
+	private byte[] requestURIBytes;
 
 	/**
 	 * http METHOD bytes
@@ -148,6 +149,14 @@ public class PD {
 
 	public void setMethodNameBytes(final byte[] methodNameBytes) {
 		this.methodNameBytes = methodNameBytes;
+	}
+
+	public byte[] getRequestURIBytes() {
+		return this.requestURIBytes;
+	}
+
+	public void setRequestURIBytes(final byte[] requestURIBytes) {
+		this.requestURIBytes = requestURIBytes;
 	}
 
 }

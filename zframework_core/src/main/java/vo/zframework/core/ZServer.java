@@ -138,6 +138,8 @@ public class ZServer {
 			final PD pd = new PD();
 			pd.setBufferedInputStream(bufferedInputStream);
 
+			PDTL.set(pd);
+
 			HttpParseStatusEnum parseStatusEnum = HttpParseStatusEnum.PARSE_REQUEST_LINE;
 
 			while (!closed) {
@@ -160,7 +162,6 @@ public class ZServer {
 				final HttpParseStatusEnum process = this.requestScheduler.process(parseStatusEnum, pd, array);
 
 				if (process == HttpParseStatusEnum.START) {
-					PDTL.set(pd);
 					response(pd.getRequest(), array, pd);
 				} else if (process == HttpParseStatusEnum.EXCEPTION) {
 					final ZResponse exception = pd.getException();

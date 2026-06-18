@@ -466,14 +466,10 @@ public class ZRequest {
 			return request;
 		}
 
-		// 0 为 请求行
-		final String requestLine = new String(request.dataRawArray,
-				request.arList.get(0).getFrom(),request.arList.get(0).getTo());
+		final String requestLine = new String(PDTL.get().getRequestLineBytes());
 		request.original = requestLine;
 
-		final int methodIndex = requestLine.indexOf(STU.SAPCE);
-
-		parsePath(requestLine, request, methodIndex);
+		parsePath(request);
 
 		parseHeader(request);
 
@@ -518,8 +514,8 @@ public class ZRequest {
 	}
 
 
-	private static void parsePath(final String requestLine, final ZRequest request, final int methodIndex) {
-		final String requestURI = parseURI(requestLine, request, methodIndex);
+	private static void parsePath(final ZRequest request) {
+		final String requestURI = parseURI(request);
 
 		try {
 			request.requestURI = java.net.URLDecoder.decode(requestURI, Task.DEFAULT_CHARSET_NAME);
@@ -528,31 +524,34 @@ public class ZRequest {
 		}
 	}
 
-	public static byte[] parsePATHBytes(final byte[] requestLineBytes) {
+	public static byte[] parseRequestURIBytes(final byte[] requestLineBytes) {
 		final int si = AU.indexOfKeyword(requestLineBytes, STU.SPACE_BYTE);
 		if (si > -1) {
 			final int s2i = AU.indexOfKeyword(requestLineBytes, si + 1, STU.SPACE_BYTE);
 			if (s2i > (si + 1)) {
-				final int wenI = AU.indexOfKeyword(requestLineBytes, si + 1, STU.Q_BYTE);
-				if (wenI > -1) {
-					final byte[] pathBytes = Arrays.copyOfRange(requestLineBytes, si + 1, wenI);
-					return pathBytes;
-				}
-
-				return Arrays.copyOfRange(requestLineBytes, si + 1, s2i);
+				final byte[] pathBytes = Arrays.copyOfRange(requestLineBytes, si + 1, s2i);
+				return pathBytes;
 			}
 		}
 
 		return null;
 	}
 
-	private static String parseURI(final String requestLine, final ZRequest request, final int methodIndex) {
-		final int pathI = requestLine.indexOf(STU.SAPCE, methodIndex + 1);
-		if (pathI <= -1) {
-			throw new IllegalArgumentException("请求行错误：找不到path");
+	public static byte[] parsePATHBytes(final byte[] requestURIBytes) {
+
+		final int wI = AU.indexOfKeyword(requestURIBytes, 0, STU.Q_BYTE);
+		if (wI > -1) {
+			final byte[] pathBytes = Arrays.copyOfRange(requestURIBytes, 0, wI);
+			return pathBytes;
 		}
 
-		final String requestURI = requestLine.substring(methodIndex  + 1, pathI);
+		return requestURIBytes;
+	}
+
+	private static String parseURI(final ZRequest request) {
+
+		final byte[] getRequestURIBytes = PDTL.get().getRequestURIBytes();
+		final String requestURI = new String(getRequestURIBytes);
 
 		final int wI = requestURI.indexOf(STU.Q);
 		if (wI > -1) {
@@ -583,6 +582,7 @@ public class ZRequest {
 				e.printStackTrace();
 			}
 		}
+
 		return requestURI;
 	}
 

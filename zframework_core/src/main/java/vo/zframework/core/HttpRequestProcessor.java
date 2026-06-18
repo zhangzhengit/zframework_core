@@ -148,7 +148,10 @@ public class HttpRequestProcessor {
 	 */
 	public HttpParseStatusEnum checkURI(final PD pd) {
 
-		final byte[] pathBytes = ZRequest.parsePATHBytes(pd.getRequestLineBytes());
+		final byte[] requestURIBytes = ZRequest.parseRequestURIBytes(pd.getRequestLineBytes());
+		pd.setRequestURIBytes(requestURIBytes);
+
+		final byte[] pathBytes = ZRequest.parsePATHBytes(requestURIBytes);
 
 		// 1、精确匹配
 		final ZRMethod zrMethod = ZControllerMap.getMethodByMethodEnumAndPath(pd.getMethodNameBytes(), pathBytes);
