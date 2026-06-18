@@ -24,8 +24,8 @@ import vo.zframework.exception.StartupException;
  *
  */
 public class ZControllerMap {
-	static final HashBasedTable<ByteArrayKeyWrapper, String, ZRMethod> methodPathTable = HashBasedTable.create();
-	static final HashBasedTable<Method, String, Boolean> methodIsregexTable = HashBasedTable.create();
+	static final HashBasedTable<ByteArrayKeyWrapper, ByteArrayKeyWrapper, ZRMethod> methodPathTable = HashBasedTable.create();
+	static final HashBasedTable<Method, ByteArrayKeyWrapper, Boolean> methodIsregexTable = HashBasedTable.create();
 	static final HashMap<Method, Object> objectMap = new HashMap<>(16, 1F);
 	static final HashSet<String> mappingSet = new HashSet<>();
 
@@ -65,11 +65,12 @@ public class ZControllerMap {
 
 		}
 
-		final ByteArrayKeyWrapper keyWrapper = new ByteArrayKeyWrapper(methodEnum.name().getBytes());
+		final ByteArrayKeyWrapper methodWrapper = new ByteArrayKeyWrapper(methodEnum.name().getBytes());
+		final ByteArrayKeyWrapper mappingWrapper = new ByteArrayKeyWrapper(mapping.getBytes());
 
-		methodPathTable.put(keyWrapper, mapping, new ZRMethod(method, cte, zcObject));
+		methodPathTable.put(methodWrapper, mappingWrapper, new ZRMethod(method, cte, zcObject));
 
-		methodIsregexTable.put(method, mapping, isRegex);
+		methodIsregexTable.put(method, mappingWrapper, isRegex);
 
 		objectMap.put(method, zcObject);
 
@@ -120,33 +121,31 @@ public class ZControllerMap {
 		return objectMap.get(method);
 	}
 
-	public static ZRMethod getMethodByMethodEnumAndPath(final byte[] methodNameBytes, final String path) {
+	public static ZRMethod getMethodByMethodEnumAndPath(final byte[] methodNameBytes, final byte[] pathBytes) {
 
 
-		final ByteArrayKeyWrapper keyWrapper = new ByteArrayKeyWrapper(methodNameBytes);
+		final ByteArrayKeyWrapper methodNameWrapper = new ByteArrayKeyWrapper(methodNameBytes);
+		final ByteArrayKeyWrapper pathWrapper = new ByteArrayKeyWrapper(pathBytes);
 
-		final ZRMethod method = methodPathTable.get(keyWrapper, path);
+		final ZRMethod method = methodPathTable.get(methodNameWrapper, pathWrapper);
 
 		if (method != null) {
 			return method;
 		}
 
-		final Set<String> keySet = methodPathTable.row(keyWrapper).keySet();
+		final Set<ByteArrayKeyWrapper> keySet = methodPathTable.row(methodNameWrapper).keySet();
 		// FIXME 2025年1月22日 下午3:21:16 zhangzhen : 访问 @ZPV的接口值，jp分析getx方法耗时比较长
-		final String pathM = getx(path, keySet);
-		if (STU.isEmpty(pathM)) {
-			return null;
-		}
+		final ByteArrayKeyWrapper pathMKW = getx(new String(pathBytes), keySet);
 
-		final ZRMethod method2 = methodPathTable.get(keyWrapper, pathM);
-		return method2;
+		return pathMKW == null ? null : methodPathTable.get(methodNameWrapper, pathMKW);
 	}
 
-	private static String getx(final String path, final Set<String> keySet) {
+	private static ByteArrayKeyWrapper getx(final String path, final Set<ByteArrayKeyWrapper> keySet) {
 
 		final String[] s = path.replaceAll("//+", "/").split("/");
 
-		for (final String k : keySet) {
+		for (final ByteArrayKeyWrapper kw : keySet) {
+			final String k = new String(kw.getBytes());
 			final String[] a = k.split("/");
 			if (a.length != s.length) {
 				continue;
@@ -176,21 +175,19 @@ public class ZControllerMap {
 
 			if ((pipei + pipeiM + empty) == s.length) {
 				ZPVTL.set(valueList);
-				return k;
+				return kw;
 			}
 		}
 
 		return null;
 	}
 
-	public static Map<String, ZRMethod> getByMethodEnum(final byte[] methodNameBytes) {
-		final ByteArrayKeyWrapper keyWrapper = new ByteArrayKeyWrapper(methodNameBytes);
-
-		return methodPathTable.row(keyWrapper);
+	public static Map<ByteArrayKeyWrapper, ZRMethod> getByMethodEnum(final byte[] methodNameBytes) {
+		return methodPathTable.row(new ByteArrayKeyWrapper(methodNameBytes));
 	}
 
-	public static Boolean getIsregexByMethodEnumAndPath(final Method method, final String path) {
-		return methodIsregexTable.get(method, path);
+	public static boolean getIsregexByMethodEnumAndPath(final Method method, final ByteArrayKeyWrapper pathKW) {
+		return methodIsregexTable.get(method, pathKW);
 	}
 
 	private static void checkAPI(final MethodEnum methodEnum, final String mapping, final Method method,

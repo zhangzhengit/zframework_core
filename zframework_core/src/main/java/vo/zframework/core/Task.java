@@ -42,6 +42,7 @@ import vo.zframework.exception.PathVariableException;
 import vo.zframework.exception.ResourceNotExistException;
 import vo.zframework.html.ResourcesLoader;
 import vo.zframework.http.AccessDeniedCodeEnum;
+import vo.zframework.http.ByteArrayKeyWrapper;
 import vo.zframework.http.CTEnum;
 import vo.zframework.http.HttpStatusEnum;
 import vo.zframework.http.ZControllerMap;
@@ -111,16 +112,17 @@ public class Task {
 	 * 使用 server.method的配置值中非参数 methodEnum的选项 和 URI来匹配目标接口Method
 	 * @param methodNameBytes
 	 * @param path
+	 * @param pathBytes TODO
 	 * @return
 	 */
-	public static ZRMethod matchWithServerMethod(final byte[] methodNameBytes, final String path) {
+	public static ZRMethod matchWithServerMethod(final byte[] methodNameBytes, final String path, final byte[] pathBytes) {
 
 		final MethodEnum[] es = MethodEnum.values();
 		for (final MethodEnum methodEnum : es) {
 			final byte[] meNameBytes = methodEnum.getMethodBytes();
 			final boolean methodSupportBytes = HttpRequestProcessor.methodSupportBytes(meNameBytes);
 			if (methodSupportBytes && !Arrays.equals(meNameBytes, methodNameBytes)) {
-				final ZRMethod methodT = ZControllerMap.getMethodByMethodEnumAndPath(meNameBytes, path);
+				final ZRMethod methodT = ZControllerMap.getMethodByMethodEnumAndPath(meNameBytes, pathBytes);
 				if (methodT != null) {
 					return methodT;
 				}
@@ -133,18 +135,18 @@ public class Task {
 	public static ZRMethod getMatcheMethod(final byte[] methodNameBytes, final String path) {
 
 		final Supplier<ZRMethod> supplier = () -> {
-			final Map<String, ZRMethod> rowMap = ZControllerMap.getByMethodEnum(methodNameBytes);
-			final Set<Entry<String, ZRMethod>> entrySet = rowMap.entrySet();
-			for (final Entry<String, ZRMethod> entry : entrySet) {
+			final Map<ByteArrayKeyWrapper, ZRMethod> rowMap = ZControllerMap.getByMethodEnum(methodNameBytes);
+			final Set<Entry<ByteArrayKeyWrapper, ZRMethod>> entrySet = rowMap.entrySet();
+			for (final Entry<ByteArrayKeyWrapper, ZRMethod> entry : entrySet) {
 				final ZRMethod methodTarget = entry.getValue();
-				final String requestMapping = entry.getKey();
-				if (Boolean.TRUE
-						.equals(ZControllerMap.getIsregexByMethodEnumAndPath(methodTarget.getMethod(), requestMapping))
-						&& path.matches(requestMapping)) {
+				final ByteArrayKeyWrapper requestMappingKW = entry.getKey();
+				if (ZControllerMap.getIsregexByMethodEnumAndPath(methodTarget.getMethod(), requestMappingKW)
+						&& path.matches(new String(requestMappingKW.getBytes()))) {
 
 					return methodTarget;
 				}
 			}
+
 			return null;
 		};
 
