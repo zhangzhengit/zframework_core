@@ -698,7 +698,7 @@ public class ZResponse {
 				this.bufferedOutputStream.write(data, 0, length);
 			}
 		} catch (final IOException e) {
-			e.printStackTrace();
+//			e.printStackTrace();
 			SocketTL.closeOutputStreamAndSocket();
 		}
 	}
@@ -707,7 +707,7 @@ public class ZResponse {
 		try {
 			this.bufferedOutputStream.flush();
 		} catch (final IOException e) {
-			e.printStackTrace();
+//			e.printStackTrace();
 			SocketTL.closeOutputStreamAndSocket();
 		}
 	}

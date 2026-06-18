@@ -45,7 +45,7 @@ public class SocketTL {
 				so.getSocket().close();
 			}
 		} catch (final IOException e) {
-			e.printStackTrace();
+//			e.printStackTrace();
 		}
 	}
 
