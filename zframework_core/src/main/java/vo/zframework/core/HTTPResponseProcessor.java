@@ -30,7 +30,7 @@ public class HTTPResponseProcessor {
 			ReqeustInfo.set(request);
 			response0(request);
 
-		} catch (final Exception e) {
+		} catch (final Throwable e) {
 
 			// 这个catch里 真正处理 response里的异常，用统一配置的异常处理器来处理
 			final ZControllerAdviceActuator a = ZContext.getBean(ZControllerAdviceActuator.class);
@@ -76,7 +76,7 @@ public class HTTPResponseProcessor {
 		response.cookie(cookie);
 	}
 
-	private static void response0(final ZRequest request) throws Exception {
+	private static void response0(final ZRequest request) throws Throwable {
 
 		try {
 			final ZResponse response = Task.invoke(request);

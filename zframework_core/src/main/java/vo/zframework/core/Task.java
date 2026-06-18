@@ -89,7 +89,7 @@ public class Task {
 	 * @return
 	 * @throws Exception
 	 */
-	public static ZResponse invoke(final ZRequest request) throws Exception {
+	public static ZResponse invoke(final ZRequest request) throws Throwable {
 
 		try {
 
@@ -99,7 +99,7 @@ public class Task {
 			final Object zController = ZControllerMap.getObjectByMethod(zrMethod.getMethod());
 			return invokeAndResponse(zrMethod, parameters, zController, request);
 
-		} catch (final Exception e) {
+		} catch (final Throwable e) {
 			//			e.printStackTrace();
 			// 这里不处理，抛出去
 			throw e;
@@ -186,7 +186,7 @@ public class Task {
 					final ZRMethod zrMethod,
 					final Object[] parameters,
 					final Object zControllerObject,
-					final ZRequest request) {
+					final ZRequest request) throws Throwable {
 
 		final ZRequestMapping requestMapping = zrMethod.getZRequestMapping();
 		if (requestMapping.qpsLimit()) {
@@ -312,7 +312,7 @@ public class Task {
 	}
 
 	private static Object invokeZHandlerInterceptor(final ZRMethod zrMethod, final Object[] parameters,
-			final Object zControllerObject, final ZRequest request, final List<ZHandlerInterceptor> zhiList) {
+			final Object zControllerObject, final ZRequest request, final List<ZHandlerInterceptor> zhiList) throws Throwable {
 
 		// FIXME 2026年6月10日 09:30:02 zhangzhen : 这里又new ZResponse应该是bug，应该取上面set过的ZResponse对象。
 		final ZResponse response = ZHttpContext.getZResponse();
@@ -472,19 +472,16 @@ public class Task {
 	 *
 	 * @param zControllerObject		此method所在的 @ZController 标记的对象
 	 * @param zrMethod 				组合的Method相关内容的对象
-	 * @param parameters				此method的参数数组，如：ZRequest/ZModel/@ZRequestHeader/@ZRequestParam等等
+	 * @param parameters			此method的参数数组，如：ZRequest/ZModel/@ZRequestHeader/@ZRequestParam等等
 	 * @return
-	 * @throws IllegalAccessException
-	 * @throws IllegalArgumentException
-	 * @throws InvocationTargetException
+	 * @throws Throwable
 	 */
-	private static Object invoke0(final Object zControllerObject, final ZRMethod zrMethod, final Object[] parameters) {
+	private static Object invoke0(final Object zControllerObject, final ZRMethod zrMethod, final Object[] parameters) throws Throwable {
 
 		try {
 			return zrMethod.getMethodHandle().invokeExact(parameters);
 		} catch (final Throwable e) {
-			e.printStackTrace();
-			return null;
+			throw e;
 		} finally {
 
 			if (parameters.length > 0) {
