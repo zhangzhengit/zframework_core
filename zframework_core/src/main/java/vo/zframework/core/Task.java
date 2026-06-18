@@ -537,7 +537,7 @@ public class Task {
 
 	private static ZResponse responseAppJSON(final Object r) {
 		final String json = J.toJSONString(r);
-		return new ZResponse().contentType(DEFAULT_CONTENT_TYPE.getTypeBytes()).body(json);
+		return new ZResponse().contentType(ContentTypeEnum.APPLICATION_JSON.getTypeBytes()).body(json);
 	}
 
 	private static ZResponse responseHtml(final Object r) {
@@ -558,13 +558,13 @@ public class Task {
 				final ResourceNotExistException ex = (ResourceNotExistException) e;
 				return new ZResponse()
 						.httpStatus(ex.getHttpStatus())
-						.contentType(DEFAULT_CONTENT_TYPE.getTypeBytes())
+						.contentType(ContentTypeEnum.APPLICATION_JSON.getTypeBytes())
 						.body(J.toJSONString(CR.error(ex.getMessagezf())));
 			}
 
 			return new ZResponse()
 					.httpStatus(HttpStatusEnum.HTTP_500.getStatus())
-					.contentType(DEFAULT_CONTENT_TYPE.getTypeBytes())
+					.contentType(ContentTypeEnum.APPLICATION_JSON.getTypeBytes())
 					.body(J.toJSONString(CR.error(em)));
 		}
 	}
