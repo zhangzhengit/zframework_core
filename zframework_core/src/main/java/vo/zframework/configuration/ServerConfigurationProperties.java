@@ -236,6 +236,11 @@ public class ServerConfigurationProperties {
 	@ZMin(min = 1)
 	@ZMax(max = 60 * 2)
 	// FIXME 2023年7月4日 下午6:57:06 zhanghen: TODO 改为：从连接最后一次活动开始计时，超过此值再关闭
+	// FIXME 2026年6月18日 11:14:00 zhangzhen : 本分支改为虚拟线程后，此字段还没用上，记得用上
+	// 新增一个连接类，一个超时任务的线程类
+	// 每次请求来了/响应结束了，都更新一下最后活跃时间，很耗时的流下载，也要write时更新
+	// 但是比如超时10S，业务方法执行12S，此时就需要给连接类加一个状态机，超时任务
+	// 判断是[执行中]则跳过。或者readme中提示用户耗时长的响应204，待会来取？
 	private int keepAliveTimeout = 10;
 
 	/**
