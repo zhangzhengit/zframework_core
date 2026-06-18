@@ -237,9 +237,7 @@ public class ZResponse {
 	}
 
 	public ZResponse header(final ZHeader zHeader) {
-
-		final byte[] vbs = AU.concat(zHeader.getValueBytes(), STU.CRLF_BYTES);
-		this.headerMap.put(new ByteArrayKeyWrapper(zHeader.getNameBytes()), vbs);
+		this.headerMap.put(new ByteArrayKeyWrapper(zHeader.getNameBytes()), zHeader.getValueBytes());
 
 		this.setConnection(zHeader);
 
@@ -526,6 +524,7 @@ public class ZResponse {
 			this.arrayAdd(kw.getBytes());
 			this.arrayAdd(STU.COLON_BYTES);
 			this.arrayAdd(entry.getValue());
+			this.arrayAdd(STU.CRLF_BYTES);
 		}
 
 		if (this.cookieArray != null) {
