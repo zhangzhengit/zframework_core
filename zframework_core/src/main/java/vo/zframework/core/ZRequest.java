@@ -532,17 +532,15 @@ public class ZRequest {
 		final int si = AU.indexOfKeyword(requestLineBytes, STU.SPACE_BYTE);
 		if (si > -1) {
 			final int s2i = AU.indexOfKeyword(requestLineBytes, si + 1, STU.SPACE_BYTE);
-			if (s2i > -1) {
-				final byte[] uriBytes = Arrays.copyOfRange(requestLineBytes, si + 1, s2i);
-				if (AU.isNotEmpty(uriBytes)) {
-					final int wenI = AU.indexOfKeyword(uriBytes, STU.Q_BYTE);
-					if (wenI > -1) {
-						final byte[] pathBytes = Arrays.copyOf(uriBytes, wenI);
-						final String path = new String(pathBytes);
-						return path;
-					}
-					return new String(uriBytes);
+			if (s2i > (si + 1)) {
+				final int wenI = AU.indexOfKeyword(requestLineBytes,si + 1, STU.Q_BYTE);
+				if (wenI > -1) {
+					final byte[] pathBytes = Arrays.copyOfRange(requestLineBytes, si + 1, wenI);
+					final String path = new String(pathBytes);
+					return path;
 				}
+
+				return new String(Arrays.copyOfRange(requestLineBytes, si + 1, s2i));
 			}
 		}
 
