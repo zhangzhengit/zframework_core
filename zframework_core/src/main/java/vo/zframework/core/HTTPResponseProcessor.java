@@ -87,6 +87,7 @@ public class HTTPResponseProcessor {
 
 			final int httpStatus = response.getHttpStatus();
 			if (httpStatus == HttpStatusEnum.HTTP_200.getStatus()) {
+				// 在此判断不包含ETag头，意思是没有手动设置过，则在此自动设置
 				if (!response.containsHeader(HeaderEnum.ETAG.getName())) {
 					response.setETagIfZETagPresent(request, response.getBody(), ETagEnum.STRONG);
 				}
