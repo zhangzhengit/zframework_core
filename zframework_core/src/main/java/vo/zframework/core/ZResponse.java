@@ -2,9 +2,10 @@ package vo.zframework.core;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -20,6 +21,7 @@ import vo.zframework.compression.ZSTD;
 import vo.zframework.configuration.ServerConfigurationProperties;
 import vo.zframework.enums.ConnectionEnum;
 import vo.zframework.enums.TransferEncodingEnum;
+import vo.zframework.html.FIS;
 import vo.zframework.http.ByteArrayKeyWrapper;
 import vo.zframework.http.HttpStatusEnum;
 import vo.zframework.http.ZCookie;
@@ -121,6 +123,8 @@ public class ZResponse {
 	 * write 方法是否执行过
 	 */
 	private volatile boolean write = false;
+
+	private volatile boolean isBodyStream = false;
 
 	private String contentType;
 	private byte[] contentTypeBytes;
@@ -287,12 +291,13 @@ public class ZResponse {
 	 *
 	 * 注意：本方法(InputStream inputStream)的，只能在一个ZResponse响应对象的最后调用
 	 * 因为本方法会write到客户端，在调用本方法之后再调用任何方法都无意义了
-	 *
-	 * @param inputStream
+	 * @param fis
 	 */
 	// FIXME 2026年6月7日 03:49:01 zhangzhen : 为了限制用户在最后调用本方法，要不要改为header方法返回一个对象A
 	// 只有A才有本方法？
-	public synchronized void body(final InputStream inputStream) {
+	public synchronized void body(final FIS fis) {
+
+		this.isBodyStream = true;
 
 		this.checkBIC();
 
@@ -304,14 +309,63 @@ public class ZResponse {
 
 		final ZRequest request = ReqeustInfo.get();
 
+		boolean r304 = false;
+		boolean rETag = false;
+
+		final File file = fis.getFile();
+		if (file != null) {
+
+			if (!this.containsHeader(HeaderEnum.ETAG.getName())) {
+				if (PDTL.get().getZrMethod().hasZETag()) {
+					final String eTag = ETagEnum.STRONG.handle(file.length() + "-" + file.lastModified());
+					this.header(HeaderEnum.ETAG.getNameBytes(), eTag.getBytes());
+					rETag = true;
+				}
+			}
+
+			// 去掉毫秒部分，不然IF_MODIFIED_SINCE会永远早于LAST_MODIFIED，因为后者带毫秒，于是导致此头功能失效
+			// 而去掉毫秒以后，这一个秒内可能真的修改了，但是不会响应新的内容，就是：有一秒的误差，
+			// 即：LAST_MODIFIED头精确到秒，语义相符
+			final long lastModified = (file.lastModified() / 1000) * 1000;
+			this.header(HeaderEnum.LAST_MODIFIED.getNameBytes(), ZDateUtil.gmt(new Date(lastModified)).getBytes());
+
+			// 先判断 IF_MODIFIED_SINCE
+			final String IF_MODIFIED_SINCE = request.getHeader(HeaderEnum.IF_MODIFIED_SINCE.getName());
+			if (IF_MODIFIED_SINCE != null) {
+				final long IF_MODIFIED_SINCE_TIME = ZDateUtil.toTimestampMillis(IF_MODIFIED_SINCE);
+				if (lastModified > IF_MODIFIED_SINCE_TIME) {
+					this.httpStatus(HttpStatusEnum.HTTP_304.getStatus());
+					r304 = true;
+				}
+				final int d = 10;
+			}
+
+			// 再判断 IF_NONE_MATCH
+			final String IF_NONE_MATCH = request.getHeader(HeaderEnum.IF_NONE_MATCH.getName());
+			if (IF_NONE_MATCH != null) {
+				final String eTag = ETagEnum.STRONG.handle(file.length() + "-" + file.lastModified());
+				if(eTag.equals(IF_NONE_MATCH)) {
+					final int x = 0;
+					this.httpStatus(HttpStatusEnum.HTTP_304.getStatus());
+					r304 = true;
+				}
+			}
+
+		}
+
 		// 已经确定的header部分
 		this.beforeWrite();
+
+		if(r304) {
+			this.writeZArrayAndFlush();
+			return;
+		}
 
 		// body部分
 		final int bufferCapacity = DEFAULT_BUFFER_SIZE;
 		final byte[] buffer = new byte[bufferCapacity];
 
-		final BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream, BIS_DEFAULT_BUFFER_SIZE);
+		final BufferedInputStream bufferedInputStream = new BufferedInputStream(fis.getInputStream(), BIS_DEFAULT_BUFFER_SIZE);
 
 		boolean exceedsCompressionMinLength = false;
 
@@ -330,7 +384,9 @@ public class ZResponse {
 				if (readFirst) {
 					// FIXME 2025年12月13日 00:14:31 zhangzhen :  这里逻辑不对，304了，就不应该继续读写body了
 					// 要不先读一次，和if-none-match比较，否再读写body，是则直接304？
-					this.setETagIfZETagPresent(request, buffer, ETagEnum.WEAK);
+					if (!rETag) {
+						this.setETagIfZETagPresent(request, buffer, ETagEnum.WEAK);
+					}
 
 					final byte[] contentEncodingBytes = this.getContentEncodingBytes(request, exceedsCompressionMinLength);
 					if (AU.isNotEmpty(contentEncodingBytes)) {
@@ -341,7 +397,6 @@ public class ZResponse {
 					this.addStatusLineAndHeaders();
 
 					this.writeZArrayAndFlush();
-
 				}
 
 				readFirst = false;
@@ -369,7 +424,7 @@ public class ZResponse {
 
 		try {
 			bufferedInputStream.close();
-			inputStream.close();
+			fis.getInputStream().close();
 		} catch (final IOException e) {
 			e.printStackTrace();
 		}
@@ -388,7 +443,7 @@ public class ZResponse {
 	 * 如果目标接口上存在 @ZETag 则自动设置ETag头
 	 *
 	 * @param request
-	 * @param ba       用于计算ETag的部分字节
+	 * @param data       用于计算ETag的字节，是传响应的全部还是部分内容，由调用者决定
 	 * @param eTagEnum
 	 */
 	// FIXME 2025年12月24日 12:08:28 zhangzhen :  测试ETag生成还是有问题
@@ -396,16 +451,16 @@ public class ZResponse {
 	// 则每个文件读一次的byte[]很可能是相同的，从而算出来的ETag也是相同的。
 	// 显然是错的，现在还没取到文件的size和最后修改日期/名称/等等内容
 	// FIXME 2026年6月7日 03:16:22 zhangzhen : 这个方法不好，违反了单一功能原则，改掉，并且返回返回header
-	void setETagIfZETagPresent(final ZRequest request, final byte[] ba, final ETagEnum eTagEnum) {
+	void setETagIfZETagPresent(final ZRequest request, final byte[] data, final ETagEnum eTagEnum) {
 
 		if (!PDTL.get().getZrMethod().hasZETag()) {
 			return;
 		}
 
-		final String murmur3 = Hash.murmur3(ba);
-		final String md5 = Hash.md5(ba);
-		final String goodFastHash = Hash.goodFastHash(ba);
-		final String sha256 = Hash.sha256(ba);
+		final String murmur3 = Hash.murmur3(data);
+		final String md5 = Hash.md5(data);
+		final String goodFastHash = Hash.goodFastHash(data);
+		final String sha256 = Hash.sha256(data);
 		final String v4 = murmur3 + md5 + goodFastHash + sha256;
 
 		final String eTag = eTagEnum.handle(v4);
@@ -656,7 +711,8 @@ public class ZResponse {
 			}
 		}
 
-		if (this.getBodyLength() <= 0) {
+		if (!this.isBodyStream && (this.getBodyLength() <= 0)
+				&& (this.getHttpStatus() == HttpStatusEnum.HTTP_200.getStatus())) {
 			this.httpStatus(HttpStatusEnum.HTTP_204.getStatus());
 		}
 

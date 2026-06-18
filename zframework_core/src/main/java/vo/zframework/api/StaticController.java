@@ -1,6 +1,5 @@
 package vo.zframework.api;
 
-import java.io.InputStream;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -17,6 +16,7 @@ import vo.zframework.core.HeaderEnum;
 import vo.zframework.core.ZContext;
 import vo.zframework.core.ZRequest;
 import vo.zframework.core.ZResponse;
+import vo.zframework.html.FIS;
 import vo.zframework.html.ResourcesLoader;
 import vo.zframework.http.HttpStatusEnum;
 import vo.zframework.http.ZCacheControl;
@@ -48,8 +48,8 @@ public class StaticController {
 					true,true, true, true, true, true, true },
 				count = 10000 * 10)
 
-	@ZQPSLimitation(count = 2000, type = ZQPSLimitationEnum.ZSESSIONID)
 	@ZETag
+	@ZQPSLimitation(count = 2000, type = ZQPSLimitationEnum.ZSESSIONID)
 	@ZCacheControl(value = { CacheControlEnum.PRIVATE, CacheControlEnum.MUST_REVALIDATE }, maxAge = 60 * 10)
 	public void staticResources(final ZResponse response, final ZRequest request) {
 
@@ -80,8 +80,8 @@ public class StaticController {
 
 		response.contentType(ct);
 
-		final InputStream inputStream = ResourcesLoader.loadStaticResourceAsInputStream(resourceName);
-		response.body(inputStream);
+		final FIS fis = ResourcesLoader.loadStaticResourceAsInputStream(resourceName);
+		response.body(fis);
 	}
 
 	private static boolean checkReferer(final ZRequest request) {

@@ -10,6 +10,9 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Paths;
 import java.util.UUID;
 
 import com.google.common.collect.HashBasedTable;
@@ -47,7 +50,7 @@ public class ResourcesLoader {
 
 		final String resourcePath = System.getProperty(STATIC_RESOURCES_PROPERTY_NAME);
 		if (STU.isNullOrEmptyOrBlank(resourcePath)) {
-			
+
 			final ServerConfigurationProperties serverConfiguration = ZContext.getBean(ServerConfigurationProperties.class);
 			final String staticPrefix = serverConfiguration.getStaticPrefix();
 			final String key = staticPrefix + resourceName;
@@ -95,7 +98,7 @@ public class ResourcesLoader {
 	 * @return
 	 *
 	 */
-	public static InputStream loadStaticResourceAsInputStream(final String resourceName) {
+	public static FIS loadStaticResourceAsInputStream(final String resourceName) {
 
 		final String resourcePath = System.getProperty(STATIC_RESOURCES_PROPERTY_NAME);
 		if (STU.isNullOrEmptyOrBlank(resourcePath)) {
@@ -109,7 +112,10 @@ public class ResourcesLoader {
 		final String fileName = resourcePath + (resourceName.replace("/", File.separator));
 
 		try {
-			return new FileInputStream(fileName);
+			final File file = new File(fileName);
+			final FileInputStream fileInputStream = new FileInputStream(file);
+			final FIS fis = new FIS(fileInputStream, file);
+			return fis;
 		} catch (final FileNotFoundException e1) {
 			throw new ResourceNotExistException("资源不存在,name = " + resourceName, HttpStatusEnum.HTTP_404.getStatus());
 		}
@@ -154,7 +160,7 @@ public class ResourcesLoader {
 
 	private static byte[] loadByteArray0(final String resourceName) {
 		if (!SERVER_CONFIGURATION.getStaticResourceCacheEnable()) {
-			return readByteArray0(checkInputStream(resourceName, resourceName));
+			return readByteArray0(checkInputStream(resourceName, resourceName).getInputStream());
 		}
 
 		final Object v = CACHE_TABLE.get(ResourcesTypeEnum.BINARY, resourceName);
@@ -169,7 +175,7 @@ public class ResourcesLoader {
 				return (byte[]) vN;
 			}
 
-			final InputStream in = checkInputStream(resourceName, resourceName);
+			final InputStream in = checkInputStream(resourceName, resourceName).getInputStream();
 			final byte[] ba2 = readByteArray0(in);
 
 			CACHE_TABLE.put(ResourcesTypeEnum.BINARY, resourceName, ba2);
@@ -196,7 +202,7 @@ public class ResourcesLoader {
 	}
 
 	private static String loadSring0(final String name, final String resourceName) {
-		final InputStream inputStream = checkInputStream(name, resourceName);
+		final InputStream inputStream = checkInputStream(name, resourceName).getInputStream();
 		final InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
 		final BufferedReader reader = new BufferedReader(inputStreamReader);
 
@@ -253,13 +259,43 @@ public class ResourcesLoader {
 	}
 
 
-	private static InputStream checkInputStream(final String name, final String resourceName) {
+	private static FIS checkInputStream(final String name, final String resourceName) {
 		final InputStream inputStream = ResourcesLoader.class.getResourceAsStream(name);
+
+		final File staticFile = getStaticFile(name.substring(1));
+
 		if (inputStream == null) {
 			// FIXME 2025年12月8日 17:51:22 zhangzhen : 这里提示详细一点，具体时候那个资源
 			throw new ResourceNotExistException("资源不存在:" + resourceName, HttpStatusEnum.HTTP_404.getStatus());
 		}
-		return inputStream;
+		return new FIS(inputStream, staticFile);
+	}
+
+
+	public static File getStaticFile(final String relativePath) {
+		// relativePath 例如 "images/logo.png"
+		final URL url = ResourcesLoader.class.getClassLoader().getResource(relativePath);
+		if (url == null) {
+			throw new IllegalArgumentException("文件不存在: " + relativePath);
+		}
+
+		// 检查协议
+		if ("file".equals(url.getProtocol())) {
+			// 开发环境：直接转为 File
+			try {
+				return Paths.get(url.toURI()).toFile();
+			} catch (final URISyntaxException e) {
+				throw new RuntimeException(e);
+			}
+		}
+
+		if ("jar".equals(url.getProtocol())) {
+			// 生产环境（JAR 包内）：无法直接获取 File
+			// 只能通过 InputStream 读取内容，无法获得 File 对象
+//			throw new UnsupportedOperationException("无法从 JAR 中获取 File 对象，请使用 InputStream");
+		}
+
+		return null;
 	}
 
 	public enum ResourcesTypeEnum {

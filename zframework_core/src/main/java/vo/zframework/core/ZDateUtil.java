@@ -30,6 +30,11 @@ public class ZDateUtil {
 		return FORMATTER.format(zonedDateTime);
 	}
 
+	public static long toTimestampMillis(final String dateStr) {
+		final ZonedDateTime zdt = ZonedDateTime.parse(dateStr, FORMATTER);
+		return zdt.toInstant().toEpochMilli();
+	}
+
 	public static byte[] getCurrentGmtDateBytes() {
 		final long nowSeconds = System.currentTimeMillis() / _1000;
 		if (nowSeconds != LAST_SECOND_BYTES.get()) {
