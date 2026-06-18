@@ -44,10 +44,6 @@ public class STU {
 	public static final byte Q_BYTE = Q_CHAR;
 	public static final byte SPACE_BYTE = SPACE_CHAR;
 
-	public static String toLowerCase(final String string) {
-		return ZRC.singleton().computeIfAbsent(string, () -> string.toLowerCase());
-	}
-
 	public static boolean isNull(final String string) {
 		return (string == null);
 	}
