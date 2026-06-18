@@ -14,6 +14,8 @@ public enum HttpStatusEnum {
 
 	HTTP_200(200, "OK"),
 
+	HTTP_204(204, "No Content"),
+
 	HTTP_304(304, "Not Modified"),
 
 	HTTP_400(400, "Bad Request"),
@@ -43,7 +45,7 @@ public enum HttpStatusEnum {
 	public int getStatus() {
 		return this.status;
 	}
- 
+
 	public void setStatus(final int status) {
 		this.status = status;
 	}

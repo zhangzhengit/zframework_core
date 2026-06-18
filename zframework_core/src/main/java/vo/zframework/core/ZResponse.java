@@ -656,6 +656,10 @@ public class ZResponse {
 			}
 		}
 
+		if (this.getBodyLength() <= 0) {
+			this.httpStatus(HttpStatusEnum.HTTP_204.getStatus());
+		}
+
 		this.setCustomHeader();
 		this.setServerName();
 		this.setDate();
