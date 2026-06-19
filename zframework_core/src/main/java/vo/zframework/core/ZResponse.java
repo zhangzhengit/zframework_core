@@ -489,13 +489,8 @@ public class ZResponse {
 			return eTagEnum.handle(new String(data));
 		}
 
-		final String murmur3 = Hash.murmur3(data);
-		final String md5 = Hash.md5(data);
-		final String goodFastHash = Hash.goodFastHash(data);
-		final String sha256 = Hash.sha256(data);
-		final String v4 = murmur3 + md5 + goodFastHash + sha256;
-
-		final String eTag = eTagEnum.handle(v4);
+		final String sha512 = Hash.sha512(data);
+		final String eTag = eTagEnum.handle(sha512);
 		return eTag;
 	}
 

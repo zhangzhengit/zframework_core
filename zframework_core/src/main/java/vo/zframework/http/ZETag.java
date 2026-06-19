@@ -9,7 +9,14 @@ import java.lang.annotation.Target;
 /**
  * 用在 @ZRequestMapping 标记的方法上，表示此方法响应 ETag 头，
  * 并且请求此方法时，根据请求头的If-None-Match值来判断资源是否变动，
- * 没变动则返回304，变了则正常返回并返回新的ETag头
+ * 没变动则返回304，变了则正常返回并返回新的ETag头。
+ *
+ * ETag头使用sha512生成，返回基本类型的接口方法使用值作为ETag，所以要慎重考虑在接口方法上
+ * 是否使用本注解，如果body还没有[ETag:"sha512结果"]这个头长，则使用本注解会
+ * 适得其反。当然，对于返回基本类型的接口方法，也很可能使用本注解会适得其反，
+ * 如：body：32，使用本注解后虽然不响应body了，但会多一个[ETag:"32"]的头，
+ *
+ * 所以，要不要用本注解，请自行考虑。
  *
  * 注意：代码优先级高于本注解，如：response.header("ETag", xxx);则本注解自动失效
  *
@@ -20,9 +27,6 @@ import java.lang.annotation.Target;
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.METHOD })
-// FIXME 2026年6月19日 08:01:12 zhangzhen : 重新思考此功能如何实现，要不要加属性？设定一个生效阈值？body大于多少本注解才生效？
-// Number/boolean值直接用值本身作为ETag？但是对于这类极其简单的body，响应ETag反而可能适得其反，因为多一个ETag头和计算ETag的消耗比
-// 直接响应body大很多
 public @interface ZETag {
 
 	 /**

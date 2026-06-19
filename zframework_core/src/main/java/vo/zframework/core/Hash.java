@@ -40,6 +40,10 @@ public class Hash {
 		return Hashing.sha256().newHasher().putBytes(ba).hash().toString();
 	}
 
+	public static String sha512(final byte[] ba) {
+		return Hashing.sha512().newHasher().putBytes(ba).hash().toString();
+	}
+
 	public static String goodFastHash(final byte[] ba) {
 		return Hashing.goodFastHash(256).newHasher().putBytes(ba).hash().toString();
 	}
