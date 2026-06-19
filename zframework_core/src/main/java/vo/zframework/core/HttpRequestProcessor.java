@@ -163,7 +163,7 @@ public class HttpRequestProcessor {
 
 		// 2、URI正则匹配
 		final String path = new String(pathBytes);
-		final ZRMethod matcheZRMethod = Task.getMatcheMethod(pd.getMethodNameBytes(), path);
+		final ZRMethod matcheZRMethod = Task.getMatcheMethodCache(pd.getMethodNameBytes(), path);
 		if (matcheZRMethod == null) {
 
 			// 3、继续URI正则匹配，依然没匹配到，但用非请求的METHOD和URI精确匹配到了，响应405

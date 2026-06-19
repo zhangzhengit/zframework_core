@@ -132,7 +132,7 @@ public class Task {
 		return null;
 	}
 
-	public static ZRMethod getMatcheMethod(final byte[] methodNameBytes, final String path) {
+	public static ZRMethod getMatcheMethodCache(final byte[] methodNameBytes, final String path) {
 
 		final Supplier<ZRMethod> supplier = () -> {
 			final Map<ByteArrayKeyWrapper, ZRMethod> rowMap = ZControllerMap.getByMethodEnum(methodNameBytes);

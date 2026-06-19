@@ -7,12 +7,14 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import com.google.common.collect.HashBasedTable;
 
 import vo.zframework.cache.STU;
 import vo.zframework.core.QPSEnum;
 import vo.zframework.core.ZMultipartFile;
+import vo.zframework.core.ZRC;
 import vo.zframework.enums.MethodEnum;
 import vo.zframework.exception.StartupException;
 
@@ -135,51 +137,60 @@ public class ZControllerMap {
 
 		final Set<ByteArrayKeyWrapper> keySet = methodPathTable.row(methodNameWrapper).keySet();
 		// FIXME 2025年1月22日 下午3:21:16 zhangzhen : 访问 @ZPV的接口值，jp分析getx方法耗时比较长
-		final ByteArrayKeyWrapper pathMKW = getx(new String(pathBytes), keySet);
+		final ByteArrayKeyWrapper pathMKW = getxCache(new String(pathBytes), keySet);
 
 		return pathMKW == null ? null : methodPathTable.get(methodNameWrapper, pathMKW);
 	}
 
-	private static ByteArrayKeyWrapper getx(final String path, final Set<ByteArrayKeyWrapper> keySet) {
+	private static ByteArrayKeyWrapper getxCache(final String path, final Set<ByteArrayKeyWrapper> keySet) {
+		final Supplier<ByteArrayKeyWrapper> getxSupplier = getxSupplier(path, keySet);
+		final ByteArrayKeyWrapper computeIfAbsent = ZRC.singleton().computeIfAbsent(path, getxSupplier);
+		return computeIfAbsent;
+	}
 
-		final String[] s = path.replaceAll("//+", "/").split("/");
+	private static Supplier<ByteArrayKeyWrapper> getxSupplier(final String path, final Set<ByteArrayKeyWrapper> keySet) {
+		final Supplier<ByteArrayKeyWrapper> getxSupplier = () -> {
+			final String[] s = path.replaceAll("//+", "/").split("/");
 
-		for (final ByteArrayKeyWrapper kw : keySet) {
-			final String k = new String(kw.getBytes());
-			final String[] a = k.split("/");
-			if (a.length != s.length) {
-				continue;
-			}
-
-			int pipeiM = 0;
-			int pipei = 0;
-			int empty = 0;
-
-			final ArrayList<Object> valueList = new ArrayList<>();
-			for (int i = 0; i < s.length; i++) {
-				final String t = s[i];
-				if (STU.isEmpty(t)) {
-					empty++;
-					continue;
-				}
-				if (a[i].startsWith("{") && a[i].endsWith("}")) {
-					pipeiM++;
-					valueList.add(t);
+			for (final ByteArrayKeyWrapper kw : keySet) {
+				final String k = new String(kw.getBytes());
+				final String[] a = k.split("/");
+				if (a.length != s.length) {
 					continue;
 				}
 
-				if (t.equals(a[i])) {
-					pipei++;
+				int pipeiM = 0;
+				int pipei = 0;
+				int empty = 0;
+
+				final ArrayList<Object> valueList = new ArrayList<>();
+				for (int i = 0; i < s.length; i++) {
+					final String t = s[i];
+					if (STU.isEmpty(t)) {
+						empty++;
+						continue;
+					}
+					if (a[i].startsWith("{") && a[i].endsWith("}")) {
+						pipeiM++;
+						valueList.add(t);
+						continue;
+					}
+
+					if (t.equals(a[i])) {
+						pipei++;
+					}
+				}
+
+				if ((pipei + pipeiM + empty) == s.length) {
+					ZPVTL.set(valueList);
+					return kw;
 				}
 			}
 
-			if ((pipei + pipeiM + empty) == s.length) {
-				ZPVTL.set(valueList);
-				return kw;
-			}
-		}
+			return null;
+		};
 
-		return null;
+		return getxSupplier;
 	}
 
 	public static Map<ByteArrayKeyWrapper, ZRMethod> getByMethodEnum(final byte[] methodNameBytes) {
