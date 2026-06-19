@@ -8,9 +8,9 @@ import java.lang.annotation.Target;
 
 /**
  *	用在 @ZController 标记的类里的 @ZRequestMapping 标记的方法上，
- *	表示此接口返回值为String时响应text/plain，其他一律响应application/json
+ *	表示此接口返回值为String/基本类型时响应text/plain，其他一律响应application/json
  *	如果接口方法不加入本注解，则不管返回类型是什么都默认为视图名称，
- *	找不到视图名称则响应404  
+ *	找不到视图名称则响应404
  *
  * @author zhangzhen
  * @date 2025年12月6日 02:01:42
