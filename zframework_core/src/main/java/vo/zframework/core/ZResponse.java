@@ -682,6 +682,7 @@ public class ZResponse {
 	 * @return
 	 */
 	public synchronized ZResponse body(final String body) {
+		// FIXME 2026年6月20日 07:12:04 zhangzhen : 大String在此getBytes成为内存热点，要不要改为ZstdOutputStream流式响应?
 		return this.body(body.getBytes());
 	}
 
