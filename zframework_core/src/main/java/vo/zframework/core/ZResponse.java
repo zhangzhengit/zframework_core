@@ -240,6 +240,15 @@ public class ZResponse {
 		return this.headerMap.containsKey(keyWrapper);
 	}
 
+	public String getHeader(final byte[] nameBytes) {
+		final byte[] bs = this.headerMap.get(new ByteArrayKeyWrapper(nameBytes));
+		return bs == null ? null : new String(bs);
+	}
+
+	public String getHeader(final String name) {
+		return this.getHeader(name.getBytes());
+	}
+
 	public ZResponse header(final ZHeader zHeader) {
 		this.headerMap.put(new ByteArrayKeyWrapper(zHeader.getNameBytes()), zHeader.getValueBytes());
 
@@ -455,13 +464,12 @@ public class ZResponse {
 			return;
 		}
 
-		final String murmur3 = Hash.murmur3(data);
-		final String md5 = Hash.md5(data);
-		final String goodFastHash = Hash.goodFastHash(data);
-		final String sha256 = Hash.sha256(data);
-		final String v4 = murmur3 + md5 + goodFastHash + sha256;
+		// 优先使用手动设置的，然后用自动生成的
+		final String eTagManually = this.getHeader(HeaderEnum.ETAG.getNameBytes());
 
-		final String eTag = eTagEnum.handle(v4);
+		final String eTag =
+				eTagManually != null ? eTagManually :
+				ZResponse.gETag(data, eTagEnum);
 
 		this.header(HeaderEnum.ETAG.getNameBytes(), eTag.getBytes());
 
@@ -470,6 +478,17 @@ public class ZResponse {
 			this.httpStatus(HttpStatusEnum.HTTP_304.getStatus());
 			this.clearBody();
 		}
+	}
+
+	private static String gETag(final byte[] data, final ETagEnum eTagEnum) {
+		final String murmur3 = Hash.murmur3(data);
+		final String md5 = Hash.md5(data);
+		final String goodFastHash = Hash.goodFastHash(data);
+		final String sha256 = Hash.sha256(data);
+		final String v4 = murmur3 + md5 + goodFastHash + sha256;
+
+		final String eTag = eTagEnum.handle(v4);
+		return eTag;
 	}
 
 	private void compressBodyAndWrite(final ZRequest request, final int read,
