@@ -728,9 +728,9 @@ public class ServerConfigurationProperties {
 		ctm.put("doc", ContentTypeEnum.WORD.getType());
 		ctm.put("js", ContentTypeEnum.JS.getType());
 
-		ctm.put("txt", ContentTypeEnum.TEXT_PLAIN.getType());
-		ctm.put("css", ContentTypeEnum.TEXT_CSS.getType());
-		ctm.put("html", ContentTypeEnum.TEXT_HTML.getType());
+		ctm.put("txt", new String(ContentTypeEnum.TEXT_PLAIN.getTypeBytes()));
+		ctm.put("css", new String(ContentTypeEnum.TEXT_CSS.getTypeBytes()));
+		ctm.put("html", new String(ContentTypeEnum.TEXT_HTML.getTypeBytes()));
 
 
 		return ctm;
