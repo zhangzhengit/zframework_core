@@ -143,13 +143,18 @@ public class ZControllerMap {
 	}
 
 	private static ByteArrayKeyWrapper getxCache(final String path, final Set<ByteArrayKeyWrapper> keySet) {
-		final Supplier<ByteArrayKeyWrapper> getxSupplier = getxSupplier(path, keySet);
-		final ByteArrayKeyWrapper computeIfAbsent = ZRC.singleton().computeIfAbsent(path, getxSupplier);
-		return computeIfAbsent;
+		final Supplier<SP> getxSupplier = getxSupplier(path, keySet);
+		final SP sp = ZRC.singleton().computeIfAbsent(path, getxSupplier);
+		if (sp == null) {
+			return null;
+		}
+
+		ZPVTL.set(sp.getVList());
+		return sp.getKeyWrapper();
 	}
 
-	private static Supplier<ByteArrayKeyWrapper> getxSupplier(final String path, final Set<ByteArrayKeyWrapper> keySet) {
-		final Supplier<ByteArrayKeyWrapper> getxSupplier = () -> {
+	private static Supplier<SP> getxSupplier(final String path, final Set<ByteArrayKeyWrapper> keySet) {
+		final Supplier<SP> getxSupplier = () -> {
 			final String[] s = path.replaceAll("//+", "/").split("/");
 
 			for (final ByteArrayKeyWrapper kw : keySet) {
@@ -182,8 +187,8 @@ public class ZControllerMap {
 				}
 
 				if ((pipei + pipeiM + empty) == s.length) {
-					ZPVTL.set(valueList);
-					return kw;
+//					ZPVTL.set(valueList);
+					return new SP(kw, valueList);
 				}
 			}
 
