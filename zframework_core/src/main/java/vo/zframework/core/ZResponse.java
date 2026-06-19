@@ -125,7 +125,6 @@ public class ZResponse {
 	private volatile boolean write = false;
 
 	private volatile boolean isBodyStream = false;
-
 	private String contentType;
 	private byte[] contentTypeBytes;
 	private final AtomicReference<Integer> httpStatus = new AtomicReference<>(HttpStatusEnum.HTTP_200.getStatus());
@@ -469,7 +468,7 @@ public class ZResponse {
 
 		final String eTag =
 				eTagManually != null ? eTagManually :
-				ZResponse.gETag(data, eTagEnum);
+				this.gETag(data, eTagEnum);
 
 		this.header(HeaderEnum.ETAG.getNameBytes(), eTag.getBytes());
 
@@ -480,7 +479,16 @@ public class ZResponse {
 		}
 	}
 
-	private static String gETag(final byte[] data, final ETagEnum eTagEnum) {
+	private String gETag(final byte[] data, final ETagEnum eTagEnum) {
+		if (!this.isBodyStream && PDTL.get().getZrMethod().isRTPrimitiveType()) {
+			// 接口方法返回基本类型，直接用返回值作为ETag头
+			// FIXME 2026年6月19日 15:56:45 zhangzhen : 上面if是为了减少下面的hash的消耗，
+			// 但是这个if不太准确，不该只是基本类型，而是所有body都很小的内容，包括Date/BigInteger/小String/小对象等等
+			// 都可以不hash直接用body作为ETag，而很大的body不得不减小ETag头，才用了hash(目前的实现)
+			// 所以应该统一判断body大小，设一个阈值
+			return eTagEnum.handle(new String(data));
+		}
+
 		final String murmur3 = Hash.murmur3(data);
 		final String md5 = Hash.md5(data);
 		final String goodFastHash = Hash.goodFastHash(data);

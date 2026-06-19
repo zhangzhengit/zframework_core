@@ -79,6 +79,7 @@ public class ZRMethod {
 	private final boolean hasZMultipartFile;
 
 	private final boolean hasZETag;
+	private final ZETag zETag;
 
 	private final ZCacheControl cacheControl;
 	private final ZLastModified lastModified;
@@ -104,6 +105,8 @@ public class ZRMethod {
 		this.methodHandle = ZRMethod.gMH(method, zcObject);
 
 		this.hasZETag = method.getAnnotation(ZETag.class) != null;
+
+		this.zETag = method.getAnnotation(ZETag.class);
 
 		this.zqpsLimitation = method.getAnnotation(ZQPSLimitation.class);
 
@@ -325,6 +328,10 @@ public class ZRMethod {
 
 	public boolean isRTPrimitiveType() {
 		return this.isRTPrimitiveType;
+	}
+
+	public ZETag getZETag() {
+		return this.zETag;
 	}
 
 }
