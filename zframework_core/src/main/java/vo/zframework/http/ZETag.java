@@ -20,6 +20,9 @@ import java.lang.annotation.Target;
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.METHOD })
+// FIXME 2026年6月19日 08:01:12 zhangzhen : 重新思考此功能如何实现，要不要加属性？设定一个生效阈值？body大于多少本注解才生效？
+// Number/boolean值直接用值本身作为ETag？但是对于这类极其简单的body，响应ETag反而可能适得其反，因为多一个ETag头和计算ETag的消耗比
+// 直接响应body大很多
 public @interface ZETag {
 
 }
