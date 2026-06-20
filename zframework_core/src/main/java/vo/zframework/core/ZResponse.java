@@ -239,6 +239,10 @@ public class ZResponse {
 		return this.headerMap.containsKey(keyWrapper);
 	}
 
+	public void removeHeader(final byte[] nameBytes) {
+		this.headerMap.remove(new ByteArrayKeyWrapper(nameBytes));
+	}
+
 	public String getHeader(final byte[] nameBytes) {
 		final byte[] bs = this.headerMap.get(new ByteArrayKeyWrapper(nameBytes));
 		return bs == null ? null : new String(bs);
@@ -628,6 +632,14 @@ public class ZResponse {
 	public synchronized ZResponse body(final byte[] body) {
 		this.checkBIC();
 
+		if (this.getHttpStatus() == HttpStatusEnum.HTTP_204.getStatus()) {
+			return this;
+		}
+
+		if (AU.isEmpty(body)) {
+			return this;
+		}
+
 		if (compressionEnable
 				&& (body.length >= (SERVER_CONFIGURATIONPROPERTIES.getCompressionMinLength() * 1024))
 				&& SERVER_CONFIGURATIONPROPERTIES.compressionContains(this.getContentType())
@@ -672,6 +684,10 @@ public class ZResponse {
 	 * @return
 	 */
 	public synchronized ZResponse body(final Object body) {
+		if (this.getHttpStatus() == HttpStatusEnum.HTTP_204.getStatus()) {
+			return this;
+		}
+
 		return this.body(String.valueOf(body));
 	}
 
@@ -683,6 +699,10 @@ public class ZResponse {
 	 */
 	public synchronized ZResponse body(final String body) {
 		// FIXME 2026年6月20日 07:12:04 zhangzhen : 大String在此getBytes成为内存热点，要不要改为ZstdOutputStream流式响应?
+		if (this.getHttpStatus() == HttpStatusEnum.HTTP_204.getStatus()) {
+			return this;
+		}
+
 		return this.body(body.getBytes());
 	}
 
@@ -739,6 +759,11 @@ public class ZResponse {
 //			this.httpStatus(HttpStatusEnum.HTTP_204.getStatus());
 //		}
 
+		if (this.getHttpStatus() == HttpStatusEnum.HTTP_204.getStatus()) {
+			this.clearBody();
+			this.removeHeaderWhen204();
+		}
+
 		this.setCustomHeader();
 		this.setServerName();
 		this.setDate();
@@ -751,6 +776,14 @@ public class ZResponse {
 			HTTPResponseProcessor.setCacheControl(this);
 		}
 
+	}
+
+	private void removeHeaderWhen204() {
+		this.removeHeader(HeaderEnum.CONTENT_TYPE.getNameBytes());
+		this.removeHeader(HeaderEnum.CONTENT_LENGTH.getNameBytes());
+		this.removeHeader(HeaderEnum.CONTENT_ENCODING.getNameBytes());
+		this.removeHeader(HeaderEnum.TRANSFER_ENCODING.getNameBytes());
+		// FIXME 2026年6月20日 09:51:07 zhangzhen :还有Content-Language Content-Range
 	}
 
 	public void setDate() {
@@ -799,7 +832,9 @@ public class ZResponse {
 		this.checkContentType();
 
 		// 设置Content-Length头
-		this.header(HeaderEnum.CONTENT_LENGTH.getNameBytes(), String.valueOf(this.getBodyLength()).getBytes());
+		if (this.getHttpStatus() != HttpStatusEnum.HTTP_204.getStatus()) {
+			this.header(HeaderEnum.CONTENT_LENGTH.getNameBytes(), String.valueOf(this.getBodyLength()).getBytes());
+		}
 
 		this.addStatusLineAndHeaders();
 
