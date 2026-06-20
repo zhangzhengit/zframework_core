@@ -144,7 +144,7 @@ public class ZControllerMap {
 
 	private static ByteArrayKeyWrapper getxCache(final String path, final Set<ByteArrayKeyWrapper> keySet) {
 		final Supplier<SP> getxSupplier = getxSupplier(path, keySet);
-		final SP sp = ZRC.singleton().computeIfAbsent(path, getxSupplier);
+		final SP sp = ZRC.singleton().computeIfAbsent(path, getxSupplier, true);
 		if (sp == null) {
 			return null;
 		}
