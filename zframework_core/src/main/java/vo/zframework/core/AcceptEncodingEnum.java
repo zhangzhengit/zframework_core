@@ -11,7 +11,7 @@ public enum AcceptEncodingEnum {
 
 	GZIP("gzip", "gzip".getBytes()),
 
-	DEFLATE("DEFLATE", "DEFLATE".getBytes()),
+	DEFLATE("deflate", "deflate".getBytes()),
 
 	BR("br", "br".getBytes()),
 

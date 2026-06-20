@@ -142,7 +142,7 @@ public class ZRequest {
 	}
 
 	private boolean supportCompression(final AcceptEncodingEnum aeEnum) {
-		final String a = this.getHeader(HeaderEnum.ACCEPT_ENCODING.getName());
+		final String a = this.getAcceptEncoding();
 		if (STU.isEmpty(a)) {
 			return false;
 		}
@@ -388,6 +388,11 @@ public class ZRequest {
 		}
 
 		return this.userAgent;
+	}
+
+	public String getAcceptEncoding() {
+		final String acceptEncoding = this.getHeader(HeaderEnum.ACCEPT_ENCODING.getName());
+		return acceptEncoding;
 	}
 
 	public String getHeader(final String name) {

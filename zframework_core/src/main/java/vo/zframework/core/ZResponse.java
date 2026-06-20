@@ -613,14 +613,28 @@ public class ZResponse {
 		this.arrayAdd(CRLF_BYTES);
 	}
 
-	/**
-	 * 写入body部分
-	 */
-	private void addBody() {
-		if (this.body != null) {
-			this.arrayAdd(this.body);
-			this.arrayAdd(CRLF_BYTES);
+	private byte[] compressBody() {
+		if (this.body == null) {
+			return null;
 		}
+
+		if (!this.isBodyStream && this.yasuo(this.body)) {
+
+			final ZRequest request = ReqeustInfo.get();
+			if (request.isSupportZSTD()) {
+				return ZSTD.compress(this.body);
+			}
+			// FIXME 2025年1月2日 下午9:37:52 zhangzhen : 支持了br后，要再加一个ifelse
+			if (request.isSupportGZIP()) {
+				return ZGzip.compress(this.body);
+			}
+			if (request.isSupportDEFLATE()) {
+				return Deflater.compress(this.body);
+			}
+
+		}
+
+		return this.body;
 	}
 
 	/**
@@ -640,33 +654,15 @@ public class ZResponse {
 			return this;
 		}
 
-		if (compressionEnable
-				&& (body.length >= (SERVER_CONFIGURATIONPROPERTIES.getCompressionMinLength() * 1024))
-				&& SERVER_CONFIGURATIONPROPERTIES.compressionContains(this.getContentType())
-				) {
-
-			byte[] compress = null;
-			final ZRequest request = ReqeustInfo.get();
-			if (request.isSupportZSTD()) {
-				this.header(HeaderEnum.CONTENT_ENCODING.getNameBytes(), AcceptEncodingEnum.ZSTD.getValueBytes());
-				compress = ZSTD.compress(body);
-				// FIXME 2025年1月2日 下午9:37:52 zhangzhen : 支持了br后，要再加一个ifelse
-			} else if (request.isSupportGZIP()) {
-				this.header(HeaderEnum.CONTENT_ENCODING.getNameBytes(), AcceptEncodingEnum.GZIP.getValueBytes());
-				compress = ZGzip.compress(body);
-			} else if (request.isSupportDEFLATE()) {
-				this.header(HeaderEnum.CONTENT_ENCODING.getNameBytes(), AcceptEncodingEnum.DEFLATE.getValueBytes());
-				compress = Deflater.compress(body);
-			} else {
-				compress = body;
-			}
-
-			this.body = compress;
-		} else {
-			this.body = body;
-		}
+		this.body = body;
 
 		return this;
+	}
+
+	private boolean yasuo(final byte[] body) {
+		return compressionEnable
+				&& (body.length >= (SERVER_CONFIGURATIONPROPERTIES.getCompressionMinLength() * 1024))
+				&& SERVER_CONFIGURATIONPROPERTIES.compressionContains(this.getContentType());
 	}
 
 	private synchronized void checkBIC() {
@@ -732,7 +728,7 @@ public class ZResponse {
 	}
 
 	/**
-	 * 在socketChannel.write之前，设置一些header
+	 * 在响应之前，设置一些header
 	 */
 	private void beforeWrite() {
 
@@ -761,7 +757,18 @@ public class ZResponse {
 
 		if (this.getHttpStatus() == HttpStatusEnum.HTTP_204.getStatus()) {
 			this.clearBody();
-			this.removeHeaderWhen204();
+			this.removeContentHeaderWhen204();
+		}
+
+		if (!this.isBodyStream && this.yasuo(this.body)) {
+			if (request.isSupportZSTD()) {
+				this.header(HeaderEnum.CONTENT_ENCODING.getNameBytes(), AcceptEncodingEnum.ZSTD.getValueBytes());
+				// FIXME 2025年1月2日 下午9:37:52 zhangzhen : 支持了br后，要再加一个ifelse
+			} else if (request.isSupportGZIP()) {
+				this.header(HeaderEnum.CONTENT_ENCODING.getNameBytes(), AcceptEncodingEnum.GZIP.getValueBytes());
+			} else if (request.isSupportDEFLATE()) {
+				this.header(HeaderEnum.CONTENT_ENCODING.getNameBytes(), AcceptEncodingEnum.DEFLATE.getValueBytes());
+			}
 		}
 
 		this.setCustomHeader();
@@ -778,7 +785,7 @@ public class ZResponse {
 
 	}
 
-	private void removeHeaderWhen204() {
+	private void removeContentHeaderWhen204() {
 		this.removeHeader(HeaderEnum.CONTENT_TYPE.getNameBytes());
 		this.removeHeader(HeaderEnum.CONTENT_LENGTH.getNameBytes());
 		this.removeHeader(HeaderEnum.CONTENT_ENCODING.getNameBytes());
@@ -827,20 +834,33 @@ public class ZResponse {
 		}
 	}
 
-	private void writeResponse()  {
+	private void writeResponse() {
 
+		// 先校验：Content-Type必须设置过
 		this.checkContentType();
 
-		// 设置Content-Length头
+		// 先压缩body
+		final byte[] compressBody = this.compressBody();
+
+		// 根据压缩后的body设置Content-Length头
 		if (this.getHttpStatus() != HttpStatusEnum.HTTP_204.getStatus()) {
-			this.header(HeaderEnum.CONTENT_LENGTH.getNameBytes(), String.valueOf(this.getBodyLength()).getBytes());
+			this.header(HeaderEnum.CONTENT_LENGTH.getNameBytes(),
+					String.valueOf(compressBody == null ? 0 : compressBody.length).getBytes());
 		}
 
+		// 写入header
 		this.addStatusLineAndHeaders();
 
-		this.addBody();
+		// 写入压缩后的body
+		this.addBody(compressBody);
 
+		// 最后flush
 		this.writeZArrayAndFlush();
+	}
+
+	private void addBody(final byte[] compressBody) {
+		this.arrayAdd(compressBody);
+		this.arrayAdd(CRLF_BYTES);
 	}
 
 	private void writeZArrayAndFlush() {
