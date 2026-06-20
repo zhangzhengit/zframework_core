@@ -142,14 +142,23 @@ public class ZRequest {
 	}
 
 	private boolean supportCompression(final AcceptEncodingEnum aeEnum) {
-		final String a = this.getAcceptEncoding();
-		if (STU.isEmpty(a)) {
+		final String ae = this.getAcceptEncoding();
+		if (STU.isEmpty(ae)) {
 			return false;
 		}
 
-		final String[] array = a.split(",");
-		for (final String a2 : array) {
-			if (aeEnum.getValue().equalsIgnoreCase(a2.trim())) {
+		// FIXME 2026年6月20日 15:53:29 zhangzhen : 下面会生成多个String成为内存热点，
+		// 但是似乎只能这样，使用byte[]貌似不好处理，连if ((ae.indexOf(aeEnum.getValue()) > -1)
+		//	 || (ae.toLowerCase().indexOf(aeEnum.getValue()) > -1)) 也不行，虽然简单,
+		// 但只能匹配正规的合法的且严格小写的AcceptEncoding
+		// 还会有误判，如恶意请求的agzipb也会误判为gzip，虽无安全问题，但也多做了无用的压缩
+		final String[] array = ae.split(",");
+		for (final String a : array) {
+			if (aeEnum.getValue().equals(a)
+			 ||	aeEnum.getValue().equals(a.trim())
+			 ||	aeEnum.getValue().equals(a.toLowerCase())
+			 ||	aeEnum.getValue().equals(a.trim().toLowerCase())
+					) {
 				return true;
 			}
 		}
