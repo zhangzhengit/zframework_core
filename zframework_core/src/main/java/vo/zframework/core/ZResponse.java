@@ -676,6 +676,7 @@ public class ZResponse {
 
 	private boolean yasuo(final byte[] body) {
 		return compressionEnable
+				&& AU.isNotEmpty(body)
 				&& (body.length >= (SERVER_CONFIGURATIONPROPERTIES.getCompressionMinLength() * 1024))
 				&& SERVER_CONFIGURATIONPROPERTIES.compressionContains(this.getContentType());
 	}
@@ -874,8 +875,10 @@ public class ZResponse {
 	}
 
 	private void addBody(final byte[] compressBody) {
-		this.arrayAdd(compressBody);
-		this.arrayAdd(CRLF_BYTES);
+		if (compressBody != null) {
+			this.arrayAdd(compressBody);
+			this.arrayAdd(CRLF_BYTES);
+		}
 	}
 
 	private void writeZArrayAndFlush() {
