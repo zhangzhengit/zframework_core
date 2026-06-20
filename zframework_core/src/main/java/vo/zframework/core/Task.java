@@ -74,11 +74,11 @@ import vo.zframework.validator.ZValidator;
  */
 public class Task {
 
+	private static final Object[] EMPTY_OBJECT_ARRAY = {};
 	private static final ServerConfigurationProperties SERVER_CONFIGURATIONPROPERTIES = ZContext
 			.getBean(ServerConfigurationProperties.class);
 	private static final RequestValidatorConfigurationProperties REQUEST_VALIDATOR_CONFIGURATION_PROPERTIES = ZContext.getBean(RequestValidatorConfigurationProperties.class);
 
-	public static final String SP = "&";
 	public static final String DEFAULT_CHARSET_NAME = Charset.defaultCharset().displayName();
 	public static final String VOID = "void";
 	public static final ContentTypeEnum DEFAULT_CONTENT_TYPE = ContentTypeEnum.APPLICATION_JSON;
@@ -982,8 +982,8 @@ public class Task {
 	private static Object[] generateParameters(final ZRequest request, final String path, final ZRMethod zrMethod)
 			throws NumberFormatException {
 
-		if (zrMethod.getMethodParameters().length <= 0) {
-			return new Object[0];
+		if (zrMethod.getMethodParameterSize() <= 0) {
+			return EMPTY_OBJECT_ARRAY;
 		}
 
 		return Task.generateParameters0(request, path, zrMethod);

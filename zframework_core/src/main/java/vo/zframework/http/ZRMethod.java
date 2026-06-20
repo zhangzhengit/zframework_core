@@ -31,6 +31,7 @@ public class ZRMethod {
 	private final Method method;
 
 	private final Parameter[] methodParameters;
+	private final int methodParameterSize;
 
 	private	final MethodHandle methodHandle;
 
@@ -101,6 +102,8 @@ public class ZRMethod {
 		this.method = method;
 
 		this.methodParameters = method.getParameters();
+
+		this.methodParameterSize = this.methodParameters.length;
 
 		this.methodHandle = ZRMethod.gMH(method, zcObject);
 
@@ -332,6 +335,10 @@ public class ZRMethod {
 
 	public ZETag getZETag() {
 		return this.zETag;
+	}
+
+	public int getMethodParameterSize() {
+		return this.methodParameterSize;
 	}
 
 }

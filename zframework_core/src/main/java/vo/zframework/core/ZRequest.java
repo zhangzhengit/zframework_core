@@ -62,7 +62,8 @@ public class ZRequest {
 	/**
 	 * path中?后面的部分
 	 */
-	String queryString;
+	BA queryStringBA;
+	String queryStringCache;
 
 	TF tf;
 
@@ -513,14 +514,34 @@ public class ZRequest {
 		return address.getHostAddress();
 	}
 
-
 	private static void parsePath(final ZRequest request) {
-		final String requestURI = parseURI(request);
 
-		try {
-			request.requestURI = java.net.URLDecoder.decode(requestURI, Task.DEFAULT_CHARSET_NAME);
-		} catch (final UnsupportedEncodingException e) {
-			e.printStackTrace();
+		final byte[] requestURIBytes = PDTL.get().getRequestURIBytes();
+
+		final int wI = AU.indexOfKeyword(requestURIBytes, STU.Q_BYTE);
+
+		if (wI > -1) {
+
+			final List<byte[]> pa = STU.splitBytes(requestURIBytes, wI + STU.Q_LENGTH, requestURIBytes.length,
+					STU.SP_BYTES);
+
+			final List<RequestParam> params = new ArrayList<>(pa.size());
+			for (int i = 0; i < pa.size(); i++) {
+				final ZRequest.RequestParam requestParam = hParam(new String(pa.get(i)));
+				params.add(requestParam);
+			}
+
+			request.params = params;
+			request.path = new String(Arrays.copyOfRange(requestURIBytes, 0, wI));
+			request.queryStringBA = new BA(requestURIBytes, (wI + STU.Q_LENGTH) - 1, requestURIBytes.length);
+			request.requestURI = new String(requestURIBytes);
+		} else {
+			// requestURI中无?符号
+			final String requestURI = new String(requestURIBytes);
+			request.path = requestURI;
+			request.queryStringBA = null;
+			request.requestURI = requestURI;
+			// FIXME 2026年6月20日 14:18:18 zhangzhen : 暂时删除了java.net.URLDecoder.decode，记得再加上
 		}
 	}
 
@@ -546,44 +567,6 @@ public class ZRequest {
 		}
 
 		return requestURIBytes;
-	}
-
-	private static String parseURI(final ZRequest request) {
-
-		final byte[] getRequestURIBytes = PDTL.get().getRequestURIBytes();
-		final String requestURI = new String(getRequestURIBytes);
-
-		final int wI = requestURI.indexOf(STU.Q);
-		if (wI > -1) {
-			final String simplePath = requestURI.substring(0, wI);
-
-			try {
-				request.path = java.net.URLDecoder.decode(simplePath, Task.DEFAULT_CHARSET_NAME);
-			} catch (final UnsupportedEncodingException e) {
-				e.printStackTrace();
-			}
-
-			request.queryString = requestURI.substring((wI + STU.Q_LENGTH) - 1);
-			final String paramS = requestURI.substring(wI + STU.Q_LENGTH);
-
-			final String[] pa = paramS.split(Task.SP);
-			final List<RequestParam> params = new ArrayList<>(pa.length);
-			for (final String param : pa) {
-				final ZRequest.RequestParam requestParam = hParam(param);
-				params.add(requestParam);
-			}
-
-			request.params = params;
-
-		} else {
-			try {
-				request.path = java.net.URLDecoder.decode(requestURI, Task.DEFAULT_CHARSET_NAME);
-			} catch (final UnsupportedEncodingException e) {
-				e.printStackTrace();
-			}
-		}
-
-		return requestURI;
 	}
 
 	private static ZRequest.RequestParam hParam(final String param) {
@@ -765,7 +748,16 @@ public class ZRequest {
 	}
 
 	public String getQueryString() {
-		return this.queryString;
+		if (this.queryStringBA == null) {
+			return null;
+		}
+
+		if (this.queryStringCache == null) {
+			this.queryStringCache = new String(this.queryStringBA.getData(), this.queryStringBA.getFrom(),
+					this.queryStringBA.getTo() - this.queryStringBA.getFrom());
+		}
+
+		return this.queryStringCache;
 	}
 
 	public TF getTf() {
