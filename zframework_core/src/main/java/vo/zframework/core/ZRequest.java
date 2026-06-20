@@ -548,8 +548,7 @@ public class ZRequest {
 			}
 
 			request.params = params;
-			request.path = URLDecoder.decode(new String(Arrays.copyOfRange(requestURIBytes, 0, wI)),
-					Charset.defaultCharset());
+			request.path = URLDecoder.decode(new String(requestURIBytes, 0, wI), Charset.defaultCharset());
 			request.queryStringBA = new BA(requestURIBytes, (wI + STU.Q_LENGTH) - 1, requestURIBytes.length);
 			request.requestURI = URLDecoder.decode(new String(requestURIBytes), Charset.defaultCharset());
 		} else {
