@@ -774,25 +774,26 @@ public class Task {
 	}
 
 	private static void setZPathVariableValue(final Object[] parameters, final int pI, final Class<?> type, final Object value) {
-		if (type.getName().equals(Byte.class.getName())) {
+		if (type == Byte.class) {
 			parameters[pI] = Byte.valueOf(String.valueOf(value));
-		} else if (type.getName().equals(Short.class.getName())) {
+		} else if (type == Short.class) {
 			parameters[pI] = Short.valueOf(String.valueOf(value));
-		} else if (type.getName().equals(Integer.class.getName())) {
+		} else if (type == Integer.class) {
 			parameters[pI] = Integer.valueOf(String.valueOf(value));
-		} else if (type.getName().equals(Long.class.getName())) {
+		} else if (type == Long.class) {
 			parameters[pI] = Long.valueOf(String.valueOf(value));
-		} else if (type.getName().equals(Float.class.getName())) {
+		} else if (type == Float.class) {
 			parameters[pI] = Float.valueOf(String.valueOf(value));
-		} else if (type.getName().equals(Double.class.getName())) {
+		} else if (type == Double.class) {
 			parameters[pI] = Double.valueOf(String.valueOf(value));
-		} else if (type.getName().equals(Boolean.class.getName())) {
+		} else if (type == Boolean.class) {
 			parameters[pI] = Boolean.valueOf(String.valueOf(value));
-		} else if (type.getName().equals(Character.class.getName())) {
+		} else if (type == Character.class) {
 			parameters[pI] = Character.valueOf(String.valueOf(value).charAt(0));
-		} else if (type.getName().equals(String.class.getName())) {
-			parameters[pI] = String.valueOf(value);
+		} else if (type == String.class) {
+			parameters[pI] = value;
 		}
+
 	}
 
 	private static int hZRequestParam(final Object[] parameters, final ZRequest request, final String path,
