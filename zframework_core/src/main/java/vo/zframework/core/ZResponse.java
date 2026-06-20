@@ -252,6 +252,20 @@ public class ZResponse {
 		return this.getHeader(name.getBytes());
 	}
 
+
+	public ZResponse contentLength(final long contentLength) {
+		// FIXME 2026年6月20日 16:13:43 zhangzhen : 要不要提供这个方法?要的话，每个header方法都要严格判断且判断是
+		// CONTENT_LENGTH头则调用本方法，并且所有类似的头都要严格判断，工作量太大了吧？
+		// 还是用户第一，用户写什么就是什么，不做任何限制和校验，但又容易不小心甚至恶意搞出违反http1.1协议的写法。想清楚
+		if (contentLength < 0) {
+			throw new IllegalArgumentException(HeaderEnum.CONTENT_LENGTH.getName() + "不能小于0，contentLength = " + contentLength);
+		}
+
+		this.header(HeaderEnum.CONTENT_LENGTH.getNameBytes(), String.valueOf(contentLength).getBytes());
+
+		return this;
+	}
+
 	public ZResponse header(final ZHeader zHeader) {
 		this.headerMap.put(new ByteArrayKeyWrapper(zHeader.getNameBytes()), zHeader.getValueBytes());
 
@@ -270,6 +284,8 @@ public class ZResponse {
 		}
 	}
 
+
+
 	public ZResponse header(final byte[] nameBytes,final byte[] valueBytes) {
 		if (Arrays.equals(HeaderEnum.CONTENT_TYPE.getNameBytes(), nameBytes)) {
 			throw new IllegalArgumentException(HeaderEnum.CONTENT_TYPE.getName() + " 使用 contentType 方法来设置");
@@ -279,15 +295,14 @@ public class ZResponse {
 		return this;
 	}
 
-	public ZResponse header(final String name,final String value) {
+	public ZResponse header(final String name, final String value) {
 		if (HeaderEnum.CONTENT_TYPE.getName().equals(name)) {
 			throw new IllegalArgumentException(HeaderEnum.CONTENT_TYPE.getName() + " 使用 contentType 方法来设置");
 		}
-		this.header(name.getBytes(),value.getBytes());
+		this.header(name.getBytes(), value.getBytes());
 
 		return this;
 	}
-
 
 	// FIXME 2025年1月1日 下午6:47:20 zhangzhen : 现在的4个body方法要不要设置为只允许调用一次？
 
