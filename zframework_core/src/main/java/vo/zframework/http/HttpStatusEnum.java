@@ -14,6 +14,8 @@ public enum HttpStatusEnum {
 
 	HTTP_200(200, "OK"),
 
+	HTTP_202(202, "Accepted"),
+
 	/**
 	 * 204 要求body必须为空且无Content*头
 	 */
