@@ -848,6 +848,17 @@ public class ZRequest {
 		public RequestParam() {
 		}
 
+		@Override
+		public String toString() {
+			final StringBuilder builder = new StringBuilder();
+			builder.append("RequestParam [name=");
+			builder.append(this.name);
+			builder.append(", value=");
+			builder.append(this.value);
+			builder.append("]");
+			return builder.toString();
+		}
+
 	}
 
 	public byte[] getMethodNameBytes() {

@@ -9,7 +9,6 @@ import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Parameter;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -689,7 +688,7 @@ public class Task {
 
 			final ZCookieValue zcv = RU.getAnnotation(p, ZCookieValue.class);
 			if (zcv != null) {
-				final String cookieName = ZCookieValue.DEFAULT_NONE.equals(zcv.name()) ? p.getName() : zcv.name();
+				final String cookieName = zcv.name();
 				final ZCookie ck = request.getCookie(cookieName);
 				if ((ck == null) && zcv.required()) {
 					final String message = "请求方法[" + path + "]缺少名为[" + cookieName + "]的Cookie";
@@ -825,15 +824,11 @@ public class Task {
 		if (CU.isNotEmpty(params)) {
 
 			final RequestParam rp = findRequestParam(p, params);
-			if (rp == null) {
-				throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在",
-						HttpStatusEnum.HTTP_400.getStatus());
-			}
 
-
-			final Object value = rp.getValue() != null ? rp.getValue() :
-					(ZRequestParam.DEFAULT_NONE.equals(requestParam.defaultValue())) ? null
-							: requestParam.defaultValue();
+			final Object value =
+					(rp == null) ? null :
+					(ZRequestParam.DEFAULT_NONE.equals(rp.getValue())) ? null
+							: rp.getValue();
 
 			if (requestParam.required() && (value == null)) {
 				throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在",
@@ -843,7 +838,7 @@ public class Task {
 			try {
 				return Task.setValue(parameters, pI, p, value);
 			} catch (final NumberFormatException e) {
-				throw new ParsingRequestParamException(p.getName() + STU.EQUALS + rp.getValue(),
+				throw new ParsingRequestParamException(p.getName() + STU.EQUALS + value,
 						HttpStatusEnum.HTTP_400.getStatus());
 			}
 

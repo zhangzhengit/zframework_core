@@ -6,8 +6,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import vo.zframework.http.ZRequestParam;
-
 /**
  * 用在接口方法的参数上，表示此参数是一个 Cookie。
  * 参数类型只能是String或ZCookie：
@@ -23,8 +21,6 @@ import vo.zframework.http.ZRequestParam;
 @Target({ ElementType.PARAMETER })
 public @interface ZCookieValue {
 
-	public static final String DEFAULT_NONE = ZRequestParam.DEFAULT_NONE;
-
 	/**
 	 * 校验的Cookie名称，如：ZSESSIONID。
 	 * 必填项
@@ -32,7 +28,7 @@ public @interface ZCookieValue {
 	 * @return
 	 *
 	 */
-	String name() default DEFAULT_NONE;
+	String name();
 
 	/**
 	 * 此参数是否必须存在，为true时如果不存在会抛出异常
