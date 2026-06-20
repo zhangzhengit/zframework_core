@@ -293,110 +293,113 @@ public class ZValidator {
 			return;
 		}
 
-		if (!ZValidator.isZMinZMaxSupported(paramValue.getClass())) {
+		final Class<? extends Object> pvClass = paramValue.getClass();
+		if (!ZValidator.isZMinZMaxSupported(pvClass)) {
 			throw new ValidatedException("@" + ZMin.class.getSimpleName()
 					+ " 只能用于Byte,Short,Integer,Long,Float,Double,BigDecimal,BigInteger,AtomicLong,AtomicInteger类型,当前用于["
 					+ p.getName() + "]", HttpStatusEnum.HTTP_400.getStatus());
 		}
 
-		final String canonicalName = paramValue.getClass().getCanonicalName();
-		if (canonicalName.equals(Byte.class.getCanonicalName())) {
+		final String canonicalName = pvClass.getCanonicalName();
+		if (pvClass == Byte.class) {
 			if (Byte.valueOf(String.valueOf(paramValue)) > ((Number) maxValue).byteValue()) {
 				ZValidator.throwZMaxMessage(p.getName(), paramValue, ((Number) maxValue).byteValue());
 			}
-		} else if (canonicalName.equals(Short.class.getCanonicalName())) {
+		} else if (pvClass == Short.class) {
 			if (Short.valueOf(String.valueOf(paramValue)) > ((Number) maxValue).shortValue()) {
 				ZValidator.throwZMaxMessage(p.getName(), paramValue, ((Number) maxValue).shortValue());
 			}
-		} else if (canonicalName.equals(Integer.class.getCanonicalName())) {
+		} else if (pvClass == Integer.class) {
 			if (Integer.valueOf(String.valueOf(paramValue)) > ((Number) maxValue).intValue()) {
 				ZValidator.throwZMaxMessage(p.getName(), paramValue, ((Number) maxValue).intValue());
 			}
-		} else if (canonicalName.equals(Long.class.getCanonicalName())) {
+		} else if (pvClass == Long.class) {
 			if (Long.valueOf(String.valueOf(paramValue)) > ((Number) maxValue).longValue()) {
 				ZValidator.throwZMaxMessage(p.getName(), paramValue, ((Number) maxValue).longValue());
 			}
-		} else if (canonicalName.equals(Float.class.getCanonicalName())) {
+		} else if (pvClass == Float.class) {
 			if (Float.valueOf(String.valueOf(paramValue)) > ((Number) maxValue).floatValue()) {
 				ZValidator.throwZMaxMessage(p.getName(), paramValue, ((Number) maxValue).floatValue());
 			}
-		} else if (canonicalName.equals(Double.class.getCanonicalName())
+		} else if ((pvClass == Double.class)
 				&& (Double.valueOf(String.valueOf(paramValue)) > ((Number) maxValue).doubleValue())) {
 			ZValidator.throwZMaxMessage(p.getName(), paramValue, ((Number) maxValue).doubleValue());
-		} else if (canonicalName.equals(BigInteger.class.getCanonicalName())) {
+		} else if (pvClass == BigInteger.class) {
 			final BigInteger bi = (BigInteger) paramValue;
 			if (bi.doubleValue() > ((BigInteger) maxValue).doubleValue()) {
 				ZValidator.throwZMaxMessage(p.getName(), paramValue, maxValue);
 			}
-		} else if (canonicalName.equals(BigDecimal.class.getCanonicalName())) {
+		} else if (pvClass == BigDecimal.class) {
 			final BigDecimal bd = (BigDecimal) paramValue;
 			if (bd.doubleValue() > ((BigDecimal) maxValue).doubleValue()) {
 				ZValidator.throwZMaxMessage(p.getName(), paramValue, maxValue);
 			}
-		} else if (canonicalName.equals(AtomicInteger.class.getCanonicalName())) {
+		} else if (pvClass == AtomicInteger.class) {
 			final AtomicInteger ai = (AtomicInteger) paramValue;
 			if (ai.doubleValue() > ((AtomicInteger) maxValue).doubleValue()) {
 				ZValidator.throwZMaxMessage(p.getName(), paramValue, maxValue);
 			}
-		} else if (canonicalName.equals(AtomicLong.class.getCanonicalName())) {
+		} else if (pvClass == AtomicLong.class) {
 			final AtomicLong al = (AtomicLong) paramValue;
 			if (al.doubleValue() > ((AtomicLong) maxValue).decrementAndGet()) {
 				ZValidator.throwZMaxMessage(p.getName(), paramValue, maxValue);
 			}
 		}
 	}
+
 	public static void validatedZMin(final Parameter p, final Object paramValue, final Object minValue) {
 		if (paramValue == null) {
 			ZValidator.throwZNotNullException(p.getName());
 			return;
 		}
 
-		if (!ZValidator.isZMinZMaxSupported(paramValue.getClass())) {
+		final Class<? extends Object> pvClass = paramValue.getClass();
+		if (!ZValidator.isZMinZMaxSupported(pvClass)) {
 			throw new ValidatedException("@" + ZMin.class.getSimpleName()
 					+ " 只能用于Byte,Short,Integer,Long,Float,Double,BigDecimal,BigInteger,AtomicLong,AtomicInteger类型,当前用于["
 					+ p.getName() + "]", HttpStatusEnum.HTTP_400.getStatus());
 		}
 
-		final String canonicalName = paramValue.getClass().getCanonicalName();
-		if (canonicalName.equals(Byte.class.getCanonicalName())) {
+		final String canonicalName = pvClass.getCanonicalName();
+		if (pvClass == Byte.class) {
 			if (Byte.valueOf(String.valueOf(paramValue)) < ((Number) minValue).byteValue()) {
 				ZValidator.throwZMinMessage(p.getName(), paramValue, ((Number) minValue).byteValue());
 			}
-		} else if (canonicalName.equals(Short.class.getCanonicalName())) {
+		} else if (pvClass == Short.class) {
 			if (Short.valueOf(String.valueOf(paramValue)) < ((Number) minValue).shortValue()) {
 				ZValidator.throwZMinMessage(p.getName(), paramValue, ((Number) minValue).shortValue());
 			}
-		} else if (canonicalName.equals(Integer.class.getCanonicalName())) {
+		} else if (pvClass == Integer.class) {
 			if (Integer.valueOf(String.valueOf(paramValue)) < ((Number) minValue).intValue()) {
 				ZValidator.throwZMinMessage(p.getName(), paramValue, ((Number) minValue).intValue());
 			}
-		} else if (canonicalName.equals(Long.class.getCanonicalName())) {
+		} else if (pvClass == Long.class) {
 			if (Long.valueOf(String.valueOf(paramValue)) < ((Number) minValue).longValue()) {
 				ZValidator.throwZMinMessage(p.getName(), paramValue, ((Number) minValue).longValue());
 			}
-		} else if (canonicalName.equals(Float.class.getCanonicalName())) {
+		} else if (pvClass == Float.class) {
 			if (Float.valueOf(String.valueOf(paramValue)) < ((Number) minValue).floatValue()) {
 				ZValidator.throwZMinMessage(p.getName(), paramValue, ((Number) minValue).floatValue());
 			}
-		} else if (canonicalName.equals(Double.class.getCanonicalName())
+		} else if ((pvClass == Double.class)
 				&& (Double.valueOf(String.valueOf(paramValue)) < ((Number) minValue).doubleValue())) {
 			ZValidator.throwZMinMessage(p.getName(), paramValue, ((Number) minValue).doubleValue());
-		} else if (canonicalName.equals(BigInteger.class.getCanonicalName())) {
+		} else if (pvClass == BigInteger.class) {
 			final BigInteger bi = (BigInteger) paramValue;
 			if (bi.doubleValue() < ((BigInteger) minValue).doubleValue()) {
 				ZValidator.throwZMinMessage(p.getName(), paramValue, minValue);
 			}
-		} else if (canonicalName.equals(BigDecimal.class.getCanonicalName())) {
+		} else if (pvClass == BigDecimal.class) {
 			final BigDecimal bd = (BigDecimal) paramValue;
 			if (bd.doubleValue() < ((BigDecimal) minValue).doubleValue()) {
 				ZValidator.throwZMinMessage(p.getName(), paramValue, minValue);
 			}
-		} else if (canonicalName.equals(AtomicInteger.class.getCanonicalName())) {
+		} else if (pvClass == AtomicInteger.class) {
 			final AtomicInteger ai = (AtomicInteger) paramValue;
 			if (ai.doubleValue() < ((AtomicInteger) minValue).doubleValue()) {
 				ZValidator.throwZMinMessage(p.getName(), paramValue, minValue);
 			}
-		} else if (canonicalName.equals(AtomicLong.class.getCanonicalName())) {
+		} else if (pvClass == AtomicLong.class) {
 			final AtomicLong al = (AtomicLong) paramValue;
 			if (al.doubleValue() < ((AtomicLong) minValue).decrementAndGet()) {
 				ZValidator.throwZMinMessage(p.getName(), paramValue, minValue);
@@ -421,52 +424,53 @@ public class ZValidator {
 				return;
 			}
 
-			if (!ZValidator.isZMinZMaxSupported(minFiledValue.getClass())) {
+			final Class<? extends Object> fvClass = minFiledValue.getClass();
+			if (!ZValidator.isZMinZMaxSupported(fvClass)) {
 				throw new ValidatedException("@" + ZMin.class.getSimpleName()
 						+ " 只能用于Byte,Short,Integer,Long,Float,Double,BigDecimal,BigInteger,AtomicLong,AtomicInteger类型,当前用于字段["
 						+ field.getName() + "]", HttpStatusEnum.HTTP_400.getStatus());
 			}
 
-			final String canonicalName = minFiledValue.getClass().getCanonicalName();
-			if (canonicalName.equals(Byte.class.getCanonicalName())) {
+			final String canonicalName = fvClass.getCanonicalName();
+			if (fvClass == Byte.class) {
 				if (Byte.valueOf(String.valueOf(minFiledValue)) < min) {
 					ZValidator.throwZMinMessage(object, field, (byte) min, minFiledValue);
 				}
-			} else if (canonicalName.equals(Short.class.getCanonicalName())) {
+			} else if (fvClass == Short.class) {
 				if (Short.valueOf(String.valueOf(minFiledValue)) < min) {
 					ZValidator.throwZMinMessage(object, field, (short) min, minFiledValue);
 				}
-			} else if (canonicalName.equals(Integer.class.getCanonicalName())) {
+			} else if (fvClass == Integer.class) {
 				if (Integer.valueOf(String.valueOf(minFiledValue)) < min) {
 					ZValidator.throwZMinMessage(object, field, (int) min, minFiledValue);
 				}
-			} else if (canonicalName.equals(Long.class.getCanonicalName())) {
+			} else if (fvClass == Long.class) {
 				if (Long.valueOf(String.valueOf(minFiledValue)) < min) {
 					ZValidator.throwZMinMessage(object, field, (long) min, minFiledValue);
 				}
-			} else if (canonicalName.equals(Float.class.getCanonicalName())) {
+			} else if (fvClass == Float.class) {
 				if (Float.valueOf(String.valueOf(minFiledValue)) < min) {
 					ZValidator.throwZMinMessage(object, field, min, minFiledValue);
 				}
-			} else if (canonicalName.equals(Double.class.getCanonicalName())
+			} else if ((fvClass == Double.class)
 					&& (Double.valueOf(String.valueOf(minFiledValue)) < min)) {
 				ZValidator.throwZMinMessage(object, field, min, minFiledValue);
-			} else if (canonicalName.equals(BigInteger.class.getCanonicalName())) {
+			} else if (fvClass == BigInteger.class) {
 				final BigInteger bi = (BigInteger) minFiledValue;
 				if (bi.doubleValue() < min) {
 					ZValidator.throwZMinMessage(object, field, min, minFiledValue);
 				}
-			} else if (canonicalName.equals(BigDecimal.class.getCanonicalName())) {
+			} else if (fvClass == BigDecimal.class) {
 				final BigDecimal bd = (BigDecimal) minFiledValue;
 				if (bd.doubleValue() < min) {
 					ZValidator.throwZMinMessage(object, field, min, minFiledValue);
 				}
-			} else if (canonicalName.equals(AtomicInteger.class.getCanonicalName())) {
+			} else if (fvClass == AtomicInteger.class) {
 				final AtomicInteger ai = (AtomicInteger) minFiledValue;
 				if (ai.doubleValue() < min) {
 					ZValidator.throwZMinMessage(object, field, min, minFiledValue);
 				}
-			} else if (canonicalName.equals(AtomicLong.class.getCanonicalName())) {
+			} else if (fvClass == AtomicLong.class) {
 				final AtomicLong al = (AtomicLong) minFiledValue;
 				if (al.doubleValue() < min) {
 					ZValidator.throwZMinMessage(object, field, min, minFiledValue);
@@ -546,52 +550,53 @@ public class ZValidator {
 				return;
 			}
 
-			if (!ZValidator.isZMinZMaxSupported(maxFiledValue.getClass())) {
+			final Class<? extends Object> fvClass = maxFiledValue.getClass();
+			if (!ZValidator.isZMinZMaxSupported(fvClass)) {
 				throw new ValidatedException("@" + ZMax.class.getSimpleName()
 						+ " 只能用于Byte,Short,Integer,Long,Float,Double,BigDecimal,BigInteger,AtomicLong,AtomicInteger类型,当前用于字段["
 						+ field.getName() + "]");
 			}
 
-			final String canonicalName = maxFiledValue.getClass().getCanonicalName();
-			if (canonicalName.equals(Byte.class.getCanonicalName())) {
+			final String canonicalName = fvClass.getCanonicalName();
+			if (fvClass == Byte.class) {
 				if (Byte.valueOf(String.valueOf(maxFiledValue)) > max) {
 					ZValidator.throwZMaxMessage(object, field, (byte) max, maxFiledValue);
 				}
-			} else if (canonicalName.equals(Short.class.getCanonicalName())) {
+			} else if (fvClass == Short.class) {
 				if (Short.valueOf(String.valueOf(maxFiledValue)) > max) {
 					ZValidator.throwZMaxMessage(object, field, (short) max, maxFiledValue);
 				}
-			} else if (canonicalName.equals(Integer.class.getCanonicalName())) {
+			} else if (fvClass == Integer.class) {
 				if (Integer.valueOf(String.valueOf(maxFiledValue)) > max) {
 					ZValidator.throwZMaxMessage(object, field, (int) max, maxFiledValue);
 				}
-			} else if (canonicalName.equals(Long.class.getCanonicalName())) {
+			} else if (fvClass == Long.class) {
 				if (Long.valueOf(String.valueOf(maxFiledValue)) > max) {
 					ZValidator.throwZMaxMessage(object, field, (long) max, maxFiledValue);
 				}
-			} else if (canonicalName.equals(Float.class.getCanonicalName())) {
+			} else if (fvClass == Float.class) {
 				if (Float.valueOf(String.valueOf(maxFiledValue)) > max) {
 					ZValidator.throwZMaxMessage(object, field, max, maxFiledValue);
 				}
-			} else if (canonicalName.equals(Double.class.getCanonicalName())
+			} else if ((fvClass == Double.class)
 					&& (Double.valueOf(String.valueOf(maxFiledValue)) > max)) {
 				ZValidator.throwZMaxMessage(object, field, max, maxFiledValue);
-			} else if (canonicalName.equals(BigInteger.class.getCanonicalName())) {
+			} else if (fvClass == BigInteger.class) {
 				final BigInteger bi = (BigInteger) maxFiledValue;
 				if (bi.doubleValue() > max) {
 					ZValidator.throwZMaxMessage(object, field, max, maxFiledValue);
 				}
-			} else if (canonicalName.equals(BigDecimal.class.getCanonicalName())) {
+			} else if (fvClass == BigDecimal.class) {
 				final BigDecimal bd = (BigDecimal) maxFiledValue;
 				if (bd.doubleValue() > max) {
 					ZValidator.throwZMaxMessage(object, field, max, maxFiledValue);
 				}
-			} else if (canonicalName.equals(AtomicInteger.class.getCanonicalName())) {
+			} else if (fvClass == AtomicInteger.class) {
 				final AtomicInteger ai = (AtomicInteger) maxFiledValue;
 				if (ai.doubleValue() > max) {
 					ZValidator.throwZMaxMessage(object, field, max, maxFiledValue);
 				}
-			} else if (canonicalName.equals(AtomicLong.class.getCanonicalName())) {
+			} else if (fvClass == AtomicLong.class) {
 				final AtomicLong al = (AtomicLong) maxFiledValue;
 				if (al.doubleValue() > max) {
 					ZValidator.throwZMaxMessage(object, field, max, maxFiledValue);

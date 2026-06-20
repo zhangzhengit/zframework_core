@@ -669,16 +669,18 @@ public class Task {
 				}
 
 				// FIXME 2023年11月8日 下午10:47:54 zhanghen: TODO 继续支持 校验注解
-				if (RU.isAnnotationPresent(p, ZMax.class)) {
-					ZValidator.validatedZMax(p, parameters[pI], RU.getAnnotation(p, ZMax.class).max());
+				final ZMax zmax = RU.getAnnotation(p, ZMax.class);
+				if (zmax != null) {
+					ZValidator.validatedZMax(p, parameters[pI], zmax.max());
 				}
 
 				if (RU.isAnnotationPresent(p, ZPositive.class)) {
 					ZValidator.validatedZPositive(p, parameters[pI]);
 				}
 
-				if (RU.isAnnotationPresent(p, ZMin.class)) {
-					ZValidator.validatedZMin(p, parameters[pI], RU.getAnnotation(p, ZMin.class).min());
+				final ZMin zmin = RU.getAnnotation(p, ZMin.class);
+				if (zmin != null) {
+					ZValidator.validatedZMin(p, parameters[pI], zmin.min());
 				}
 
 				pI++;
