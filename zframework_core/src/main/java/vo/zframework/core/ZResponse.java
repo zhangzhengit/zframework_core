@@ -732,10 +732,12 @@ public class ZResponse {
 			}
 		}
 
-		if (!this.isBodyStream && (this.getBodyLength() <= 0)
-				&& (this.getHttpStatus() == HttpStatusEnum.HTTP_200.getStatus())) {
-			this.httpStatus(HttpStatusEnum.HTTP_204.getStatus());
-		}
+		// 注意：下面逻辑注释了，因为不能这么做，应该是用户代码高于一切，
+		// 并且200允许无body
+//		if (!this.isBodyStream && (this.getBodyLength() <= 0)
+//				&& (this.getHttpStatus() == HttpStatusEnum.HTTP_200.getStatus())) {
+//			this.httpStatus(HttpStatusEnum.HTTP_204.getStatus());
+//		}
 
 		this.setCustomHeader();
 		this.setServerName();
