@@ -4,6 +4,8 @@ import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.URLDecoder;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -546,16 +548,17 @@ public class ZRequest {
 			}
 
 			request.params = params;
-			request.path = new String(Arrays.copyOfRange(requestURIBytes, 0, wI));
+			request.path = URLDecoder.decode(new String(Arrays.copyOfRange(requestURIBytes, 0, wI)),
+					Charset.defaultCharset());
 			request.queryStringBA = new BA(requestURIBytes, (wI + STU.Q_LENGTH) - 1, requestURIBytes.length);
-			request.requestURI = new String(requestURIBytes);
+			request.requestURI = URLDecoder.decode(new String(requestURIBytes), Charset.defaultCharset());
 		} else {
 			// requestURI中无?符号
 			final String requestURI = new String(requestURIBytes);
-			request.path = requestURI;
+			final String requestURIDECODE = URLDecoder.decode(requestURI,Charset.defaultCharset());
+			request.path = requestURIDECODE;
 			request.queryStringBA = null;
-			request.requestURI = requestURI;
-			// FIXME 2026年6月20日 14:18:18 zhangzhen : 暂时删除了java.net.URLDecoder.decode，记得再加上
+			request.requestURI = requestURIDECODE;
 		}
 	}
 
@@ -767,8 +770,11 @@ public class ZRequest {
 		}
 
 		if (this.queryStringCache == null) {
-			this.queryStringCache = new String(this.queryStringBA.getData(), this.queryStringBA.getFrom(),
-					this.queryStringBA.getTo() - this.queryStringBA.getFrom());
+			this.queryStringCache =
+					URLDecoder.decode(
+							new String(this.queryStringBA.getData(), this.queryStringBA.getFrom(),
+									this.queryStringBA.getTo() - this.queryStringBA.getFrom()),
+							Charset.defaultCharset());
 		}
 
 		return this.queryStringCache;
