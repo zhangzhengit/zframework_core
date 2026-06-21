@@ -586,27 +586,29 @@ public class ZRequest {
 	}
 
 	private static ZRequest.RequestParam hParam(final String param) {
-		final String[] p0 = param.split(STU.EQUALS);
 
-		final ZRequest.RequestParam requestParam = new ZRequest.RequestParam();
-		requestParam.setName(p0[0]);
-
-		if (p0.length >= 2) {
-
-			if (STU.isEmpty(p0[1])) {
-				requestParam.setValue(STU.EMPTY);
-			} else {
-
-				try {
-					final String value = java.net.URLDecoder.decode(p0[1], Task.DEFAULT_CHARSET_NAME);
-					requestParam.setValue(value);
-				} catch (final UnsupportedEncodingException e) {
-					e.printStackTrace();
-				}
-			}
+		final int i = param.indexOf(STU.EQUALS);
+		if (i <= -1) {
+			return null;
 		}
 
+		final String name = param.substring(0, i);
+		final String value = param.substring(i + 1);
+
+		final ZRequest.RequestParam requestParam = new ZRequest.RequestParam();
+		requestParam.setName(name);
+		requestParam.setValue(value == null ? null : decode(value));
+
 		return requestParam;
+	}
+
+	private static String decode(final String s) {
+		try {
+			return java.net.URLDecoder.decode(s, Task.DEFAULT_CHARSET_NAME);
+		} catch (final UnsupportedEncodingException e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 
 	private static void parseHost(final String line, final ZRequest request) {
