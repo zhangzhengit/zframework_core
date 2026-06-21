@@ -548,13 +548,13 @@ public class ZRequest {
 			}
 
 			request.params = params;
-			request.path = URLDecoder.decode(new String(requestURIBytes, 0, wI), Charset.defaultCharset());
+			request.path = decode(new String(requestURIBytes, 0, wI));
 			request.queryStringBA = new BA(requestURIBytes, (wI + STU.Q_LENGTH) - 1, requestURIBytes.length);
-			request.requestURI = URLDecoder.decode(new String(requestURIBytes), Charset.defaultCharset());
+			request.requestURI = decode(new String(requestURIBytes));
 		} else {
 			// requestURI中无?符号
 			final String requestURI = new String(requestURIBytes);
-			final String requestURIDECODE = URLDecoder.decode(requestURI,Charset.defaultCharset());
+			final String requestURIDECODE = decode(requestURI);
 			request.path = requestURIDECODE;
 			request.queryStringBA = null;
 			request.requestURI = requestURIDECODE;
