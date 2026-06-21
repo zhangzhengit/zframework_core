@@ -320,8 +320,6 @@ public class ZResponse {
 	 * 因为本方法会write到客户端，在调用本方法之后再调用任何方法都无意义了
 	 * @param fis
 	 */
-	// FIXME 2026年6月7日 03:49:01 zhangzhen : 为了限制用户在最后调用本方法，要不要改为header方法返回一个对象A
-	// 只有A才有本方法？
 	public synchronized void body(final FIS fis) {
 
 		this.isBodyStream = true;
