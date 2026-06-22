@@ -139,7 +139,7 @@ public class ZRMethod {
 		this.isVoid = method.getReturnType() == void.class;
 		this.isRTString = method.getReturnType().getName().equals(STRING_NAME);
 
-		this.isRTPrimitiveType = ZRMethod.isPT(method.getReturnType().getName());
+		this.isRTPrimitiveType = ZRMethod.isPT(method.getReturnType());
 
 		this.hasResponseBody = method.isAnnotationPresent(ZResponseBody.class);
 		if (this.produces.length > 0) {
@@ -161,23 +161,24 @@ public class ZRMethod {
 		this.ctEnum = ctEnum;
 	}
 
-	private static boolean isPT(final String mRTN) {
-		if (mRTN.equals(Byte.class.getCanonicalName())
-		|| "byte".equals(mRTN)
-		|| mRTN.equals(Short.class.getCanonicalName())
-		|| "short".equals(mRTN)
-		|| mRTN.equals(Integer.class.getCanonicalName())
-		|| "int".equals(mRTN)
-		|| mRTN.equals(Long.class.getCanonicalName())
-		|| "long".equals(mRTN)
-		|| mRTN.equals(Float.class.getCanonicalName())
-		|| "float".equals(mRTN)
-		|| mRTN.equals(Double.class.getCanonicalName())
-		|| "double".equals(mRTN)
-		|| mRTN.equals(Character.class.getCanonicalName())
-		|| "char".equals(mRTN)
-		|| mRTN.equals(Boolean.class.getCanonicalName())
-		|| "boolean".equals(mRTN)
+	private static boolean isPT(final Class<?> cls) {
+		if ((cls == byte.class)
+		 || (cls == short.class)
+		 || (cls == int.class)
+		 || (cls == long.class)
+		 || (cls == float.class)
+		 || (cls == double.class)
+		 || (cls == char.class)
+		 || (cls == boolean.class)
+		 || (cls == Byte.class)
+		 || (cls == Short.class)
+		 || (cls == Integer.class)
+		 || (cls == Long.class)
+		 || (cls == Float.class)
+		 || (cls == Double.class)
+		 || (cls == Character.class)
+		 || (cls == Boolean.class)
+
 				) {
 			return true;
 		}
