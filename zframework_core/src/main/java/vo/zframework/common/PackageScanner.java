@@ -29,7 +29,7 @@ public class PackageScanner {
 	 * @throws IOException            IO异常
 	 * @throws ClassNotFoundException 类加载异常
 	 */
-	public static Set<Class<?>> scanPackage(final String packageName) throws IOException, ClassNotFoundException {
+	public static Set<Class<?>> scanPackage(final String packageName) throws IOException  {
 		final Set<Class<?>> classSet = new LinkedHashSet<>();
 		// 替换包名中的点为文件路径分隔符
 		final String packagePath = packageName.replace('.', '/');
@@ -51,7 +51,11 @@ public class PackageScanner {
 				// 场景2：JAR包形式（如打包后运行）
 				final JarURLConnection jarURLConnection = (JarURLConnection) resource.openConnection();
 				final JarFile jarFile = jarURLConnection.getJarFile();
-				scanJarClasses(packageName, jarFile, classSet);
+				try {
+					scanJarClasses(packageName, jarFile, classSet);
+				} catch (final ClassNotFoundException e) {
+					e.printStackTrace();
+				}
 			}
 		}
 		return classSet;

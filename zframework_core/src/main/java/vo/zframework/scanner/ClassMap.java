@@ -2,6 +2,7 @@ package vo.zframework.scanner;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -20,7 +21,7 @@ import vo.zframework.common.PackageScanner;
  */
 public class ClassMap {
 
-	private final static ConcurrentMap<String, Set<Class<?>>> map = new ConcurrentHashMap<>();
+	private final static ConcurrentMap<String, Set<Class<?>>> cacheMap = new ConcurrentHashMap<>(64, 1F);
 
 	public static Set<Class<?>> scanPackageByAnnotation(final Class<? extends Annotation> annotationClass,
 			final String... scanPackageName) {
@@ -30,38 +31,36 @@ public class ClassMap {
 			return Collections.emptySet();
 		}
 
-		final Set<Class<?>> annoSet = clsSet.parallelStream()
+		final Set<Class<?>> annoSet = clsSet.stream()
 					.filter(cls -> cls.isAnnotationPresent(annotationClass))
 					.collect(Collectors.toSet());
-		final Set<Class<?>> unmodifiableSet = Collections.unmodifiableSet(annoSet);
-		return unmodifiableSet;
+		return Collections.unmodifiableSet(annoSet);
 	}
 
 	public synchronized static Set<Class<?>> scanPackage(final String... scanPackageName) {
-		final HashSet<Class<?>> rs = new HashSet<>();
-		for (final String p : scanPackageName) {
-			final Set<Class<?>> clsSet = s(p);
-			rs.addAll(clsSet);
-		}
-		
-		final Set<Class<?>> unmodifiableSet = Collections.unmodifiableSet(rs);
-		return unmodifiableSet;
+
+		final Set<Class<?>> r = cacheMap.computeIfAbsent(Arrays.toString(scanPackageName), spn -> {
+			final Set<Class<?>> set = new HashSet<>();
+			Arrays.stream(scanPackageName).distinct().parallel().forEach(pn -> {
+				set.addAll(scan(pn));
+			});
+			return Collections.unmodifiableSet(set);
+		});
+
+		return r;
 	}
 
-	private static Set<Class<?>> s(final String p) {
-		final Set<Class<?>> v = map.get(p);
-		if (v != null) {
-			final Set<Class<?>> unmodifiableSet = Collections.unmodifiableSet(v);
-			return unmodifiableSet;
-		}
+	private static Set<Class<?>> scan(final String packageName) {
 
-		Set<Class<?>> clsSet = null;
-		try {
-			clsSet = PackageScanner.scanPackage(p);
-		} catch (ClassNotFoundException | IOException e) {
-			e.printStackTrace();
-		}
-		map.put(p, clsSet);
-		return clsSet;
+		final Set<Class<?>> computeIfAbsent = cacheMap.computeIfAbsent(packageName, t -> {
+			try {
+				return PackageScanner.scanPackage(t);
+			} catch (final IOException e) {
+				e.printStackTrace();
+			}
+			return null;
+		});
+
+		return Collections.unmodifiableSet(computeIfAbsent);
 	}
 }

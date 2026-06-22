@@ -15,7 +15,7 @@ import vo.zframework.core.ZRequest;
 import vo.zframework.core.ZResponse;
 import vo.zframework.enums.MethodEnum;
 import vo.zframework.http.ZRequestMapping;
-import vo.zframework.scanner.ZConfigurationPropertiesScanner;
+import vo.zframework.scanner.ClassMap;
 import vo.zframework.template.ZModel;
 
 /**
@@ -31,7 +31,7 @@ public class DocScanner {
 
 	public static void scan(final String... packageName)  {
 
-		final Set<Class<?>> zcSet = ZConfigurationPropertiesScanner.scanPackage(packageName).stream()
+		final Set<Class<?>> zcSet = ClassMap.scanPackage(packageName).stream()
 				.filter(cls -> cls.isAnnotationPresent(ZRestController.class))
 				.collect(Collectors.toSet());
 

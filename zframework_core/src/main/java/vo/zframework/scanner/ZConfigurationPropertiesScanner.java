@@ -54,26 +54,29 @@ public class ZConfigurationPropertiesScanner {
 	 *  0 1 2 3...最大支持到此值
 	 */
 	public static final int PROPERTY_INDEX = 1520;
-	private static final ZLog2 LOG = ZLog2.getInstance();
 
 	public static void scanAndCreate(final String... packageName) throws Exception {
 
-		final Set<Class<?>> csSet = scanPackage(packageName).stream()
-				.filter(cls -> cls.isAnnotationPresent(ZConfigurationProperties.class))
-				.collect(Collectors.toSet());
+		final Set<Class<?>> csSet =
+				ClassMap.scanPackage(packageName)
+					.parallelStream()
+					.filter(cls -> cls.isAnnotationPresent(ZConfigurationProperties.class))
+					.collect(Collectors.toSet());
+
 		if (CU.isEmpty(csSet)) {
 			return;
 		}
 
-		final ArrayList<Class<?>> cl = new ArrayList<>(csSet);
 		final Set<Integer> valueSet = new HashSet<>();
-		for (final Class<?> cls : cl) {
+		for (final Class<?> cls : csSet) {
 			final ZOrder annotation = cls.getAnnotation(ZOrder.class);
 			if ((annotation != null) && !valueSet.add(annotation.value())) {
 				throw new StartupException("@" + ZConfigurationProperties.class.getSimpleName() + " 类 " + "@"
 						+ ZOrder.class.getSimpleName() + ".value" + "[" + annotation.value() + "]" + "重复，请检查代码");
 			}
 		}
+
+		final ArrayList<Class<?>> cl = new ArrayList <>(csSet);
 
 		final List<Class<?>> sl = cl.stream().sorted(new ZOrderComparator<>()).collect(Collectors.toList());
 
@@ -566,17 +569,6 @@ public class ZConfigurationPropertiesScanner {
 		//			throw new IllegalArgumentException("@" + ZConfigurationProperties.class.getSimpleName() + " 类 "
 		//					+ cs.getSimpleName() + " 的字段 " + field.getName() + " 不能用abstract修饰");
 		//		}
-	}
-
-	public static Set<Class<?>> scanPackage(final String... packageName) {
-//		LOG.info("开始扫描类,scanPackage={}", Arrays.toString(packageName));
-		final HashSet<Class<?>> rs = new HashSet<>();
-		for (final String p : packageName) {
-			final Set<Class<?>> clsSet = ClassMap.scanPackage(p);
-			rs.addAll(clsSet);
-
-		}
-		return rs;
 	}
 
 	/**
