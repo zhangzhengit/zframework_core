@@ -92,7 +92,7 @@ public class ZAOPScaner {
 
 			for (final Field f : fs) {
 				try {
-					f.setAccessible(true);
+//					f.setAccessible(true);
 //					final ZField zf = new ZField();
 //
 //					zf.setType(f.getType().getName());
@@ -112,17 +112,17 @@ public class ZAOPScaner {
 					final ZField zf = new ZField(f.getType().getName(),f.getName(),ZFH.class.getName() + ".get(\"" + cls.getName() + "@"
 							+ f.getType().getName() + "\")");
 
-					final Annotation[] fas = f.getAnnotations();
-					if (fas != null) {
-						for (final Annotation a : fas) {
-							final String value = getAnnoName(a).replace("\"", "");
-							final String as = a.toString().replace("\"\"", "");
-							final String r2 = replaceLast(as, value, "\"" + value + "\"");
-							// FIXME 2023年11月6日 上午1:24:25 zhanghen: 此处addAnno貌似毫无用处
-							// 因为代理类都是直接super.xxx ，都是用的父类字段没用到本类的
-							//							zf.addAnno(r2);
-						}
-					}
+//					final Annotation[] fas = f.getAnnotations();
+//					if (fas != null) {
+//						for (final Annotation a : fas) {
+//							final String value = getAnnoName(a).replace("\"", "");
+//							final String as = a.toString().replace("\"\"", "");
+//							final String r2 = replaceLast(as, value, "\"" + value + "\"");
+//							// FIXME 2023年11月6日 上午1:24:25 zhanghen: 此处addAnno貌似毫无用处
+//							// 因为代理类都是直接super.xxx ，都是用的父类字段没用到本类的
+//							//							zf.addAnno(r2);
+//						}
+//					}
 					proxyZClass.addField(zf);
 				} catch (final IllegalArgumentException e) {
 					e.printStackTrace();
