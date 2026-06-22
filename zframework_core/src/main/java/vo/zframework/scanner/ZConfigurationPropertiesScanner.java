@@ -55,6 +55,12 @@ public class ZConfigurationPropertiesScanner {
 	 */
 	public static final int PROPERTY_INDEX = 1520;
 
+	/**
+	 * List的泛型参数对象里支持的字段类型
+	 */
+	private static final List<Class<?>> LT = List.of(Byte.class, Short.class,
+			Integer.class, Long.class, Float.class, Double.class, Character.class, Boolean.class, String.class);
+
 	public static void scanAndCreate(final String... packageName) throws Exception {
 
 		final Set<Class<?>> csSet = ClassMap.scanPackageByAnnotation(ZConfigurationProperties.class, packageName);
@@ -87,6 +93,8 @@ public class ZConfigurationPropertiesScanner {
 			for (final Field field : fs) {
 				checkModifiers(cs, field);
 				findValueAndSetValue(prefix, object, field);
+				// 赋值后校验一下
+				ZValidator.validatedAll(object, field);
 			}
 
 			ZContext.addBean(cs, object);
@@ -139,62 +147,46 @@ public class ZConfigurationPropertiesScanner {
 			setValueByType(object, field, type, keyAR);
 		} else {
 			// 到此 [orderCount]和[order.count]形式的名称都不匹配，说明是List、Map、Set三种类型了，开始匹配这三种类型
-
 			if (field.getType() == Map.class) {
 				setMap(object, field, key);
 			} else if (field.getType() == List.class) {
 				// FIXME 2023年11月9日 上午12:13:59 zhanghen: 支持三种类型要支持什么类型
-
-				final Class<?>[] ts = ZCU.getGenericType(field);
-				if (AU.isEmpty(ts)) {
-					final String message = "@" + ZConfigurationProperties.class.getSimpleName() + " List类型必须加入泛型参数";
-					throw new ZConfigurationPropertiesException(message);
-				}
-
-				final boolean isJavaType = listType.contains(ts[0].getCanonicalName());
-				final boolean isUserType = !isJavaType
-						&& !ts[0].getCanonicalName().startsWith("java");
-				if (!isUserType) {
-					final String message = "@" + ZConfigurationProperties.class.getSimpleName() + " List类型只支持用户自定义类型"
-							+ ","
-							+ "当前类型=" + ts[0].getCanonicalName()
-							;
-					throw new ZConfigurationPropertiesException(message);
-				}
-
-				for (final Field f : ts[0].getDeclaredFields()) {
-					if (!listType.contains(f.getType().getCanonicalName())) {
-						throw new StartupException(
-								ts[0].getClass().getSimpleName() + "] 中的字段[" + f.getType().getCanonicalName() + " "
-										+ f.getName() + "]类型不支持,支持字段类型为" + listType);
-					}
-				}
-
+				checkList(field);
 				setList(object, field, key);
 			} else if (field.getType() == Set.class) {
 				setSet(object, field, key);
 			}
 
-			ZValidator.validatedAll(object, field);
-
 		}
 
 	}
 
-	/**
-	 * List的泛型参数对象里支持的字段类型
-	 */
-	public static List<String> listType;
+	private static void checkList(final Field field) {
+		final Class<?>[] ts = ZCU.getGenericType(field);
+		if (AU.isEmpty(ts)) {
+			final String message = "@" + ZConfigurationProperties.class.getSimpleName() + " List类型必须加入泛型参数";
+			throw new ZConfigurationPropertiesException(message);
+		}
 
-	static {
-		final ArrayList<String> l = new ArrayList<>();
-		Collections.addAll(l, Byte.class.getCanonicalName(), Short.class.getCanonicalName(),
-				Integer.class.getCanonicalName(), Long.class.getCanonicalName(), Float.class.getCanonicalName(),
-				Double.class.getCanonicalName(), Character.class.getCanonicalName(), Boolean.class.getCanonicalName(),
-				String.class.getCanonicalName());
-		listType = l;
+		final boolean isJavaType = LT.contains(ts[0]);
+		final boolean isUserType = !isJavaType
+				&& !ts[0].getCanonicalName().startsWith("java");
+		if (!isUserType) {
+			final String message = "@" + ZConfigurationProperties.class.getSimpleName() + " List类型只支持用户自定义类型"
+					+ ","
+					+ "当前类型=" + ts[0].getCanonicalName()
+					;
+			throw new ZConfigurationPropertiesException(message);
+		}
+
+		for (final Field f : ts[0].getDeclaredFields()) {
+			if (!LT.contains(f.getType())) {
+				throw new StartupException(
+						ts[0].getClass().getSimpleName() + "] 中的字段[" + f.getType().getCanonicalName() + " "
+								+ f.getName() + "]类型不支持,支持字段类型为" + LT);
+			}
+		}
 	}
-
 
 	private static void setSet(final Object object, final Field field, final String key) {
 
@@ -518,8 +510,6 @@ public class ZConfigurationPropertiesScanner {
 			setValue(object, field, new AtomicLong(ZProperties.getLong(keyAR.get())));
 		}
 
-		// 赋值以后才可以校验
-		ZValidator.validatedAll(object, field);
 	}
 
 	private static String getStringValue(final AtomicReference<String> keyAR) {
