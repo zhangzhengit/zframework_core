@@ -57,12 +57,7 @@ public class ZConfigurationPropertiesScanner {
 
 	public static void scanAndCreate(final String... packageName) throws Exception {
 
-		final Set<Class<?>> csSet =
-				ClassMap.scanPackage(packageName)
-					.parallelStream()
-					.filter(cls -> cls.isAnnotationPresent(ZConfigurationProperties.class))
-					.collect(Collectors.toSet());
-
+		final Set<Class<?>> csSet = ClassMap.scanPackageByAnnotation(ZConfigurationProperties.class, packageName);
 		if (CU.isEmpty(csSet)) {
 			return;
 		}
