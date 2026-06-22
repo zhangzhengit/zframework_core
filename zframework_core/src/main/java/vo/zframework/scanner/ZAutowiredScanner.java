@@ -31,8 +31,6 @@ import vo.zframework.exception.BeanNotExistException;
  */
 public class ZAutowiredScanner {
 
-	private static final ZLog2 LOG = ZLog2.getInstance();
-
 	public static Set<Class<?>> inject(final Class<? extends Annotation> annoClass, final String... packageName) {
 
 		//		ZAutowiredScanner.LOG.info("开始扫描带有[{}]注解的类", annoClass.getCanonicalName());
@@ -101,10 +99,8 @@ public class ZAutowiredScanner {
 
 			try {
 				f.setAccessible(true);
-				final Object fOldV = f.get(superClassObject);
 				ZAutowiredScanner.setFiledValue(f, superClassObject, value);
-				final Object fNewV = f.get(superClassObject);
-			} catch (IllegalArgumentException | IllegalAccessException e) {
+			} catch (final IllegalArgumentException e) {
 				e.printStackTrace();
 			}
 
@@ -142,10 +138,8 @@ public class ZAutowiredScanner {
 
 		try {
 			f.setAccessible(true);
-			final Object fOldV = f.get(object);
 			ZAutowiredScanner.setFiledValue(f, object, value);
-			final Object fNewV = f.get(object);
-		} catch (IllegalArgumentException | IllegalAccessException e) {
+		} catch (final IllegalArgumentException e) {
 			e.printStackTrace();
 		}
 

@@ -90,10 +90,8 @@ public class ZComponentScanner {
 
 			try {
 				f.setAccessible(true);
-				final Object fOldV = f.get(newInstance);
 				ZAutowiredScanner.setFiledValue(f, newInstance, value);
-				final Object fNewV = f.get(newInstance);
-			} catch (IllegalArgumentException | IllegalAccessException e) {
+			} catch (final IllegalArgumentException e) {
 				e.printStackTrace();
 			}
 		}

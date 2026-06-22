@@ -195,10 +195,8 @@ public class ZSynchronouslyScanner {
 
 			try {
 				f.setAccessible(true);
-				final Object fOldV = f.get(superClassObject);
 				ZSynchronouslyScanner.setFiledValue(f, superClassObject, value);
-				final Object fNewV = f.get(superClassObject);
-			} catch (IllegalArgumentException | IllegalAccessException e) {
+			} catch (final IllegalArgumentException e) {
 				e.printStackTrace();
 			}
 
@@ -236,10 +234,8 @@ public class ZSynchronouslyScanner {
 
 		try {
 			f.setAccessible(true);
-			final Object fOldV = f.get(object);
 			ZSynchronouslyScanner.setFiledValue(f, object, value);
-			final Object fNewV = f.get(object);
-		} catch (IllegalArgumentException | IllegalAccessException e) {
+		} catch (final IllegalArgumentException e) {
 			e.printStackTrace();
 		}
 
