@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import vo.log.core.ZLog2;
 import vo.zframework.anno.ZAutowired;
 import vo.zframework.anno.ZComponent;
 import vo.zframework.anno.ZConfiguration;
@@ -18,6 +17,7 @@ import vo.zframework.anno.ZService;
 import vo.zframework.aop.ZAOP;
 import vo.zframework.aop.ZAOPScaner;
 import vo.zframework.cache.STU;
+import vo.zframework.core.RU;
 import vo.zframework.core.ZContext;
 import vo.zframework.core.ZSingleton;
 import vo.zframework.exception.BeanNotExistException;
@@ -97,13 +97,7 @@ public class ZAutowiredScanner {
 			final Object vT = ZContext.getBean(name);
 			final Object value = vT != null ? vT : ZContext.getBean(f.getType());
 
-			try {
-				f.setAccessible(true);
-				ZAutowiredScanner.setFiledValue(f, superClassObject, value);
-			} catch (final IllegalArgumentException e) {
-				e.printStackTrace();
-			}
-
+			RU.setFiledValue(f, superClassObject, value);
 		}
 
 		// XXX 注意：这个即使调用的(String name)的，就是这个不要动，生产代理类的时候用到
@@ -136,28 +130,10 @@ public class ZAutowiredScanner {
 		//			throw new BeanNotExistException(name);
 		//		}
 
-		try {
-			f.setAccessible(true);
-			ZAutowiredScanner.setFiledValue(f, object, value);
-		} catch (final IllegalArgumentException e) {
-			e.printStackTrace();
-		}
+		RU.setFiledValue(f, object, value);
 
 		return name;
 	}
-
-
-	static void setFiledValue(final Field f, final Object object, final Object value) {
-		try {
-			f.setAccessible(true);
-			f.set(object, value);
-			//			ZAutowiredScanner.LOG.info("对象的[{}]字段赋值[{}]完成",
-			//					ZAutowired.class.getCanonicalName(),value);
-		} catch (IllegalArgumentException | IllegalAccessException e) {
-			e.printStackTrace();
-		}
-	}
-
 
 	public static void after() {
 		final Collection<Object> bs = ZContext.all().values();

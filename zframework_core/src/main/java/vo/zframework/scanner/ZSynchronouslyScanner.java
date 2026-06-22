@@ -193,12 +193,7 @@ public class ZSynchronouslyScanner {
 			final Object vT = ZContext.getBean(name);
 			final Object value = vT != null ? vT : ZContext.getBean(f.getType());
 
-			try {
-				f.setAccessible(true);
-				ZSynchronouslyScanner.setFiledValue(f, superClassObject, value);
-			} catch (final IllegalArgumentException e) {
-				e.printStackTrace();
-			}
+			RU.setFiledValue(f, superClassObject, value);
 
 		}
 
@@ -232,28 +227,10 @@ public class ZSynchronouslyScanner {
 		//			throw new BeanNotExistException(name);
 		//		}
 
-		try {
-			f.setAccessible(true);
-			ZSynchronouslyScanner.setFiledValue(f, object, value);
-		} catch (final IllegalArgumentException e) {
-			e.printStackTrace();
-		}
+		RU.setFiledValue(f, object, value);
 
 		return name;
 	}
-
-
-	static void setFiledValue(final Field f, final Object object, final Object value) {
-		try {
-			f.setAccessible(true);
-			f.set(object, value);
-			//			ZAutowiredScanner.LOG.info("对象的[{}]字段赋值[{}]完成",
-			//					ZAutowired.class.getCanonicalName(),value);
-		} catch (IllegalArgumentException | IllegalAccessException e) {
-			e.printStackTrace();
-		}
-	}
-
 
 	public static void after() {
 		final Collection<Object> bs = ZContext.all().values();

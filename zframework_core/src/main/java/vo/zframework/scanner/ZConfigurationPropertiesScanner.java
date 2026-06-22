@@ -245,6 +245,7 @@ public class ZConfigurationPropertiesScanner {
 	}
 
 	private static Object getSetFiledValue(final String xa, final Class<?> gType) {
+		// FIXME 2026年6月23日 06:18:16 zhangzhen : 改这里比较class
 		Object value = null;
 		if (gType.equals(String.class)) {
 			value = ZProperties.getString(xa);

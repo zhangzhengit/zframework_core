@@ -16,6 +16,7 @@ import vo.zframework.anno.ZAutowired;
 import vo.zframework.aop.ZAOPProxyClass;
 import vo.zframework.aop.ZAOPScaner;
 import vo.zframework.cache.STU;
+import vo.zframework.core.RU;
 import vo.zframework.core.ZContext;
 import vo.zframework.core.ZObjectGeneratorStarter;
 import vo.zframework.validator.ZValidated;
@@ -88,12 +89,7 @@ public class ZComponentScanner {
 			final Object vT = ZContext.getBean(name);
 			final Object value = vT != null ? vT : ZContext.getBean(f.getType());
 
-			try {
-				f.setAccessible(true);
-				ZAutowiredScanner.setFiledValue(f, newInstance, value);
-			} catch (final IllegalArgumentException e) {
-				e.printStackTrace();
-			}
+			RU.setFiledValue(f, newInstance, value);
 		}
 	}
 

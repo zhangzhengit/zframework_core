@@ -53,4 +53,13 @@ public class RU {
 		});
 	}
 
+	public static void setFiledValue(final Field field, final Object object, final Object value) {
+		try {
+			field.setAccessible(true);
+			field.set(object, value);
+		} catch (IllegalArgumentException | IllegalAccessException e) {
+			e.printStackTrace();
+		}
+	}
+
 }
