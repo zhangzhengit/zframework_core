@@ -37,7 +37,7 @@ public class ZObjectGeneratorStarter {
 
 		final List<ZObjectGenerator> zogList = scan(packageName);
 		final List<ZObjectGenerator> zogList2 = zogList.stream()
-				.filter(o -> !o.getClass().getCanonicalName().equals(ZDefaultObjectGenerator.class.getCanonicalName()))
+				.filter(o -> o.getClass() != ZDefaultObjectGenerator.class)
 				.collect(Collectors.toList());
 		if (CU.isNotEmpty(zogList2)) {
 			glis.addAll(zogList2);

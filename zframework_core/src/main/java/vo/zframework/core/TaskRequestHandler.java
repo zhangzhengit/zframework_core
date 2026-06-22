@@ -34,8 +34,7 @@ public final class TaskRequestHandler {
 		final Collection<Object> beanCollection = ZContext.all().values();
 
 		final List<RequestValidatorAdapter> childList = beanCollection.stream()
-				.filter(bean -> bean.getClass().getSuperclass().getCanonicalName()
-						.equals(RequestValidatorAdapter.class.getCanonicalName()))
+				.filter(bean -> bean.getClass().getSuperclass() == RequestValidatorAdapter.class)
 				.map(bean -> (RequestValidatorAdapter) bean).collect(Collectors.toList());
 
 		if (childList.isEmpty()) {
