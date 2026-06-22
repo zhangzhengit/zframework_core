@@ -2,6 +2,7 @@ package vo.zframework.scanner;
 
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
@@ -436,11 +437,12 @@ public class ZConfigurationPropertiesScanner {
 	}
 
 	private static Object newInstance(final Field field)  {
-		final Class<?> type2 = ZCU.getGenericType(field)[0];
+		final Class<?> type = ZCU.getGenericType(field)[0];
 		Object newInstance = null;
 		try {
-			newInstance = type2.newInstance();
-		} catch (InstantiationException | IllegalAccessException e) {
+			newInstance = type.getDeclaredConstructor().newInstance();
+		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
+				| NoSuchMethodException e) {
 			e.printStackTrace();
 		}
 
