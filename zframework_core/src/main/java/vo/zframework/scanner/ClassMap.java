@@ -41,9 +41,9 @@ public class ClassMap {
 
 		final Set<Class<?>> r = cacheMap.computeIfAbsent(Arrays.toString(scanPackageName), spn -> {
 			final Set<Class<?>> set = new HashSet<>();
-			Arrays.stream(scanPackageName).distinct().parallel().forEach(pn -> {
+			for (final String pn : scanPackageName) {
 				set.addAll(scan(pn));
-			});
+			}
 			return Collections.unmodifiableSet(set);
 		});
 
