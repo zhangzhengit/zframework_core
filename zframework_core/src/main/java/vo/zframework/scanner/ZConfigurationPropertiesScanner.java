@@ -394,19 +394,21 @@ public class ZConfigurationPropertiesScanner {
 			final Field field = newInstance.getClass().getDeclaredField(fieldName);
 			field.setAccessible(true);
 
-			if (field.getType().getCanonicalName().equals(Byte.class.getCanonicalName())) {
+			final Class<?> ft = field.getType();
+
+			if ((ft == byte.class) || (ft == Byte.class)) {
 				field.set(newInstance, Byte.parseByte(value));
-			} else if (field.getType().getCanonicalName().equals(Short.class.getCanonicalName())) {
+			} else if ((ft == short.class) || (ft == Short.class)) {
 				field.set(newInstance, Short.parseShort(value));
-			} else if (field.getType().getCanonicalName().equals(Integer.class.getCanonicalName())) {
+			} else if ((ft == int.class) || (ft == Integer.class)) {
 				field.set(newInstance, Integer.parseInt(value));
-			} else if (field.getType().getCanonicalName().equals(Long.class.getCanonicalName())) {
+			} else if ((ft == long.class) || (ft == Long.class)) {
 				field.set(newInstance, Long.parseLong(value));
-			} else if (field.getType().getCanonicalName().equals(Float.class.getCanonicalName())) {
+			} else if ((ft == float.class) || (ft == Float.class)) {
 				field.set(newInstance, Float.parseFloat(value));
-			} else if (field.getType().getCanonicalName().equals(Double.class.getCanonicalName())) {
+			} else if ((ft == double.class) || (ft == Double.class)) {
 				field.set(newInstance, Double.parseDouble(value));
-			} else if (field.getType().getCanonicalName().equals(Boolean.class.getCanonicalName())) {
+			} else if ((ft == boolean.class) || (ft == Boolean.class)) {
 				// FIXME 2023年11月9日 下午1:53:34 zhanghen: TODO 其他类型继续提示
 				final String bo = String.valueOf(value);
 				if (!"true".equalsIgnoreCase(bo) && !"false".equalsIgnoreCase(bo)) {
@@ -416,14 +418,14 @@ public class ZConfigurationPropertiesScanner {
 									+ Boolean.class.getSimpleName() + " 类型，当前参数为 " + value + "，请检查代码参数类型或修改参数值为true或false");
 				}
 				field.set(newInstance, Boolean.parseBoolean(value));
-			} else if (field.getType().getCanonicalName().equals(Character.class.getCanonicalName())) {
+			} else if ((ft == char.class) || (ft == Character.class)) {
 				if (value.length() > 1) {
 					throw new ConfigurationPropertiesParameterException(
 							newInstance.getClass().getSimpleName() + "." + fieldName + " 为 "
 									+ Character.class.getSimpleName() + " 类型，当前参数为 " + value + "，请检查代码参数类型或修改参数值为一个字符");
 				}
 				field.set(newInstance, Character.valueOf(value.charAt(0)));
-			} else if (field.getType().getCanonicalName().equals(String.class.getCanonicalName())) {
+			} else if (ft == String.class) {
 				// String 无需校验直接赋值
 				field.set(newInstance, value);
 			} else {
