@@ -20,7 +20,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Lists;
 
-import vo.log.core.ZLog2;
 import vo.zframework.cache.CU;
 import vo.zframework.cache.STU;
 import vo.zframework.configuration.ServerConfigurationProperties;
@@ -45,9 +44,9 @@ import vo.zframework.zclass.ZPackage;
  */
 public class ZAOPScaner {
 
+	public static final String KEY = "scan";
 	public static final String VOID = "void";
 
-	private static final ZLog2 LOG = ZLog2.getInstance();
 	public static final String PROXY_ZCLASS_NAME_SUFFIX = "_ProxyZclass";
 	public static final ConcurrentMap<String, Map<String, ZClass>> zcMap = new ConcurrentHashMap<>();
 
@@ -58,12 +57,11 @@ public class ZAOPScaner {
 		return m;
 	}
 
-	public static final String KEY = "scan";
 
-	public	static Map<String, ZClass> scanAndGenerateProxyClass1(final String... packageName) throws IllegalAccessException {
+	public static Map<String, ZClass> scanAndGenerateProxyClass(final String... packageName) {
 
 		final Map<String, ZClass> map = new HashMap<>(16, 1F);
-		final Set<Class<?>> cs = scanPackage_COM(packageName);
+		final Set<Class<?>> cs = ClassMap.scanPackage(packageName);
 
 		final HashBasedTable<Class<?>, Method, List<Class<?>>> table = extractedC(cs);
 
@@ -320,12 +318,6 @@ public class ZAOPScaner {
 			return string.substring("class".length() + i);
 		}
 		return string;
-	}
-
-	public static Set<Class<?>> scanPackage_COM(final String... packageName) {
-		//		LOG.info("开始扫描类,scanPackage={}", Arrays.toString(packageName));
-		final Set<Class<?>> clsSet = ClassMap.scanPackage(packageName);
-		return clsSet;
 	}
 
 	/**

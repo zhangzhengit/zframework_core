@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import vo.zframework.aop.ZAOPScaner;
 import vo.zframework.cache.CU;
+import vo.zframework.scanner.ClassMap;
 
 /**
  *
@@ -49,7 +50,7 @@ public class ZObjectGeneratorStarter {
 	public static List<ZObjectGenerator> scan(final String... packageName) {
 
 		final ArrayList<ZObjectGenerator> zogList = new ArrayList<>();
-		final Set<Class<?>> zsSet = ZAOPScaner.scanPackage_COM(packageName);
+		final Set<Class<?>> zsSet = ClassMap.scanPackage(packageName);
 		for (final Class<?> c : zsSet) {
 			final Class<?>[] is = c.getInterfaces();
 			for (final Class<?> i : is) {

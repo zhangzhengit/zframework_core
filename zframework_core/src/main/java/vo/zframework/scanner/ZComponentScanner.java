@@ -34,50 +34,44 @@ import vo.zframework.zclass.ZPackage;
  */
 public class ZComponentScanner {
 
-	public static void scanAndCreate(final Class<? extends Annotation> cls,final String... packageName) {
-		try {
-			scanAndCreate0(cls, packageName);
-		} catch (final IllegalAccessException e) {
-			e.printStackTrace();
-		}
-	}
+	public static void scanAndCreate(final Class<? extends Annotation> annotationClass, final String... packageName) {
+		final Map<String, ZClass> map = ZAOPScaner.scanAndGenerateProxyClass(packageName);
 
-	private static void scanAndCreate0(final Class<? extends Annotation> zc, final String... packageName) throws IllegalAccessException {
-		final Map<String, ZClass> map = ZAOPScaner.scanAndGenerateProxyClass1(packageName);
-
-		final Set<Class<?>> zcSet = ClassMap.scanPackageByAnnotation(zc, packageName);
+		final Set<Class<?>> zcSet = ClassMap.scanPackageByAnnotation(annotationClass, packageName);
 
 		zcSet
-		// FIXME 2025年1月18日 上午10:13:56 zhangzhen : 在armbian的pantherX2上这行并行导致启动报错NPE了，暂时注释掉
-		// 以后再看时什么原因
-		//		.parallelStream()
-		.forEach(cls -> {
-			final Object newComponent = ZObjectGeneratorStarter.generate(cls);
-			final ZClass proxyClass = map.get(newComponent.getClass().getSimpleName());
-			if (proxyClass != null) {
-				final Object newInstanceProxy = proxyClass.newInstance();
+				// FIXME 2025年1月18日 上午10:13:56 zhangzhen :
+				// 在armbian的pantherX2上这行并行导致启动报错NPE了，暂时注释掉
+				// 以后再看时什么原因
+				// .parallelStream()
+			.forEach(cls1 -> {
+				final Object newComponent = ZObjectGeneratorStarter.generate(cls1);
+				final ZClass proxyClass = map.get(newComponent.getClass().getSimpleName());
+				if (proxyClass != null) {
+					final Object newInstanceProxy = proxyClass.newInstance();
 
-				injectParentFieldForProxy(newInstanceProxy);
+					injectParentFieldForProxy(newInstanceProxy);
 
-				// 放代理类
-				ZContext.addBean(newComponent.getClass(), newInstanceProxy);
-			} else {
-
-				// 1、@ZComponent 类中方法的参数是否带有 @ZValidated 注解，有则插入校验代码，无则super.xx(xx);
-				final Optional<Method> anyMethodIsAnnotationPresentZValidated = Arrays.stream(cls.getDeclaredMethods()).filter(m -> Arrays.stream(m.getParameterTypes()).filter(pa -> pa
-										.isAnnotationPresent(ZValidated.class)).findAny().isPresent())
-						.findAny();
-
-				if (anyMethodIsAnnotationPresentZValidated.isPresent()) {
-					addZValidatedProxyClass(cls, newComponent);
+					// 放代理类
+					ZContext.addBean(newComponent.getClass(), newInstanceProxy);
 				} else {
-					// 正常放原类
-					ZContext.addBean(newComponent.getClass(), newComponent);
+
+					// 1、@ZComponent 类中方法的参数是否带有 @ZValidated 注解，有则插入校验代码，无则super.xx(xx);
+					final Optional<Method> anyMethodIsAnnotationPresentZValidated = Arrays
+							.stream(cls1.getDeclaredMethods())
+							.filter(m -> Arrays.stream(m.getParameterTypes())
+									.filter(pa -> pa.isAnnotationPresent(ZValidated.class)).findAny().isPresent())
+							.findAny();
+
+					if (anyMethodIsAnnotationPresentZValidated.isPresent()) {
+						addZValidatedProxyClass(cls1, newComponent);
+					} else {
+						// 正常放原类
+						ZContext.addBean(newComponent.getClass(), newComponent);
+					}
+
 				}
-
-			}
-		});
-
+			});
 	}
 
 	private static void injectParentFieldForProxy(final Object newInstance) {
