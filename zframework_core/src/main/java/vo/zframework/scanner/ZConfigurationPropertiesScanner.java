@@ -95,8 +95,10 @@ public class ZConfigurationPropertiesScanner {
 
 
 		for (final Class<?> cls : csSet) {
+			final Field[] declaredFields = cls.getDeclaredFields();
+
 			// 如果Class有 @ZAutowired 字段，则先生成对应的的对象，然后注入进来
-			Arrays.stream(cls.getDeclaredFields())
+			Arrays.stream(declaredFields)
 			.filter(f -> f.isAnnotationPresent(ZAutowired.class))
 			.forEach(f -> ZAutowiredScanner.inject(cls, f));
 
