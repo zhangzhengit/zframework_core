@@ -488,21 +488,21 @@ public class ZConfigurationPropertiesScanner {
 
 		if (type == String.class) {
 			setValue(object, field, v1);
-		} else if (type == byte.class) {
+		} else if ((type == byte.class) || (type == Byte.class)) {
 			setValue(object, field, ZProperties.getByte(keyAR.get()));
-		} else if (type == short.class) {
+		} else if ((type == short.class) || (type == Short.class)) {
 			setValue(object, field, ZProperties.getShort(keyAR.get()));
-		} else if (type == int.class) {
+		} else if ((type == int.class) || (type == Integer.class)) {
 			setValue(object, field, ZProperties.getInteger(keyAR.get()));
-		} else if (type == long.class) {
+		} else if ((type == long.class) || (type == Long.class)) {
 			setValue(object, field, ZProperties.getLong(keyAR.get()));
-		} else if (type == float.class) {
+		} else if ((type == float.class) || (type == Float.class)) {
 			setValue(object, field, ZProperties.getFloat(keyAR.get()));
-		} else if (type == double.class) {
+		} else if ((type == double.class) || (type == Double.class)) {
 			setValue(object, field, ZProperties.getDouble(keyAR.get()));
-		} else if (type == char.class) {
+		} else if ((type == char.class) || (type == Character.class)) {
 			setValue(object, field, v1.charAt(0));
-		} else if (type == boolean.class) {
+		} else if ((type == boolean.class) || (type == Boolean.class)) {
 			setValue(object, field, ZProperties.getBoolean(keyAR.get()));
 		} else if (type == BigInteger.class) {
 			setValue(object, field, ZProperties.getBigInteger(keyAR.get()));
