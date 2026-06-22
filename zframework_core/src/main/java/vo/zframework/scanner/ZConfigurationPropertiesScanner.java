@@ -90,7 +90,6 @@ public class ZConfigurationPropertiesScanner {
 			}
 
 			ZContext.addBean(cs, object);
-			ZContext.addBean(cs, object);
 		}
 
 
