@@ -57,9 +57,32 @@ public class RU {
 		try {
 			field.setAccessible(true);
 			field.set(object, value);
-		} catch (IllegalArgumentException | IllegalAccessException e) {
+		} catch (final IllegalAccessException e) {
 			e.printStackTrace();
 		}
+	}
+
+	public static Object getFiledValue(final Object object, final Field field) {
+		try {
+			field.setAccessible(true);
+			final Object v = field.get(object);
+			return v;
+		} catch (final IllegalAccessException e) {
+			e.printStackTrace();
+		}
+
+		return null;
+	}
+
+	public static Field getDeclaredField(final Object object, final String fieldName) {
+		try {
+			final Field declaredField = object.getClass().getDeclaredField(fieldName);
+			return declaredField;
+		} catch (final NoSuchFieldException e) {
+			e.printStackTrace();
+		}
+
+		return null;
 	}
 
 }

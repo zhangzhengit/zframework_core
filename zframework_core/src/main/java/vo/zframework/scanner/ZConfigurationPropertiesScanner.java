@@ -33,6 +33,7 @@ import vo.zframework.cache.AU;
 import vo.zframework.cache.CU;
 import vo.zframework.cache.STU;
 import vo.zframework.configuration.ZProperties;
+import vo.zframework.core.RU;
 import vo.zframework.core.ZContext;
 import vo.zframework.core.ZSingleton;
 import vo.zframework.exception.StartupException;
@@ -213,13 +214,9 @@ public class ZConfigurationPropertiesScanner {
 				}
 			}
 		}
-		try {
-			if (!set.isEmpty()) {
-				field.setAccessible(true);
-				field.set(object, set);
-			}
-		} catch (IllegalArgumentException | IllegalAccessException e) {
-			e.printStackTrace();
+
+		if (!set.isEmpty()) {
+			RU.setFiledValue(field, object, set);
 		}
 	}
 
@@ -344,14 +341,8 @@ public class ZConfigurationPropertiesScanner {
 
 		final List<Object> subList = i <= 0 ? null : list.subList(0, i);
 
-		try {
-			if (CU.isNotEmpty(subList)) {
-				field.setAccessible(true);
-				field.set(object, subList);
-			}
-
-		} catch (IllegalArgumentException | IllegalAccessException e) {
-			e.printStackTrace();
+		if (CU.isNotEmpty(subList)) {
+			RU.setFiledValue(field, object, subList);
 		}
 	}
 
@@ -383,52 +374,46 @@ public class ZConfigurationPropertiesScanner {
 			final String value) throws Exception {
 		final String fieldName = key.replace(fullKey + ".", "");
 
-		try {
-			final Field field = newInstance.getClass().getDeclaredField(fieldName);
-			field.setAccessible(true);
+		final Field field = RU.getDeclaredField(newInstance, fieldName);
 
-			final Class<?> ft = field.getType();
+		final Class<?> ft = field.getType();
 
-			if ((ft == byte.class) || (ft == Byte.class)) {
-				field.set(newInstance, Byte.parseByte(value));
-			} else if ((ft == short.class) || (ft == Short.class)) {
-				field.set(newInstance, Short.parseShort(value));
-			} else if ((ft == int.class) || (ft == Integer.class)) {
-				field.set(newInstance, Integer.parseInt(value));
-			} else if ((ft == long.class) || (ft == Long.class)) {
-				field.set(newInstance, Long.parseLong(value));
-			} else if ((ft == float.class) || (ft == Float.class)) {
-				field.set(newInstance, Float.parseFloat(value));
-			} else if ((ft == double.class) || (ft == Double.class)) {
-				field.set(newInstance, Double.parseDouble(value));
-			} else if ((ft == boolean.class) || (ft == Boolean.class)) {
-				// FIXME 2023年11月9日 下午1:53:34 zhanghen: TODO 其他类型继续提示
-				final String bo = String.valueOf(value);
-				if (!"true".equalsIgnoreCase(bo) && !"false".equalsIgnoreCase(bo)) {
-					// Boolean.parseBoolean 也无需校验，但仍提示
-					throw new ConfigurationPropertiesParameterException(
-							newInstance.getClass().getSimpleName() + "." + fieldName + " 为 "
-									+ Boolean.class.getSimpleName() + " 类型，当前参数为 " + value + "，请检查代码参数类型或修改参数值为true或false");
-				}
-				field.set(newInstance, Boolean.parseBoolean(value));
-			} else if ((ft == char.class) || (ft == Character.class)) {
-				if (value.length() > 1) {
-					throw new ConfigurationPropertiesParameterException(
-							newInstance.getClass().getSimpleName() + "." + fieldName + " 为 "
-									+ Character.class.getSimpleName() + " 类型，当前参数为 " + value + "，请检查代码参数类型或修改参数值为一个字符");
-				}
-				field.set(newInstance, Character.valueOf(value.charAt(0)));
-			} else if (ft == String.class) {
-				// String 无需校验直接赋值
-				field.set(newInstance, value);
-			} else {
-				throw new TypeNotSupportedExcpetion(fieldName);
+		if ((ft == byte.class) || (ft == Byte.class)) {
+			RU.setFiledValue(field, newInstance, Byte.parseByte(value));
+		} else if ((ft == short.class) || (ft == Short.class)) {
+			RU.setFiledValue(field, newInstance, Short.parseShort(value));
+		} else if ((ft == int.class) || (ft == Integer.class)) {
+			RU.setFiledValue(field, newInstance, Integer.parseInt(value));
+		} else if ((ft == long.class) || (ft == Long.class)) {
+			RU.setFiledValue(field, newInstance, Long.parseLong(value));
+		} else if ((ft == float.class) || (ft == Float.class)) {
+			RU.setFiledValue(field, newInstance, Float.parseFloat(value));
+		} else if ((ft == double.class) || (ft == Double.class)) {
+			RU.setFiledValue(field, newInstance, Double.parseDouble(value));
+		} else if ((ft == boolean.class) || (ft == Boolean.class)) {
+			// FIXME 2023年11月9日 下午1:53:34 zhanghen: TODO 其他类型继续提示
+			final String bo = String.valueOf(value);
+			if (!"true".equalsIgnoreCase(bo) && !"false".equalsIgnoreCase(bo)) {
+				// Boolean.parseBoolean 也无需校验，但仍提示
+				throw new ConfigurationPropertiesParameterException(
+						newInstance.getClass().getSimpleName() + "." + fieldName + " 为 "
+								+ Boolean.class.getSimpleName() + " 类型，当前参数为 " + value + "，请检查代码参数类型或修改参数值为true或false");
 			}
-
-		} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
-			e.printStackTrace();
-			throw e;
+			RU.setFiledValue(field, newInstance, Boolean.parseBoolean(value));
+		} else if ((ft == char.class) || (ft == Character.class)) {
+			if (value.length() > 1) {
+				throw new ConfigurationPropertiesParameterException(
+						newInstance.getClass().getSimpleName() + "." + fieldName + " 为 "
+								+ Character.class.getSimpleName() + " 类型，当前参数为 " + value + "，请检查代码参数类型或修改参数值为一个字符");
+			}
+			RU.setFiledValue(field, newInstance, Character.valueOf(value.charAt(0)));
+		} else if (ft == String.class) {
+			// String 无需校验直接赋值
+			RU.setFiledValue(field, newInstance, value);
+		} else {
+			throw new TypeNotSupportedExcpetion(fieldName);
 		}
+
 	}
 
 	private static Object newInstance(final Field field)  {
@@ -467,14 +452,8 @@ public class ZConfigurationPropertiesScanner {
 			map.put(kName, value);
 		}
 
-		try {
-			if (!map.isEmpty()) {
-				field.setAccessible(true);
-				field.set(object, map);
-			}
-
-		} catch (IllegalArgumentException | IllegalAccessException e) {
-			e.printStackTrace();
+		if (!map.isEmpty()) {
+			RU.setFiledValue(field, object, map);
 		}
 	}
 
@@ -484,31 +463,31 @@ public class ZConfigurationPropertiesScanner {
 		final String v1 = getStringValue(keyAR);
 
 		if (type == String.class) {
-			setValue(object, field, v1);
+			RU.setFiledValue(field, object, v1);
 		} else if ((type == byte.class) || (type == Byte.class)) {
-			setValue(object, field, ZProperties.getByte(keyAR.get()));
+			RU.setFiledValue(field, object, ZProperties.getByte(keyAR.get()));
 		} else if ((type == short.class) || (type == Short.class)) {
-			setValue(object, field, ZProperties.getShort(keyAR.get()));
+			RU.setFiledValue(field, object, ZProperties.getShort(keyAR.get()));
 		} else if ((type == int.class) || (type == Integer.class)) {
-			setValue(object, field, ZProperties.getInteger(keyAR.get()));
+			RU.setFiledValue(field, object, ZProperties.getInteger(keyAR.get()));
 		} else if ((type == long.class) || (type == Long.class)) {
-			setValue(object, field, ZProperties.getLong(keyAR.get()));
+			RU.setFiledValue(field, object, ZProperties.getLong(keyAR.get()));
 		} else if ((type == float.class) || (type == Float.class)) {
-			setValue(object, field, ZProperties.getFloat(keyAR.get()));
+			RU.setFiledValue(field, object, ZProperties.getFloat(keyAR.get()));
 		} else if ((type == double.class) || (type == Double.class)) {
-			setValue(object, field, ZProperties.getDouble(keyAR.get()));
+			RU.setFiledValue(field, object, ZProperties.getDouble(keyAR.get()));
 		} else if ((type == char.class) || (type == Character.class)) {
-			setValue(object, field, v1.charAt(0));
+			RU.setFiledValue(field, object, v1.charAt(0));
 		} else if ((type == boolean.class) || (type == Boolean.class)) {
-			setValue(object, field, ZProperties.getBoolean(keyAR.get()));
+			RU.setFiledValue(field, object, ZProperties.getBoolean(keyAR.get()));
 		} else if (type == BigInteger.class) {
-			setValue(object, field, ZProperties.getBigInteger(keyAR.get()));
+			RU.setFiledValue(field, object, ZProperties.getBigInteger(keyAR.get()));
 		} else if (type == BigDecimal.class) {
-			setValue(object, field, ZProperties.getBigDecimal(keyAR.get()));
+			RU.setFiledValue(field, object, ZProperties.getBigDecimal(keyAR.get()));
 		} else if (type == AtomicInteger.class) {
-			setValue(object, field, new AtomicInteger(ZProperties.getInteger(keyAR.get())));
+			RU.setFiledValue(field, object, new AtomicInteger(ZProperties.getInteger(keyAR.get())));
 		} else if (type == AtomicLong.class) {
-			setValue(object, field, new AtomicLong(ZProperties.getLong(keyAR.get())));
+			RU.setFiledValue(field, object, new AtomicLong(ZProperties.getLong(keyAR.get())));
 		}
 
 	}
@@ -528,15 +507,6 @@ public class ZConfigurationPropertiesScanner {
 		}
 
 		return joiner.toString();
-	}
-
-	private static void setValue(final Object object, final Field field, final Object value) {
-		try {
-			field.setAccessible(true);
-			field.set(object, value);
-		} catch (IllegalArgumentException | IllegalAccessException e) {
-			e.printStackTrace();
-		}
 	}
 
 	private static void checkModifiers(final Class<?> cs, final Field field) {

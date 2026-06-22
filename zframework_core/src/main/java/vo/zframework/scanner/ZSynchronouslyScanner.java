@@ -243,29 +243,23 @@ public class ZSynchronouslyScanner {
 					continue;
 				}
 
-				f.setAccessible(true);
-				try {
-					final Object v = f.get(bean);
-					// 在此判断：如果 autowired.required() 并且字段不存在，则抛异常
-					if ((v == null) && autowired.required()) {
-						final String beanName = STU.isEmpty(autowired.name()) ?
-								f.getType().getCanonicalName() + "@" +
-								f.getName() : autowired.name();
+				final Object v = RU.getFiledValue(bean, f);
 
-						final String message1 =
-								bean.getClass().getSimpleName() + "." + f.getName()
-								+ "的 @"
-								+ ZAutowired.class.getSimpleName()
-								+ ".name 指定的依赖对象["
-								+ beanName
-								+ "]不存在,请检查[" + beanName + "]是否正确配置了?";
+				// 在此判断：如果 autowired.required() 并且字段不存在，则抛异常
+				if ((v == null) && autowired.required()) {
+					final String beanName = STU.isEmpty(autowired.name()) ?
+							f.getType().getCanonicalName() + "@" +
+							f.getName() : autowired.name();
 
+					final String message1 =
+							bean.getClass().getSimpleName() + "." + f.getName()
+							+ "的 @"
+							+ ZAutowired.class.getSimpleName()
+							+ ".name 指定的依赖对象["
+							+ beanName
+							+ "]不存在,请检查[" + beanName + "]是否正确配置了?";
 
-						throw new BeanNotExistException(message1);
-					}
-
-				} catch (IllegalArgumentException | IllegalAccessException e) {
-					e.printStackTrace();
+					throw new BeanNotExistException(message1);
 				}
 			}
 

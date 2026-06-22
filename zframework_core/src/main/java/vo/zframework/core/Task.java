@@ -926,21 +926,15 @@ public class Task {
 		final Class<?> ftype = field.getType();
 		// FIXME 2024年6月28日 下午5:44:43 zhangzhen : 忘了是否支持Map类型了，看@ZNotEmtpy的javadoc是支持Map的，记不清了是否支持了？
 		if ((ftype == List.class) || (ftype == Set.class)) {
-			try {
-				field.setAccessible(true);
-				final Iterable<?> it = (Iterable<?>) field.get(object);
-				if (it != null) {
-					for (final Object lv : it) {
-						final Field[] lvfs = lv.getClass().getDeclaredFields();
-						for (final Field lf : lvfs) {
-							ZValidator.validatedAll(lv, lf);
-							checkT(lv, lf);
-						}
+			final Iterable<?> it = (Iterable<?>) RU.getFiledValue(object, field);
+			if (it != null) {
+				for (final Object lv : it) {
+					final Field[] lvfs = lv.getClass().getDeclaredFields();
+					for (final Field lf : lvfs) {
+						ZValidator.validatedAll(lv, lf);
+						checkT(lv, lf);
 					}
 				}
-
-			} catch (IllegalArgumentException | IllegalAccessException e) {
-				e.printStackTrace();
 			}
 		}
 	}

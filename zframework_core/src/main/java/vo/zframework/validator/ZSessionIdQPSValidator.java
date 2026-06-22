@@ -3,6 +3,7 @@ package vo.zframework.validator;
 import java.lang.reflect.Field;
 
 import vo.zframework.anno.ZValue;
+import vo.zframework.core.RU;
 import vo.zframework.exception.ValidatedException;
 
 /**
@@ -22,27 +23,21 @@ public class ZSessionIdQPSValidator implements ZCustomValidator{
 
 	@Override
 	public void validated(final Object object, final Field field) throws Exception {
-		try {
-			field.setAccessible(true);
-			final Object value = field.get(object);
-			final Integer v = (Integer) value;
 
-			if ((v % MIN_VALUE) != 0) {
-				final String message = field.getAnnotation(ZCustom.class).message();
+		final Integer v = (Integer) RU.getFiledValue(object, field);
 
-				final String pName = field.isAnnotationPresent(ZValue.class)
-						? "[" + field.getAnnotation(ZValue.class).name() + "]"
-								: "";
-				final String t = object.getClass().getSimpleName() + "." + field.getName() + " " + pName + " 必须配置为可以被 "
-						+ MIN_VALUE + " (" + ZSessionIdQPSValidator.class.getCanonicalName() + ".MIN_VALUE)"
-						+ " 整除";
+		if ((v % MIN_VALUE) != 0) {
+			final String message = field.getAnnotation(ZCustom.class).message();
 
-				final String format = String.format(message, t);
-				throw new ValidatedException(format);
-			}
+			final String pName = field.isAnnotationPresent(ZValue.class)
+					? "[" + field.getAnnotation(ZValue.class).name() + "]"
+							: "";
+			final String t = object.getClass().getSimpleName() + "." + field.getName() + " " + pName + " 必须配置为可以被 "
+					+ MIN_VALUE + " (" + ZSessionIdQPSValidator.class.getCanonicalName() + ".MIN_VALUE)"
+					+ " 整除";
 
-		} catch (IllegalArgumentException | IllegalAccessException e) {
-			throw e;
+			final String format = String.format(message, t);
+			throw new ValidatedException(format);
 		}
 	}
 

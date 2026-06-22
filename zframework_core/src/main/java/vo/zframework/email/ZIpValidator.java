@@ -4,6 +4,7 @@ import java.lang.reflect.Field;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import vo.zframework.core.RU;
 import vo.zframework.exception.ValidatedException;
 import vo.zframework.http.HttpStatusEnum;
 import vo.zframework.validator.ZCustomValidator;
@@ -22,9 +23,7 @@ public class ZIpValidator implements ZCustomValidator {
 
 	@Override
 	public void validated(final Object object, final Field field) throws Exception {
-
-		field.setAccessible(true);
-		final Object v = field.get(object);
+		final Object v = RU.getFiledValue(object, field);
 
 		final Matcher matcher = PATTERN.matcher(String.valueOf(v));
 		if (!matcher.matches()) {

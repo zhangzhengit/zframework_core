@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Optional;
 
 import vo.zframework.anno.ZValue;
+import vo.zframework.core.RU;
 import vo.zframework.exception.ValidatedException;
 import vo.zframework.validator.ZCustom;
 import vo.zframework.validator.ZCustomValidator;
@@ -20,8 +21,7 @@ public class TaskResponsiveModeValidator implements ZCustomValidator {
 
 	@Override
 	public void validated(final Object object, final Field field) throws Exception {
-		field.setAccessible(true);
-		final String v = (String) field.get(object);
+		final String v = (String) RU.getFiledValue(object, field);
 
 		final Optional<TaskResponsiveModeEnum> findAny =
 				Arrays.stream(TaskResponsiveModeEnum.values())

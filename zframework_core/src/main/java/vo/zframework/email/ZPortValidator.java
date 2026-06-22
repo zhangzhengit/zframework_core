@@ -3,6 +3,7 @@ package vo.zframework.email;
 import java.lang.reflect.Field;
 
 import vo.zframework.core.PortChecker;
+import vo.zframework.core.RU;
 import vo.zframework.exception.ValidatedException;
 import vo.zframework.validator.ZCustomValidator;
 
@@ -20,9 +21,7 @@ public class ZPortValidator implements ZCustomValidator {
 	@Override
 	public void validated(final Object object, final Field field) throws Exception {
 
-		field.setAccessible(true);
-
-		final Object value = field.get(object);
+		final Object value = RU.getFiledValue(object, field);
 
 		int port = 0;
 		try {

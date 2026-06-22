@@ -5,6 +5,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import vo.zframework.core.RU;
 import vo.zframework.exception.ValidatedException;
 import vo.zframework.http.HttpStatusEnum;
 import vo.zframework.validator.ZCustomValidator;
@@ -23,9 +24,7 @@ public class ZMailValidator implements ZCustomValidator {
 	@Override
 	public void validated(final Object object, final Field field) throws Exception {
 
-		field.setAccessible(true);
-
-		final Object email = field.get(object);
+		final Object email = RU.getFiledValue(object, field);
 
 		final Pattern pattern = Pattern.compile(EMAIL_REGEX);
 

@@ -3,6 +3,7 @@ package vo.zframework.validator;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 
+import vo.zframework.core.RU;
 import vo.zframework.enums.MethodEnum;
 import vo.zframework.exception.ValidatedException;
 
@@ -17,10 +18,7 @@ public class ZHttpMethodValidator implements ZCustomValidator {
 	@Override
 	public void validated(final Object object, final Field field) throws Exception {
 
-		field.setAccessible(true);
-		final Object value = field.get(object);
-		final String ms = String.valueOf(value);
-
+		final String ms = (String) RU.getFiledValue(object, field);
 
 		final String[] a = ms.split(",");
 		for (final String a1 : a) {

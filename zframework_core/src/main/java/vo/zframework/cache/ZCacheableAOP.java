@@ -81,12 +81,12 @@ public class ZCacheableAOP implements ZIAOP {
 		if (STU.isNullOrEmptyOrBlank(key)) {
 			return ZCacheableAOP.PREFIX + "@" + aopParameter.getTarget().getClass().getCanonicalName() + "@" + group;
 		}
-		
+
 		final Parameter[] ps = RU.getParameters(aopParameter.getMethod());
 		if (AU.isEmpty(ps)) {
 			return PREFIX + "@" + group + "@" + key;
 		}
-		
+
 		final int ix = key.indexOf(separatorChar);
 		if (ix < 0) {
 			for (int i = 0; i < ps.length; i++) {
@@ -100,20 +100,20 @@ public class ZCacheableAOP implements ZIAOP {
 							+ gKey(pl.get(i));
 				}
 			}
-			
+
 			throw new CacheKeyDeclarationException(
 					"key不存在,key = " + key + ",方法名称=" + aopParameter.getMethod().getName());
 		}
 
-		if (ix == 0 || ix == key.length() - 1) {
+		if ((ix == 0) || (ix == (key.length() - 1))) {
 			throw new CacheKeyDeclarationException("key声明异常,key = " + key + ",方法名称=" + aopParameter.getMethod().getName()
 					+ ",请声明为[方法参数名.字段名]的形式,如：user.id"
 					);
 		}
-		
+
 		final String pname = key.substring(0, ix);
 		final String fname = key.substring(ix + separatorChar.length());
-		
+
 		for (int i = 0; i < ps.length; i++) {
 
 			final Parameter parameter = ps[i];
@@ -122,15 +122,12 @@ public class ZCacheableAOP implements ZIAOP {
 				final String canonicalName = aopParameter.getTarget().getClass().getName();
 				final List<Object> pl = aopParameter.getParameterList();
 				final Object pO = pl.get(i);
-				try {
-					final Field f = pO.getClass().getDeclaredField(fname);
-					f.setAccessible(true);
-					final Object fV= f.get(pO);
-					return PREFIX + "@" + canonicalName + "@" + group + "@" + parameter.getName() + STU.EQUALS
-							+ fV;
-				} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
-					e.printStackTrace();
-				}
+
+				final Field f = RU.getDeclaredField(pO, fname);
+				final Object fV = RU.getFiledValue(pO, f);
+
+				return PREFIX + "@" + canonicalName + "@" + group + "@" + parameter.getName() + STU.EQUALS
+						+ fV;
 			}
 		}
 

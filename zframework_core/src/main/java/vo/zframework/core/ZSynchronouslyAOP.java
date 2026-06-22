@@ -30,12 +30,12 @@ public class ZSynchronouslyAOP implements ZIAOP {
 	public Object around(final AOPParameter AOPParameter) {
 
 		final String value = ZSynchronouslyAOP.gValue(AOPParameter);
-		
+
 		synchronized (("AOPLock" + value).intern()) {
 			final Object v = AOPParameter.invoke();
 			return v;
 		}
-		
+
 	}
 
 	private static String gValue(final AOPParameter AOPParameter) {
@@ -71,15 +71,11 @@ public class ZSynchronouslyAOP implements ZIAOP {
 					final List<Object> pl = AOPParameter.getParameterList();
 					final Object a = pl.get(i);
 					final String fieldName = key.substring(x + 1);
-					try {
-						final Field filed = a.getClass().getDeclaredField(fieldName);
-						filed.setAccessible(true);
-						final Object v = filed.get(a);
-						return p + '=' + v;
-					} catch (NoSuchFieldException | SecurityException | IllegalArgumentException
-							| IllegalAccessException e) {
-						e.printStackTrace();
-					}
+
+					final Field field = RU.getDeclaredField(a, fieldName);
+					final Object v = RU.getFiledValue(a, field);
+
+					return p + '=' + v;
 				}
 			}
 		}

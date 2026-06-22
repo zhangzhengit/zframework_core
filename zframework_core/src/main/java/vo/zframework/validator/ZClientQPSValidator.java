@@ -4,6 +4,7 @@ import java.lang.reflect.Field;
 
 import vo.zframework.anno.ZValue;
 import vo.zframework.core.QPSEnum;
+import vo.zframework.core.RU;
 import vo.zframework.exception.ValidatedException;
 
 /**
@@ -26,29 +27,22 @@ public class ZClientQPSValidator implements ZCustomValidator {
 	@Override
 	public void validated(final Object object, final Field field) throws Exception {
 
-		try {
-			field.setAccessible(true);
-			final Object value = field.get(object);
-			final Integer v = (Integer) value;
+		final Integer v = (Integer) RU.getFiledValue(object, field);
 
-			if ((v % QPSEnum.CLIENT.getMinValue()) != 0) {
-				final String message = field.getAnnotation(ZCustom.class).message();
+		if ((v % QPSEnum.CLIENT.getMinValue()) != 0) {
+			final String message = field.getAnnotation(ZCustom.class).message();
 
-				final String pName = field.isAnnotationPresent(ZValue.class)
-						? "[" + field.getAnnotation(ZValue.class).name() + "]"
-						: "";
+			final String pName = field.isAnnotationPresent(ZValue.class)
+					? "[" + field.getAnnotation(ZValue.class).name() + "]"
+							: "";
 
-				final String t = object.getClass().getSimpleName() + "." + field.getName() + " " + pName + " 必须配置为可以被 "
-						+ QPSEnum.CLIENT.getMinValue() + " 整除";
-				final String format = String.format(message, t);
-				throw new ValidatedException(format);
+			final String t = object.getClass().getSimpleName() + "." + field.getName() + " " + pName + " 必须配置为可以被 "
+					+ QPSEnum.CLIENT.getMinValue() + " 整除";
 
-			}
+			final String format = String.format(message, t);
 
-		} catch (IllegalArgumentException | IllegalAccessException e) {
-			throw e;
+			throw new ValidatedException(format);
 		}
-
 	}
 
 }

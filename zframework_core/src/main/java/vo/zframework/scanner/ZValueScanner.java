@@ -25,6 +25,7 @@ import vo.zframework.anno.ZService;
 import vo.zframework.anno.ZValue;
 import vo.zframework.cache.CU;
 import vo.zframework.configuration.ZProperties;
+import vo.zframework.core.RU;
 import vo.zframework.core.Task;
 import vo.zframework.core.ZContext;
 import vo.zframework.validator.ZValidator;
@@ -103,13 +104,7 @@ public class ZValueScanner {
 			final Field field = entry.getKey();
 			final Object object = entry.getValue();
 
-			Object oldValue = null;
-			try {
-				field.setAccessible(true);
-				oldValue = field.get(object);
-			} catch (IllegalArgumentException | IllegalAccessException e) {
-				e.printStackTrace();
-			}
+			final Object oldValue = RU.getFiledValue(object, field);
 
 			// 新值和原值一样，continue
 			if (((newValue == null) && (newValue == oldValue))
@@ -223,14 +218,7 @@ public class ZValueScanner {
 	}
 
 	private static void setValue(final Field field, final Object object, final Object value) {
-		try {
-			field.setAccessible(true);
-			field.set(object, value);
-			//			LOG.info("field赋值成功,field={},value={},object={}", field.getName(), value, object);
-		} catch (IllegalArgumentException | IllegalAccessException  e) {
-			e.printStackTrace();
-		}
+		RU.setFiledValue(field, object, value);
 	}
-
 
 }
