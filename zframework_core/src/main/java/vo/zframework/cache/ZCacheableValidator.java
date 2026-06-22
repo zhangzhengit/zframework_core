@@ -26,13 +26,14 @@ public class ZCacheableValidator {
 				final Annotation[] as = m.getAnnotations();
 
 				for (final Annotation a : as) {
-					if (a.annotationType().getCanonicalName().equals(ZCacheable.class.getCanonicalName())) {
+					final Class<? extends Annotation> annotationType = a.annotationType();
+					if (annotationType == ZCacheable.class) {
 						c++;
 					}
-					if (a.annotationType().getCanonicalName().equals(ZCachePut.class.getCanonicalName())) {
+					if (annotationType == ZCachePut.class) {
 						c++;
 					}
-					if (a.annotationType().getCanonicalName().equals(ZCacheEvict.class.getCanonicalName())) {
+					if (annotationType == ZCacheEvict.class) {
 						c++;
 					}
 				}
