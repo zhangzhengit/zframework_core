@@ -22,7 +22,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
-import vo.log.core.ZLog2;
 import vo.zframework.anno.ZAutowired;
 import vo.zframework.anno.ZConfigurationProperties;
 import vo.zframework.anno.ZConfigurationPropertiesRegistry;
@@ -487,32 +486,31 @@ public class ZConfigurationPropertiesScanner {
 
 		final String v1 = getStringValue(keyAR);
 
-
-		if (type.getCanonicalName().equals(String.class.getCanonicalName())) {
+		if (type == String.class) {
 			setValue(object, field, v1);
-		} else if ("byte".equals(type.getCanonicalName()) || type.getCanonicalName().equals(Byte.class.getCanonicalName())) {
+		} else if (type == byte.class) {
 			setValue(object, field, ZProperties.getByte(keyAR.get()));
-		} else if ("short".equals(type.getCanonicalName()) || type.getCanonicalName().equals(Short.class.getCanonicalName())) {
+		} else if (type == short.class) {
 			setValue(object, field, ZProperties.getShort(keyAR.get()));
-		} else if ("int".equals(type.getCanonicalName()) || type.getCanonicalName().equals(Integer.class.getCanonicalName())) {
+		} else if (type == int.class) {
 			setValue(object, field, ZProperties.getInteger(keyAR.get()));
-		} else if ("long".equals(type.getCanonicalName()) || type.getCanonicalName().equals(Long.class.getCanonicalName())) {
+		} else if (type == long.class) {
 			setValue(object, field, ZProperties.getLong(keyAR.get()));
-		} else if ("float".equals(type.getCanonicalName()) || type.getCanonicalName().equals(Float.class.getCanonicalName())) {
+		} else if (type == float.class) {
 			setValue(object, field, ZProperties.getFloat(keyAR.get()));
-		} else if ("double".equals(type.getCanonicalName()) || type.getCanonicalName().equals(Double.class.getCanonicalName())) {
+		} else if (type == double.class) {
 			setValue(object, field, ZProperties.getDouble(keyAR.get()));
-		} else if ("char".equals(type.getCanonicalName()) || type.getCanonicalName().equals(Character.class.getCanonicalName())) {
+		} else if (type == char.class) {
 			setValue(object, field, v1.charAt(0));
-		} else if ("boolean".equals(type.getCanonicalName()) || type.getCanonicalName().equals(Boolean.class.getCanonicalName())) {
+		} else if (type == boolean.class) {
 			setValue(object, field, ZProperties.getBoolean(keyAR.get()));
-		} else if (type.getCanonicalName().equals(BigInteger.class.getCanonicalName())) {
+		} else if (type == BigInteger.class) {
 			setValue(object, field, ZProperties.getBigInteger(keyAR.get()));
-		} else if (type.getCanonicalName().equals(BigDecimal.class.getCanonicalName())) {
+		} else if (type == BigDecimal.class) {
 			setValue(object, field, ZProperties.getBigDecimal(keyAR.get()));
-		} else if (type.getCanonicalName().equals(AtomicInteger.class.getCanonicalName())) {
+		} else if (type == AtomicInteger.class) {
 			setValue(object, field, new AtomicInteger(ZProperties.getInteger(keyAR.get())));
-		} else if (type.getCanonicalName().equals(AtomicLong.class.getCanonicalName())) {
+		} else if (type == AtomicLong.class) {
 			setValue(object, field, new AtomicLong(ZProperties.getLong(keyAR.get())));
 		}
 
