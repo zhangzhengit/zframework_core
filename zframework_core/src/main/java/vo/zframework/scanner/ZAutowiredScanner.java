@@ -84,7 +84,7 @@ public class ZAutowiredScanner {
 	 */
 	private static void injectForProxyMethod_getSingletonByClass(final Object object) {
 		final Object superClassObject = object;
-		if (superClassObject.getClass().getCanonicalName().equals(Object.class.getCanonicalName())) {
+		if (superClassObject.getClass() == Object.class) {
 			return;
 		}
 		final List<Field> zafList = Arrays.stream(superClassObject.getClass().getDeclaredFields()).filter(f -> f.isAnnotationPresent(ZAutowired.class)).collect(Collectors.toList());
@@ -172,7 +172,7 @@ public class ZAutowiredScanner {
 			final Field[] fs = bean.getClass().getDeclaredFields();
 			for (final Field f : fs) {
 				final ZAutowired autowired = f.getAnnotation(ZAutowired.class);
-				if(autowired==null) {
+				if (autowired == null) {
 					continue;
 				}
 
