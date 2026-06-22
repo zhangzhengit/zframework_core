@@ -140,9 +140,9 @@ public class ZConfigurationPropertiesScanner {
 		} else {
 			// 到此 [orderCount]和[order.count]形式的名称都不匹配，说明是List、Map、Set三种类型了，开始匹配这三种类型
 
-			if (field.getType().getCanonicalName().equals(Map.class.getCanonicalName())) {
+			if (field.getType() == Map.class) {
 				setMap(object, field, key);
-			} else if (field.getType().getCanonicalName().equals(List.class.getCanonicalName())) {
+			} else if (field.getType() == List.class) {
 				// FIXME 2023年11月9日 上午12:13:59 zhanghen: 支持三种类型要支持什么类型
 
 				final Class<?>[] ts = ZCU.getGenericType(field);
@@ -171,7 +171,7 @@ public class ZConfigurationPropertiesScanner {
 				}
 
 				setList(object, field, key);
-			} else if (field.getType().getCanonicalName().equals(Set.class.getCanonicalName())) {
+			} else if (field.getType() == Set.class) {
 				setSet(object, field, key);
 			}
 
