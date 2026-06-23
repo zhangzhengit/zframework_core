@@ -91,7 +91,8 @@ public class ZConfigurationPropertiesScanner {
 			 final String prefix = STU.isEmpty(zcp.prefix()) ? ""
 					 : zcp.prefix().endsWith(".") ? zcp.prefix() : zcp.prefix() + ".";
 
-			 final Object object = ZSingleton.getSingletonByClass(cs);
+		 	 final Object object = ZSingleton.getSingletonByClass(cs);
+
 			 final Field[] fs = cs.getDeclaredFields();
 
 			 for (final Field field : fs) {
@@ -109,7 +110,7 @@ public class ZConfigurationPropertiesScanner {
 			ZContext.addBean(cs, object);
 		}
 
-		for (final Class<?> cls : csSet) {
+		for (final Class<?> cls : cl) {
 			final Field[] declaredFields = cls.getDeclaredFields();
 
 			// 如果Class有 @ZAutowired 字段，则先生成对应的的对象，然后注入进来
@@ -118,7 +119,7 @@ public class ZConfigurationPropertiesScanner {
 			.forEach(f -> ZAutowiredScanner.inject(cls, f));
 
 			// 如果Class有 @ZValue 字段 ，则先给此字段注入值
-			Arrays.stream(cls.getDeclaredFields())
+			Arrays.stream(declaredFields)
 			.filter(f -> f.isAnnotationPresent(ZValue.class))
 			.forEach(f -> ZValueScanner.inject(cls, f));
 		}
