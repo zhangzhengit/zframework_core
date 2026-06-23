@@ -16,9 +16,9 @@ import java.util.Enumeration;
 import java.util.Properties;
 
 import vo.log.core.ZLog2;
-import vo.zframework.configuration.AppH;
-import vo.zframework.configuration.EE;
-import vo.zframework.configuration.ZProperties;
+import vo.zframework.ZProperties;
+import vo.zframework.dynamic.AppH;
+import vo.zframework.dynamic.EE;
 
 /**
  * 配置文件监听器，监听配置变动，及时更新 @ZConfigurationProperties、 @ZValue 等

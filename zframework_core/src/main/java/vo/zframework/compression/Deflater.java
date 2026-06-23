@@ -8,8 +8,8 @@ import java.nio.charset.Charset;
 import java.util.zip.DeflaterInputStream;
 import java.util.zip.DeflaterOutputStream;
 
-import vo.zframework.cache.AU;
-import vo.zframework.cache.STU;
+import vo.zframework.common.AU;
+import vo.zframework.common.STU;
 
 /**
  * Deflater压缩

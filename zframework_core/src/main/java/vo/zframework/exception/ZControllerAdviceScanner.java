@@ -11,11 +11,11 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import vo.zframework.cache.AU;
-import vo.zframework.cache.CU;
-import vo.zframework.core.Task;
+import vo.zframework.bean.ZSingleton;
+import vo.zframework.common.AU;
+import vo.zframework.common.CU;
 import vo.zframework.core.ZContext;
-import vo.zframework.core.ZSingleton;
+import vo.zframework.http.Task;
 import vo.zframework.scanner.ClassMap;
 
 /**

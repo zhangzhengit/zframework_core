@@ -13,7 +13,8 @@ import javax.mail.internet.MimeMessage;
 
 import vo.zframework.anno.ZAsync;
 import vo.zframework.anno.ZComponent;
-import vo.zframework.cache.STU;
+import vo.zframework.common.STU;
+import vo.zframework.configuration.properties.ZMailNotificationConfigurationProperties;
 import vo.zframework.core.ZContext;
 
 /**

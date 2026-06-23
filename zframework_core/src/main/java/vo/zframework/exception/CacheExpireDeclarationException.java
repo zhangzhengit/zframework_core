@@ -1,7 +1,5 @@
 package vo.zframework.exception;
 
-import vo.zframework.validator.ZFException;
-
 /**
  *
  * @ZCacheable.expire 或 @ZCachePut.expire 声明异常

@@ -5,10 +5,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.StringJoiner;
 
-import vo.zframework.cache.STU;
-import vo.zframework.core.HeaderEnum;
-import vo.zframework.core.ZRequest;
-import vo.zframework.core.ZSession;
+import vo.zframework.common.STU;
+import vo.zframework.enums.HeaderEnum;
+import vo.zframework.enums.SameSiteEnum;
 
 /**
  * Cookie

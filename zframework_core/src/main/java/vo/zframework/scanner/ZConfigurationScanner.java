@@ -13,10 +13,10 @@ import vo.zframework.anno.ZConditional;
 import vo.zframework.anno.ZConfiguration;
 import vo.zframework.anno.ZConfigurationPropertiesRegistry;
 import vo.zframework.anno.ZValue;
-import vo.zframework.cache.CU;
-import vo.zframework.core.Task;
+import vo.zframework.bean.ZSingleton;
+import vo.zframework.common.CU;
 import vo.zframework.core.ZContext;
-import vo.zframework.core.ZSingleton;
+import vo.zframework.http.Task;
 
 /**
  *	扫描 @ZConfiguration 注解，找到里面的 @ZBean方法，来生成一个配置类

@@ -8,14 +8,14 @@ import java.util.UUID;
 import vo.log.core.ZLog2;
 import vo.zframework.M;
 import vo.zframework.anno.ZComponent;
-import vo.zframework.cache.CU;
-import vo.zframework.cache.STU;
-import vo.zframework.core.ReqeustInfo;
-import vo.zframework.core.Task;
+import vo.zframework.common.CU;
+import vo.zframework.common.STU;
+import vo.zframework.configuration.properties.ZMailNotificationConfigurationProperties;
 import vo.zframework.core.ZContext;
-import vo.zframework.core.ZRequest;
 import vo.zframework.email.ZMail;
-import vo.zframework.email.ZMailNotificationConfigurationProperties;
+import vo.zframework.http.ReqeustInfo;
+import vo.zframework.http.Task;
+import vo.zframework.http.ZRequest;
 
 /**
  * 运行时处理 @ZControllerAdvice 定义的方法

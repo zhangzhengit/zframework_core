@@ -8,8 +8,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import vo.zframework.common.PackageScanner;
-import vo.zframework.core.ZRC;
+import vo.zframework.cache.ZRC;
 
 /**
  * 暂存扫描出来的Class，防止每次都扫描

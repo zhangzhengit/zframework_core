@@ -3,7 +3,8 @@ package vo.zframework.validator;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 
-import vo.zframework.core.RU;
+import vo.zframework.anno.ZCustom;
+import vo.zframework.common.RU;
 import vo.zframework.enums.MethodEnum;
 import vo.zframework.exception.ValidatedException;
 

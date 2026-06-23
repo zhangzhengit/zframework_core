@@ -8,9 +8,9 @@ import java.util.function.Supplier;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
-import vo.zframework.configuration.ServerConfigurationProperties;
+import vo.zframework.cache.ZRC;
+import vo.zframework.configuration.properties.ServerConfigurationProperties;
 import vo.zframework.core.ZContext;
-import vo.zframework.core.ZRC;
 
 /**
  * freemarker模板工具类

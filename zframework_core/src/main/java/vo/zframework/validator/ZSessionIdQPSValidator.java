@@ -2,8 +2,9 @@ package vo.zframework.validator;
 
 import java.lang.reflect.Field;
 
+import vo.zframework.anno.ZCustom;
 import vo.zframework.anno.ZValue;
-import vo.zframework.core.RU;
+import vo.zframework.common.RU;
 import vo.zframework.exception.ValidatedException;
 
 /**

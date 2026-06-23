@@ -1,7 +1,5 @@
 package vo.zframework.exception;
 
-import vo.zframework.validator.ZFException;
-
 /**
  * @ZCacheable.key 或 @ZCachePut.key 声明异常
  *

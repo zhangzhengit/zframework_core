@@ -8,18 +8,18 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import vo.zframework.anno.ZAOP;
 import vo.zframework.anno.ZAutowired;
 import vo.zframework.anno.ZComponent;
 import vo.zframework.anno.ZConfiguration;
 import vo.zframework.anno.ZController;
 import vo.zframework.anno.ZRestController;
 import vo.zframework.anno.ZService;
-import vo.zframework.aop.ZAOP;
 import vo.zframework.aop.ZAOPScaner;
-import vo.zframework.cache.STU;
-import vo.zframework.core.RU;
+import vo.zframework.bean.ZSingleton;
+import vo.zframework.common.RU;
+import vo.zframework.common.STU;
 import vo.zframework.core.ZContext;
-import vo.zframework.core.ZSingleton;
 import vo.zframework.exception.BeanNotExistException;
 
 /**
@@ -67,7 +67,7 @@ public class ZAutowiredScanner {
 				ZContext.addBean(cls, o2);
 			}
 
-			final Object superClassObject = vo.zframework.core.ZSingleton.getSingletonByClass(o2.getClass().getSuperclass());
+			final Object superClassObject = vo.zframework.bean.ZSingleton.getSingletonByClass(o2.getClass().getSuperclass());
 			injectForProxyMethod_getSingletonByClass(superClassObject);
 		}
 

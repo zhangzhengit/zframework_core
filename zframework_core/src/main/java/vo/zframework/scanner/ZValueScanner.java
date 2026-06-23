@@ -18,16 +18,16 @@ import java.util.concurrent.ConcurrentMap;
 import com.google.common.collect.HashBasedTable;
 
 import vo.log.core.ZLog2;
+import vo.zframework.ZProperties;
 import vo.zframework.anno.ZComponent;
 import vo.zframework.anno.ZController;
 import vo.zframework.anno.ZRestController;
 import vo.zframework.anno.ZService;
 import vo.zframework.anno.ZValue;
-import vo.zframework.cache.CU;
-import vo.zframework.configuration.ZProperties;
-import vo.zframework.core.RU;
-import vo.zframework.core.Task;
+import vo.zframework.common.CU;
+import vo.zframework.common.RU;
 import vo.zframework.core.ZContext;
+import vo.zframework.http.Task;
 import vo.zframework.validator.ZValidator;
 
 /**

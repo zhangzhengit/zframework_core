@@ -7,8 +7,8 @@ import java.nio.charset.Charset;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-import vo.zframework.cache.AU;
-import vo.zframework.cache.STU;
+import vo.zframework.common.AU;
+import vo.zframework.common.STU;
 
 /**
  *

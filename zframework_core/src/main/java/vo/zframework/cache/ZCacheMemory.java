@@ -5,7 +5,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import vo.zframework.anno.ZCacheable;
 import vo.zframework.anno.ZComponent;
+import vo.zframework.configuration.properties.ZCacheMemoryConfigurationProperties;
 import vo.zframework.core.ZContext;
 
 /**

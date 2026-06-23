@@ -24,22 +24,24 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import vo.zframework.ZProperties;
 import vo.zframework.anno.ZAutowired;
-import vo.zframework.anno.ZConfigurationProperties;
 import vo.zframework.anno.ZConfigurationPropertiesRegistry;
 import vo.zframework.anno.ZOrder;
 import vo.zframework.anno.ZOrderComparator;
 import vo.zframework.anno.ZValue;
-import vo.zframework.cache.AU;
-import vo.zframework.cache.CU;
-import vo.zframework.cache.STU;
-import vo.zframework.configuration.ZProperties;
-import vo.zframework.core.RU;
+import vo.zframework.bean.ZSingleton;
+import vo.zframework.common.AU;
+import vo.zframework.common.CU;
+import vo.zframework.common.RU;
+import vo.zframework.common.STU;
+import vo.zframework.common.ZCU;
+import vo.zframework.configuration.properties.ZConfigurationProperties;
 import vo.zframework.core.ZContext;
-import vo.zframework.core.ZSingleton;
+import vo.zframework.exception.ConfigurationPropertiesParameterException;
 import vo.zframework.exception.StartupException;
 import vo.zframework.exception.TypeNotSupportedExcpetion;
-import vo.zframework.validator.ZConfigurationPropertiesException;
+import vo.zframework.exception.ZConfigurationPropertiesException;
 import vo.zframework.validator.ZValidator;
 
 /**

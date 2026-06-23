@@ -1,7 +1,5 @@
 package vo.zframework.exception;
 
-import vo.zframework.validator.ZFException;
-
 /**
  * 请求中的body过大
  *

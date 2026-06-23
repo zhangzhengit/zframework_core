@@ -12,15 +12,25 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import vo.zframework.anno.ZConfigurationProperties;
+import vo.zframework.anno.ZCustom;
+import vo.zframework.anno.ZEndsWith;
+import vo.zframework.anno.ZLength;
+import vo.zframework.anno.ZMax;
+import vo.zframework.anno.ZMin;
+import vo.zframework.anno.ZNotEmtpy;
+import vo.zframework.anno.ZNotNull;
+import vo.zframework.anno.ZPositive;
+import vo.zframework.anno.ZStartWith;
+import vo.zframework.anno.ZUnique;
 import vo.zframework.anno.ZValue;
-import vo.zframework.cache.STU;
-import vo.zframework.core.RU;
-import vo.zframework.core.Task;
-import vo.zframework.core.ZSingleton;
+import vo.zframework.bean.ZSingleton;
+import vo.zframework.common.RU;
+import vo.zframework.common.STU;
+import vo.zframework.configuration.properties.ZConfigurationProperties;
+import vo.zframework.enums.HttpStatusEnum;
 import vo.zframework.exception.TypeNotSupportedExcpetion;
 import vo.zframework.exception.ValidatedException;
-import vo.zframework.http.HttpStatusEnum;
+import vo.zframework.http.Task;
 import vo.zframework.scanner.ClassMap;
 import vo.zframework.scanner.ZConfigurationPropertiesScanner;
 
@@ -738,6 +748,12 @@ public class ZValidator {
 	public static void start(final String... packageName) {
 		final Set<Class<?>> clsSet = ClassMap.scanPackage(packageName);
 		for (final Class<?> cls : clsSet) {
+			final Package package1 = cls.getPackage();
+			final String name = package1.getName();
+			if ("vo.zframework.zclass".equals(name)) {
+				continue;
+			}
+
 			final Field[] fs = cls.getDeclaredFields();
 			for (final Field f : fs) {
 				final Annotation[] as = f.getDeclaredAnnotations();

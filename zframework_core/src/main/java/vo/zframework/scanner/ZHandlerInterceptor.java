@@ -1,8 +1,8 @@
 package vo.zframework.scanner;
 
 import vo.zframework.aop.InterceptorParameter;
-import vo.zframework.core.ZRequest;
-import vo.zframework.core.ZResponse;
+import vo.zframework.http.ZRequest;
+import vo.zframework.http.ZResponse;
 
 /**
  * 拦截器接口，实现此接口来自定义一个拦截器。实现比如权限校验、记录日志、执行耗时监控、数据预处理等等。

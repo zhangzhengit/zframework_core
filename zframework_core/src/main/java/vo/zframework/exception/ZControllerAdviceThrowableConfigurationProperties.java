@@ -1,7 +1,7 @@
 package vo.zframework.exception;
 
-import vo.zframework.anno.ZConfigurationProperties;
-import vo.zframework.validator.ZNotNull;
+import vo.zframework.anno.ZNotNull;
+import vo.zframework.configuration.properties.ZConfigurationProperties;
 
 /**
  * 内置的 ZControllerAdviceThrowable 类的 错误码

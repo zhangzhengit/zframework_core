@@ -1,7 +1,5 @@
 package vo.zframework.exception;
 
-import vo.zframework.validator.ZFException;
-
 /**
  *
  * @ZValidated 所校验的注解所抛出的异常

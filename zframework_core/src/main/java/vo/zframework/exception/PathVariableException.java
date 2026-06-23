@@ -1,7 +1,6 @@
 package vo.zframework.exception;
 
-import vo.zframework.core.ZPathVariable;
-import vo.zframework.validator.ZFException;
+import vo.zframework.anno.ZPathVariable;
 
 /**
  * @ZPathVariable 解析异常

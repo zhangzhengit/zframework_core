@@ -3,6 +3,8 @@ package vo.zframework.anno;
 import java.util.HashMap;
 import java.util.Map;
 
+import vo.zframework.configuration.properties.ZConfigurationProperties;
+
 /**
  * @ZConfigurationProperties 容器类
  *

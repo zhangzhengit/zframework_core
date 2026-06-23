@@ -1,7 +1,7 @@
 package vo.zframework.configuration;
 
-import vo.zframework.anno.ZConfigurationProperties;
-import vo.zframework.validator.ZNotEmtpy;
+import vo.zframework.anno.ZNotEmtpy;
+import vo.zframework.configuration.properties.ZConfigurationProperties;
 
 /**
  * 管理后台的配置
