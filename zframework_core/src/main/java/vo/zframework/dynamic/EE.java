@@ -2,6 +2,8 @@ package vo.zframework.dynamic;
 
 import org.codehaus.janino.ExpressionEvaluator;
 
+import vo.zframework.cache.ZRC;
+
 /**
  * 执行配置java语句表达式，如： 60 * 60 ，执行结果：3600
  *
@@ -11,19 +13,25 @@ import org.codehaus.janino.ExpressionEvaluator;
 public class EE {
 
 	public static Object execute(final String command) {
-		try {
-		    final ExpressionEvaluator ee = new ExpressionEvaluator();
-		    ee.cook(command);
-		    final Object result = ee.evaluate(null);
-		    return result;
-		} catch (final Exception e) {
-		    e.printStackTrace();
-		    // FIXME 2026年5月22日 13:20:29 zhangzhen : 考虑好，如果语句错误了怎么办，如["A" + d"]d前面少一个"符号编译报错
-		    // 是放任不管只e.printST一下？
-//		    LOG.error("表达式错误,请检查.expression={}", command);
-		}
-		return null;
 
+		final String key = "execute:" + command;
+
+		final Object v = ZRC.singleton().computeIfAbsent(key, ()->{
+			try {
+			    final ExpressionEvaluator ee = new ExpressionEvaluator();
+			    ee.cook(command);
+			    final Object result = ee.evaluate(null);
+			    return result;
+			} catch (final Exception e) {
+			    e.printStackTrace();
+			    // FIXME 2026年5月22日 13:20:29 zhangzhen : 考虑好，如果语句错误了怎么办，如["A" + d"]d前面少一个"符号编译报错
+			    // 是放任不管只e.printST一下？
+//			    LOG.error("表达式错误,请检查.expression={}", command);
+			}
+			return null;
+		});
+
+		return v;
 	}
 
 }
