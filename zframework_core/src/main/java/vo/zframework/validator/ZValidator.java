@@ -37,6 +37,7 @@ public class ZValidator {
 	private static Set<Class<? extends Annotation>> VA_SET = Set.of(
 			ZNotNull.class, ZNotEmtpy.class, ZStartWith.class,
 			ZEndsWith.class, ZLength.class, ZMin.class,
+			ZUnique.class,
 			ZMax.class, ZPositive.class);
 
 	public static void validatedZNotNull(final Object object, final Field field) {
