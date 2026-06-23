@@ -13,7 +13,7 @@ public class StartupException extends ZFException {
 
 	private static final long serialVersionUID = 1L;
 
-	public static final String PREFIX = "程序启动异常：";
+	public static final String PREFIX = "APP启动异常：";
 
 	public StartupException(final String message) {
 		super(PREFIX + message);
