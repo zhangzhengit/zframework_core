@@ -5,7 +5,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 /**
- *
+ *	本类要放在顶级包名下
  *
  * @author zhangzhen
  * @data 2024年5月23日 下午7:10:19

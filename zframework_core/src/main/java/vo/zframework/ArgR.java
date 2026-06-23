@@ -5,7 +5,7 @@ package vo.zframework;
  *
  * @author zhangzhen
  * @date 2025年8月25日
- * 
+ *
  */
 public class ArgR {
 
@@ -13,15 +13,14 @@ public class ArgR {
 	private final String value;
 
 	public String getKey() {
-		return key;
+		return this.key;
 	}
 
 	public String getValue() {
-		return value;
+		return this.value;
 	}
 
-	public ArgR(String key, String value) {
-		super();
+	public ArgR(final String key, final String value) {
 		this.key = key;
 		this.value = value;
 	}
