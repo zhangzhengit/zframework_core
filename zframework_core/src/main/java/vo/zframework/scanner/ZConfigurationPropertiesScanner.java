@@ -424,9 +424,8 @@ public class ZConfigurationPropertiesScanner {
 	private static void setValueByType(final Object object, final Field field, final Class<?> type,
 			final AtomicReference<String> keyAR) {
 
-		final String v1 = getStringValue(keyAR);
-
 		if (type == String.class) {
+			final String v1 = getStringValue(keyAR);
 			RU.setFiledValue(field, object, v1);
 		} else if ((type == byte.class) || (type == Byte.class)) {
 			RU.setFiledValue(field, object, ZProperties.getByte(keyAR.get()));
@@ -441,6 +440,7 @@ public class ZConfigurationPropertiesScanner {
 		} else if ((type == double.class) || (type == Double.class)) {
 			RU.setFiledValue(field, object, ZProperties.getDouble(keyAR.get()));
 		} else if ((type == char.class) || (type == Character.class)) {
+			final String v1 = getStringValue(keyAR);
 			RU.setFiledValue(field, object, v1.charAt(0));
 		} else if ((type == boolean.class) || (type == Boolean.class)) {
 			RU.setFiledValue(field, object, ZProperties.getBoolean(keyAR.get()));
