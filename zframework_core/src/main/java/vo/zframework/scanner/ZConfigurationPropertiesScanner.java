@@ -22,6 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import vo.zframework.anno.ZAutowired;
 import vo.zframework.anno.ZConfigurationProperties;
@@ -195,47 +196,42 @@ public class ZConfigurationPropertiesScanner {
 
 	private static void setSet(final Object object, final Field field, final String key) {
 
-		// 从1-N个[i]
-		final Set<Object> set = new LinkedHashSet<>();
-
 		final Class<?>[] ts = ZCU.getGenericType(field);
 		if (AU.isEmpty(ts)) {
 			final String message = object.getClass().getSimpleName() + "." + field.getName() + " Set类型必须加入泛型参数" ;
 			throw new ZConfigurationPropertiesException(message);
 		}
 
-		for (int i = 1; i <= (PROPERTY_INDEX + 1); i++) {
+		final Set<Object> vs = Collections.synchronizedSet(new LinkedHashSet<>());
+
+		IntStream.range(1, PROPERTY_INDEX + 1)
+		.parallel()
+		.forEach(i -> {
 			final String suffix = "[" + (i - 1) + "]";
+
 			final String k1 = key + suffix;
-
-			if (ZProperties.containsKey(k1)) {
-				iteratorSet(object, field, k1, set);
-			} else {
-
-				final String k2 = convert(key) + suffix;
-				if (ZProperties.containsKey(k2)) {
-					iteratorSet(object, field, k2, set);
-				}
+			final String v1 = ZProperties.getString(k1);
+			if (STU.isNotEmpty(v1) && !vs.add(v1)) {
+				th(object, field, k1, v1);
 			}
-		}
 
-		if (!set.isEmpty()) {
-			RU.setFiledValue(field, object, set);
+			final String k2 = convert(key) + suffix;
+			final String v2 = ZProperties.getString(k2);
+			if (STU.isNotEmpty(v2) && !vs.add(v2)) {
+				th(object, field, k2, v2);
+			}
+
+		});
+
+		if (!vs.isEmpty()) {
+			RU.setFiledValue(field, object, vs);
 		}
 	}
 
-	private static void iteratorSet(final Object object, final Field field, final String key, final Set<Object> set) {
-
-		final String v = ZProperties.getString(key);
-		if (STU.isEmpty(v)) {
-			return;
-		}
-
-		if (!set.add(v)) {
-			final String message = object.getClass().getSimpleName() + "." + field.getName() + " Set类型值重复：key=" + key
-					+ ",value=" + v;
-			throw new ZConfigurationPropertiesException(message);
-		}
+	private static void th(final Object object, final Field field, final String key, final String value) {
+		final String message = object.getClass().getSimpleName() + "." + field.getName() + " Set类型值重复：key=" + key
+				+ ",value=" + value;
+		throw new ZConfigurationPropertiesException(message);
 	}
 
 	private static void setList(final Object object, final Field field, final String key) throws Exception {
