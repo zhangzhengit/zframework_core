@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 import vo.zframework.anno.ZCustom;
 import vo.zframework.anno.ZEndsWith;
@@ -739,6 +740,40 @@ public class ZValidator {
 		throw new ValidatedException(format, HttpStatusEnum.HTTP_400.getStatus());
 	}
 
+	public static final Set<String> BAOHAN = Set.of("vo.zframework.configuration",
+			"vo.zframework.configuration.properties");
+
+	public static final Set<String> TIAO_GUO = Set.of(
+				"vo.log",
+				"vo.log.common",
+				"vo.log.conf",
+				"vo.log.core",
+				"vo.log.enums",
+				"vo.log.handler",
+
+				"vo.zframework.anno",
+				"vo.zframework.aop",
+				"vo.zframework.api",
+				"vo.zframework.cache",
+				"vo.zframework.common",
+				"vo.zframework.compression",
+
+				"vo.zframework.dynamic",
+				"vo.zframework.email",
+				"vo.zframework.enums",
+				"vo.zframework.event",
+				"vo.zframework.exception",
+				"vo.zframework.html",
+				"vo.zframework.http",
+				"vo.zframework.protobuf",
+				"vo.zframework.scanner",
+				"vo.zframework.template",
+				"vo.zframework.validator",
+				"vo.zframework.zclass"
+
+		);
+
+
 	/**
 	 * 程序启动时调用此方法，扫描所有带有校验注解的字段，来判断此字段是否支持
 	 *
@@ -747,13 +782,12 @@ public class ZValidator {
 	 */
 	public static void start(final String... packageName) {
 		final Set<Class<?>> clsSet = ClassMap.scanPackage(packageName);
-		for (final Class<?> cls : clsSet) {
-			final Package package1 = cls.getPackage();
-			final String name = package1.getName();
-			if ("vo.zframework.zclass".equals(name)) {
-				continue;
-			}
 
+		final List<Class<?>> list = clsSet.parallelStream()
+				.filter(cls -> BAOHAN.contains(cls.getPackageName()))
+				.collect(Collectors.toList());
+
+		for (final Class<?> cls : list) {
 			final Field[] fs = cls.getDeclaredFields();
 			for (final Field f : fs) {
 				final Annotation[] as = f.getDeclaredAnnotations();
