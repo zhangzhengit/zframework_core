@@ -8,7 +8,6 @@ import vo.zframework.anno.ZNotEmtpy;
 import vo.zframework.anno.ZNotNull;
 import vo.zframework.anno.ZValue;
 import vo.zframework.common.STU;
-import vo.zframework.compression.ZSet;
 import vo.zframework.enums.QPSHandlingEnum;
 
 /**
@@ -41,9 +40,7 @@ public class RequestValidatorConfigurationProperties {
 	 *
 	 */
 	@ZNotEmtpy
-	private Set<String> smoothUserAgent = ZSet.newHashSet("Safari", "Chrome", "Firefox",
-			"Edge", "Edg", "Opera",
-			"OPR");
+	private Set<String> smoothUserAgent = Set.of("Safari", "Chrome", "Firefox", "Edge", "Edg", "Opera", "OPR");
 
 	/**
 	 * 是否打印http请求头（日志输出）
@@ -74,18 +71,18 @@ public class RequestValidatorConfigurationProperties {
 		if (STU.isNullOrEmptyOrBlank(userAgent)) {
 			return DEFAULT_HANDLINGENUM;
 		}
- 
-		
+
+
 		if (uaL == null) {
 			synchronized (this) {
 				if (uaL == null) {
-					uaL = new String[getSmoothUserAgent().size()];
-					uaL = getSmoothUserAgent().toArray(new String[0]);
+					uaL = new String[this.getSmoothUserAgent().size()];
+					uaL = this.getSmoothUserAgent().toArray(new String[0]);
 					Arrays.sort(uaL, Comparator.comparing(String::length));
 				}
 			}
 		}
-		
+
 		for (final String ua : uaL) {
 			// FIXME 2025年1月26日 02:16:37 zhangzhen: userAgent.length() < ua.length() 这行NPE，先判断ua是否null吧
 			// 以后再debug
@@ -137,5 +134,5 @@ public class RequestValidatorConfigurationProperties {
 	public static QPSHandlingEnum getDefaultHandlingenum() {
 		return DEFAULT_HANDLINGENUM;
 	}
-	
+
 }
