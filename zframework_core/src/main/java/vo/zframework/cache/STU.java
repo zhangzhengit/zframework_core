@@ -37,6 +37,7 @@ public class STU {
 	public static final String EMPTY = "";
 	public static final String EQUALS = "=";
 	public static final byte[] EQUALS_BYTES = EQUALS.getBytes();
+	public static final byte EQUALS_BYTE = EQUALS_BYTES[0];
 	public static final int EQUALS_LENGTH = EQUALS.length();
 	public static final char EQUALS_C = '=';
 	public static final String SEMICOLON = ";";

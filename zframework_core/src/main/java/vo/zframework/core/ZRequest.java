@@ -542,7 +542,7 @@ public class ZRequest {
 
 			final List<RequestParam> params = new ArrayList<>(pa.size());
 			for (int i = 0; i < pa.size(); i++) {
-				final ZRequest.RequestParam requestParam = hParam(new String(pa.get(i)));
+				final ZRequest.RequestParam requestParam = hParam(pa.get(i));
 				params.add(requestParam);
 			}
 
@@ -584,15 +584,17 @@ public class ZRequest {
 		return requestURIBytes;
 	}
 
-	private static ZRequest.RequestParam hParam(final String param) {
+	private static ZRequest.RequestParam hParam(final byte[] paramBytes) {
 
-		final int i = param.indexOf(STU.EQUALS);
+		final int i = AU.indexOfKeyword(paramBytes, STU.EQUALS_BYTE);
 		if (i <= -1) {
 			return null;
 		}
 
-		final String name = param.substring(0, i);
-		final String value = param.substring(i + 1);
+		final String name = new String(paramBytes, 0, i);
+
+		final String value = (i + 1) >= paramBytes.length ? null
+				: new String(paramBytes, i + 1, paramBytes.length - (i + 1));
 
 		final ZRequest.RequestParam requestParam = new ZRequest.RequestParam();
 		requestParam.setName(name);
