@@ -78,11 +78,10 @@ public class ZConfigurationPropertiesScanner {
 			}
 		}
 
-		final ArrayList<Class<?>> cl = new ArrayList <>(csSet);
+		final List<Class<?>> cl = new ArrayList<>(csSet);
+		cl.sort(new ZOrderComparator<>());
 
-		final List<Class<?>> sl = cl.stream().sorted(new ZOrderComparator<>()).collect(Collectors.toList());
-
-		for (final Class<?> cs : sl) {
+		for (final Class<?> cs : cl) {
 
 			final ZConfigurationProperties zcp = cs.getAnnotation(ZConfigurationProperties.class);
 
