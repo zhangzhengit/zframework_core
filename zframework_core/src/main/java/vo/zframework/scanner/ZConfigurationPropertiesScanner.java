@@ -211,14 +211,16 @@ public class ZConfigurationPropertiesScanner {
 
 			final String k1 = key + suffix;
 			final String v1 = ZProperties.getString(k1);
-			if (STU.isNotEmpty(v1) && !vs.add(v1)) {
-				th(object, field, k1, v1);
-			}
-
-			final String k2 = convert(key) + suffix;
-			final String v2 = ZProperties.getString(k2);
-			if (STU.isNotEmpty(v2) && !vs.add(v2)) {
-				th(object, field, k2, v2);
+			if (STU.isNotEmpty(v1)) {
+				if (!vs.add(v1)) {
+					th(object, field, k1, v1);
+				}
+			} else {
+				final String k2 = convert(key) + suffix;
+				final String v2 = ZProperties.getString(k2);
+				if (STU.isNotEmpty(v2) && !vs.add(v2)) {
+					th(object, field, k2, v2);
+				}
 			}
 
 		});
