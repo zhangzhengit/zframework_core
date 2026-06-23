@@ -245,17 +245,16 @@ public class ZConfigurationPropertiesScanner {
 
 		for (int i = 1; i <= (PROPERTY_INDEX + 1); i++) {
 
-			final Object newInstance = newInstance(field);
-
 			final String suffix = "[" + (i - 1) + "]";
 			final String fullKey1 = key + suffix;
 			final Iterator<String> sk1 = ZProperties.getKeys(fullKey1);
 
-			boolean sk1HasNext = false;
+			final Object newInstanceFromFieldGenericType = newInstanceFromFieldGenericType(field);
 
+			boolean sk1HasNext = false;
 			if (sk1.hasNext()) {
 				sk1HasNext = true;
-				iteratorList(field, list, fullKey1, sk1, newInstance);
+				iteratorList(fullKey1, sk1, newInstanceFromFieldGenericType);
 			}
 
 			final String fullKey2 = convert(key) + suffix;
@@ -271,12 +270,12 @@ public class ZConfigurationPropertiesScanner {
 						throw new ZConfigurationPropertiesException(message);
 					}
 					sk1HasNext = true;
-					iteratorList(field, list, fullKey2, sk2, newInstance);
+					iteratorList(fullKey2, sk2, newInstanceFromFieldGenericType);
 				}
 			}
 
 			if (sk1HasNext) {
-				list.add(newInstance);
+				list.add(newInstanceFromFieldGenericType);
 			}
 
 			// FIXME 2024年2月16日 下午7:35:20 zhanghen: 下面的之前考虑的可以 0配置 1配置null 2配置
@@ -314,27 +313,24 @@ public class ZConfigurationPropertiesScanner {
 		}
 	}
 
-	private static Object iteratorList(final Field field, final List<Object> list, final String fullKey1,
-			final Iterator<String> sk1, final Object newInstance) throws Exception {
-		final String xa = sk1.next();
-		final String xaValue = ZProperties.getString(xa);
-		//		final Object newInstance = newInstance(field);
+	private static Object iteratorList(final String fullKey1, final Iterator<String> iterator, final Object newInstance) throws Exception {
+		final String key = iterator.next();
+		final String value = ZProperties.getString(key);
 		try {
-			setValue(newInstance, fullKey1, xa, xaValue);
+			setValue(newInstance, fullKey1, key, value);
 		} catch (final Exception e) {
-			final String message = "@" + ZConfigurationProperties.class.getSimpleName()
-					+ " List类型参数初始化异常，key=" + xa;
+			final String message = "@" + ZConfigurationProperties.class.getSimpleName() + " List类型参数初始化异常，key=" + key;
 			throw new ZConfigurationPropertiesException(message);
 		}
 
-		while (sk1.hasNext()) {
-			final String xa2 = sk1.next();
-			final String xaValue2 = ZProperties.getString(xa2);
-			if (xaValue2 != null) {
-				setValue(newInstance, fullKey1, xa2, xaValue2);
+		while (iterator.hasNext()) {
+			final String k2 = iterator.next();
+			final String v2 = ZProperties.getString(k2);
+			if (v2 != null) {
+				setValue(newInstance, fullKey1, k2, v2);
 			}
 		}
-		//		list.add(newInstance);
+
 		return newInstance;
 	}
 
@@ -384,7 +380,7 @@ public class ZConfigurationPropertiesScanner {
 
 	}
 
-	private static Object newInstance(final Field field)  {
+	private static Object newInstanceFromFieldGenericType(final Field field)  {
 		final Class<?> type = ZCU.getGenericType(field)[0];
 		Object newInstance = null;
 		try {
