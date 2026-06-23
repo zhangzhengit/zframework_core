@@ -467,7 +467,7 @@ public class ZRequest {
 
 		this.arList = arList;
 
-		// 构造参数逻辑考虑同上：
+		// 构造参数逻辑考虑：
 		// 第一个是请求行，不是header，所以-1。headerMap最大存放数量就是size-1，
 		// 大多数情况可能不会用到全部的header，所以大多数header都是不会去解析的
 		// 所以即使容量设置size-1，也是浪费，尤其是带很多头的请求，可能只会有几分之一会用到
