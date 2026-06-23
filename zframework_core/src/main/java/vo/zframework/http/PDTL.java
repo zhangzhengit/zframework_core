@@ -18,4 +18,8 @@ public class PDTL {
 		return TL.get();
 	}
 
+	public static void remove() {
+		TL.remove();
+	}
+
 }

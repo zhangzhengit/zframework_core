@@ -185,6 +185,7 @@ public class ZServer {
 
 			if (closed) {
 				SocketTL.closeOutputStreamAndSocket();
+				PDTL.remove();
 				break;
 			}
 		}
