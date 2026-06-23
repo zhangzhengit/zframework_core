@@ -6,11 +6,10 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
 import vo.zframework.common.PackageScanner;
+import vo.zframework.core.ZRC;
 
 /**
  * 暂存扫描出来的Class，防止每次都扫描
@@ -21,8 +20,6 @@ import vo.zframework.common.PackageScanner;
  */
 public class ClassMap {
 
-	private final static ConcurrentMap<String, Set<Class<?>>> cacheMap = new ConcurrentHashMap<>(64, 1F);
-
 	public static Set<Class<?>> scanPackageByAnnotation(final Class<? extends Annotation> annotationClass,
 			final String... scanPackageName) {
 
@@ -31,7 +28,7 @@ public class ClassMap {
 			return Collections.emptySet();
 		}
 
-		final Set<Class<?>> annoSet = clsSet.stream()
+		final Set<Class<?>> annoSet = clsSet.parallelStream()
 					.filter(cls -> cls.isAnnotationPresent(annotationClass))
 					.collect(Collectors.toSet());
 		return Collections.unmodifiableSet(annoSet);
@@ -39,7 +36,9 @@ public class ClassMap {
 
 	public synchronized static Set<Class<?>> scanPackage(final String... scanPackageName) {
 
-		final Set<Class<?>> r = cacheMap.computeIfAbsent(Arrays.toString(scanPackageName), spn -> {
+		final String key = "ClassMap.scanPackage:" +  Arrays.toString(scanPackageName);
+
+		final Set<Class<?>> r = ZRC.singleton().computeIfAbsent(key, () -> {
 			final Set<Class<?>> set = new HashSet<>();
 			for (final String pn : scanPackageName) {
 				set.addAll(scan(pn));
@@ -51,16 +50,12 @@ public class ClassMap {
 	}
 
 	private static Set<Class<?>> scan(final String packageName) {
+		try {
+			return PackageScanner.scanPackage(packageName);
+		} catch (final IOException e) {
+			e.printStackTrace();
+		}
 
-		final Set<Class<?>> computeIfAbsent = cacheMap.computeIfAbsent(packageName, t -> {
-			try {
-				return PackageScanner.scanPackage(t);
-			} catch (final IOException e) {
-				e.printStackTrace();
-			}
-			return null;
-		});
-
-		return Collections.unmodifiableSet(computeIfAbsent);
+		return null;
 	}
 }
