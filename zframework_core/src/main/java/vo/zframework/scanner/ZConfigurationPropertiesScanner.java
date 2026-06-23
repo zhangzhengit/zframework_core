@@ -81,7 +81,8 @@ public class ZConfigurationPropertiesScanner {
 		final List<Class<?>> cl = new ArrayList<>(csSet);
 		cl.sort(new ZOrderComparator<>());
 
-		cl.parallelStream().forEach(cs -> {
+		for (final Class<?> cs : cl) {
+
 			 final ZConfigurationProperties zcp = cs.getAnnotation(ZConfigurationProperties.class);
 
 			 final String prefix = STU.isEmpty(zcp.prefix()) ? ""
@@ -90,20 +91,20 @@ public class ZConfigurationPropertiesScanner {
 			 final Object object = ZSingleton.getSingletonByClass(cs);
 			 final Field[] fs = cs.getDeclaredFields();
 
-			Arrays.stream(fs).parallel().forEach(field -> {
-				checkModifiers(cs, field);
+			 for (final Field field : fs) {
+
+				 checkModifiers(cs, field);
 				 try {
 					 findValueAndSetValue(prefix, object, field);
 				 } catch (final Exception e) {
-					 e.printStackTrace();
+					 throw e;
 				 }
 				 // 赋值后校验一下
 				 ZValidator.validatedAll(object, field);
-			 });
+			}
 
 			ZContext.addBean(cs, object);
-
-		 });
+		}
 
 		for (final Class<?> cls : csSet) {
 			final Field[] declaredFields = cls.getDeclaredFields();
@@ -208,12 +209,12 @@ public class ZConfigurationPropertiesScanner {
 			final String k1 = key + suffix;
 
 			if (ZProperties.containsKey(k1)) {
-				iteratorSet(object, field, set, ts, k1);
+				iteratorSet(object, field, k1, set);
 			} else {
 
 				final String k2 = convert(key) + suffix;
 				if (ZProperties.containsKey(k2)) {
-					iteratorSet(object, field, set, ts, k2);
+					iteratorSet(object, field, k2, set);
 				}
 			}
 		}
@@ -223,54 +224,18 @@ public class ZConfigurationPropertiesScanner {
 		}
 	}
 
-	private static void iteratorSet(final Object object, final Field field, final Set<Object> set,
-			final Class<?>[] ts, final String k1) {
-		final Iterator<String> sk = ZProperties.getKeys(k1);
-		while (sk.hasNext()) {
-			final String xa = sk.next();
+	private static void iteratorSet(final Object object, final Field field, final String key, final Set<Object> set) {
 
-			final Class<?> gType = ts[0];
-			final Object value = getSetFiledValue(xa, gType);
-
-			if (Objects.isNull(value) || !STU.hasContent(String.valueOf(value))) {
-				continue;
-			}
-
-			if (!set.add(value)) {
-				final String message = object.getClass().getSimpleName() + "." + field.getName() + " Set类型值重复：key="
-						+ xa + "" + ",value=" + value;
-				throw new ZConfigurationPropertiesException(message);
-			}
+		final String v = ZProperties.getString(key);
+		if (STU.isEmpty(v)) {
+			return;
 		}
-	}
 
-	private static Object getSetFiledValue(final String xa, final Class<?> gType) {
-		// FIXME 2026年6月23日 06:18:16 zhangzhen : 改这里比较class
-		Object value = null;
-		if (gType.equals(String.class)) {
-			value = ZProperties.getString(xa);
-		} else if (gType.equals(Byte.class)) {
-			value = ZProperties.getByte(xa);
-		} else if (gType.equals(Short.class)) {
-			value = ZProperties.getShort(xa);
-		} else if (gType.equals(Integer.class)) {
-			value = ZProperties.getInteger(xa, null);
-		} else if (gType.equals(Long.class)) {
-			value = ZProperties.getLong(xa);
-		} else if (gType.equals(Float.class)) {
-			value = ZProperties.getFloat(xa);
-		} else if (gType.equals(Double.class)) {
-			value = ZProperties.getDouble(xa);
-		} else if (gType.equals(Character.class)) {
-			value = STU.isEmpty(ZProperties.getString(xa)) ? null : ZProperties.getString(xa).charAt(0);
-		} else if (gType.equals(Boolean.class)) {
-			value = ZProperties.getBoolean(xa);
-		} else {
-			final String message = "@" + ZConfigurationProperties.class.getSimpleName() + " Set类型的泛型参数不支持,type = "
-					+ gType.getCanonicalName();
+		if (!set.add(v)) {
+			final String message = object.getClass().getSimpleName() + "." + field.getName() + " Set类型值重复：key=" + key
+					+ ",value=" + v;
 			throw new ZConfigurationPropertiesException(message);
 		}
-		return value;
 	}
 
 	private static void setList(final Object object, final Field field, final String key) throws Exception {
