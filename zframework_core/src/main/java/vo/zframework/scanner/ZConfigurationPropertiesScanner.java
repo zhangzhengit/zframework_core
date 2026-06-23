@@ -28,7 +28,6 @@ import vo.zframework.ZProperties;
 import vo.zframework.anno.ZAutowired;
 import vo.zframework.anno.ZConfigurationPropertiesRegistry;
 import vo.zframework.anno.ZOrder;
-import vo.zframework.anno.ZOrderComparator;
 import vo.zframework.anno.ZValue;
 import vo.zframework.bean.ZSingleton;
 import vo.zframework.common.AU;
@@ -507,24 +506,12 @@ public class ZConfigurationPropertiesScanner {
 		final AtomicInteger replaceCount = new AtomicInteger(0);
 		for (int i = 0; i < ca.length; i++) {
 			final char c = ca[i];
-			if (daxie.contains(c)) {
+			if (Character.isUpperCase(c)) {
 				final int andIncrement = replaceCount.getAndIncrement();
 				builder.replace(i + andIncrement, i + andIncrement + 1, "." + Character.toLowerCase(c));
 			}
 		}
 		return builder.toString();
 	}
-
-	static Set<Character> daxie = null;
-
-	static {
-		final HashSet<Character> hashSet = new HashSet<>();
-
-		Collections.addAll(hashSet, 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q',
-				'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z');
-
-		daxie = hashSet;
-	}
-
 
 }
