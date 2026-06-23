@@ -70,9 +70,11 @@ public class ZControllerScanner {
 
 		for (final Class<?> cc : cSet) {
 			for (final Class<?> zcc : zcSet1) {
-				if (zcc.getCanonicalName().equals(cc.getCanonicalName())) {
-					throw new StartupException("不允许 @" + ZRestController.class.getCanonicalName() + " 和 @"
-							+ ZController.class.getCanonicalName() + " 同时使用,class = " + cc
+				if (zcc == cc) {
+					throw new StartupException(
+							"不允许 @" + ZRestController.class.getName()
+							+ " 和 @" + ZController.class.getName()
+							+ " 同时使用,class = " + cc
 					);
 				}
 			}
