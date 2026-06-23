@@ -35,7 +35,6 @@ public class ZRequest {
 	public static final String HTTP_11 = "HTTP/1.1";
 	public static final byte[] HTTP_11_BYTES = HTTP_11.getBytes();
 	public static final String BOUNDARY = "boundary=";
-	private static final char SPACE = STU.SPACE_CHAR;
 	private static final ZCookie[] EMPTY_ZCOOKIE = {};
 	private static final String HEADER_PARSED_NO_VALUE = "\u0000" + "\0" + "PARSED_NO_VALUE" + UUID.randomUUID();
 	private static final int HEADER_PARSED_NO_VALUE_LENGTH = HEADER_PARSED_NO_VALUE.length();
