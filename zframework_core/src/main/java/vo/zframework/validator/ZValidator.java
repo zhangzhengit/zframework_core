@@ -6,8 +6,6 @@ import java.lang.reflect.Parameter;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -34,6 +32,12 @@ import vo.zframework.scanner.ZConfigurationPropertiesScanner;
  *
  */
 public class ZValidator {
+
+
+	private static Set<Class<? extends Annotation>> VA_SET = Set.of(
+			ZNotNull.class, ZNotEmtpy.class, ZStartWith.class,
+			ZEndsWith.class, ZLength.class, ZMin.class,
+			ZMax.class, ZPositive.class);
 
 	public static void validatedZNotNull(final Object object, final Field field) {
 		final ZNotNull nn = field.getAnnotation(ZNotNull.class);
@@ -737,27 +741,28 @@ public class ZValidator {
 			for (final Field f : fs) {
 				final Annotation[] as = f.getDeclaredAnnotations();
 				for (final Annotation annotation : as) {
-					final boolean isVA = ZValidator.isValidatorAnnotation(annotation.annotationType());
-					if (!isVA) {
+					final Class<? extends Annotation> annotationType = annotation.annotationType();
+					if (!ZValidator.isValidatorAnnotation(annotationType)) {
 						continue;
 					}
-					if (annotation.annotationType() == ZNotNull.class) {
+
+					if (annotationType == ZNotNull.class) {
 						// @ZNotNull 不用校验，因为它支持所有类型
-					} else if ((annotation.annotationType() == ZNotEmtpy.class) && !ZValidator.isZNotEmptySupported(f.getType())) {
+					} else if ((annotationType == ZNotEmtpy.class) && !ZValidator.isZNotEmptySupported(f.getType())) {
 						ZValidator.throwTypeNotSupportedExcpetion(cls, ZNotEmtpy.class, f);
-					} else if ((annotation.annotationType() == ZMin.class) && !ZValidator.isZMinZMaxSupported(f.getType())) {
+					} else if ((annotationType == ZMin.class) && !ZValidator.isZMinZMaxSupported(f.getType())) {
 						ZValidator.throwTypeNotSupportedExcpetion(cls, ZMin.class, f);
-					} else if ((annotation.annotationType() == ZMax.class) && !ZValidator.isZMinZMaxSupported(f.getType())) {
+					} else if ((annotationType == ZMax.class) && !ZValidator.isZMinZMaxSupported(f.getType())) {
 						ZValidator.throwTypeNotSupportedExcpetion(cls, ZMax.class, f);
-					} else if ((annotation.annotationType() == ZLength.class) && !ZValidator.isString(f.getType())) {
+					} else if ((annotationType == ZLength.class) && !ZValidator.isString(f.getType())) {
 						ZValidator.throwTypeNotSupportedExcpetion(cls, ZLength.class, f);
-					} else if ((annotation.annotationType() == ZStartWith.class) && !ZValidator.isString(f.getType())) {
+					} else if ((annotationType == ZStartWith.class) && !ZValidator.isString(f.getType())) {
 						ZValidator.throwTypeNotSupportedExcpetion(cls, ZStartWith.class, f);
-					} else if ((annotation.annotationType() == ZEndsWith.class) && !ZValidator.isString(f.getType())) {
+					} else if ((annotationType == ZEndsWith.class) && !ZValidator.isString(f.getType())) {
 						ZValidator.throwTypeNotSupportedExcpetion(cls, ZEndsWith.class, f);
-					} else if ((annotation.annotationType() == ZPositive.class) && !ZValidator.isZMinZMaxSupported(f.getType())) {
+					} else if ((annotationType == ZPositive.class) && !ZValidator.isZMinZMaxSupported(f.getType())) {
 						ZValidator.throwTypeNotSupportedExcpetion(cls, ZPositive.class, f);
-					} else if (annotation.annotationType() == ZCustom.class) {
+					} else if (annotationType == ZCustom.class) {
 
 						if (!ZValidator.isZCustomSupported(f.getType())) {
 							ZValidator.throwTypeNotSupportedExcpetion(cls, ZCustom.class, f);
@@ -789,15 +794,6 @@ public class ZValidator {
 
 	public static boolean isZNotEmptySupported(final Class<?> annoClass) {
 		return (annoClass == String.class) || (annoClass == List.class) || (annoClass == Set.class) || (annoClass == Map.class);
-	}
-
-	private  static HashSet<Class<? extends Annotation>> VA_SET;
-
-	static {
-		final HashSet<Class<? extends Annotation>> s = new HashSet();
-		Collections.addAll(s, ZNotNull.class, ZNotEmtpy.class, ZStartWith.class, ZEndsWith.class, ZLength.class,
-				ZMin.class, ZMax.class, ZPositive.class);
-		VA_SET = s;
 	}
 
 	public static boolean isValidatorAnnotation(final Class<? extends Annotation> annoClass) {
