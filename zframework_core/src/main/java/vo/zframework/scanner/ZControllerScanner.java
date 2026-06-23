@@ -189,20 +189,6 @@ public class ZControllerScanner {
 		return prefix;
 	}
 
-	private static void checkVoidWithoutZResponse(final Method method) {
-		if (Task.VOID.equals(method.getReturnType().getCanonicalName())) {
-			final Optional<Parameter> ro =
-					Arrays.stream(method.getParameters())
-					.filter(p -> p.getType().getCanonicalName().equals(ZResponse.class.getCanonicalName()))
-					.findAny();
-			if (!ro.isPresent()) {
-				throw new StartupException(
-						"接口方法 " + method.getName() + " 无返回值必须加入 " + ZResponse.class.getSimpleName() + " 参数，加入 "
-								+ ZResponse.class.getSimpleName() + " 参数，或者返回值改为非 void");
-			}
-		}
-	}
-
 	private static void checkNoVoidWithZResponse(final Method method) {
 		if (!Task.VOID.equals(method.getReturnType().getCanonicalName())) {
 			final Parameter[] ps = method.getParameters();
