@@ -107,14 +107,6 @@ public class ServerConfigurationProperties {
 	private boolean staticResourceCacheEnable = true;
 
 	/**
-	 * 扫描的包配置，如：vo
-	 */
-	@ZNotNull
-	// FIXME 2026年6月23日 16:49:32 zhangzhen : 这个配置项不合理啊？本类和注解都是启动后才生效
-	// 而本配置项要求在启动前就要拿到值，要不要删掉？
-	private String scanPackage = M.class.getPackageName();
-
-	/**
 	 * 是否启用QPS限制 (server.qps)
 	 */
 	@ZNotNull
@@ -474,14 +466,6 @@ public class ServerConfigurationProperties {
 
 	public void setImmediatelyParsedRequestHeaders(final String immediatelyParsedRequestHeaders) {
 		this.immediatelyParsedRequestHeaders = immediatelyParsedRequestHeaders;
-	}
-
-	public String getScanPackage() {
-		return this.scanPackage;
-	}
-
-	public void setScanPackage(final String scanPackage) {
-		this.scanPackage = scanPackage;
 	}
 
 	public boolean getQpsLimitEnabled() {
