@@ -81,25 +81,29 @@ public class ZConfigurationPropertiesScanner {
 		final List<Class<?>> cl = new ArrayList<>(csSet);
 		cl.sort(new ZOrderComparator<>());
 
-		for (final Class<?> cs : cl) {
+		cl.parallelStream().forEach(cs -> {
+			 final ZConfigurationProperties zcp = cs.getAnnotation(ZConfigurationProperties.class);
 
-			final ZConfigurationProperties zcp = cs.getAnnotation(ZConfigurationProperties.class);
+			 final String prefix = STU.isEmpty(zcp.prefix()) ? ""
+					 : zcp.prefix().endsWith(".") ? zcp.prefix() : zcp.prefix() + ".";
 
-			final String prefix = STU.isEmpty(zcp.prefix()) ? ""
-					: zcp.prefix().endsWith(".") ? zcp.prefix() : zcp.prefix() + ".";
+			 final Object object = ZSingleton.getSingletonByClass(cs);
+			 final Field[] fs = cs.getDeclaredFields();
 
-			final Object object = ZSingleton.getSingletonByClass(cs);
-			final Field[] fs = cs.getDeclaredFields();
-			for (final Field field : fs) {
+			Arrays.stream(fs).parallel().forEach(field -> {
 				checkModifiers(cs, field);
-				findValueAndSetValue(prefix, object, field);
-				// 赋值后校验一下
-				ZValidator.validatedAll(object, field);
-			}
+				 try {
+					 findValueAndSetValue(prefix, object, field);
+				 } catch (final Exception e) {
+					 e.printStackTrace();
+				 }
+				 // 赋值后校验一下
+				 ZValidator.validatedAll(object, field);
+			 });
 
 			ZContext.addBean(cs, object);
-		}
 
+		 });
 
 		for (final Class<?> cls : csSet) {
 			final Field[] declaredFields = cls.getDeclaredFields();
