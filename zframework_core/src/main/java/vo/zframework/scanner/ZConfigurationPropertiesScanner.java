@@ -81,10 +81,7 @@ public class ZConfigurationPropertiesScanner {
 			}
 		}
 
-		final List<Class<?>> cl = new ArrayList<>(csSet);
-		cl.sort(new ZOrderComparator<>());
-
-		for (final Class<?> cs : cl) {
+		for (final Class<?> cs : csSet) {
 
 			 final ZConfigurationProperties zcp = cs.getAnnotation(ZConfigurationProperties.class);
 
@@ -110,7 +107,7 @@ public class ZConfigurationPropertiesScanner {
 			ZContext.addBean(cs, object);
 		}
 
-		for (final Class<?> cls : cl) {
+		for (final Class<?> cls : csSet) {
 			final Field[] declaredFields = cls.getDeclaredFields();
 
 			// 如果Class有 @ZAutowired 字段，则先生成对应的的对象，然后注入进来
@@ -131,6 +128,7 @@ public class ZConfigurationPropertiesScanner {
 		for (final Object zcp : zcpList) {
 			configurationPropertiesRegistry.addConfigurationPropertie(zcp);
 		}
+
 		ZContext.addBean(ZConfigurationPropertiesRegistry.class, configurationPropertiesRegistry);
 
 	}
