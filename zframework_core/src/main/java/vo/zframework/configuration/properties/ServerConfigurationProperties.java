@@ -57,7 +57,7 @@ public class ServerConfigurationProperties {
 	 * server的name，用于响应头中的Server字段
 	 */
 	@ZNotEmtpy
-	private String name = "ZServer";
+	private String name = "vo";
 
 	/**
 	 * 读取http请求byte[]的容量大小,单位：字节
