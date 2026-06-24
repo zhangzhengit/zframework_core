@@ -15,12 +15,14 @@ public class ZResponseCompressor {
 		if (request.isSupportZSTD()) {
 			return ZSTD.compress(data);
 		}
-		// FIXME 2026年6月24日 19:20:37 zhangzhen : 添加br
 		if (request.isSupportGZIP()) {
 			return ZGzip.compress(data);
 		}
 		if (request.isSupportDEFLATE()) {
 			return Deflater.compress(data);
+		}
+		if (request.isSupportBR()) {
+			return Brotli.compress(data);
 		}
 
 		return data;

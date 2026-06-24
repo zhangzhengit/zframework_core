@@ -761,11 +761,12 @@ public class ZResponse {
 		if (!this.isBodyStream && this.yasuo(this.body)) {
 			if (request.isSupportZSTD()) {
 				this.header(HeaderEnum.CONTENT_ENCODING.getNameBytes(), AcceptEncodingEnum.ZSTD.getValueBytes());
-				// FIXME 2025年1月2日 下午9:37:52 zhangzhen : 支持了br后，要再加一个ifelse
 			} else if (request.isSupportGZIP()) {
 				this.header(HeaderEnum.CONTENT_ENCODING.getNameBytes(), AcceptEncodingEnum.GZIP.getValueBytes());
 			} else if (request.isSupportDEFLATE()) {
 				this.header(HeaderEnum.CONTENT_ENCODING.getNameBytes(), AcceptEncodingEnum.DEFLATE.getValueBytes());
+			} else if (request.isSupportBR()) {
+				this.header(HeaderEnum.CONTENT_ENCODING.getNameBytes(), AcceptEncodingEnum.BR.getValueBytes());
 			}
 		}
 

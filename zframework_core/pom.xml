@@ -41,6 +41,18 @@
 		<!--			<version>0.21</version>-->
 		<!--		</dependency>-->
 
+		<dependency>
+			<groupId>com.aayushatharva.brotli4j</groupId>
+			<artifactId>brotli4j</artifactId>
+			<version>1.23.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.aayushatharva.brotli4j</groupId>
+			<artifactId>native-linux-x86_64</artifactId>
+			<version>1.23.0</version>
+		</dependency>
+
 		<!-- jni zstd支持 -->
 		<dependency>
 			<groupId>com.github.luben</groupId>
@@ -65,6 +77,7 @@
 			<artifactId>jackson-databind</artifactId>
 			<version>2.15.2</version>
 		</dependency>
+
 
 		<!-- https://mvnrepository.com/artifact/io.protostuff/protostuff-runtime -->
 		<dependency>

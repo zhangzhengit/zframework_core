@@ -145,6 +145,10 @@ public class ZRequest {
 		return this.supportCompression(AcceptEncodingEnum.ZSTD);
 	}
 
+	public boolean isSupportBR() {
+		return this.supportCompression(AcceptEncodingEnum.BR);
+	}
+
 	public boolean isSupportDEFLATE() {
 		return this.supportCompression(AcceptEncodingEnum.DEFLATE);
 	}

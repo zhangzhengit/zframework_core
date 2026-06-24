@@ -63,12 +63,12 @@ public class ZSTD {
 //		return compressed;
 //	}
 
-	public static byte[] compress(final byte[] ba) {
-		if (AU.isEmpty(ba)) {
+	public static byte[] compress(final byte[] data) {
+		if (AU.isEmpty(data)) {
 			return null;
 		}
 
-		return Zstd.compress(ba, DEFALUT_COMPRESS_LEVEL);
+		return Zstd.compress(data, DEFALUT_COMPRESS_LEVEL);
 	}
 
 }

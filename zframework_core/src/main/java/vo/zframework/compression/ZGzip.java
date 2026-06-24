@@ -48,15 +48,15 @@ public class ZGzip {
 		return null;
 	}
 
-	public static byte[] compress(final byte[] ba) {
-		if (AU.isEmpty(ba)) {
+	public static byte[] compress(final byte[] data) {
+		if (AU.isEmpty(data)) {
 			return null;
 		}
 
 		try {
 			final ByteArrayOutputStream out = new ByteArrayOutputStream();
 			final GZIPOutputStream gzip = new GZIPOutputStream(out);
-			gzip.write(ba);
+			gzip.write(data);
 			gzip.finish();
 
 			out.close();
