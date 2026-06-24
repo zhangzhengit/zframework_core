@@ -1,8 +1,5 @@
 package vo.zframework.compression;
 
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-
 import com.github.luben.zstd.Zstd;
 
 import vo.zframework.common.AU;
@@ -49,12 +46,29 @@ public class ZSTD {
 
 	private static final int DEFALUT_COMPRESS_LEVEL = 3;
 
+//	private static final ZstdCompressor compressor = new ZstdCompressor();
+//
+//	public static byte[] compress(final byte[] original) {
+//
+//		final int maxLen = compressor.maxCompressedLength(original.length);
+//
+//		final ByteBuffer result = ByteBuffer.allocate(maxLen);
+//		compressor.compress(ByteBuffer.wrap(original), result);
+//
+//		result.flip();
+//
+//		final byte[] compressed = new byte[result.remaining()];
+//		result.get(compressed);
+//
+//		return compressed;
+//	}
+
 	public static byte[] compress(final byte[] ba) {
 		if (AU.isEmpty(ba)) {
 			return null;
 		}
 
-		return Zstd.compress(ba,DEFALUT_COMPRESS_LEVEL);
+		return Zstd.compress(ba, DEFALUT_COMPRESS_LEVEL);
 	}
 
 }

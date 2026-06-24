@@ -18,9 +18,7 @@ import vo.zframework.common.Hash;
 import vo.zframework.common.STU;
 import vo.zframework.common.ZArray;
 import vo.zframework.common.ZDateUtil;
-import vo.zframework.compression.Deflater;
-import vo.zframework.compression.ZGzip;
-import vo.zframework.compression.ZSTD;
+import vo.zframework.compression.ZResponseCompressor;
 import vo.zframework.configuration.properties.ServerConfigurationProperties;
 import vo.zframework.core.ZContext;
 import vo.zframework.enums.AcceptEncodingEnum;
@@ -437,7 +435,7 @@ public class ZResponse {
 				readFirst = false;
 
 				final byte[] bx = read >= bufferCapacity ? buffer :Arrays.copyOfRange(buffer, 0, read);
-				this.compressBodyAndWrite(request, read, exceedsCompressionMinLength, bx);
+				this.compressBodyAndWrite(request, exceedsCompressionMinLength, bx);
 
 				this.write(CRLF_BYTES);
 				this.flush();
@@ -523,42 +521,23 @@ public class ZResponse {
 		return eTag;
 	}
 
-	private void compressBodyAndWrite(final ZRequest request, final int read,
-			final boolean exceedsCompressionMinLength, final byte[] ba) {
+	private void compressBodyAndWrite(final ZRequest request, final boolean exceedsCompressionMinLength,
+			final byte[] data) {
 
 		if (!this.compress(exceedsCompressionMinLength)) {
-			final String chunkHeader = Integer.toHexString(read) + STU.CRLF;
+			final String chunkHeader = Integer.toHexString(data.length) + STU.CRLF;
 			this.write(chunkHeader.getBytes());
-			this.write(ba);
+			this.write(data);
 
 			return;
 		}
 
-		if (request.isSupportZSTD()) {
+		final byte[] compress = ZResponseCompressor.compressByAcceptEncoding(request, data);
 
-			final byte[] compress = ZSTD.compress(ba);
-			final String chunkHeader = Integer.toHexString(compress.length) + STU.CRLF;
-			this.write(chunkHeader.getBytes());
-			this.write(compress);
+		final String chunkHeader = Integer.toHexString(compress.length) + STU.CRLF;
+		this.write(chunkHeader.getBytes());
+		this.write(compress);
 
-		} else if (request.isSupportGZIP()) {
-			// FIXME 2025年1月20日 下午5:34:10 zhangzhen : qq浏览器和360极速浏览器 gzip 解码 2MB的.css文件不完整？后面有一部分不显示？
-			// 而上面的支持zstd的Edge和Firefox 解码zstd是正常的。
-
-			final byte[] compress = ZGzip.compress(ba);
-			final String chunkHeader = Integer.toHexString(compress.length) + STU.CRLF;
-			this.write(chunkHeader.getBytes());
-			this.write(compress);
-		} else if (request.isSupportDEFLATE()) {
-			final byte[] compress = Deflater.compress(ba);
-			final String chunkHeader = Integer.toHexString(compress.length) + STU.CRLF;
-			this.write(chunkHeader.getBytes());
-			this.write(compress);
-		} else {
-			final String chunkHeader = Integer.toHexString(read) + STU.CRLF;
-			this.write(chunkHeader.getBytes());
-			this.write(ba);
-		}
 	}
 
 	private boolean compress(final boolean exceedsCompressionMinLength) {
@@ -644,19 +623,8 @@ public class ZResponse {
 		}
 
 		if (!this.isBodyStream && this.yasuo(this.body)) {
-
 			final ZRequest request = ReqeustInfo.get();
-			if (request.isSupportZSTD()) {
-				return ZSTD.compress(this.body);
-			}
-			// FIXME 2025年1月2日 下午9:37:52 zhangzhen : 支持了br后，要再加一个ifelse
-			if (request.isSupportGZIP()) {
-				return ZGzip.compress(this.body);
-			}
-			if (request.isSupportDEFLATE()) {
-				return Deflater.compress(this.body);
-			}
-
+			return ZResponseCompressor.compressByAcceptEncoding(request, this.body);
 		}
 
 		return this.body;
