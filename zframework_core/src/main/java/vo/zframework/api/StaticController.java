@@ -38,6 +38,7 @@ public class StaticController {
 
 	private static final ServerConfigurationProperties SERVER_CONFIGURATION = ZContext.getBean(ServerConfigurationProperties.class);
 
+	// FIXME 2026年6月24日 14:16:26 zhangzhen : 要不要加入"/.+\\..+$"支持A.B的形式来匹配所有的静态资源请求，并加一个配置项是否启用此mapping？
 	@ZRequestMapping(mapping = { "/favicon\\.ico",
 			"/.+\\.txt$",
 			"/.+\\.png$",
