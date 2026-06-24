@@ -53,7 +53,6 @@ import vo.zframework.enums.QPSHandlingEnum;
 import vo.zframework.exception.FormPairParseException;
 import vo.zframework.exception.ParsingRequestParamException;
 import vo.zframework.exception.PathVariableException;
-import vo.zframework.exception.ResourceNotExistException;
 import vo.zframework.exception.ZFException;
 import vo.zframework.html.ResourcesLoader;
 import vo.zframework.http.request.FormData;
@@ -70,7 +69,7 @@ import vo.zframework.scanner.ZHandlerInterceptor;
 import vo.zframework.scanner.ZHandlerInterceptorScanner;
 import vo.zframework.scanner.ZModelAndView;
 import vo.zframework.template.ZModel;
-import vo.zframework.template.ZTemplate;
+import vo.zframework.template.ZTemplateEngine;
 import vo.zframework.validator.ZValidated;
 import vo.zframework.validator.ZValidator;
 
@@ -556,27 +555,18 @@ public class Task {
 
 			final String htmlContent = readHtmlContent(r);
 
-			final String html = ZTemplate.freemarker(r instanceof String ? (String)r : String.valueOf(r), htmlContent);
+			final ZTemplateEngine templateEngine = ZContext.getBean(ZTemplateEngine.class);
+			if (templateEngine == null) {
+				throw new IllegalArgumentException("无" + ZTemplateEngine.class.getSimpleName() + "，请配置或添加starter");
+			}
+
+			final String html = templateEngine.render(htmlContent, htmlContent);
 			ZModel.clear();
 
 			return new ZResponse().contentType(ContentTypeEnum.TEXT_HTML.getTypeBytes()).body(html);
 
 		} catch (final Exception e) {
-			e.printStackTrace();
-			final String em = Task.gExceptionMessage(e);
-
-			if (e instanceof ResourceNotExistException) {
-				final ResourceNotExistException ex = (ResourceNotExistException) e;
-				return new ZResponse()
-						.httpStatus(ex.getHttpStatus())
-						.contentType(ContentTypeEnum.APPLICATION_JSON.getTypeBytes())
-						.body(J.toJSONString(CR.error(ex.getMessagezf())));
-			}
-
-			return new ZResponse()
-					.httpStatus(HttpStatusEnum.HTTP_500.getStatus())
-					.contentType(ContentTypeEnum.APPLICATION_JSON.getTypeBytes())
-					.body(J.toJSONString(CR.error(em)));
+			throw e;
 		}
 	}
 
