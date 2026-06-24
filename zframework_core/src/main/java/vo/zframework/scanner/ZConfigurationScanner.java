@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import vo.log.core.ZLog2;
 import vo.zframework.anno.ZAutowired;
@@ -14,11 +15,13 @@ import vo.zframework.anno.ZCondition;
 import vo.zframework.anno.ZConditional;
 import vo.zframework.anno.ZConfiguration;
 import vo.zframework.anno.ZConfigurationPropertiesRegistry;
+import vo.zframework.anno.ZOrder;
 import vo.zframework.anno.ZOrderComparator;
 import vo.zframework.anno.ZValue;
 import vo.zframework.bean.ZSingleton;
 import vo.zframework.common.CU;
 import vo.zframework.core.ZContext;
+import vo.zframework.exception.StartupException;
 import vo.zframework.http.Task;
 
 /**
@@ -32,15 +35,40 @@ public class ZConfigurationScanner {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
+	private static final Class<ZConfiguration> CLASS = ZConfiguration.class;
+
 	public static void scanAndCreate(final String... packageName) throws Exception {
 		//		LOG.info("开始扫描带有@{}注解的类", ZConfiguration.class.getSimpleName());
 
-		final Set<Class<?>> clsSet = ClassMap.scanPackageByAnnotation(ZConfiguration.class, packageName);
+		final Set<Class<?>> clsSet = ClassMap.scanPackageByAnnotation(CLASS, packageName);
 		if (CU.isEmpty(clsSet)) {
 			//			LOG.info("没有带有@{}注解的类", ZConfiguration.class.getSimpleName());
 			return;
 		}
 
+		final List<Class<?>> nol = clsSet.stream()
+				.filter(cls -> !cls.isAnnotationPresent(ZOrder.class))
+				.collect(Collectors.toList());
+		if (!nol.isEmpty()) {
+
+			final String cns = nol.stream()
+			.map(Class::getCanonicalName)
+			.collect(Collectors.joining("\r\n\t"));
+
+			final String message =
+					"@" + CLASS.getSimpleName() + "类必须同时使用@" + ZOrder.class.getSimpleName()
+					+ "来指定执行顺序"
+					+ "\r\n\t"
+					+"请修改代码："
+					+ "\r\n\t"
+					+"给以下对象加入@" + ZOrder.class.getSimpleName()
+					+ "\r\n\t"
+					+ cns
+					+ "\r\n\t"
+					;
+
+			throw new StartupException(message);
+		}
 
 		final List<Class<?>> cal = new ArrayList<>(clsSet);
 		cal.sort(new ZOrderComparator<>());
@@ -49,8 +77,6 @@ public class ZConfigurationScanner {
 
 			final Object newInstance = ZSingleton.getSingletonByClass(cls);
 			ZContext.addBean(cls, newInstance);
-
-
 			// 如果Class有 @ZAutowired 字段，则先生成对应的的对象，然后注入进来
 			Arrays.stream(cls.getDeclaredFields())
 			.filter(f -> f.isAnnotationPresent(ZAutowired.class))
