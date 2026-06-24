@@ -422,6 +422,14 @@ public class ZConfigurationPropertiesScanner {
 	private static void setValueByType(final Object object, final Field field, final Class<?> type,
 			final AtomicReference<String> keyAR) {
 
+		// 基本类型配置值为null，直接跳过，赋值无意义还会导致异常
+		if (type.isPrimitive()) {
+			final String v = ZProperties.getString(keyAR.get());
+			if (STU.isEmpty(v)) {
+				return;
+			}
+		}
+
 		if (type == String.class) {
 			final String v1 = getStringValue(keyAR);
 			RU.setFiledValue(field, object, v1);

@@ -12,8 +12,10 @@ import vo.zframework.enums.BeanModeEnum;
  *
  * 用在type上，表示此类是读取配置文件的配置类，此类专用于对应配置文件，
  * 不要有其他任何内容，仅作为配置类使用
- * 支持类型：8个包装类型、String、BigInteger、BigDecimal、AtomicInteger、
+ * 支持类型：8个基本类型/包装类型、String、BigInteger、BigDecimal、AtomicInteger、
  * AtomicLong、List、Set、Map。
+ *
+ * 如果字段为基本类型，并且配置值为null，则自动忽略此配置值，使用代码默认值
  *
  *
  * java 驼峰式名称，会首先匹配配置文件中对应的驼峰式名称，
