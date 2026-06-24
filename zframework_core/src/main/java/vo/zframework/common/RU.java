@@ -59,7 +59,7 @@ public class RU {
 		try {
 			field.setAccessible(true);
 			field.set(object, value);
-		} catch (final IllegalAccessException e) {
+		} catch (IllegalArgumentException | IllegalAccessException e) {
 			e.printStackTrace();
 		}
 	}
@@ -69,7 +69,7 @@ public class RU {
 			field.setAccessible(true);
 			final Object v = field.get(object);
 			return v;
-		} catch (final IllegalAccessException e) {
+		} catch (IllegalArgumentException | IllegalAccessException e) {
 			e.printStackTrace();
 		}
 
