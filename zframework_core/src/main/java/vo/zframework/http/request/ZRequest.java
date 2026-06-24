@@ -1,4 +1,4 @@
-package vo.zframework.http;
+package vo.zframework.http.request;
 
 import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
@@ -22,6 +22,15 @@ import vo.zframework.core.ZContext;
 import vo.zframework.enums.AcceptEncodingEnum;
 import vo.zframework.enums.ConnectionEnum;
 import vo.zframework.enums.HeaderEnum;
+import vo.zframework.http.ArrayRange;
+import vo.zframework.http.PDTL;
+import vo.zframework.http.SocketTL;
+import vo.zframework.http.TF;
+import vo.zframework.http.Task;
+import vo.zframework.http.ZCookie;
+import vo.zframework.http.ZServer;
+import vo.zframework.http.ZSession;
+import vo.zframework.http.ZSessionMap;
 
 /**
  * 表示http 的请求信息

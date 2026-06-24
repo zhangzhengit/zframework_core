@@ -13,9 +13,9 @@ import vo.zframework.common.STU;
 import vo.zframework.configuration.properties.ZMailNotificationConfigurationProperties;
 import vo.zframework.core.ZContext;
 import vo.zframework.email.ZMail;
-import vo.zframework.http.ReqeustInfo;
 import vo.zframework.http.Task;
-import vo.zframework.http.ZRequest;
+import vo.zframework.http.request.ReqeustInfo;
+import vo.zframework.http.request.ZRequest;
 
 /**
  * 运行时处理 @ZControllerAdvice 定义的方法

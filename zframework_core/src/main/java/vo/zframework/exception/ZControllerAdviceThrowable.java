@@ -8,9 +8,9 @@ import vo.zframework.anno.ZComponent;
 import vo.zframework.common.CR;
 import vo.zframework.common.STU;
 import vo.zframework.core.ZContext;
-import vo.zframework.http.ReqeustInfo;
 import vo.zframework.http.ZCookie;
-import vo.zframework.http.ZRequest;
+import vo.zframework.http.request.ReqeustInfo;
+import vo.zframework.http.request.ZRequest;
 
 /**
  * @ZControllerAdvice 的默认处理方法，如果 @ZExceptionHandler 定义的

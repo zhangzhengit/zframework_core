@@ -1,4 +1,4 @@
-package vo.zframework.http;
+package vo.zframework.http.request;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -24,6 +24,8 @@ import vo.zframework.core.ZContext;
 import vo.zframework.enums.HeaderEnum;
 import vo.zframework.enums.HttpStatusEnum;
 import vo.zframework.exception.ZFException;
+import vo.zframework.http.ArrayRange;
+import vo.zframework.http.TF;
 
 /**
  *

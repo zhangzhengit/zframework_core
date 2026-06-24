@@ -22,8 +22,8 @@ import vo.zframework.enums.HttpStatusEnum;
 import vo.zframework.enums.ZQPSLimitationEnum;
 import vo.zframework.html.FIS;
 import vo.zframework.html.ResourcesLoader;
-import vo.zframework.http.ZRequest;
-import vo.zframework.http.ZResponse;
+import vo.zframework.http.request.ZRequest;
+import vo.zframework.http.response.ZResponse;
 
 /**
  *

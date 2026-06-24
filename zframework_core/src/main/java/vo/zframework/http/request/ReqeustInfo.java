@@ -1,4 +1,4 @@
-package vo.zframework.http;
+package vo.zframework.http.request;
 
 /**
  * 暂时存放Request信息

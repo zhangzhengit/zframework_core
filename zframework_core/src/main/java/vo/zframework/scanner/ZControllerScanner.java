@@ -31,8 +31,8 @@ import vo.zframework.exception.StartupException;
 import vo.zframework.http.Task;
 import vo.zframework.http.ZControllerMap;
 import vo.zframework.http.ZCookie;
-import vo.zframework.http.ZMultipartFile;
-import vo.zframework.http.ZResponse;
+import vo.zframework.http.request.ZMultipartFile;
+import vo.zframework.http.response.ZResponse;
 
 /**
  * 扫描 @ZController 的类，注册为一个控制类

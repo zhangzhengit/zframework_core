@@ -1,7 +1,7 @@
 package vo.zframework.enums;
 
 import vo.zframework.common.J;
-import vo.zframework.http.ZResponse;
+import vo.zframework.http.response.ZResponse;
 
 /**
  * Content-Type

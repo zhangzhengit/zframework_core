@@ -13,8 +13,8 @@ import vo.zframework.anno.ZRestController;
 import vo.zframework.common.CU;
 import vo.zframework.common.STU;
 import vo.zframework.enums.MethodEnum;
-import vo.zframework.http.ZRequest;
-import vo.zframework.http.ZResponse;
+import vo.zframework.http.request.ZRequest;
+import vo.zframework.http.response.ZResponse;
 import vo.zframework.scanner.ClassMap;
 import vo.zframework.template.ZModel;
 

@@ -1,4 +1,4 @@
-package vo.zframework.http;
+package vo.zframework.http.request;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;

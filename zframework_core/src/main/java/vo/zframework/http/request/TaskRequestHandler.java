@@ -1,4 +1,4 @@
-package vo.zframework.http;
+package vo.zframework.http.request;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -17,6 +17,8 @@ import vo.zframework.enums.HeaderEnum;
 import vo.zframework.enums.HttpStatusEnum;
 import vo.zframework.exception.StartupException;
 import vo.zframework.exception.ZControllerAdviceThrowable;
+import vo.zframework.http.SocketTL;
+import vo.zframework.http.response.ZResponse;
 import vo.zframework.validator.AbstractRequestValidator;
 
 /**

@@ -3,6 +3,8 @@ package vo.zframework.http;
 import java.io.BufferedInputStream;
 
 import vo.zframework.enums.HttpParseStatusEnum;
+import vo.zframework.http.request.ZRequest;
+import vo.zframework.http.response.ZResponse;
 
 /**
  * 解析http请求的中间状态

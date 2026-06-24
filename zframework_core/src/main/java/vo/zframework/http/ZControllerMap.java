@@ -20,6 +20,7 @@ import vo.zframework.enums.MethodEnum;
 import vo.zframework.enums.QPSEnum;
 import vo.zframework.enums.ZQPSLimitationEnum;
 import vo.zframework.exception.StartupException;
+import vo.zframework.http.request.ZMultipartFile;
 
 /**
  * 存取接口方法

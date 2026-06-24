@@ -1,8 +1,9 @@
-package vo.zframework.http;
+package vo.zframework.http.request;
 
 import vo.zframework.common.ZArray;
 import vo.zframework.core.ZContext;
 import vo.zframework.enums.HttpParseStatusEnum;
+import vo.zframework.http.PD;
 
 /**
  * 本类规定了 HttpRequestScheduler 的执行状态，从A状态到B状态
@@ -23,12 +24,7 @@ public class HttpRequestScheduler {
 
 	private final HttpRequestProcessor processor = ZContext.getBean(HttpRequestProcessor.class);
 
-	// FIXME 2026年5月26日 10:55:55 zhangzhen : 在read的while中调用本方法，
-
-	HttpParseStatusEnum process(final HttpParseStatusEnum parseStatusEnum, final PD pd, final ZArray array) {
-//		System.out.println(LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t"
-//				+ "HTTPRequestScheduler.process()");
-
+	public HttpParseStatusEnum process(final HttpParseStatusEnum parseStatusEnum, final PD pd, final ZArray array) {
 
 		switch (parseStatusEnum) {
 
