@@ -1,7 +1,7 @@
 package vo.zframework.common;
 
 /**
- * 数组带偏移量
+ * byte[]带偏移量
  *
  * @author zhangzhen
  * @date 2026年6月20日 13:42:32

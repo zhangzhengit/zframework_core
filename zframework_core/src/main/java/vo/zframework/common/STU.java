@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import vo.zframework.cache.ArrayRange;
+import vo.zframework.http.ArrayRange;
 
 /**
  * String相关

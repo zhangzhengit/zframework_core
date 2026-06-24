@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- *
+ * Collection相关
  *
  * @author zhangzhen
  * @date 2024年12月21日 下午10:01:20

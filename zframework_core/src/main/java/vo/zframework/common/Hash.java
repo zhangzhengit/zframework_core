@@ -5,6 +5,7 @@ import java.util.List;
 import com.google.common.hash.Hashing;
 
 /**
+ * HASH
  *
  * @author zhangzhen
  * @date 2024年12月7日 上午12:00:24

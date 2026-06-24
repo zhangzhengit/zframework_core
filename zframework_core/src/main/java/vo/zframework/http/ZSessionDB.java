@@ -11,8 +11,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import vo.zframework.M;
 import vo.zframework.common.J;
-import vo.zframework.common.TempDir;
 
 /**
  * session存sqlite
@@ -23,13 +23,13 @@ public class ZSessionDB {
 	// SQLite 连接URL格式：jdbc:sqlite:数据库文件路径（绝对/相对）
 	// 内存数据库（仅测试用）：jdbc:sqlite::memory:
 	private static final String SQLITE_URL_PREFIX = "jdbc:sqlite:";
-	private static final String datadir = TempDir.getUserDir() + File.separator + "data";
+	private static final String datadir = M.getUserDir() + File.separator + "data";
 
 	static final String dbFilePath = datadir + File.separator + "session.db";
 
 	static Connection connection = null;
 	static {
-		
+
 		mkdir();
 		connection = getConnection(dbFilePath);
 		CREATETableIsNotExists();
@@ -60,11 +60,11 @@ public class ZSessionDB {
 			}
 		}
 	}
-	
+
 	public static ZSession findByid(final String sessionId) {
 		System.out.println(
 				Thread.currentThread().getName() + "\t" + LocalDateTime.now() + "\t" + "ZSessionDB.findByid()");
-		
+
 		final String sql =
 				"SELECT"
 						+ "  session_id,"
@@ -75,7 +75,7 @@ public class ZSessionDB {
 						+ " from "
 						+ "  session"
 						+ " where session_id = ?;";
-		
+
 		try {
 			final PreparedStatement ps = connection.prepareStatement(sql);
 			ps.setString(1, sessionId);
@@ -89,16 +89,16 @@ public class ZSessionDB {
 				session.setData(J.parseObject(rs.getString(5), Map.class));
 				return session;
 			}
-			
+
 		} catch (final SQLException e) {
 			e.printStackTrace();
 		}
-		
+
 		// 返回空对象，不返回null
 		return new ZSession();
 	}
-	
-	
+
+
 	public static List<ZSession> loadValid(final long currentTimeMillis) {
 		System.out.println(
 				Thread.currentThread().getName() + "\t" + LocalDateTime.now() + "\t" + "ZSessionDB.loadValid()");
@@ -139,7 +139,7 @@ public class ZSessionDB {
 
 		return null;
 	}
-	
+
 	public static int deleteExpired(final long currentTimeMillis) {
 		System.out.println(
 				Thread.currentThread().getName() + "\t" + LocalDateTime.now() + "\t" + "ZSessionDB.loadValid()");
@@ -150,30 +150,30 @@ public class ZSessionDB {
 						+ " where 1=1"
 						// <= 过期的
 						+ "  and last_access_time <= "+currentTimeMillis+"- interval_seconds * 1000";
-		
+
 		try {
 			final PreparedStatement ps = connection.prepareStatement(sql);
 			final int executeUpdate = ps.executeUpdate();
 			System.out.println("deleteExpired.executeUpdate = " + executeUpdate);
-			
+
 			return executeUpdate;
 		} catch (final SQLException e) {
 			e.printStackTrace();
 		}
-		
+
 		return 0;
 	}
-	
-	
-	
+
+
+
 	public static void delete(final String sessionId, final long createTime,
 			final long lastAccessTime, final long intervalSeconds, final String content)  {
-		
-		
+
+
 		final String insertSql = "INSERT INTO session (\r\n"
 				+ "       session_id, create_time, last_access_time, interval_seconds,content\r\n"
 				+ "   ) VALUES (?, ?, ?, ?, ?)";
-		
+
 		try {
 			connection.setAutoCommit(false);
 			final PreparedStatement ps = connection.prepareStatement(insertSql);
@@ -182,7 +182,7 @@ public class ZSessionDB {
 			ps.setLong(3, lastAccessTime);
 			ps.setLong(4, intervalSeconds);
 			ps.setString(5, content);
-			
+
 			final int affectedRows = ps.executeUpdate();
 			connection.commit();
 			System.out.println("插入成功，受影响行数：" + affectedRows);
@@ -195,16 +195,16 @@ public class ZSessionDB {
 			}
 		}
 	}
-	
+
 	public static void insertOrRepaceInto(final String sessionId, final long createTime,
 			final long lastAccessTime, final long intervalSeconds, final String content)  {
 		System.out.println(Thread.currentThread().getName() + "\t" + LocalDateTime.now() + "\t"
 				+ "ZSessionDB.insertOrRepaceInto()");
-		
+
 		final String insertSql = "INSERT OR REPLACE INTO session (\r\n"
 				+ "       session_id, create_time, last_access_time, interval_seconds,content\r\n"
 				+ "   ) VALUES (?, ?, ?, ?, ?)";
-		
+
 		try {
 			connection.setAutoCommit(false);
 			final PreparedStatement ps = connection.prepareStatement(insertSql);
@@ -213,7 +213,7 @@ public class ZSessionDB {
 			ps.setLong(3, lastAccessTime);
 			ps.setLong(4, intervalSeconds);
 			ps.setString(5, content);
-			
+
 			final int affectedRows = ps.executeUpdate();
 			connection.commit();
 			System.out.println("插入Or替换成功，受影响行数：" + affectedRows);
@@ -228,10 +228,10 @@ public class ZSessionDB {
 	}
 	public static void insert(final String sessionId, final long createTime,
 			final long lastAccessTime, final long intervalSeconds, final String content)  {
-		
+
 		System.out
 				.println(Thread.currentThread().getName() + "\t" + LocalDateTime.now() + "\t" + "ZSessionDB.insert()");
-		
+
 		final String insertSql = "INSERT INTO session (\r\n"
 				+ "       session_id, create_time, last_access_time, interval_seconds,content\r\n"
 				+ "   ) VALUES (?, ?, ?, ?, ?)";
@@ -260,7 +260,7 @@ public class ZSessionDB {
 
 	/**
 	 * 创建 SQLite 数据库连接（推荐使用，带最佳配置）
-	 * 
+	 *
 	 * @param dbFilePath 数据库文件路径（如：./data/myserver.db 或 C:/db/myserver.db）
 	 * @return 可用的 Connection 对象
 	 * @throws SQLException 连接创建失败时抛出
@@ -285,7 +285,7 @@ public class ZSessionDB {
 						 + " last_access_time timestamp NOT NULL,"
 						 + " interval_seconds int NOT NULL,"
 						 + " content TEXT);";
-		
+
 		try {
 			final PreparedStatement pstmt = connection.prepareStatement(createTableSql);
 			pstmt.executeUpdate();

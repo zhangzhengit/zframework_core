@@ -4,12 +4,14 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.Optional;
 
 import vo.zframework.cache.ZRC;
 
 /**
- * 反射相关方法
+ * 反射相关
  *
  * @author zhangzhen
  * @date 2025年1月10日 上午12:13:10
@@ -82,6 +84,38 @@ public class RU {
 			return declaredField;
 		} catch (final NoSuchFieldException e) {
 			e.printStackTrace();
+		}
+
+		return null;
+	}
+
+	/**
+	 * 获取字段里面的泛型类型
+	 *
+	 * @param field
+	 * @return
+	 *
+	 */
+	public static Class<?>[] getGenericType(final Field field) {
+		final Type fieldType = field.getGenericType();
+
+		if (fieldType instanceof ParameterizedType) {
+			final ParameterizedType parameterizedType = (ParameterizedType) fieldType;
+			final Type[] typeArguments = parameterizedType.getActualTypeArguments();
+			if (AU.isEmpty(typeArguments)) {
+				return null;
+			}
+
+			final Class<?>[] a = new Class[typeArguments.length];
+			boolean isC = false;
+			for (int i = 0; i < a.length; i++) {
+				if (typeArguments[i] instanceof Class) {
+					a[i] = (Class<?>) typeArguments[i];
+					isC = true;
+				}
+			}
+
+			return isC ? a : null;
 		}
 
 		return null;

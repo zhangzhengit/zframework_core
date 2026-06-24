@@ -4,6 +4,8 @@ import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+import vo.zframework.enums.OSEnum;
+
 /**
  *	本类要放在顶级包名下
  *
@@ -33,6 +35,20 @@ public class M {
 		}
 
 		return null;
+	}
+
+	public static String getUserDir() {
+		return System.getProperty("user.dir");
+	}
+
+	public static OSEnum getOS() {
+		final String osName = System.getProperty("os.name").toLowerCase();
+
+		if (osName.contains("win")) {
+			return OSEnum.WINDOWS;
+		}
+
+		return OSEnum.LINUX;
 	}
 
 }

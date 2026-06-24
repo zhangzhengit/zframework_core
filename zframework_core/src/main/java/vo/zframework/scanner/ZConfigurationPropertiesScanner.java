@@ -168,7 +168,7 @@ public class ZConfigurationPropertiesScanner {
 	}
 
 	private static void checkList(final Field field) {
-		final Class<?>[] ts = ZCU.getGenericType(field);
+		final Class<?>[] ts = RU.getGenericType(field);
 		if (AU.isEmpty(ts)) {
 			final String message = "@" + ZConfigurationProperties.class.getSimpleName() + " List类型必须加入泛型参数";
 			throw new ZConfigurationPropertiesException(message);
@@ -196,7 +196,7 @@ public class ZConfigurationPropertiesScanner {
 
 	private static void setSet(final Object object, final Field field, final String key) {
 
-		final Class<?>[] ts = ZCU.getGenericType(field);
+		final Class<?>[] ts = RU.getGenericType(field);
 		if (AU.isEmpty(ts)) {
 			final String message = object.getClass().getSimpleName() + "." + field.getName() + " Set类型必须加入泛型参数" ;
 			throw new ZConfigurationPropertiesException(message);
@@ -379,7 +379,7 @@ public class ZConfigurationPropertiesScanner {
 	}
 
 	private static Object newInstanceFromFieldGenericType(final Field field)  {
-		final Class<?> type = ZCU.getGenericType(field)[0];
+		final Class<?> type = RU.getGenericType(field)[0];
 		Object newInstance = null;
 		try {
 			newInstance = type.getDeclaredConstructor().newInstance();

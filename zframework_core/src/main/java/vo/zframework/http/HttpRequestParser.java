@@ -15,10 +15,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import vo.zframework.cache.ArrayRange;
+import vo.zframework.M;
 import vo.zframework.common.AU;
 import vo.zframework.common.STU;
-import vo.zframework.common.TempDir;
 import vo.zframework.common.ZArray;
 import vo.zframework.configuration.properties.ServerConfigurationProperties;
 import vo.zframework.core.ZContext;
@@ -431,7 +430,7 @@ public class HttpRequestParser {
 			return dir.getAbsolutePath();
 		}
 
-		final String userDir = TempDir.getUserDir();
+		final String userDir = M.getUserDir();
 		final File dir = new File(userDir + File.separator + "temp");
 		if (!dir.exists()) {
 			dir.mkdirs();
