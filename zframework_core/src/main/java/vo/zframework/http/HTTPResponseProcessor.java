@@ -4,10 +4,7 @@ import java.io.IOException;
 import java.util.Date;
 
 import vo.zframework.anno.ZCacheControl;
-import vo.zframework.anno.ZLastModified;
 import vo.zframework.common.J;
-import vo.zframework.common.STU;
-import vo.zframework.common.ZDateUtil;
 import vo.zframework.configuration.properties.ServerConfigurationProperties;
 import vo.zframework.core.ZContext;
 import vo.zframework.enums.ContentTypeEnum;
@@ -95,11 +92,6 @@ public class HTTPResponseProcessor {
 				response.setETagIfZETagPresent(request, response.getBody(), ETagEnum.STRONG);
 			}
 
-			// FIXME 2025年1月3日 上午3:22:26 zhangzhen : Last-Modified
-			// FIXME 2025年1月3日 上午3:28:22 zhangzhen : last-modified头貌似不好写
-			// 因为只有在业务代码中才容易判断资源的修改时间
-			//			setLastModified(request, response);
-
 			response.write();
 
 			if (!request.isKeepAlive()) {
@@ -117,27 +109,10 @@ public class HTTPResponseProcessor {
 
 		final ZCacheControl cacheControl = PDTL.get().getZrMethod().getCacheControl();
 		if (cacheControl != null) {
-			response.header(HeaderEnum.CACHE_CONTROL.getNameBytes(), PDTL.get().getZrMethod().getCacheControlVStringBytes());
+			response.header(HeaderEnum.CACHE_CONTROL.getNameBytes(),
+					PDTL.get().getZrMethod().getCacheControlVStringBytes());
 		}
 
 	}
-
-	// FIXME 2026年5月25日 14:42:26 zhangzhen : 注意：这个不要删，黄了也不删，这是以前打算过的功能，
-		// 以后再看要不要做
-	private static void setLastModified(final ZRequest request,final ZResponse response) {
-
-		final ZLastModified lastModified = PDTL.get().getZrMethod().getLastModified();
-		if (lastModified == null) {
-			return;
-		}
-
-		final String ifModifiedSince = request.getHeader(HeaderEnum.IF_MODIFIED_SINCE.getName());
-		if (STU.isNullOrEmptyOrBlank(ifModifiedSince)) {
-			return;
-		}
-
-		response.header(HeaderEnum.LAST_MODIFIED.getNameBytes(), ZDateUtil.getCurrentGmtDateBytes());
-	}
-
 
 }

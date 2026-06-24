@@ -8,7 +8,6 @@ import java.util.StringJoiner;
 
 import vo.zframework.anno.ZCacheControl;
 import vo.zframework.anno.ZETag;
-import vo.zframework.anno.ZLastModified;
 import vo.zframework.anno.ZQPSLimitation;
 import vo.zframework.anno.ZRequestMapping;
 import vo.zframework.anno.ZResponseBody;
@@ -87,7 +86,6 @@ public class ZRMethod {
 	private final ZETag zETag;
 
 	private final ZCacheControl cacheControl;
-	private final ZLastModified lastModified;
 
 	private final String cacheControlVString;
 	private final byte[] cacheControlVStringBytes;
@@ -118,8 +116,6 @@ public class ZRMethod {
 		this.zqpsLimitation = method.getAnnotation(ZQPSLimitation.class);
 
 		this.cacheControl = method.getAnnotation(ZCacheControl.class);
-
-		this.lastModified =  method.getAnnotation(ZLastModified.class);
 
 		this.zRequestMapping = method.getAnnotation(ZRequestMapping.class);
 
@@ -328,10 +324,6 @@ public class ZRMethod {
 
 	public byte[] getCacheControlVStringBytes() {
 		return this.cacheControlVStringBytes;
-	}
-
-	public ZLastModified getLastModified() {
-		return this.lastModified;
 	}
 
 	public boolean isRTPrimitiveType() {
