@@ -3,6 +3,7 @@ package vo.zframework.configuration;
 import vo.zframework.anno.ZAutowired;
 import vo.zframework.anno.ZBean;
 import vo.zframework.anno.ZConfiguration;
+import vo.zframework.anno.ZOrder;
 import vo.zframework.cache.ZCache;
 import vo.zframework.cache.ZCacheMemory;
 import vo.zframework.cache.ZCacheMixed;
@@ -21,6 +22,7 @@ import vo.zframework.exception.TypeNotSupportedExcpetion;
  *
  */
 @ZConfiguration
+@ZOrder(value = Integer.MIN_VALUE)
 public class ZCacheConfiguration {
 
 	public static final String MEMORY = "MEMORY";

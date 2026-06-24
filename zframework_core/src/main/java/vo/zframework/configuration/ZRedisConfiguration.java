@@ -9,6 +9,7 @@ import vo.zframework.anno.ZBean;
 import vo.zframework.anno.ZCacheRedisCondition;
 import vo.zframework.anno.ZConditional;
 import vo.zframework.anno.ZConfiguration;
+import vo.zframework.anno.ZOrder;
 import vo.zframework.common.STU;
 import vo.zframework.configuration.properties.ZCacheConfigurationProperties;
 import vo.zframework.configuration.properties.ZRedisConfigurationProperties;
@@ -29,6 +30,7 @@ import vo.zframework.http.Task;
  *
  */
 @ZConfiguration
+@ZOrder(value = Integer.MIN_VALUE + 1)
 public class ZRedisConfiguration {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
