@@ -6,7 +6,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import vo.log.common.CU;
-import vo.zframework.M;
 import vo.zframework.anno.ZCustom;
 import vo.zframework.anno.ZMax;
 import vo.zframework.anno.ZMin;
@@ -355,7 +354,7 @@ public class ServerConfigurationProperties {
 	 */
 	@ZMin(min = 512)
 	@ZMax(max = 1024 * 8)
-	private Integer responseArrayCapacity = 1024 * 4;
+	private int responseArrayCapacity = 1024 * 4;
 
 	/**
 	 * 程序启动时是否打印 @ZConfigurationProperties 配置类信息
@@ -743,7 +742,7 @@ public class ServerConfigurationProperties {
 		return this.responseArrayCapacity;
 	}
 
-	public void setResponseArrayCapacity(final Integer responseArrayCapacity) {
+	public void setResponseArrayCapacity(final int responseArrayCapacity) {
 		this.responseArrayCapacity = responseArrayCapacity;
 	}
 
