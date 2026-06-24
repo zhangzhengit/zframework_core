@@ -752,6 +752,10 @@ public class ZResponse {
 	private void beforeWrite() {
 
 		final ZRequest request = ReqeustInfo.get();
+		if (request == null) {
+			// XXX : 正常情况下不会是null，在次判断null，因为eclipse改了[访问潜在的null级别]为ERROR，为了编译而改
+			return;
+		}
 
 		// 到此，response中的Connection要优先于request中指定的，就是默认响应keep-alive
 		// 如果request指定了则按request中的来，response中手动设置了则按response中的来

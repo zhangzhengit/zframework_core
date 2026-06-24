@@ -45,18 +45,6 @@ public class ZControllerAdviceThrowable {
 		return CR.error(conf.getErrorCode(), m);
 	}
 
-	public static String getHostName() {
-		InetAddress inetAddress = null;
-		try {
-			inetAddress = InetAddress.getLocalHost();
-		} catch (final UnknownHostException e) {
-			e.printStackTrace();
-		}
-		final String hostName = inetAddress.getHostName();
-
-		return hostName;
-	}
-
 	public static Integer findHttpStatus(final Throwable e) {
 		if (e instanceof ZFException) {
 			return ((ZFException) e).getHttpStatus();

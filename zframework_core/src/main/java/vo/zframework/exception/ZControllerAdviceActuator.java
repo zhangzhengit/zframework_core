@@ -59,7 +59,7 @@ public class ZControllerAdviceActuator {
 					final String projectName = M.getAppName();
 
 					final String subject = "[" + projectName + "]工程里关注的事件[" + event + "]在机器["
-							+ ZControllerAdviceThrowable.getHostName() + "]上发生了";
+							+ M.getHostName() + "]上发生了";
 
 					// FIXME 2025年1月19日 下午7:17:23 zhangzhen : 考虑好：敏感信息要不要放入邮件的subject和body？
 					// 因为配置的邮箱可能不是自己的邮箱服务器

@@ -24,14 +24,15 @@ public class M {
 	}
 
 	public static String getHostName() {
-		InetAddress inetAddress = null;
 		try {
-			inetAddress = InetAddress.getLocalHost();
+			final InetAddress inetAddress = InetAddress.getLocalHost();
+			final String hostName = inetAddress.getHostName();
+			return hostName;
 		} catch (final UnknownHostException e) {
 			e.printStackTrace();
 		}
-		final String hostName = inetAddress.getHostName();
-		return hostName;
+
+		return null;
 	}
 
 }
