@@ -63,7 +63,7 @@ public enum ContentTypeEnum {
 
 	JS("Content-Type: application/javascript;", "application/javascript","application/javascript".getBytes()),
 
-	IMAGE_ICON("Content-Type: image/vnd.microsoft.icon;", "image/vnd.microsoft.ico","image/vnd.microsoft.ico".getBytes()),
+	IMAGE_ICON("Content-Type: image/x-icon;", "image/x-icon","image/x-icon".getBytes()),
 
 	GZIP("Content-Encoding: gzip", "","".getBytes()),
 
