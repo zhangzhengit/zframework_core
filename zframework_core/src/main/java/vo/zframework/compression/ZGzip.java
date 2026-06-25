@@ -65,7 +65,9 @@ public class ZGzip {
 		try (final InputStream inputStream = Files.newInputStream(source);
 			final BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
 			final OutputStream outputStream = Files.newOutputStream(target);
-			final GZIPOutputStream gzipOutputStream = new GZIPOutputStream(outputStream);
+			final GZIPOutputStream gzipOutputStream = new GZIPOutputStream(outputStream) {{
+					this.def.setLevel(java.util.zip.Deflater.BEST_COMPRESSION);
+			}};
 		) {
 
 			final byte[] buffer = new byte[BUFFER_CAPACITY];

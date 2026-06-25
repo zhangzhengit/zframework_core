@@ -29,6 +29,8 @@ public class StaticResourcespreCompressionService {
 	public static final String TEMP_BR = ".tempbr";
 	public static final String GZIP = ".gzip";
 	public static final String TEMP_GZIP = ".tempgzip";
+	public static final String ZSTD = ".zstd";
+	public static final String TEMP_ZSTD = ".tempzstd";
 
 	public static void preCompression() {
 		final ExecutorService ex = Executors.newSingleThreadExecutor();
@@ -44,7 +46,7 @@ public class StaticResourcespreCompressionService {
 
 		final ServerConfigurationProperties cp = ZContext.getBean(ServerConfigurationProperties.class);
 
-		try (Stream<Path> stream = Files.walk(Paths.get(staticResourcesPath))) {
+		try (final Stream<Path> stream = Files.walk(Paths.get(staticResourcesPath))) {
 				stream
 				.parallel()
 				.filter(Files::isRegularFile)
@@ -59,8 +61,10 @@ public class StaticResourcespreCompressionService {
 				// 跳过.br/.gzip文件(已经压缩好的)
 				.filter(p -> !String.valueOf(p.getFileName()).endsWith(BR))
 				.filter(p -> !String.valueOf(p.getFileName()).endsWith(GZIP))
+				.filter(p -> !String.valueOf(p.getFileName()).endsWith(ZSTD))
 				.filter(p -> !Files.exists(p.resolveSibling(p.getFileName() + BR)))
 				.filter(p -> !Files.exists(p.resolveSibling(p.getFileName() + GZIP)))
+				.filter(p -> !Files.exists(p.resolveSibling(p.getFileName() + ZSTD)))
 				.forEach(p -> {
 				final Path source = p.toAbsolutePath();
 
@@ -81,9 +85,17 @@ public class StaticResourcespreCompressionService {
 						e.printStackTrace();
 					}
 				} else {
+
+					final Path targetTEMPZSTD = source.resolveSibling(source.getFileName() + TEMP_ZSTD);
+					vo.zframework.compression
+					.ZSTD.compressFile(source,targetTEMPZSTD);
+
 					final Path targetTEMPGZIP = source.resolveSibling(source.getFileName() + TEMP_GZIP);
 //					System.out.println("targetTEMPGZIP = " + targetTEMPGZIP);
 					ZGzip.compressFile(source, targetTEMPGZIP);
+
+
+					// br 最耗时，放最后
 					final Path targetTEMPBR = source.resolveSibling(source.getFileName() + TEMP_BR);
 //					System.out.println("targetTEMPBR = " + targetTEMPBR);
 					Brotli.compressFile(source, targetTEMPBR);

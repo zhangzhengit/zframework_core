@@ -114,6 +114,22 @@ public class StaticController {
 				}
 			}
 
+			if (request.isSupportZSTD()) {
+				// 支持zstd，并且是响应文件且已存在压缩好的.zstd文件，直接响应.zstd文件
+				final File zstdFile = new File(fis.getFile() + StaticResourcespreCompressionService.ZSTD);
+				if (zstdFile.exists()) {
+					try (final InputStream zstdInputStream = Files.newInputStream(Paths.get(zstdFile.getAbsolutePath()))) {
+						final FIS zstdFis = new FIS(zstdInputStream, zstdFile);
+						// 设置AcceptEncoding: zstd
+						zstdFis.setAcceptEncodingEnum(AcceptEncodingEnum.ZSTD);
+						response.body(zstdFis);
+						return;
+					} catch (final IOException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+
 			if (request.isSupportGZIP()) {
 				// 支持gzip，并且是响应文件且已存在压缩好的.gzip文件，直接响应.gzip文件
 				final File gzipFile = new File(fis.getFile() + StaticResourcespreCompressionService.GZIP);
