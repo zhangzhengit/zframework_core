@@ -10,7 +10,6 @@ import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.LocalDateTime;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -58,8 +57,6 @@ public class ZGzip {
 	}
 
 	public static void compressFile(final Path source, final Path target) {
-		System.out
-				.println(LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t" + "ZGzip.compressFile()");
 
 		try (final InputStream inputStream = Files.newInputStream(source);
 			final BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);

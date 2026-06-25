@@ -5,6 +5,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -18,6 +21,7 @@ import vo.zframework.common.CR;
 import vo.zframework.common.CU;
 import vo.zframework.common.J;
 import vo.zframework.common.STU;
+import vo.zframework.compression.CF;
 import vo.zframework.configuration.properties.ServerConfigurationProperties;
 import vo.zframework.core.ZContext;
 import vo.zframework.enums.AcceptEncodingEnum;
@@ -99,60 +103,69 @@ public class StaticController {
 		responseBody(response, request, fis);
 	}
 
-	private static void responseBody(final ZResponse response, final ZRequest request, final FIS fis) {
-		if (fis.getFile() != null) {
-			if (request.isSupportBR()) {
-				// 支持br，并且是响应文件且已存在压缩好的.br文件，直接响应.br文件
-				final File brFile = new File(fis.getFile() + StaticResourcespreCompressionService.BR);
-				if (brFile.exists()) {
-					try (final InputStream brInputStream = Files.newInputStream(Paths.get(brFile.getAbsolutePath()))) {
-						final FIS brFis = new FIS(brInputStream, brFile);
-						// 设置AcceptEncoding: br
-						brFis.setAcceptEncodingEnum(AcceptEncodingEnum.BR);
-						response.body(brFis);
-						return;
-					} catch (final IOException e) {
-						e.printStackTrace();
-					}
-				}
+	private static void responseBody(final ZResponse response, final ZRequest request, final FIS sourceFis) {
+
+		if (sourceFis.getFile() != null) {
+
+			// 一次找出所有的压缩文件，并且按文件大小从小到大排序，优先响应小的
+			final List<CF> cfl = gCFOrderByFileLength(sourceFis.getFile());
+
+			if (CU.isEmpty(cfl)) {
+				// 响应原始文件
+				response.body(sourceFis);
+				return;
 			}
 
-			if (request.isSupportZSTD()) {
-				// 支持zstd，并且是响应文件且已存在压缩好的.zstd文件，直接响应.zstd文件
-				final File zstdFile = new File(fis.getFile() + StaticResourcespreCompressionService.ZSTD);
-				if (zstdFile.exists()) {
-					try (final InputStream zstdInputStream = Files.newInputStream(Paths.get(zstdFile.getAbsolutePath()))) {
-						final FIS zstdFis = new FIS(zstdInputStream, zstdFile);
-						// 设置AcceptEncoding: zstd
-						zstdFis.setAcceptEncodingEnum(AcceptEncodingEnum.ZSTD);
-						response.body(zstdFis);
-						return;
-					} catch (final IOException e) {
-						e.printStackTrace();
-					}
-				}
-			}
-
-			if (request.isSupportGZIP()) {
-				// 支持gzip，并且是响应文件且已存在压缩好的.gzip文件，直接响应.gzip文件
-				final File gzipFile = new File(fis.getFile() + StaticResourcespreCompressionService.GZIP);
-				if (gzipFile.exists()) {
-					try (final InputStream brInputStream = Files
-							.newInputStream(Paths.get(gzipFile.getAbsolutePath()))) {
-						final FIS gzipFis = new FIS(brInputStream, gzipFile);
-						// 设置AcceptEncoding: gzip
-						gzipFis.setAcceptEncodingEnum(AcceptEncodingEnum.GZIP);
-						response.body(gzipFis);
-						return;
-					} catch (final IOException e) {
-						e.printStackTrace();
-					}
+			for (final CF cf : cfl) {
+				final AcceptEncodingEnum ae = cf.getAcceptEncodingEnum();
+				if (((ae == AcceptEncodingEnum.BR)   && request.isSupportBR())
+				||  ((ae == AcceptEncodingEnum.ZSTD) && request.isSupportZSTD())
+				||  ((ae == AcceptEncodingEnum.GZIP) && request.isSupportGZIP())) {
+					rb(response, cf.getFile(), ae);
+					// 执行到此一次就return
+					return;
 				}
 			}
 		}
 
 		// 响应原始文件
-		response.body(fis);
+		response.body(sourceFis);
+		return;
+	}
+
+	private static void rb(final ZResponse response, final File file, final AcceptEncodingEnum acceptEncodingEnum) {
+		try (final InputStream inputStream = Files.newInputStream(Paths.get(file.getAbsolutePath()))) {
+			final FIS fis = new FIS(inputStream, file);
+			fis.setAcceptEncodingEnum(acceptEncodingEnum);
+			response.body(fis);
+		} catch (final IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private static List<CF> gCFOrderByFileLength(final File sourceFile) {
+		final File br = new File(sourceFile + StaticResourcespreCompressionService.BR);
+		final File zstd = new File(sourceFile + StaticResourcespreCompressionService.ZSTD);
+		final File gzip = new File(sourceFile + StaticResourcespreCompressionService.GZIP);
+
+		final List<CF> list = new ArrayList<>(3);
+		if (br.exists()) {
+			list.add(new CF(br, br.length(), AcceptEncodingEnum.BR));
+		}
+		if (zstd.exists()) {
+			list.add(new CF(zstd, zstd.length(), AcceptEncodingEnum.ZSTD));
+		}
+		if (gzip.exists()) {
+			list.add(new CF(gzip, gzip.length(), AcceptEncodingEnum.GZIP));
+		}
+
+		if (list.size() <= 1) {
+			return list;
+		}
+
+		list.sort(Comparator.comparing(CF::getFileSize));
+
+		return list;
 	}
 
 	private static boolean checkReferer(final ZRequest request) {
