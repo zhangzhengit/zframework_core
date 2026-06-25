@@ -1,5 +1,10 @@
 package vo.zframework.api;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -15,6 +20,7 @@ import vo.zframework.common.J;
 import vo.zframework.common.STU;
 import vo.zframework.configuration.properties.ServerConfigurationProperties;
 import vo.zframework.core.ZContext;
+import vo.zframework.enums.AcceptEncodingEnum;
 import vo.zframework.enums.CacheControlEnum;
 import vo.zframework.enums.ContentTypeEnum;
 import vo.zframework.enums.HeaderEnum;
@@ -82,6 +88,25 @@ public class StaticController {
 		response.contentType(ct);
 
 		final FIS fis = ResourcesLoader.loadStaticResourceAsInputStream(resourceName);
+		if (request.isSupportBR()) {
+			if (fis.getFile() != null) {
+				// 支持br，并且是响应文件且已存在压缩好的.br文件，直接响应.br文件
+				final File brFile = new File(fis.getFile() + StaticResourcespreCompressionService.BR);
+				if (brFile.exists()) {
+					try (final InputStream brInputStream = Files.newInputStream(Paths.get(brFile.getAbsolutePath()))){
+						final FIS brFis = new FIS(brInputStream, brFile);
+						// 设置AcceptEncoding: br
+						brFis.setAcceptEncodingEnum(AcceptEncodingEnum.BR);
+						response.body(brFis);
+						return;
+					} catch (final IOException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		}
+
+		// 响应原始文件
 		response.body(fis);
 	}
 

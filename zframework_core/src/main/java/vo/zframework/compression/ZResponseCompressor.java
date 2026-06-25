@@ -15,14 +15,12 @@ public class ZResponseCompressor {
 		if (request.isSupportZSTD()) {
 			return ZSTD.compress(data);
 		}
+		// XXX : 已经支持了br了，但是压缩太慢，就不用于实时接口的压缩了，只用于静态资源的预压缩
 		if (request.isSupportGZIP()) {
 			return ZGzip.compress(data);
 		}
 		if (request.isSupportDEFLATE()) {
 			return Deflater.compress(data);
-		}
-		if (request.isSupportBR()) {
-			return Brotli.compress(data);
 		}
 
 		return data;

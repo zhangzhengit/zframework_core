@@ -421,10 +421,16 @@ public class ZResponse {
 						this.setETagIfZETagPresent(request, buffer, ETagEnum.WEAK);
 					}
 
-					final byte[] contentEncodingBytes = this.getContentEncodingBytes(request, exceedsCompressionMinLength);
-					if (AU.isNotEmpty(contentEncodingBytes)) {
-						this.header(HeaderEnum.CONTENT_ENCODING.getNameBytes(), contentEncodingBytes);
+					if (fis.getAcceptEncodingEnum() != null) {
+						this.header(HeaderEnum.CONTENT_ENCODING.getNameBytes(), fis.getAcceptEncodingEnum().getValueBytes());
+					} else {
+						final byte[] contentEncodingBytes = this.getContentEncodingBytes(request,
+								exceedsCompressionMinLength);
+						if (AU.isNotEmpty(contentEncodingBytes)) {
+							this.header(HeaderEnum.CONTENT_ENCODING.getNameBytes(), contentEncodingBytes);
+						}
 					}
+
 
 					this.header(HeaderEnum.TRANSFER_ENCODING.getNameBytes(), TransferEncodingEnum.CHUNKED.getValueBytes());
 					this.addStatusLineAndHeaders();
@@ -435,7 +441,10 @@ public class ZResponse {
 				readFirst = false;
 
 				final byte[] bx = read >= bufferCapacity ? buffer :Arrays.copyOfRange(buffer, 0, read);
-				this.compressBodyAndWrite(request, exceedsCompressionMinLength, bx);
+
+				final boolean enableC = fis.getAcceptEncodingEnum() == null;
+
+				this.compressBodyAndWrite(request, exceedsCompressionMinLength, bx, enableC);
 
 				this.write(CRLF_BYTES);
 				this.flush();
@@ -522,9 +531,9 @@ public class ZResponse {
 	}
 
 	private void compressBodyAndWrite(final ZRequest request, final boolean exceedsCompressionMinLength,
-			final byte[] data) {
+			final byte[] data, final boolean enableC) {
 
-		if (!this.compress(exceedsCompressionMinLength)) {
+		if (!enableC || !this.compress(exceedsCompressionMinLength)) {
 			final String chunkHeader = Integer.toHexString(data.length) + STU.CRLF;
 			this.write(chunkHeader.getBytes());
 			this.write(data);
@@ -552,11 +561,11 @@ public class ZResponse {
 			return null;
 		}
 
-		// FIXME 2025年1月20日 下午4:41:18 zhangzhen : 记得以后支持了br以后再加一个else
 		if (request.isSupportZSTD()) {
 			return AcceptEncodingEnum.ZSTD.getValueBytes();
 		}
 
+		// XXX : 已经支持了br了，但是压缩太慢，就不用于实时接口的压缩了，只用于静态资源的预压缩
 		if (request.isSupportGZIP()) {
 			return AcceptEncodingEnum.GZIP.getValueBytes();
 		}
@@ -761,12 +770,11 @@ public class ZResponse {
 		if (!this.isBodyStream && this.yasuo(this.body)) {
 			if (request.isSupportZSTD()) {
 				this.header(HeaderEnum.CONTENT_ENCODING.getNameBytes(), AcceptEncodingEnum.ZSTD.getValueBytes());
+				// XXX : 已经支持了br了，但是压缩太慢，就不用于实时接口的压缩了，只用于静态资源的预压缩
 			} else if (request.isSupportGZIP()) {
 				this.header(HeaderEnum.CONTENT_ENCODING.getNameBytes(), AcceptEncodingEnum.GZIP.getValueBytes());
 			} else if (request.isSupportDEFLATE()) {
 				this.header(HeaderEnum.CONTENT_ENCODING.getNameBytes(), AcceptEncodingEnum.DEFLATE.getValueBytes());
-			} else if (request.isSupportBR()) {
-				this.header(HeaderEnum.CONTENT_ENCODING.getNameBytes(), AcceptEncodingEnum.BR.getValueBytes());
 			}
 		}
 
