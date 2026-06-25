@@ -21,6 +21,8 @@ public enum HeaderEnum {
 
 	ACCEPT_ENCODING("Accept-Encoding", "Accept-Encoding".getBytes()),
 
+	VARY("Vary", "Vary".getBytes()),
+
 	COOKIE("Cookie", "Cookie".getBytes()),
 
 	CONTENT_DISPOSITION("Content-Disposition", "Content-Disposition".getBytes()),

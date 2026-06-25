@@ -429,6 +429,7 @@ public class ZResponse {
 								this.header(HeaderEnum.CONTENT_ENCODING.getNameBytes(), contentEncodingBytes);
 							}
 						}
+						this.header(HeaderEnum.VARY.getNameBytes(), HeaderEnum.ACCEPT_ENCODING.getNameBytes());
 
 
 						this.header(HeaderEnum.TRANSFER_ENCODING.getNameBytes(), TransferEncodingEnum.CHUNKED.getValueBytes());
