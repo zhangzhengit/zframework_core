@@ -93,16 +93,37 @@ public class StaticController {
 		response.contentType(ct);
 
 		final FIS fis = ResourcesLoader.loadStaticResourceAsInputStream(resourceName);
-		if (request.isSupportBR()) {
-			if (fis.getFile() != null) {
+		responseBody(response, request, fis);
+	}
+
+	private static void responseBody(final ZResponse response, final ZRequest request, final FIS fis) {
+		if (fis.getFile() != null) {
+			if (request.isSupportBR()) {
 				// 支持br，并且是响应文件且已存在压缩好的.br文件，直接响应.br文件
 				final File brFile = new File(fis.getFile() + StaticResourcespreCompressionService.BR);
 				if (brFile.exists()) {
-					try (final InputStream brInputStream = Files.newInputStream(Paths.get(brFile.getAbsolutePath()))){
+					try (final InputStream brInputStream = Files.newInputStream(Paths.get(brFile.getAbsolutePath()))) {
 						final FIS brFis = new FIS(brInputStream, brFile);
 						// 设置AcceptEncoding: br
 						brFis.setAcceptEncodingEnum(AcceptEncodingEnum.BR);
 						response.body(brFis);
+						return;
+					} catch (final IOException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+
+			if (request.isSupportGZIP()) {
+				// 支持gzip，并且是响应文件且已存在压缩好的.gzip文件，直接响应.gzip文件
+				final File gzipFile = new File(fis.getFile() + StaticResourcespreCompressionService.GZIP);
+				if (gzipFile.exists()) {
+					try (final InputStream brInputStream = Files
+							.newInputStream(Paths.get(gzipFile.getAbsolutePath()))) {
+						final FIS gzipFis = new FIS(brInputStream, gzipFile);
+						// 设置AcceptEncoding: gzip
+						gzipFis.setAcceptEncodingEnum(AcceptEncodingEnum.GZIP);
+						response.body(gzipFis);
 						return;
 					} catch (final IOException e) {
 						e.printStackTrace();

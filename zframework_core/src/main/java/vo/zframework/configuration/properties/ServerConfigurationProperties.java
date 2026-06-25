@@ -190,6 +190,16 @@ public class ServerConfigurationProperties {
 	private Map<String, String> staticControllerContentType = initCTM();
 
 	/**
+	 * 对哪些后缀的静态文件进行预压缩
+	 */
+	@ZNotEmtpy
+	private Set<String> staticResourcePreCompressionSuffix = Set.of(
+			"html", "htm", "css", "js", "mjs",
+			"json", "xml", "svg", "csv", "tsv",
+			"txt", "log", "manifest", "ttf", "otf",
+			"eot");
+
+	/**
 	 * StaticController 中允许的Referer，
 	 * 如：http://xxx.com/
 	 * 非来自此Referer的请求会被拒绝
@@ -744,6 +754,14 @@ public class ServerConfigurationProperties {
 
 	public void setResponseArrayCapacity(final int responseArrayCapacity) {
 		this.responseArrayCapacity = responseArrayCapacity;
+	}
+
+	public Set<String> getStaticResourcePreCompressionSuffix() {
+		return this.staticResourcePreCompressionSuffix;
+	}
+
+	public void setStaticResourcePreCompressionSuffix(final Set<String> staticResourcePreCompressionSuffix) {
+		this.staticResourcePreCompressionSuffix = staticResourcePreCompressionSuffix;
 	}
 
 

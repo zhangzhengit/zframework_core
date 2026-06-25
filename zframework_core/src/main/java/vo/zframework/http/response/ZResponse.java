@@ -398,81 +398,79 @@ public class ZResponse {
 		final int bufferCapacity = DEFAULT_BUFFER_SIZE;
 		final byte[] buffer = new byte[bufferCapacity];
 
-		final BufferedInputStream bufferedInputStream = new BufferedInputStream(fis.getInputStream(), BIS_DEFAULT_BUFFER_SIZE);
+		try (BufferedInputStream bufferedInputStream = new BufferedInputStream(fis.getInputStream(), BIS_DEFAULT_BUFFER_SIZE)) {
+			boolean exceedsCompressionMinLength = false;
 
-		boolean exceedsCompressionMinLength = false;
-
-		boolean readFirst = true;
-		while (true) {
-			try {
-				final int read = bufferedInputStream.read(buffer);
-				if (read == -1) {
-					break;
-				}
-
-				exceedsCompressionMinLength =
-						exceedsCompressionMinLength ||
-						(readFirst && (read >= (SERVER_CONFIGURATIONPROPERTIES.getCompressionMinLength() * 1024)));
-
-				if (readFirst) {
-					// FIXME 2025年12月13日 00:14:31 zhangzhen :  这里逻辑不对，304了，就不应该继续读写body了
-					// 要不先读一次，和if-none-match比较，否再读写body，是则直接304？
-					if (!rETag) {
-						this.setETagIfZETagPresent(request, buffer, ETagEnum.WEAK);
+			boolean readFirst = true;
+			while (true) {
+				try {
+					final int read = bufferedInputStream.read(buffer);
+					if (read == -1) {
+						break;
 					}
 
-					if (fis.getAcceptEncodingEnum() != null) {
-						this.header(HeaderEnum.CONTENT_ENCODING.getNameBytes(), fis.getAcceptEncodingEnum().getValueBytes());
-					} else {
-						final byte[] contentEncodingBytes = this.getContentEncodingBytes(request,
-								exceedsCompressionMinLength);
-						if (AU.isNotEmpty(contentEncodingBytes)) {
-							this.header(HeaderEnum.CONTENT_ENCODING.getNameBytes(), contentEncodingBytes);
+					exceedsCompressionMinLength =
+							exceedsCompressionMinLength ||
+							(readFirst && (read >= (SERVER_CONFIGURATIONPROPERTIES.getCompressionMinLength() * 1024)));
+
+					if (readFirst) {
+						// FIXME 2025年12月13日 00:14:31 zhangzhen :  这里逻辑不对，304了，就不应该继续读写body了
+						// 要不先读一次，和if-none-match比较，否再读写body，是则直接304？
+						if (!rETag) {
+							this.setETagIfZETagPresent(request, buffer, ETagEnum.WEAK);
 						}
+
+						if (fis.getAcceptEncodingEnum() != null) {
+							this.header(HeaderEnum.CONTENT_ENCODING.getNameBytes(), fis.getAcceptEncodingEnum().getValueBytes());
+						} else {
+							final byte[] contentEncodingBytes = this.getContentEncodingBytes(request,
+									exceedsCompressionMinLength);
+							if (AU.isNotEmpty(contentEncodingBytes)) {
+								this.header(HeaderEnum.CONTENT_ENCODING.getNameBytes(), contentEncodingBytes);
+							}
+						}
+
+
+						this.header(HeaderEnum.TRANSFER_ENCODING.getNameBytes(), TransferEncodingEnum.CHUNKED.getValueBytes());
+						this.addStatusLineAndHeaders();
+
+						this.writeZArrayAndFlush();
 					}
 
+					readFirst = false;
 
-					this.header(HeaderEnum.TRANSFER_ENCODING.getNameBytes(), TransferEncodingEnum.CHUNKED.getValueBytes());
-					this.addStatusLineAndHeaders();
+					final byte[] bx = read >= bufferCapacity
+									? buffer
+									: Arrays.copyOfRange(buffer, 0, read);
 
-					this.writeZArrayAndFlush();
+					final boolean enableC = fis.getAcceptEncodingEnum() == null;
+					this.compressBodyAndWrite(request, exceedsCompressionMinLength, bx, enableC);
+
+					this.write(CRLF_BYTES);
+					this.flush();
+
+					if (read < bufferCapacity) {
+						break;
+					}
+
+				} catch (final IOException e) {
+					e.printStackTrace();
 				}
-
-				readFirst = false;
-
-				final byte[] bx = read >= bufferCapacity ? buffer :Arrays.copyOfRange(buffer, 0, read);
-
-				final boolean enableC = fis.getAcceptEncodingEnum() == null;
-
-				this.compressBodyAndWrite(request, exceedsCompressionMinLength, bx, enableC);
-
-				this.write(CRLF_BYTES);
-				this.flush();
-
-				if (read < bufferCapacity) {
-					break;
-				}
-			} catch (final IOException e) {
-				e.printStackTrace();
 			}
-		}
 
-		this.write(ZERO_RNRN_BYTES);
-		this.flush();
+			this.write(ZERO_RNRN_BYTES);
+			this.flush();
 
-		this.write = true;
+			this.write = true;
 
-		ZResponse.reset();
+			ZResponse.reset();
 
-		try {
-			bufferedInputStream.close();
-			fis.getInputStream().close();
 		} catch (final IOException e) {
 			e.printStackTrace();
-		}
-
-		if (!request.isKeepAlive()) {
-			SocketTL.closeOutputStreamAndSocket();
+		} finally {
+			if (!request.isKeepAlive()) {
+				SocketTL.closeOutputStreamAndSocket();
+			}
 		}
 
 	}
@@ -533,19 +531,14 @@ public class ZResponse {
 	private void compressBodyAndWrite(final ZRequest request, final boolean exceedsCompressionMinLength,
 			final byte[] data, final boolean enableC) {
 
-		if (!enableC || !this.compress(exceedsCompressionMinLength)) {
-			final String chunkHeader = Integer.toHexString(data.length) + STU.CRLF;
-			this.write(chunkHeader.getBytes());
-			this.write(data);
+		final byte[] c = (!enableC || !this.compress(exceedsCompressionMinLength))
+				? data
+				: ZResponseCompressor.compressByAcceptEncoding(request, data);
 
-			return;
-		}
-
-		final byte[] compress = ZResponseCompressor.compressByAcceptEncoding(request, data);
-
-		final String chunkHeader = Integer.toHexString(compress.length) + STU.CRLF;
+		final String chunkHeader = Integer.toHexString(c.length);
 		this.write(chunkHeader.getBytes());
-		this.write(compress);
+		this.write(STU.CRLF_BYTES);
+		this.write(c);
 
 	}
 

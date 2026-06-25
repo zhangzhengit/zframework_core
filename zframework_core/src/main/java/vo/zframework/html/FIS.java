@@ -23,7 +23,6 @@ public class FIS {
 		this.file = file;
 	}
 
-
 	public InputStream getInputStream() {
 		return this.inputStream;
 	}
@@ -32,13 +31,9 @@ public class FIS {
 		return this.file;
 	}
 
-
-
 	public AcceptEncodingEnum getAcceptEncodingEnum() {
 		return this.acceptEncodingEnum;
 	}
-
-
 
 	public void setAcceptEncodingEnum(final AcceptEncodingEnum acceptEncodingEnum) {
 		this.acceptEncodingEnum = acceptEncodingEnum;
