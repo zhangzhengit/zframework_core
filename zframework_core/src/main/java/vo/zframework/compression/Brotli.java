@@ -12,7 +12,6 @@ import com.aayushatharva.brotli4j.Brotli4jLoader;
 import com.aayushatharva.brotli4j.encoder.BrotliOutputStream;
 import com.aayushatharva.brotli4j.encoder.Encoder;
 
-import vo.zframework.api.StaticResourcespreCompressionService;
 import vo.zframework.exception.CompressException;
 
 /**
@@ -51,11 +50,6 @@ public class Brotli {
 			while ((length = bufferedInputStream.read(buffer)) != -1) {
 				brotliOutputStream.write(buffer, 0, length);
 			}
-
-			// FIXME 2026年6月25日 11:33:20 zhangzhen : 这部分分离出去，违反单一了
-			final Path brp = target.resolveSibling(String.valueOf(target.getFileName())
-					.replace(StaticResourcespreCompressionService.TEMP_BR, StaticResourcespreCompressionService.BR));
-			Files.move(target, brp);
 
 		} catch (final IOException e) {
 			e.printStackTrace();

@@ -10,7 +10,6 @@ import java.nio.file.Path;
 import com.github.luben.zstd.Zstd;
 import com.github.luben.zstd.ZstdOutputStream;
 
-import vo.zframework.api.StaticResourcespreCompressionService;
 import vo.zframework.common.AU;
 
 /**
@@ -104,11 +103,6 @@ public class ZSTD {
 			while ((length = bufferedInputStream.read(buffer)) != -1) {
 				zstdOutputStream.write(buffer, 0, length);
 			}
-
-			// FIXME 2026年6月25日 11:33:20 zhangzhen : 这部分分离出去，违反单一了
-			final Path zstdP = target.resolveSibling(String.valueOf(target.getFileName())
-					.replace(StaticResourcespreCompressionService.TEMP_ZSTD, StaticResourcespreCompressionService.ZSTD));
-			Files.move(target, zstdP);
 
 		} catch (final IOException e) {
 			e.printStackTrace();

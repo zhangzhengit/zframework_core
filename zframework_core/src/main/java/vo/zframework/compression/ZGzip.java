@@ -14,7 +14,6 @@ import java.time.LocalDateTime;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-import vo.zframework.api.StaticResourcespreCompressionService;
 import vo.zframework.common.AU;
 import vo.zframework.common.STU;
 
@@ -76,11 +75,6 @@ public class ZGzip {
 				gzipOutputStream.write(buffer, 0, length);
 			}
 
-			// FIXME 2026年6月25日 11:33:20 zhangzhen : 这部分分离出去，违反单一了
-			final Path brp = target.resolveSibling(String.valueOf(target.getFileName())
-					.replace(StaticResourcespreCompressionService.TEMP_GZIP, StaticResourcespreCompressionService.GZIP));
-			Files.move(target, brp);
-
 		} catch (final IOException e) {
 			e.printStackTrace();
 		}
@@ -92,22 +86,16 @@ public class ZGzip {
 			return null;
 		}
 
-		try {
-			final ByteArrayOutputStream out = new ByteArrayOutputStream();
-			final GZIPOutputStream gzip = new GZIPOutputStream(out);
+		final ByteArrayOutputStream out = new ByteArrayOutputStream();
+		try (GZIPOutputStream gzip = new GZIPOutputStream(out)) {
 			gzip.write(data);
 			gzip.finish();
 
-			out.close();
-			gzip.close();
-
-			return out.toByteArray();
-
-		} catch (final Exception e) {
+		} catch (final IOException e) {
 			e.printStackTrace();
 		}
 
-		return null;
+		return out.toByteArray();
 	}
 
 	public static byte[] compress(final String string) {
