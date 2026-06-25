@@ -10,8 +10,6 @@ package vo.zframework.enums;
 public enum HttpStatusEnum {
 
 
-	// FIXME 2025年1月20日 下午9:34:47 zhangzhen : 继续支持41X和42X，要不要先支持个418？
-
 	HTTP_200(200, "OK"),
 
 	HTTP_202(202, "Accepted"),
@@ -27,11 +25,13 @@ public enum HttpStatusEnum {
 
 	HTTP_403(403, "拒绝服务"),
 
-	HTTP_404(404, "not-found"),
+	HTTP_404(404, "Not Found"),
 
 	HTTP_405(405, "Method Not Allowed"),
 
 	HTTP_413(413, "Content Too Large"),
+
+	HTTP_418(418, "I'm a teapot"),
 
 	HTTP_429(429, "Too Many Requests"),
 
