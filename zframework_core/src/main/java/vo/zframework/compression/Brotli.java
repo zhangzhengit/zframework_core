@@ -6,12 +6,14 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.aayushatharva.brotli4j.Brotli4jLoader;
 import com.aayushatharva.brotli4j.encoder.BrotliOutputStream;
 import com.aayushatharva.brotli4j.encoder.Encoder;
 
 import vo.zframework.api.StaticResourcespreCompressionService;
+import vo.zframework.exception.CompressException;
 
 /**
  * Brotli
@@ -25,7 +27,17 @@ public class Brotli {
 
 	private static final int BUFFER_CAPACITY = 1024 * 8;
 
+	private static final AtomicBoolean AVAILABLE = new AtomicBoolean(true);
+
+	public static boolean isAvailable() {
+		return AVAILABLE.get();
+	}
+
 	public static void compressFile(final Path source, final Path target) {
+
+		if (isAvailable()) {
+			throw new CompressException(Brotli.class.getName() + "压缩不可用");
+		}
 
 		try (final InputStream inputStream = Files.newInputStream(source);
 			final BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
@@ -61,7 +73,10 @@ public class Brotli {
 	}
 
 	static {
-		// FIXME 2026年6月25日 11:22:41 zhangzhen :处理这个方法的异常，
-		Brotli4jLoader.ensureAvailability();
+		try {
+			Brotli4jLoader.ensureAvailability();
+		} catch (final Throwable ingore) {
+			AVAILABLE.set(false);
+		}
 	}
 }

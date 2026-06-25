@@ -86,19 +86,19 @@ public class StaticResourcespreCompressionService {
 					}
 				} else {
 
+					// 最快的先执行，让资源尽快可用
+					final Path targetTEMPGZIP = source.resolveSibling(source.getFileName() + TEMP_GZIP);
+					ZGzip.compressFile(source, targetTEMPGZIP);
+
 					final Path targetTEMPZSTD = source.resolveSibling(source.getFileName() + TEMP_ZSTD);
 					vo.zframework.compression
 					.ZSTD.compressFile(source,targetTEMPZSTD);
 
-					final Path targetTEMPGZIP = source.resolveSibling(source.getFileName() + TEMP_GZIP);
-//					System.out.println("targetTEMPGZIP = " + targetTEMPGZIP);
-					ZGzip.compressFile(source, targetTEMPGZIP);
-
-
 					// br 最耗时，放最后
-					final Path targetTEMPBR = source.resolveSibling(source.getFileName() + TEMP_BR);
-//					System.out.println("targetTEMPBR = " + targetTEMPBR);
-					Brotli.compressFile(source, targetTEMPBR);
+					if (Brotli.isAvailable()) {
+						final Path targetTEMPBR = source.resolveSibling(source.getFileName() + TEMP_BR);
+						Brotli.compressFile(source, targetTEMPBR);
+					}
 				}
 			});
 
