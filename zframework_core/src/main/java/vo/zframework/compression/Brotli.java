@@ -35,7 +35,7 @@ public class Brotli {
 
 	public static void compressFile(final Path source, final Path target) {
 
-		if (isAvailable()) {
+		if (!isAvailable()) {
 			throw new CompressException(Brotli.class.getName() + "压缩不可用");
 		}
 
