@@ -25,7 +25,7 @@ import vo.zframework.html.ResourcesLoader;
  * @author zhangzhen
  * @date 2026年6月25日 11:29:09
  */
-public class StaticResourcespreCompressionService {
+public class StaticResourcesPreCompressionService {
 
 	public static final String BR = ".br";
 	public static final String TEMP_BR = ".tempbr";
@@ -36,7 +36,7 @@ public class StaticResourcespreCompressionService {
 
 	public static void preCompression() {
 		final ExecutorService ex = Executors.newSingleThreadExecutor();
-		ex.execute(StaticResourcespreCompressionService::extracted);
+		ex.execute(StaticResourcesPreCompressionService::extracted);
 	}
 
 	private static void extracted() {
@@ -77,6 +77,11 @@ public class StaticResourcespreCompressionService {
 				|| fileName.endsWith(TEMP_GZIP)
 						) {
 					Files.delete(path);
+					continue;
+				}
+
+				// 低于压缩阈值
+				if (Files.size(path) < (cp.getCompressionMinLength() * 1024)) {
 					continue;
 				}
 
@@ -142,8 +147,8 @@ public class StaticResourcespreCompressionService {
 			Brotli.compressFile(source, targetTEMPZSTD);
 
 			final Path brp = targetTEMPZSTD.resolveSibling(String.valueOf(targetTEMPZSTD.getFileName())
-					.replace(StaticResourcespreCompressionService.TEMP_BR,
-							StaticResourcespreCompressionService.BR));
+					.replace(StaticResourcesPreCompressionService.TEMP_BR,
+							StaticResourcesPreCompressionService.BR));
 			Files.move(targetTEMPZSTD, brp);
 		}
 	}
@@ -154,7 +159,7 @@ public class StaticResourcespreCompressionService {
 		.ZSTD.compressFile(source, targetTEMPZSTD);
 
 		final Path brp = targetTEMPZSTD.resolveSibling(String.valueOf(targetTEMPZSTD.getFileName())
-				.replace(StaticResourcespreCompressionService.TEMP_ZSTD, StaticResourcespreCompressionService.ZSTD));
+				.replace(StaticResourcesPreCompressionService.TEMP_ZSTD, StaticResourcesPreCompressionService.ZSTD));
 		Files.move(targetTEMPZSTD, brp);
 	}
 
@@ -163,7 +168,7 @@ public class StaticResourcespreCompressionService {
 		ZGzip.compressFile(source, targetTEMPGZIP);
 
 		final Path brp = targetTEMPGZIP.resolveSibling(String.valueOf(targetTEMPGZIP.getFileName())
-				.replace(StaticResourcespreCompressionService.TEMP_GZIP, StaticResourcespreCompressionService.GZIP));
+				.replace(StaticResourcesPreCompressionService.TEMP_GZIP, StaticResourcesPreCompressionService.GZIP));
 		Files.move(targetTEMPGZIP, brp);
 	}
 

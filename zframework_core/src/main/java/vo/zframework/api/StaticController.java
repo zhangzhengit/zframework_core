@@ -141,9 +141,9 @@ public class StaticController {
 	}
 
 	private static List<CF> gCFOrderByFileLength(final File sourceFile) {
-		final File br = new File(sourceFile + StaticResourcespreCompressionService.BR);
-		final File zstd = new File(sourceFile + StaticResourcespreCompressionService.ZSTD);
-		final File gzip = new File(sourceFile + StaticResourcespreCompressionService.GZIP);
+		final File br = new File(sourceFile + StaticResourcesPreCompressionService.BR);
+		final File zstd = new File(sourceFile + StaticResourcesPreCompressionService.ZSTD);
+		final File gzip = new File(sourceFile + StaticResourcesPreCompressionService.GZIP);
 
 		final List<CF> list = new ArrayList<>(4);
 
