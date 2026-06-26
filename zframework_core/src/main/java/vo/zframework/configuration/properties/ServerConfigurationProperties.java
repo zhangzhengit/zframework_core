@@ -200,6 +200,7 @@ public class ServerConfigurationProperties {
 	/**
 	 * 启用哪些算法对静态文件预压缩
 	 */
+	@ZNotEmtpy
 	@ZCustom(cls = StaticResourcePreCompressionAlgorithmValidator.class)
 	private Set<String> staticResourcePreCompressionAlgorithm = Set.of(
 			AcceptEncodingEnum.BR.getValue(),
