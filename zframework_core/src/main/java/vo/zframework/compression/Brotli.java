@@ -20,6 +20,7 @@ import vo.zframework.exception.CompressException;
  * @author zhangzhen
  * @date 2026年6月24日 21:24:26
  */
+// FIXME 2026年6月27日 03:32:22 zhangzhen : 记得所有的catch都处理，继续抛或者至少记录日志，而非简单的不管或者e.pST就完了
 public class Brotli {
 
 	private static final int BUFFER_CAPACITY = 1024 * 64;
