@@ -56,15 +56,17 @@ public class StaticController {
 	// FIXME 2026年6月24日 14:16:26 zhangzhen : 要不要加入"/.+\\..+$"支持A.B的形式来匹配所有的静态资源请求，并加一个配置项是否启用此mapping？
 	@ZRequestMapping(mapping = { "/favicon\\.ico",
 			"/.+\\.java$",
+			"/.+\\.csv$",
 			"/.+\\.json$",
 			"/.+\\.log$",
+			"/.+\\.sql$",
 			"/.+\\.txt$",
 			"/.+\\.png$",
 			"/.+\\.wav$",
 			"/.+\\.js$", "/.+\\.jpg$", "/.+\\.mp3$", "/.+\\.mp4$", "/.+\\.pdf$",
 			"/.+\\.gif$", "/.+\\.doc$", "/.+\\.css$", "/.+\\.html$" }
-		, isRegex = { true, true, true, true, true, true, true, true, true,
-					true,true, true, true, true, true, true },
+		, isRegex = { true, true, true, true, true, true, true, true, true,true,
+					true,true, true, true, true, true, true, true},
 				count = 10000 * 10)
 
 	@ZETag
