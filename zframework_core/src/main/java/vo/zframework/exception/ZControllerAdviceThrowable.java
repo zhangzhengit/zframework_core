@@ -63,13 +63,6 @@ public class ZControllerAdviceThrowable {
 	}
 
 	public static String findCausedby(final Throwable e) {
-		if (e instanceof ZFException) {
-			return ((ZFException) e).getMessagezf();
-		}
-
-		if ((e.getCause() != null) && (e.getCause() instanceof ZFException)) {
-			return ((ZFException) e.getCause()).getMessagezf();
-		}
 
 		if (e.getCause() != null) {
 			return e.getCause().getClass().getCanonicalName() + STU.COLON + e.getCause().getMessage();

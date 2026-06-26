@@ -595,7 +595,7 @@ public class ZValidator {
 
 	}
 
-	public static void validatedZCustom(final Object object, final Field field) {
+	public static void validatedZCustom(final Object object, final Field field) throws Exception  {
 		final ZCustom zc = field.getAnnotation(ZCustom.class);
 		if (zc == null) {
 			return;
@@ -614,18 +614,19 @@ public class ZValidator {
 		if (customValidator != null) {
 			try {
 				customValidator.validated(object, field);
-			} catch (final Exception e) {
-				if (e instanceof ValidatedException) {
-					throw (ValidatedException) e;
-				}
-
-				throw new ValidatedException(Task.gExceptionMessage(e));
+			} catch (final RuntimeException e) {
+				throw e;
+//				if (e instanceof ValidatedException) {
+//					throw (ValidatedException) e;
+//				}
+//
+//				throw new ValidatedException(Task.gExceptionMessage(e));
 			}
 		}
 
 	}
 
-	public static void validatedAll(final Object object, final Field field) {
+	public static void validatedAll(final Object object, final Field field) throws Exception {
 
 		ZValidator.validatedZNotNull(object, field);
 		ZValidator.validatedZNotEmpty(object, field);

@@ -38,12 +38,13 @@ public class ZControllerAdviceActuator {
 	 */
 	public Object execute(final Throwable throwable) {
 
-		final String message = Task.gExceptionMessage(throwable);
-		LOG.error("执行异常,message={}", message);
+		LOG.error("执行异常", throwable);
 
 		final ZMailNotificationConfigurationProperties mn = ZContext.getBean(ZMailNotificationConfigurationProperties.class);
 		if (mn.getEnable() && CU.isNotEmpty(mn.getReceiver())
 				&& CU.isNotEmpty(mn.getMonitoredEvents())) {
+
+			final String message = Task.gExceptionMessage(throwable);
 
 			final ZMail mail = ZContext.getBean(ZMail.class);
 

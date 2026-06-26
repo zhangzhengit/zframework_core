@@ -84,7 +84,7 @@ public class StaticResourcesPreCompressionService {
 					try {
 						Files.delete(path);
 					} catch (final IOException e) {
-						LOG.warn("删除文件异常,path={},message={}", path, e.getCause().getMessage());
+						LOG.warn("删除文件异常,path={}", path, e);
 					}
 				});
 
@@ -154,8 +154,7 @@ public class StaticResourcesPreCompressionService {
 		try {
 			return Files.size(path) >= (scp.getCompressionMinLength() * 1024);
 		} catch (final IOException e) {
-			e.printStackTrace();
-			LOG.warn("获取文件大小异常,跳过压缩,path={},message={}", path, e.getCause().getMessage());
+			LOG.warn("获取文件大小异常,跳过压缩,path={}", path, e);
 		}
 
 		return false;

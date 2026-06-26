@@ -9,32 +9,26 @@ package vo.zframework.exception;
  *
  */
 public class ZFException extends RuntimeException {
+
 	private static final long serialVersionUID = 1L;
 
-	private final String messagezf;
-
 	private final Integer httpStatus;
-
-	public String getMessagezf() {
-		return this.messagezf;
-	}
 
 	public Integer getHttpStatus() {
 		return this.httpStatus;
 	}
 
 	public ZFException() {
-		this.messagezf = null;
 		this.httpStatus = null;
 	}
 
-	public ZFException(final String messagezf) {
-		this.messagezf = messagezf;
+	public ZFException(final String message) {
+		super(message);
 		this.httpStatus = null;
 	}
 
-	public ZFException(final String messagezf, final Integer httpStatus) {
-		this.messagezf = messagezf;
+	public ZFException(final String message, final Integer httpStatus) {
+		super(message);
 		this.httpStatus = httpStatus;
 	}
 

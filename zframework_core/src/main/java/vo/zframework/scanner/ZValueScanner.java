@@ -122,8 +122,7 @@ public class ZValueScanner {
 				ZValidator.validatedAll(object, field);
 				LOG.info("配置热更新:配置项[{}]已从原值[{}]更新为新值[{}]", name, oldValue, newValue);
 			} catch (final Exception e) {
-				final String message = Task.gExceptionMessage(e);
-				LOG.error("配置热更新:配置项[{}]更新异常,开始重置为旧值[{}],message={}", name, oldValue, message);
+				LOG.error("配置热更新:配置项[{}]更新异常,开始重置为旧值[{}]", name, oldValue, e);
 				// 3 如果新值校验不通过，则重新赋值为旧值
 				setValue(oldValue, field, object, type);
 			}

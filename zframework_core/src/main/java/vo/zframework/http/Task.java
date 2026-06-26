@@ -53,7 +53,6 @@ import vo.zframework.enums.QPSHandlingEnum;
 import vo.zframework.exception.FormPairParseException;
 import vo.zframework.exception.ParsingRequestParamException;
 import vo.zframework.exception.PathVariableException;
-import vo.zframework.exception.ZFException;
 import vo.zframework.html.ResourcesLoader;
 import vo.zframework.http.request.FormData;
 import vo.zframework.http.request.HttpRequestParser;
@@ -172,24 +171,7 @@ public class Task {
 		final PrintWriter writer = new PrintWriter(stringWriter);
 		e.printStackTrace(writer);
 
-		final String zfm = getZFMessage(e);
-
-		return (zfm == null ? "" : zfm) + " " + stringWriter;
-	}
-
-	private static String getZFMessage(final Throwable e) {
-		if (e instanceof ZFException) {
-			final ZFException ev = (ZFException) e;
-			return ev.getMessagezf();
-		}
-
-		final Throwable cause = e.getCause();
-		if (cause instanceof ZFException) {
-			final ZFException ev1 = (ZFException) cause;
-			return ev1.getMessagezf();
-		}
-
-		return e.getLocalizedMessage();
+		return stringWriter.toString();
 	}
 
 	private static ZResponse invokeAndResponse(
@@ -581,7 +563,7 @@ public class Task {
 			final ZRequest request,
 			final String path,
 			final ZRMethod zrMethod)
-					throws NumberFormatException {
+					throws Exception {
 
 		final Object[] parameters = new Object[zrMethod.getMethodParameterSize()];
 
@@ -890,7 +872,7 @@ public class Task {
 		return null;
 	}
 
-	private static void checkZValidated(final Parameter p, final Object object) {
+	private static void checkZValidated(final Parameter p, final Object object) throws Exception {
 		if (!p.isAnnotationPresent(ZValidated.class)) {
 			return;
 		}
@@ -909,7 +891,11 @@ public class Task {
 		for (final Class<?> cls : pl) {
 			final Field[] fs = cls.getDeclaredFields();
 			for (final Field f1 : fs) {
-				ZValidator.validatedAll(object, f1);
+				try {
+					ZValidator.validatedAll(object, f1);
+				} catch (final Exception e) {
+					throw e;
+				}
 				checkT(object, f1);
 			}
 		}
@@ -931,7 +917,11 @@ public class Task {
 				for (final Object lv : it) {
 					final Field[] lvfs = lv.getClass().getDeclaredFields();
 					for (final Field lf : lvfs) {
-						ZValidator.validatedAll(lv, lf);
+						try {
+							ZValidator.validatedAll(lv, lf);
+						} catch (final Exception e) {
+							e.printStackTrace();
+						}
 						checkT(lv, lf);
 					}
 				}
@@ -992,7 +982,7 @@ public class Task {
 	}
 
 	private static Object[] generateParameters(final ZRequest request, final String path, final ZRMethod zrMethod)
-			throws NumberFormatException {
+			throws Exception {
 
 		if (zrMethod.getMethodParameterSize() <= 0) {
 			return EMPTY_OBJECT_ARRAY;
