@@ -20,8 +20,6 @@ import vo.zframework.exception.CompressException;
  * @author zhangzhen
  * @date 2026年6月24日 21:24:26
  */
-// FIXME 2026年6月24日 21:47:17 zhangzhen : 压缩太慢了，受不了，待会再看，暂时放在四种的最后，
-// 照着github抄的代码 https://github.com/hyperxpro/Brotli4j
 public class Brotli {
 
 	private static final int BUFFER_CAPACITY = 1024 * 8;
