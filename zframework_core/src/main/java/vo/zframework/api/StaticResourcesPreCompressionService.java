@@ -10,12 +10,14 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import vo.log.core.ZLog2;
 import vo.zframework.common.STU;
 import vo.zframework.compression.Brotli;
 import vo.zframework.compression.CF;
@@ -33,6 +35,8 @@ import vo.zframework.html.ResourcesLoader;
  * @date 2026年6月25日 11:29:09
  */
 public class StaticResourcesPreCompressionService {
+
+	private final static ZLog2 LOG = ZLog2.getInstance();
 
 	private static final String _TEMP = "_TEMP";
 	public static final String BR_SUFFIX = "._vo_br";
@@ -77,9 +81,16 @@ public class StaticResourcesPreCompressionService {
 				}).collect(Collectors.toList());
 
 				final int threads = Runtime.getRuntime().availableProcessors() - 1;
-				final ExecutorService ex = Executors.newFixedThreadPool(threads);
-
-				final List<Future<String>> gfl = ex.invokeAll(gzipcl);
+				try (ExecutorService ex = Executors.newFixedThreadPool(threads)) {
+					final List<Future<String>> gfl = ex.invokeAll(gzipcl);
+					for (final Future<String> future : gfl) {
+						try {
+							future.get();
+						} catch (final ExecutionException e) {
+							LOG.warn("GZIP压缩失败,message={}", e.getCause().getMessage());
+						}
+					}
+				}
 			}
 
 			// 压缩稍慢体积很小的zstd，用[核心-1]个线程把全部文件压缩完，让尽快有更小的压缩文件可用
@@ -91,9 +102,16 @@ public class StaticResourcesPreCompressionService {
 				}).collect(Collectors.toList());
 
 				final int threads = Runtime.getRuntime().availableProcessors() - 1;
-				final ExecutorService ex = Executors.newFixedThreadPool(threads);
-
-				final List<Future<String>> zstdl = ex.invokeAll(zstdcl);
+				try (ExecutorService ex = Executors.newFixedThreadPool(threads)) {
+					final List<Future<String>> zstdl = ex.invokeAll(zstdcl);
+					for (final Future<String> future : zstdl) {
+						try {
+							future.get();
+						} catch (final ExecutionException e) {
+							LOG.warn("ZSTD压缩失败,message={}", e.getCause().getMessage());
+						}
+					}
+				}
 			}
 
 			// 压缩慢得受不了体积最小的br，用当前[1]个线程(非main线程)把全部文件慢慢去压缩，
