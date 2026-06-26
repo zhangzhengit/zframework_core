@@ -23,7 +23,7 @@ public enum HttpStatusEnum {
 
 	HTTP_400(400, "Bad Request"),
 
-	HTTP_403(403, "拒绝服务"),
+	HTTP_403(403, "Forbidden"),
 
 	HTTP_404(404, "Not Found"),
 

@@ -164,7 +164,7 @@ public class StaticController {
 		response
 		.contentType(ContentTypeEnum.APPLICATION_JSON.getTypeBytes())
 		.httpStatus(HttpStatusEnum.HTTP_403.getStatus())
-		.body(J.toJSONString(CR.error("无权访问")));
+		.body(J.toJSONString(CR.error(HttpStatusEnum.HTTP_403.getMessage())));
 	}
 
 }
