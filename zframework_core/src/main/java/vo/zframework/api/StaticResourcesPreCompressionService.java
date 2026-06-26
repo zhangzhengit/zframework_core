@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -47,8 +48,9 @@ public class StaticResourcesPreCompressionService {
 	public static final String GZIP_TEMP_SUFFIX = GZIP_SUFFIX + _TEMP;
 
 	public static void preCompression() {
-		final ExecutorService ex = Executors.newSingleThreadExecutor();
-		ex.execute(StaticResourcesPreCompressionService::c);
+		try (ExecutorService ex = Executors.newSingleThreadExecutor()) {
+			ex.execute(StaticResourcesPreCompressionService::c);
+		}
 	}
 
 	private static void c() {
@@ -67,10 +69,30 @@ public class StaticResourcesPreCompressionService {
 
 		try (final Stream<Path> stream = Files.walk(Paths.get(staticResourcesPath))) {
 
-			final List<Path> cp = gcp(stream);
+			final Set<String> suffixSet = scp.getStaticResourcePreCompressionSuffix();
 
-			final Set<String> pcas = ZContext.getBean(ServerConfigurationProperties.class)
-					.getStaticResourcePreCompressionAlgorithm();
+			final List<Path> ctp = stream
+				.filter(Files::isRegularFile)
+				.filter(path -> !isCompressedFile(path.getFileName().toString()))
+				.filter(path -> exceedsCompressionMinLength(scp, path))
+				.filter(path -> suffixSet.contains(getExtension(path)))
+			    .collect(Collectors.toList());
+
+			ctp.stream()
+				.filter(path -> isTempFile(path.getFileName().toString()))
+				.forEach(path -> {
+					try {
+						Files.delete(path);
+					} catch (final IOException e) {
+						LOG.warn("删除文件异常,path={},message={}", path, e.getCause().getMessage());
+					}
+				});
+
+			final List<Path> cp = ctp.stream()
+					.filter(path -> !isTempFile(path.getFileName().toString()))
+					.collect(Collectors.toList());
+
+			final Set<String> pcas = scp.getStaticResourcePreCompressionAlgorithm();
 
 			// 压缩最快体积最大的gzip，用[核心-1]个线程把全部文件压缩完，让所有文件都尽快有压缩文件可用
 			if (pcas.contains(AcceptEncodingEnum.GZIP.getValue())) {
@@ -128,53 +150,27 @@ public class StaticResourcesPreCompressionService {
 
 	}
 
-	private static List<Path> gcp(final Stream<Path> stream) throws IOException {
-
-		final ServerConfigurationProperties scp = ZContext.getBean(ServerConfigurationProperties.class);
-
-		final List<Path> cp = new ArrayList<>();
-
-		final List<Path> pl = stream.collect(Collectors.toList());
-		for (final Path path : pl) {
-
-			if (!Files.isRegularFile(path)) {
-				continue;
-			}
-
-			final String fileName = path.getFileName().toString();
-			// 跳过已压缩好的文件
-			if (fileName.endsWith(BR_SUFFIX)
-			|| fileName.endsWith(ZSTD_SUFFIX)
-			|| fileName.endsWith(GZIP_SUFFIX)
-					) {
-				continue;
-			}
-
-			// 删除临时文件
-			if (fileName.endsWith(BR_TEMP_SUFFIX)
-			|| fileName.endsWith(ZSTD_TEMP_SUFFIX)
-			|| fileName.endsWith(GZIP_TEMP_SUFFIX)
-					) {
-				Files.delete(path);
-				continue;
-			}
-
-			// 低于压缩阈值
-			if (Files.size(path) < (scp.getCompressionMinLength() * 1024)) {
-				continue;
-			}
-
-			// 跳过配置[不压缩]的文件
-			final Set<String> suffixSet = scp.getStaticResourcePreCompressionSuffix();
-			final String extension = getExtension(path);
-			if (!suffixSet.contains(extension)) {
-				continue;
-			}
-
-			cp.add(path);
+	private static boolean exceedsCompressionMinLength(final ServerConfigurationProperties scp, final Path path) {
+		try {
+			return Files.size(path) >= (scp.getCompressionMinLength() * 1024);
+		} catch (final IOException e) {
+			e.printStackTrace();
+			LOG.warn("获取文件大小异常,跳过压缩,path={},message={}", path, e.getCause().getMessage());
 		}
 
-		return cp;
+		return false;
+	}
+
+	private static boolean isTempFile(final String fileName) {
+		return fileName.endsWith(BR_TEMP_SUFFIX)
+		    || fileName.endsWith(ZSTD_TEMP_SUFFIX)
+		    || fileName.endsWith(GZIP_TEMP_SUFFIX);
+	}
+
+	private static boolean isCompressedFile(final String fileName) {
+		return fileName.endsWith(BR_SUFFIX)
+			|| fileName.endsWith(ZSTD_SUFFIX)
+			|| fileName.endsWith(GZIP_SUFFIX);
 	}
 
 	private static void compressGZIP(final Path source) throws IOException {
@@ -248,16 +244,13 @@ public class StaticResourcesPreCompressionService {
 		return list;
 	}
 
-
 	private static void compressBR0(final Path source) throws IOException {
 		if (Brotli.isAvailable()) {
-			final Path targetTEMPZSTD = source.resolveSibling(source.getFileName() + BR_TEMP_SUFFIX);
-			Brotli.compressFile(source, targetTEMPZSTD);
+			final Path targetTEMPBR = source.resolveSibling(source.getFileName() + BR_TEMP_SUFFIX);
+			Brotli.compressFile(source, targetTEMPBR);
 
-			final Path brp = targetTEMPZSTD.resolveSibling(String.valueOf(targetTEMPZSTD.getFileName())
-					.replace(StaticResourcesPreCompressionService.BR_TEMP_SUFFIX,
-							StaticResourcesPreCompressionService.BR_SUFFIX));
-			Files.move(targetTEMPZSTD, brp);
+			final Path brp = source.resolveSibling(source.getFileName() + BR_SUFFIX);
+			Files.move(targetTEMPBR, brp, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
 		}
 	}
 
@@ -266,18 +259,16 @@ public class StaticResourcesPreCompressionService {
 		vo.zframework.compression
 		.ZSTD.compressFile(source, targetTEMPZSTD);
 
-		final Path brp = targetTEMPZSTD.resolveSibling(String.valueOf(targetTEMPZSTD.getFileName())
-				.replace(StaticResourcesPreCompressionService.ZSTD_TEMP_SUFFIX, StaticResourcesPreCompressionService.ZSTD_SUFFIX));
-		Files.move(targetTEMPZSTD, brp);
+		final Path brp = source.resolveSibling(source.getFileName() + ZSTD_SUFFIX);
+		Files.move(targetTEMPZSTD, brp, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
 	}
 
 	private static void compressZGzip0(final Path source) throws IOException {
 		final Path targetTEMPGZIP = source.resolveSibling(source.getFileName() + GZIP_TEMP_SUFFIX);
 		ZGzip.compressFile(source, targetTEMPGZIP);
 
-		final Path brp = targetTEMPGZIP.resolveSibling(String.valueOf(targetTEMPGZIP.getFileName())
-				.replace(StaticResourcesPreCompressionService.GZIP_TEMP_SUFFIX, StaticResourcesPreCompressionService.GZIP_SUFFIX));
-		Files.move(targetTEMPGZIP, brp);
+		final Path brp = source.resolveSibling(source.getFileName() + GZIP_SUFFIX);
+		Files.move(targetTEMPGZIP, brp, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
 	}
 
 	private static String getExtension(final Path path) {
