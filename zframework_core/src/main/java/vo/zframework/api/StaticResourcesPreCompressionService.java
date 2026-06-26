@@ -47,6 +47,12 @@ public class StaticResourcesPreCompressionService {
 
 	private static void c() {
 
+		final ServerConfigurationProperties scp = ZContext.getBean(ServerConfigurationProperties.class);
+
+		if (!scp.isStaticResourcePreCompressionEnable()) {
+			return;
+		}
+
 		final String staticResourcesPath = System.getProperty(ResourcesLoader.STATIC_RESOURCES_PROPERTY_NAME);
 
 		if (!STU.hasContent(staticResourcesPath)) {
@@ -56,8 +62,6 @@ public class StaticResourcesPreCompressionService {
 		final int availableProcessors = Runtime.getRuntime().availableProcessors();
 		final int threads = availableProcessors <= 2 ? 1 : availableProcessors / 2;
 		final ExecutorService ex = Executors.newFixedThreadPool(threads);
-
-		final ServerConfigurationProperties cp = ZContext.getBean(ServerConfigurationProperties.class);
 
 		try (final Stream<Path> stream = Files.walk(Paths.get(staticResourcesPath))) {
 
@@ -87,12 +91,12 @@ public class StaticResourcesPreCompressionService {
 				}
 
 				// 低于压缩阈值
-				if (Files.size(path) < (cp.getCompressionMinLength() * 1024)) {
+				if (Files.size(path) < (scp.getCompressionMinLength() * 1024)) {
 					continue;
 				}
 
 				// 跳过配置[不压缩]的文件
-				final Set<String> suffixSet = cp.getStaticResourcePreCompressionSuffix();
+				final Set<String> suffixSet = scp.getStaticResourcePreCompressionSuffix();
 				final String extension = getExtension(path);
 				if (!suffixSet.contains(extension)) {
 					continue;
@@ -114,35 +118,45 @@ public class StaticResourcesPreCompressionService {
 
 	private static void compress(final Path source) throws IOException {
 
+		final Set<String> preCompressionAlgorithmSet =
+					ZContext.getBean(ServerConfigurationProperties.class).getStaticResourcePreCompressionAlgorithm();
+
 		// 看下加后缀的是否存在，不存在则压缩；或者原文件修改时间晚于压缩文件，也重新压缩
 
 		final long sourceLastModified = Files.getLastModifiedTime(source).toMillis();
 
 		// 最快的gzip先执行，让尽快有压缩文件可用
-		final Path gzip = source.resolveSibling(source.getFileName() + GZIP_SUFFIX);
-		if (!Files.exists(gzip)) {
-			compressZGzip(source);
-		} else if ((sourceLastModified >= Files.getLastModifiedTime(gzip).toMillis())) {
-			Files.delete(gzip);
-			compressZGzip(source);
+		if (preCompressionAlgorithmSet.contains(AcceptEncodingEnum.GZIP.getValue())) {
+			final Path gzip = source.resolveSibling(source.getFileName() + GZIP_SUFFIX);
+			if (!Files.exists(gzip)) {
+				compressZGzip(source);
+			} else if ((sourceLastModified >= Files.getLastModifiedTime(gzip).toMillis())) {
+				Files.delete(gzip);
+				compressZGzip(source);
+			}
 		}
 
+
 		// zstd
-		final Path zstd = source.resolveSibling(source.getFileName() + ZSTD_SUFFIX);
-		if (!Files.exists(zstd)) {
-			compressZSTD(source);
-		} else if ((sourceLastModified >= Files.getLastModifiedTime(zstd).toMillis())) {
-			Files.delete(zstd);
-			compressZSTD(source);
+		if (preCompressionAlgorithmSet.contains(AcceptEncodingEnum.ZSTD.getValue())) {
+			final Path zstd = source.resolveSibling(source.getFileName() + ZSTD_SUFFIX);
+			if (!Files.exists(zstd)) {
+				compressZSTD(source);
+			} else if ((sourceLastModified >= Files.getLastModifiedTime(zstd).toMillis())) {
+				Files.delete(zstd);
+				compressZSTD(source);
+			}
 		}
 
 		// br 最耗时，放最后
-		final Path br = source.resolveSibling(source.getFileName() + BR_SUFFIX);
-		if (!Files.exists(br)) {
-			compressBR(source);
-		} else if ((sourceLastModified >= Files.getLastModifiedTime(br).toMillis())) {
-			Files.delete(br);
-			compressBR(source);
+		if (preCompressionAlgorithmSet.contains(AcceptEncodingEnum.BR.getValue())) {
+			final Path br = source.resolveSibling(source.getFileName() + BR_SUFFIX);
+			if (!Files.exists(br)) {
+				compressBR(source);
+			} else if ((sourceLastModified >= Files.getLastModifiedTime(br).toMillis())) {
+				Files.delete(br);
+				compressBR(source);
+			}
 		}
 
 	}

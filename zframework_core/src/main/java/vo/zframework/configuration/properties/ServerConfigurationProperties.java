@@ -14,12 +14,14 @@ import vo.zframework.anno.ZNotNull;
 import vo.zframework.anno.ZOrder;
 import vo.zframework.anno.ZStartWith;
 import vo.zframework.anno.ZValue;
+import vo.zframework.enums.AcceptEncodingEnum;
 import vo.zframework.enums.ContentTypeEnum;
 import vo.zframework.enums.MethodEnum;
 import vo.zframework.enums.QPSEnum;
 import vo.zframework.enums.ZSessionStorageTypeEnum;
 import vo.zframework.http.PortChecker;
 import vo.zframework.http.ZHeader;
+import vo.zframework.validator.StaticResourcePreCompressionAlgorithmValidator;
 import vo.zframework.validator.ZClientQPSValidator;
 import vo.zframework.validator.ZHttpMethodValidator;
 import vo.zframework.validator.ZServerQPSValidator;
@@ -188,6 +190,21 @@ public class ServerConfigurationProperties {
 	 */
 	@ZNotEmtpy
 	private Map<String, String> staticControllerContentType = initCTM();
+
+	/**
+	 * 是否启用静态文件预压缩
+	 */
+	@ZNotNull
+	private boolean staticResourcePreCompressionEnable = true;
+
+	/**
+	 * 启用哪些算法对静态文件预压缩
+	 */
+	@ZCustom(cls = StaticResourcePreCompressionAlgorithmValidator.class)
+	private Set<String> staticResourcePreCompressionAlgorithm = Set.of(
+			AcceptEncodingEnum.BR.getValue(),
+			AcceptEncodingEnum.ZSTD.getValue(),
+			AcceptEncodingEnum.GZIP.getValue());
 
 	/**
 	 * 对哪些后缀的静态文件进行预压缩
@@ -762,6 +779,22 @@ public class ServerConfigurationProperties {
 
 	public void setStaticResourcePreCompressionSuffix(final Set<String> staticResourcePreCompressionSuffix) {
 		this.staticResourcePreCompressionSuffix = staticResourcePreCompressionSuffix;
+	}
+
+	public boolean isStaticResourcePreCompressionEnable() {
+		return this.staticResourcePreCompressionEnable;
+	}
+
+	public void setStaticResourcePreCompressionEnable(final boolean staticResourcePreCompressionEnable) {
+		this.staticResourcePreCompressionEnable = staticResourcePreCompressionEnable;
+	}
+
+	public Set<String> getStaticResourcePreCompressionAlgorithm() {
+		return this.staticResourcePreCompressionAlgorithm;
+	}
+
+	public void setStaticResourcePreCompressionAlgorithm(final Set<String> staticResourcePreCompressionAlgorithm) {
+		this.staticResourcePreCompressionAlgorithm = staticResourcePreCompressionAlgorithm;
 	}
 
 
