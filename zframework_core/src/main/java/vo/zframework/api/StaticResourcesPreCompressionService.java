@@ -1,9 +1,12 @@
 package vo.zframework.api;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -13,9 +16,11 @@ import java.util.stream.Stream;
 
 import vo.zframework.common.STU;
 import vo.zframework.compression.Brotli;
+import vo.zframework.compression.CF;
 import vo.zframework.compression.ZGzip;
 import vo.zframework.configuration.properties.ServerConfigurationProperties;
 import vo.zframework.core.ZContext;
+import vo.zframework.enums.AcceptEncodingEnum;
 import vo.zframework.html.ResourcesLoader;
 
 /**
@@ -27,19 +32,20 @@ import vo.zframework.html.ResourcesLoader;
  */
 public class StaticResourcesPreCompressionService {
 
-	public static final String BR = ".br";
-	public static final String TEMP_BR = ".tempbr";
-	public static final String GZIP = ".gzip";
-	public static final String TEMP_GZIP = ".tempgzip";
-	public static final String ZSTD = ".zstd";
-	public static final String TEMP_ZSTD = ".tempzstd";
+	private static final String _TEMP = "_TEMP";
+	public static final String BR_SUFFIX = "._vo_br";
+	public static final String BR_TEMP_SUFFIX = BR_SUFFIX + _TEMP;
+	public static final String ZSTD_SUFFIX = "._vo_zstd";
+	public static final String ZSTD_TEMP_SUFFIX = ZSTD_SUFFIX + _TEMP;
+	public static final String GZIP_SUFFIX = "._vo_gzip";
+	public static final String GZIP_TEMP_SUFFIX = GZIP_SUFFIX + _TEMP;
 
 	public static void preCompression() {
 		final ExecutorService ex = Executors.newSingleThreadExecutor();
-		ex.execute(StaticResourcesPreCompressionService::extracted);
+		ex.execute(StaticResourcesPreCompressionService::c);
 	}
 
-	private static void extracted() {
+	private static void c() {
 
 		final String staticResourcesPath = System.getProperty(ResourcesLoader.STATIC_RESOURCES_PROPERTY_NAME);
 
@@ -64,17 +70,17 @@ public class StaticResourcesPreCompressionService {
 
 				final String fileName = path.getFileName().toString();
 				// 跳过已压缩好的文件
-				if (fileName.endsWith(BR)
-				|| fileName.endsWith(ZSTD)
-				|| fileName.endsWith(GZIP)
+				if (fileName.endsWith(BR_SUFFIX)
+				|| fileName.endsWith(ZSTD_SUFFIX)
+				|| fileName.endsWith(GZIP_SUFFIX)
 						) {
 					continue;
 				}
 
 				// 删除临时文件
-				if (fileName.endsWith(TEMP_BR)
-				|| fileName.endsWith(TEMP_ZSTD)
-				|| fileName.endsWith(TEMP_GZIP)
+				if (fileName.endsWith(BR_TEMP_SUFFIX)
+				|| fileName.endsWith(ZSTD_TEMP_SUFFIX)
+				|| fileName.endsWith(GZIP_TEMP_SUFFIX)
 						) {
 					Files.delete(path);
 					continue;
@@ -113,7 +119,7 @@ public class StaticResourcesPreCompressionService {
 		final long sourceLastModified = Files.getLastModifiedTime(source).toMillis();
 
 		// 最快的gzip先执行，让尽快有压缩文件可用
-		final Path gzip = source.resolveSibling(source.getFileName() + GZIP);
+		final Path gzip = source.resolveSibling(source.getFileName() + GZIP_SUFFIX);
 		if (!Files.exists(gzip)) {
 			compressZGzip(source);
 		} else if ((sourceLastModified >= Files.getLastModifiedTime(gzip).toMillis())) {
@@ -122,7 +128,7 @@ public class StaticResourcesPreCompressionService {
 		}
 
 		// zstd
-		final Path zstd = source.resolveSibling(source.getFileName() + ZSTD);
+		final Path zstd = source.resolveSibling(source.getFileName() + ZSTD_SUFFIX);
 		if (!Files.exists(zstd)) {
 			compressZSTD(source);
 		} else if ((sourceLastModified >= Files.getLastModifiedTime(zstd).toMillis())) {
@@ -131,7 +137,7 @@ public class StaticResourcesPreCompressionService {
 		}
 
 		// br 最耗时，放最后
-		final Path br = source.resolveSibling(source.getFileName() + BR);
+		final Path br = source.resolveSibling(source.getFileName() + BR_SUFFIX);
 		if (!Files.exists(br)) {
 			compressBR(source);
 		} else if ((sourceLastModified >= Files.getLastModifiedTime(br).toMillis())) {
@@ -141,34 +147,64 @@ public class StaticResourcesPreCompressionService {
 
 	}
 
+	public static List<CF> gCFOrderByFileLength(final File sourceFile) {
+		final File br = new File(sourceFile + StaticResourcesPreCompressionService.BR_SUFFIX);
+		final File zstd = new File(sourceFile + StaticResourcesPreCompressionService.ZSTD_SUFFIX);
+		final File gzip = new File(sourceFile + StaticResourcesPreCompressionService.GZIP_SUFFIX);
+
+		final List<CF> list = new ArrayList<>(4);
+
+		// 为了配合response.body，用null，不用IDENTITY
+		list.add(new CF(sourceFile, sourceFile.length(), null));
+
+		if (br.exists()) {
+			list.add(new CF(br, br.length(), AcceptEncodingEnum.BR));
+		}
+		if (zstd.exists()) {
+			list.add(new CF(zstd, zstd.length(), AcceptEncodingEnum.ZSTD));
+		}
+		if (gzip.exists()) {
+			list.add(new CF(gzip, gzip.length(), AcceptEncodingEnum.GZIP));
+		}
+
+		if (list.size() <= 1) {
+			return list;
+		}
+
+		list.sort(Comparator.comparing(CF::getFileSize));
+
+		return list;
+	}
+
+
 	private static void compressBR(final Path source) throws IOException {
 		if (Brotli.isAvailable()) {
-			final Path targetTEMPZSTD = source.resolveSibling(source.getFileName() + TEMP_BR);
+			final Path targetTEMPZSTD = source.resolveSibling(source.getFileName() + BR_TEMP_SUFFIX);
 			Brotli.compressFile(source, targetTEMPZSTD);
 
 			final Path brp = targetTEMPZSTD.resolveSibling(String.valueOf(targetTEMPZSTD.getFileName())
-					.replace(StaticResourcesPreCompressionService.TEMP_BR,
-							StaticResourcesPreCompressionService.BR));
+					.replace(StaticResourcesPreCompressionService.BR_TEMP_SUFFIX,
+							StaticResourcesPreCompressionService.BR_SUFFIX));
 			Files.move(targetTEMPZSTD, brp);
 		}
 	}
 
 	private static void compressZSTD(final Path source) throws IOException {
-		final Path targetTEMPZSTD = source.resolveSibling(source.getFileName() + TEMP_ZSTD);
+		final Path targetTEMPZSTD = source.resolveSibling(source.getFileName() + ZSTD_TEMP_SUFFIX);
 		vo.zframework.compression
 		.ZSTD.compressFile(source, targetTEMPZSTD);
 
 		final Path brp = targetTEMPZSTD.resolveSibling(String.valueOf(targetTEMPZSTD.getFileName())
-				.replace(StaticResourcesPreCompressionService.TEMP_ZSTD, StaticResourcesPreCompressionService.ZSTD));
+				.replace(StaticResourcesPreCompressionService.ZSTD_TEMP_SUFFIX, StaticResourcesPreCompressionService.ZSTD_SUFFIX));
 		Files.move(targetTEMPZSTD, brp);
 	}
 
 	private static void compressZGzip(final Path source) throws IOException {
-		final Path targetTEMPGZIP = source.resolveSibling(source.getFileName() + TEMP_GZIP);
+		final Path targetTEMPGZIP = source.resolveSibling(source.getFileName() + GZIP_TEMP_SUFFIX);
 		ZGzip.compressFile(source, targetTEMPGZIP);
 
 		final Path brp = targetTEMPGZIP.resolveSibling(String.valueOf(targetTEMPGZIP.getFileName())
-				.replace(StaticResourcesPreCompressionService.TEMP_GZIP, StaticResourcesPreCompressionService.GZIP));
+				.replace(StaticResourcesPreCompressionService.GZIP_TEMP_SUFFIX, StaticResourcesPreCompressionService.GZIP_SUFFIX));
 		Files.move(targetTEMPGZIP, brp);
 	}
 

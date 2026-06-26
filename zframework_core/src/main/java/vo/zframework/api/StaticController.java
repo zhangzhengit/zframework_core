@@ -5,8 +5,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -110,7 +108,7 @@ public class StaticController {
 		if (sourceFis.getFile() != null) {
 
 			// 一次找出所有的压缩文件和原文件，并且按文件大小从小到大排序，四选一优先响应小的
-			final List<CF> cfl = gCFOrderByFileLength(sourceFis.getFile());
+			final List<CF> cfl = StaticResourcesPreCompressionService.gCFOrderByFileLength(sourceFis.getFile());
 
 			for (final CF cf : cfl) {
 				final AcceptEncodingEnum ae = cf.getAcceptEncodingEnum();
@@ -140,34 +138,6 @@ public class StaticController {
 		}
 	}
 
-	private static List<CF> gCFOrderByFileLength(final File sourceFile) {
-		final File br = new File(sourceFile + StaticResourcesPreCompressionService.BR);
-		final File zstd = new File(sourceFile + StaticResourcesPreCompressionService.ZSTD);
-		final File gzip = new File(sourceFile + StaticResourcesPreCompressionService.GZIP);
-
-		final List<CF> list = new ArrayList<>(4);
-
-		// 为了配合response.body，用null，不用IDENTITY
-		list.add(new CF(sourceFile, sourceFile.length(), null));
-
-		if (br.exists()) {
-			list.add(new CF(br, br.length(), AcceptEncodingEnum.BR));
-		}
-		if (zstd.exists()) {
-			list.add(new CF(zstd, zstd.length(), AcceptEncodingEnum.ZSTD));
-		}
-		if (gzip.exists()) {
-			list.add(new CF(gzip, gzip.length(), AcceptEncodingEnum.GZIP));
-		}
-
-		if (list.size() <= 1) {
-			return list;
-		}
-
-		list.sort(Comparator.comparing(CF::getFileSize));
-
-		return list;
-	}
 
 	private static boolean checkReferer(final ZRequest request) {
 		if (!STU.hasContent(SERVER_CONFIGURATION.getStaticPath())
