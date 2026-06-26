@@ -109,20 +109,15 @@ public class StaticController {
 
 		if (sourceFis.getFile() != null) {
 
-			// 一次找出所有的压缩文件，并且按文件大小从小到大排序，优先响应小的
+			// 一次找出所有的压缩文件和原文件，并且按文件大小从小到大排序，四选一优先响应小的
 			final List<CF> cfl = gCFOrderByFileLength(sourceFis.getFile());
-
-			if (CU.isEmpty(cfl)) {
-				// 响应原始文件
-				response.body(sourceFis);
-				return;
-			}
 
 			for (final CF cf : cfl) {
 				final AcceptEncodingEnum ae = cf.getAcceptEncodingEnum();
 				if (((ae == AcceptEncodingEnum.BR)   && request.isSupportBR())
 				||  ((ae == AcceptEncodingEnum.ZSTD) && request.isSupportZSTD())
-				||  ((ae == AcceptEncodingEnum.GZIP) && request.isSupportGZIP())) {
+				||  ((ae == AcceptEncodingEnum.GZIP) && request.isSupportGZIP())
+				||  ((ae == null))) {
 					rb(response, cf.getFile(), ae);
 					// 执行到此一次就return
 					return;
@@ -150,7 +145,11 @@ public class StaticController {
 		final File zstd = new File(sourceFile + StaticResourcespreCompressionService.ZSTD);
 		final File gzip = new File(sourceFile + StaticResourcespreCompressionService.GZIP);
 
-		final List<CF> list = new ArrayList<>(3);
+		final List<CF> list = new ArrayList<>(4);
+
+		// 为了配合response.body，用null，不用IDENTITY
+		list.add(new CF(sourceFile, sourceFile.length(), null));
+
 		if (br.exists()) {
 			list.add(new CF(br, br.length(), AcceptEncodingEnum.BR));
 		}

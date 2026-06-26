@@ -9,6 +9,8 @@ package vo.zframework.enums;
  */
 public enum AcceptEncodingEnum {
 
+	IDENTITY("identity", "identity".getBytes()),
+
 	GZIP("gzip", "gzip".getBytes()),
 
 	DEFLATE("deflate", "deflate".getBytes()),
