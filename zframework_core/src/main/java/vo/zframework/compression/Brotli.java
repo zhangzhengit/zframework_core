@@ -22,7 +22,7 @@ import vo.zframework.exception.CompressException;
  */
 public class Brotli {
 
-	private static final int BUFFER_CAPACITY = 1024 * 8;
+	private static final int BUFFER_CAPACITY = 1024 * 64;
 
 	private static final AtomicBoolean AVAILABLE = new AtomicBoolean(true);
 
@@ -33,7 +33,7 @@ public class Brotli {
 	public static void compressFile(final Path source, final Path target) {
 
 		if (!isAvailable()) {
-			throw new CompressException(Brotli.class.getName() + "压缩不可用");
+			throw new CompressException(Brotli.class.getName() + "不可用");
 		}
 
 		try (final InputStream inputStream = Files.newInputStream(source);
@@ -56,6 +56,10 @@ public class Brotli {
 	}
 
 	public static byte[] compress(final byte[] data, final BrotliCompressEnum bce) {
+		if (!isAvailable()) {
+			throw new CompressException(Brotli.class.getName() + "不可用");
+		}
+
 		try {
 			return Encoder.compress(data, bce.getParameters());
 		} catch (final IOException e) {
