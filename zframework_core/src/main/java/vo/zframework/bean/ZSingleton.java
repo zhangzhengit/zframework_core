@@ -26,10 +26,10 @@ public class ZSingleton {
 
 			try {
 				final Class<?> cls = Class.forName(clsName);
-				final Object newInstance = cls.newInstance();
+				final Object newInstance = cls.getDeclaredConstructor().newInstance();
 				SINGLETON_MAP.put(clsName, newInstance);
 				return newInstance;
-			} catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+			} catch (ClassNotFoundException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException e) {
 				e.printStackTrace();
 			}
 		}
