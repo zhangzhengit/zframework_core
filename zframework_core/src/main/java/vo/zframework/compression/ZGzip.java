@@ -28,34 +28,6 @@ public class ZGzip {
 
 	private static final int BUFFER_CAPACITY = 1024 * 8;
 
-	private static final String DEFAULT_CHARSET = Charset.defaultCharset().displayName();
-
-	public static String decompression(final byte[] ba) {
-		if (AU.isEmpty(ba)) {
-			return null;
-		}
-
-		try {
-			final ByteArrayOutputStream out = new ByteArrayOutputStream();
-			final GZIPInputStream gzip = new GZIPInputStream(new ByteArrayInputStream(ba));
-			final byte[] buffer = new byte[1024];
-			int n;
-			while ((n = gzip.read(buffer)) != -1) {
-				out.write(buffer, 0, n);
-			}
-
-			out.flush();
-			out.close();
-			gzip.close();
-
-			return new String(out.toByteArray(), DEFAULT_CHARSET).intern();
-		} catch (final Exception e) {
-			e.printStackTrace();
-		}
-
-		return null;
-	}
-
 	public static void compressFile(final Path source, final Path target) {
 
 		try (final InputStream inputStream = Files.newInputStream(source);
