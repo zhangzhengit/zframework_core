@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -48,12 +49,15 @@ public class StaticResourcesPreCompressionService {
 	public static final String GZIP_TEMP_SUFFIX = GZIP_SUFFIX + _TEMP;
 
 	public static void preCompression() {
-		try (ExecutorService ex = Executors.newSingleThreadExecutor()) {
-			ex.execute(StaticResourcesPreCompressionService::c);
-		}
+		final ExecutorService ex = Executors.newSingleThreadExecutor();
+		ex.execute(StaticResourcesPreCompressionService::c);
+		ex.shutdown();
 	}
 
 	private static void c() {
+
+		System.out.println(LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t"
+				+ "StaticResourcesPreCompressionService.c()");
 
 		final ServerConfigurationProperties scp = ZContext.getBean(ServerConfigurationProperties.class);
 
