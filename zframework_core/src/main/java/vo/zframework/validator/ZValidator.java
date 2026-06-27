@@ -433,7 +433,6 @@ public class ZValidator {
 					+ field.getName() + "]", HttpStatusEnum.HTTP_400.getStatus());
 		}
 
-		final String canonicalName = fvClass.getCanonicalName();
 		if (fvClass == Byte.class) {
 			if (Byte.valueOf(String.valueOf(minFiledValue)) < min) {
 				ZValidator.throwZMinMessage(object, field, (byte) min, minFiledValue);
