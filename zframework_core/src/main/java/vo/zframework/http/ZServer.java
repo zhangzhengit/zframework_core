@@ -79,9 +79,7 @@ public class ZServer {
 		try {
 			serverSocket = new ServerSocket(serverPort);
 		} catch (final IOException e) {
-			e.printStackTrace();
-			final String mess = Task.gExceptionMessage(e);
-			LOG.error("启动失败,程序即将退出,serverPort={},mess={}", serverPort, mess);
+			LOG.error("启动失败,程序即将退出,serverPort={}", serverPort, e);
 			System.exit(0);
 		}
 
