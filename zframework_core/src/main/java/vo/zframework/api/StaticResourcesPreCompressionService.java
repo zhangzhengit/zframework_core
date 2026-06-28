@@ -106,8 +106,7 @@ public class StaticResourcesPreCompressionService {
 					return "OK";
 				}).collect(Collectors.toList());
 
-				final int threads = Runtime.getRuntime().availableProcessors() - 1;
-				try (ExecutorService ex = Executors.newFixedThreadPool(threads)) {
+				try (ExecutorService ex = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())) {
 					final List<Future<String>> gfl = ex.invokeAll(gzipcl);
 					for (final Future<String> future : gfl) {
 						try {
@@ -127,8 +126,7 @@ public class StaticResourcesPreCompressionService {
 					return "OK";
 				}).collect(Collectors.toList());
 
-				final int threads = Runtime.getRuntime().availableProcessors() - 1;
-				try (ExecutorService ex = Executors.newFixedThreadPool(threads)) {
+				try (ExecutorService ex = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())) {
 					final List<Future<String>> zstdl = ex.invokeAll(zstdcl);
 					for (final Future<String> future : zstdl) {
 						try {
