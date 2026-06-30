@@ -33,13 +33,11 @@ public class ZControllerAdviceActuator {
 	 * 找一个异常处理器来处理API方法的异常，如果有自定义的匹配异常则使用此异常，否则使用内置的默认处理器
 	 *
 	 * @param throwable
+	 * @param request
 	 * @return
 	 *
 	 */
-	public Object execute(final Throwable throwable) {
-
-
-		final ZRequest request = ReqeustInfo.get();
+	public Object execute(final Throwable throwable, final ZRequest request) {
 
 		final String clientIp = request.getClientIp();
 

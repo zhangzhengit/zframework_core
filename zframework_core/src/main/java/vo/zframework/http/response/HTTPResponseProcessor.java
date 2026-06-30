@@ -42,7 +42,7 @@ public class HTTPResponseProcessor {
 
 			// 这个catch里 真正处理 response里的异常，用统一配置的异常处理器来处理
 			final ZControllerAdviceActuator a = ZContext.getBean(ZControllerAdviceActuator.class);
-			final Object r = a.execute(e);
+			final Object r = a.execute(e, request);
 
 			final int httpStatus = ZControllerAdviceThrowable.findHttpStatus(e);
 			final ZResponse response =
