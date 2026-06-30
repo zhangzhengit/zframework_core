@@ -1,24 +1,13 @@
 package vo.zframework.http.request;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import vo.log.core.ZLog2;
 import vo.zframework.bean.ZSingleton;
-import vo.zframework.common.CR;
-import vo.zframework.common.J;
 import vo.zframework.configuration.properties.ServerConfigurationProperties;
 import vo.zframework.core.ZContext;
-import vo.zframework.enums.ConnectionEnum;
-import vo.zframework.enums.ContentTypeEnum;
-import vo.zframework.enums.HeaderEnum;
-import vo.zframework.enums.HttpStatusEnum;
 import vo.zframework.exception.StartupException;
-import vo.zframework.exception.ZControllerAdviceThrowable;
-import vo.zframework.http.SocketTL;
-import vo.zframework.http.response.ZResponse;
 import vo.zframework.validator.AbstractRequestValidator;
 
 /**
@@ -29,8 +18,6 @@ import vo.zframework.validator.AbstractRequestValidator;
  *
  */
 public final class TaskRequestHandler {
-
-	private static final ZLog2 LOG = ZLog2.getInstance();
 
 	static final boolean showHttpHeader = ZContext.getBean(ServerConfigurationProperties.class).getShowHttpHeader();
 
@@ -64,29 +51,7 @@ public final class TaskRequestHandler {
 	}
 
 	public void handle(final ZRequest request) {
-
-		try {
-			this.requestValidator.handle(request);
-		} catch (final Exception e) {
-			e.printStackTrace();
-
-			final String message = ZControllerAdviceThrowable.findCausedby(e);
-			final Integer httpStatus = ZControllerAdviceThrowable.findHttpStatus(e);
-
-			final String error = J.toJSONString(CR.error(message));
-			new ZResponse()
-				.contentType(ContentTypeEnum.APPLICATION_JSON.getTypeBytes())
-				.httpStatus(httpStatus != null ? httpStatus : HttpStatusEnum.HTTP_500.getStatus())
-				.header(HeaderEnum.CONNECTION.getNameBytes(), ConnectionEnum.CLOSE.getValueBytes())
-				.body(error)
-				.write();
-
-			if (e instanceof IOException) {
-				SocketTL.closeOutputStreamAndSocket();
-			}
-
-			return;
-		}
+		this.requestValidator.handle(request);
 	}
 
 }
