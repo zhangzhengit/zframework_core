@@ -887,4 +887,8 @@ public class ZRequest {
 		this.methodNameBytes = methodNameBytes;
 	}
 
+	public String toHeaderString() {
+		return new String(this.dataRawArray);
+	}
+
 }
