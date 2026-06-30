@@ -276,7 +276,7 @@ public class ResourcesLoader {
 		// relativePath 例如 "images/logo.png"
 		final URL url = ResourcesLoader.class.getClassLoader().getResource(relativePath);
 		if (url == null) {
-			throw new IllegalArgumentException("文件不存在: " + relativePath);
+			throw new ResourceNotExistException(relativePath);
 		}
 
 		// 检查协议
