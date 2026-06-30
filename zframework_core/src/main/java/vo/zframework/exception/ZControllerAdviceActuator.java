@@ -38,7 +38,12 @@ public class ZControllerAdviceActuator {
 	 */
 	public Object execute(final Throwable throwable) {
 
-		LOG.error("执行异常", throwable);
+
+		final ZRequest request = ReqeustInfo.get();
+
+		final String clientIp = request.getClientIp();
+
+		LOG.error("执行异常,clientIp={},request=\r\n{}", clientIp, request.toHeaderString(), throwable);
 
 		final ZMailNotificationConfigurationProperties mn = ZContext.getBean(ZMailNotificationConfigurationProperties.class);
 		if (mn.getEnable() && CU.isNotEmpty(mn.getReceiver())
@@ -48,7 +53,6 @@ public class ZControllerAdviceActuator {
 
 			final ZMail mail = ZContext.getBean(ZMail.class);
 
-			final ZRequest request = ReqeustInfo.get();
 
 			for (final String event : mn.getMonitoredEvents()) {
 				if (message.contains(event)) {
