@@ -77,7 +77,7 @@ public class HttpRequestProcessor {
 			return HttpParseStatusEnum.PARSE_REQUEST_LINE;
 		}
 
-		final ZResponse response = ReU.gResponse429(SERVER_CONFIGURATIONPROPERTIES.getQpsExceedMessage(), false);
+		final ZResponse response = ReU.response429(SERVER_CONFIGURATIONPROPERTIES.getQpsExceedMessage(), false);
 		pd.setException(response);
 		return HttpParseStatusEnum.EXCEPTION;
 	}

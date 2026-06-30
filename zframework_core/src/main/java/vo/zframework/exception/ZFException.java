@@ -12,7 +12,9 @@ public class ZFException extends RuntimeException {
 
 	private static final long serialVersionUID = 1L;
 
-	private int httpStatus;
+	public static final int NOT_SET = -1;
+
+	private int httpStatus = NOT_SET;
 
 	public int getHttpStatus() {
 		return this.httpStatus;

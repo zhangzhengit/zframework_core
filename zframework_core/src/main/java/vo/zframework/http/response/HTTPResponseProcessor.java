@@ -13,6 +13,7 @@ import vo.zframework.enums.HeaderEnum;
 import vo.zframework.enums.HttpStatusEnum;
 import vo.zframework.exception.ZControllerAdviceActuator;
 import vo.zframework.exception.ZControllerAdviceThrowable;
+import vo.zframework.exception.ZFException;
 import vo.zframework.http.Task;
 import vo.zframework.http.ZConnectionTL;
 import vo.zframework.http.ZCookie;
@@ -43,10 +44,10 @@ public class HTTPResponseProcessor {
 			final ZControllerAdviceActuator a = ZContext.getBean(ZControllerAdviceActuator.class);
 			final Object r = a.execute(e);
 
-			final Integer httpStatus = ZControllerAdviceThrowable.findHttpStatus(e);
+			final int httpStatus = ZControllerAdviceThrowable.findHttpStatus(e);
 			final ZResponse response =
 					new ZResponse()
-					.httpStatus(httpStatus != null ? httpStatus : HttpStatusEnum.HTTP_500.getStatus())
+					.httpStatus(httpStatus != ZFException.NOT_SET ? httpStatus : HttpStatusEnum.HTTP_500.getStatus())
 					.contentType(ContentTypeEnum.APPLICATION_JSON.getTypeBytes())
 					.body(J.toJSONString(r));
 

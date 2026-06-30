@@ -45,21 +45,21 @@ public class ZControllerAdviceThrowable {
 		return CR.error(conf.getErrorCode(), m);
 	}
 
-	public static Integer findHttpStatus(final Throwable e) {
+	public static int findHttpStatus(final Throwable e) {
 		if (e instanceof ZFException) {
 			return ((ZFException) e).getHttpStatus();
 		}
 
 		final Throwable cause = e.getCause();
 		if (cause == null) {
-			return null;
+			return ZFException.NOT_SET;
 		}
 
 		if (cause instanceof ZFException) {
 			return ((ZFException) cause).getHttpStatus();
 		}
 
-		return null;
+		return ZFException.NOT_SET;
 	}
 
 	public static String findCausedby(final Throwable e) {

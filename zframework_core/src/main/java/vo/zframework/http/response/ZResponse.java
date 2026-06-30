@@ -134,7 +134,7 @@ public class ZResponse {
 	private volatile boolean isBodyStream = false;
 	private String contentType;
 	private byte[] contentTypeBytes;
-	private final AtomicReference<Integer> httpStatus = new AtomicReference<>(HttpStatusEnum.HTTP_200.getStatus());
+	private int httpStatus = HttpStatusEnum.HTTP_200.getStatus();
 	private boolean contentTypeHasBeenSet = false;
 
 	/**
@@ -216,8 +216,8 @@ public class ZResponse {
 		return this;
 	}
 
-	public ZResponse httpStatus(final Integer httpStatus) {
-		this.httpStatus.set(httpStatus);
+	public ZResponse httpStatus(final int httpStatus) {
+		this.httpStatus = httpStatus;
 		return this;
 	}
 
@@ -693,9 +693,8 @@ public class ZResponse {
 		return this.body(body.getBytes());
 	}
 
-	@SuppressWarnings("boxing")
 	public int getHttpStatus() {
-		return this.httpStatus.get();
+		return this.httpStatus;
 	}
 
 	/**
