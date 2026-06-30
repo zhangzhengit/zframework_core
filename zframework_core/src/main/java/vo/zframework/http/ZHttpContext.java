@@ -14,18 +14,8 @@ public class ZHttpContext {
 
 	private static final ThreadLocal<ZResponse> RESPONSE = new ThreadLocal<>();
 
-	private static final ThreadLocal<ZRequest> REQUEST = new ThreadLocal<>();
-
 	public static void setZResponse(final ZResponse response) {
 		ZHttpContext.RESPONSE.set(response);
-	}
-
-	public static void setZRequest(final ZRequest request) {
-		ZHttpContext.REQUEST.set(request);
-	}
-
-	public static ZRequest getZRequest() {
-		return ZHttpContext.REQUEST.get();
 	}
 
 	public static ZResponse getZResponse() {

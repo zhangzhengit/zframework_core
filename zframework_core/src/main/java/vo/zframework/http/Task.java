@@ -993,8 +993,6 @@ public class Task {
 
 	private static void setZRequestAndZResponse(final ZRequest request, final Object[] parameterArray) {
 
-		ZHttpContext.setZRequest(request);
-
 		if (AU.isEmpty(parameterArray)) {
 			return;
 		}
