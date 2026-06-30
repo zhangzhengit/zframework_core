@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import vo.zframework.bean.ZSingleton;
-import vo.zframework.configuration.properties.ServerConfigurationProperties;
 import vo.zframework.core.ZContext;
 import vo.zframework.exception.StartupException;
 import vo.zframework.validator.AbstractRequestValidator;
@@ -18,8 +17,6 @@ import vo.zframework.validator.AbstractRequestValidator;
  *
  */
 public final class TaskRequestHandler {
-
-	static final boolean showHttpHeader = ZContext.getBean(ServerConfigurationProperties.class).getShowHttpHeader();
 
 	private final AbstractRequestValidator requestValidator;
 
