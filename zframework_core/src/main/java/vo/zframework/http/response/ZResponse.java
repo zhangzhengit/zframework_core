@@ -6,13 +6,13 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
-import vo.log.core.ZLog2;
 import vo.zframework.common.AU;
 import vo.zframework.common.Hash;
 import vo.zframework.common.STU;
@@ -29,8 +29,7 @@ import vo.zframework.enums.HttpStatusEnum;
 import vo.zframework.enums.TransferEncodingEnum;
 import vo.zframework.html.FIS;
 import vo.zframework.http.ByteArrayKeyWrapper;
-import vo.zframework.http.PDTL;
-import vo.zframework.http.SocketTL;
+import vo.zframework.http.ZConnectionTL;
 import vo.zframework.http.ZCookie;
 import vo.zframework.http.ZHeader;
 import vo.zframework.http.request.ReqeustInfo;
@@ -92,16 +91,14 @@ import vo.zframework.http.request.ZRequest;
 // 或者用户实现特殊需求，比如某些接口响应某些header，可以覆盖某个方法来很简单的实现
 public class ZResponse {
 
-	private final static ZLog2 LOG = ZLog2.getInstance();
+	private final BufferedOutputStream bufferedOutputStream = ZConnectionTL.get().getBufferedOutputStream();
 
-	private final BufferedOutputStream bufferedOutputStream = SocketTL.get().getBufferedOutputStream();
-
-	private final ZArray array = SocketTL.get().getArray();
+	private final ZArray array = ZConnectionTL.get().getResponseArray();
 
 	/**
 	 * 放header
 	 */
-	private final Map<ByteArrayKeyWrapper, byte[]> headerMap = SocketTL.get().getHeaderMap();
+	private Map<ByteArrayKeyWrapper, byte[]> headerMap = ZConnectionTL.get().getResponseHeaderMap();
 
 	private static final byte[] CRLF_BYTES = STU.CRLF_BYTES;
 
@@ -351,7 +348,8 @@ public class ZResponse {
 		if (file != null) {
 
 			if (!this.containsHeader(HeaderEnum.ETAG.getName())) {
-				if (PDTL.get().getZrMethod().hasZETag()) {
+				if (ZConnectionTL.get().getPd().getZrMethod().hasZETag()) {
+//				if (PDTL.get().getZrMethod().hasZETag()) {
 					final String eTag = ETagEnum.STRONG.handle(file.length() + "-" + file.lastModified());
 					this.header(HeaderEnum.ETAG.getNameBytes(), eTag.getBytes());
 					rETag = true;
@@ -464,20 +462,14 @@ public class ZResponse {
 
 			this.write = true;
 
-			ZResponse.reset();
-
 		} catch (final IOException e) {
 			e.printStackTrace();
 		} finally {
 			if (!request.isKeepAlive()) {
-				SocketTL.closeOutputStreamAndSocket();
+				ZConnectionTL.get().closeOutputStreamAndSocket();
 			}
 		}
 
-	}
-
-	private static void reset() {
-		SocketTL.get().reset();
 	}
 
 	/**
@@ -494,7 +486,8 @@ public class ZResponse {
 	// FIXME 2026年6月7日 03:16:22 zhangzhen : 这个方法不好，违反了单一功能原则，改掉，并且返回返回header
 	void setETagIfZETagPresent(final ZRequest request, final byte[] data, final ETagEnum eTagEnum) {
 
-		if (!PDTL.get().getZrMethod().hasZETag()) {
+//		if (!PDTL.get().getZrMethod().hasZETag()) {
+		if (!ZConnectionTL.get().getPd().getZrMethod().hasZETag()) {
 			return;
 		}
 
@@ -515,7 +508,8 @@ public class ZResponse {
 	}
 
 	private String gETag(final byte[] data, final ETagEnum eTagEnum) {
-		if (!this.isBodyStream && PDTL.get().getZrMethod().isRTPrimitiveType()) {
+		if (!this.isBodyStream && ZConnectionTL.get().getPd().getZrMethod().isRTPrimitiveType()) {
+//		if (!this.isBodyStream && PDTL.get().getZrMethod().isRTPrimitiveType()) {
 			// 接口方法返回基本类型，直接用返回值作为ETag头
 			// FIXME 2026年6月19日 15:56:45 zhangzhen : 上面if是为了减少下面的hash的消耗，
 			// 但是这个if不太准确，不该只是基本类型，而是所有body都很小的内容，包括Date/BigInteger/小String/小对象等等
@@ -718,10 +712,7 @@ public class ZResponse {
 
 		this.write = true;
 
-		ZResponse.reset();
-
 		ZResponseStatus.written();
-
 	}
 
 	/**
@@ -821,8 +812,7 @@ public class ZResponse {
 				this.bufferedOutputStream.write(data, 0, length);
 			}
 		} catch (final IOException e) {
-//			e.printStackTrace();
-			SocketTL.closeOutputStreamAndSocket();
+			ZConnectionTL.get().closeOutputStreamAndSocket();
 		}
 	}
 
@@ -831,7 +821,8 @@ public class ZResponse {
 			this.bufferedOutputStream.flush();
 		} catch (final IOException e) {
 //			e.printStackTrace();
-			SocketTL.closeOutputStreamAndSocket();
+//			SocketTL.closeOutputStreamAndSocket();
+			ZConnectionTL.get().closeOutputStreamAndSocket();
 		}
 	}
 
@@ -881,6 +872,25 @@ public class ZResponse {
 		}
 
 		return null;
+	}
+
+	public ZResponse() {
+		// 构造时判断是否重置
+		this.resetHeaderMapAndZArray();
+	}
+
+	public void resetHeaderMapAndZArray() {
+		if (this.array.length() >= ZResponse.RESPONSE_ARRAY_CAPACITY) {
+			this.array.reset(ZResponse.RESPONSE_ARRAY_CAPACITY);
+		} else {
+			this.array.reset();
+		}
+
+		if (this.headerMap.size() > ZResponse.HEADER_MAP_CAPACITY) {
+			this.headerMap = new HashMap<>(ZResponse.HEADER_MAP_CAPACITY, 1F);
+		} else {
+			this.headerMap.clear();
+		}
 	}
 
 }

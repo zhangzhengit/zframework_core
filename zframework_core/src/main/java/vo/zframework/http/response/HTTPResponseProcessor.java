@@ -13,9 +13,8 @@ import vo.zframework.enums.HeaderEnum;
 import vo.zframework.enums.HttpStatusEnum;
 import vo.zframework.exception.ZControllerAdviceActuator;
 import vo.zframework.exception.ZControllerAdviceThrowable;
-import vo.zframework.http.PDTL;
-import vo.zframework.http.SocketTL;
 import vo.zframework.http.Task;
+import vo.zframework.http.ZConnectionTL;
 import vo.zframework.http.ZCookie;
 import vo.zframework.http.ZSession;
 import vo.zframework.http.request.ReqeustInfo;
@@ -58,7 +57,7 @@ public class HTTPResponseProcessor {
 			response.write();
 
 			if (e instanceof IOException) {
-				SocketTL.closeOutputStreamAndSocket();
+				ZConnectionTL.get().closeOutputStreamAndSocket();
 			}
 
 		} finally {
@@ -102,7 +101,7 @@ public class HTTPResponseProcessor {
 			response.write();
 
 			if (!request.isKeepAlive()) {
-				SocketTL.closeOutputStreamAndSocket();
+				ZConnectionTL.get().closeOutputStreamAndSocket();
 			}
 
 		} catch (final Exception e) {
@@ -114,10 +113,10 @@ public class HTTPResponseProcessor {
 
 	public static void setCacheControl(final ZResponse response) {
 
-		final ZCacheControl cacheControl = PDTL.get().getZrMethod().getCacheControl();
+		final ZCacheControl cacheControl = ZConnectionTL.get().getPd().getZrMethod().getCacheControl();
 		if (cacheControl != null) {
 			response.header(HeaderEnum.CACHE_CONTROL.getNameBytes(),
-					PDTL.get().getZrMethod().getCacheControlVStringBytes());
+					ZConnectionTL.get().getPd().getZrMethod().getCacheControlVStringBytes());
 		}
 
 	}

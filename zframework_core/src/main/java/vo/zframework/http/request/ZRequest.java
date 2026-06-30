@@ -23,10 +23,9 @@ import vo.zframework.enums.AcceptEncodingEnum;
 import vo.zframework.enums.ConnectionEnum;
 import vo.zframework.enums.HeaderEnum;
 import vo.zframework.http.ArrayRange;
-import vo.zframework.http.PDTL;
-import vo.zframework.http.SocketTL;
 import vo.zframework.http.TF;
 import vo.zframework.http.Task;
+import vo.zframework.http.ZConnectionTL;
 import vo.zframework.http.ZCookie;
 import vo.zframework.http.ZServer;
 import vo.zframework.http.ZSession;
@@ -497,7 +496,7 @@ public class ZRequest {
 			return request;
 		}
 
-		final String requestLine = new String(PDTL.get().getRequestLineBytes());
+		final String requestLine = new String(ZConnectionTL.get().getPd().getRequestLineBytes());
 		request.original = requestLine;
 
 		parsePath(request);
@@ -530,7 +529,7 @@ public class ZRequest {
 		}
 
 		// FIXME 2023年11月16日 下午2:47:38 zhanghen: ab 测试这里可能取不到,修复掉
-		final Socket socket = SocketTL.get().getSocket();
+		final Socket socket = ZConnectionTL.get().getSocket();
 		if (socket == null) {
 			return null;
 		}
@@ -546,7 +545,7 @@ public class ZRequest {
 
 	private static void parsePath(final ZRequest request) {
 
-		final byte[] requestURIBytes = PDTL.get().getRequestURIBytes();
+		final byte[] requestURIBytes = ZConnectionTL.get().getPd().getRequestURIBytes();
 
 		final int wI = AU.indexOfKeyword(requestURIBytes, STU.Q_BYTE);
 

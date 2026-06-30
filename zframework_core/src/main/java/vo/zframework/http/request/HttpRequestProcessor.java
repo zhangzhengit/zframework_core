@@ -16,6 +16,7 @@ import vo.zframework.enums.HttpParseStatusEnum;
 import vo.zframework.http.PD;
 import vo.zframework.http.TF;
 import vo.zframework.http.Task;
+import vo.zframework.http.ZConnection;
 import vo.zframework.http.ZControllerMap;
 import vo.zframework.http.ZRMethod;
 import vo.zframework.http.ZServer;
@@ -393,7 +394,7 @@ public class HttpRequestProcessor {
 		int fRC = 0;
 
 		while (true) {
-			final int r1 = ZServer.read0(bufferedInputStream, buffer);
+			final int r1 = ZConnection.read(bufferedInputStream, buffer);
 
 			if (r1 <= -1) {
 				break;
