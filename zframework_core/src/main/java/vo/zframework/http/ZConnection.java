@@ -129,9 +129,6 @@ public class ZConnection {
 
 	public ZConnection(final Socket socket) {
 
-		System.out.println(
-				LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t" + "ZConnection.ZConnection()");
-
 		this.socket = socket;
 
 		this.setSoTimeout();
