@@ -295,12 +295,11 @@ public class ServerConfigurationProperties {
 	// 提示修改其一
 
 	/**
-	 * session超时时间[秒]最大值限制，用于限制[server.session.max.timeout]的大小，
-	 * 同时设定存储器的超时时间，如果不限制可能导致一直占用内存最终OOM
+	 * session超时时间，单位：秒
 	 */
-	@ZMin(min = 60 * 60)
+	@ZMin(min = 1 * 1)
 	@ZMax(max = 60 * 60 * 24 * 10)
-	private int sessionMaxTimeout = 60 * 60 * 24 * 10;
+	private int sessionMaxTimeout = 60 * 30;
 
 	/**
 	 * 允许同时存在的session的最大数量，超过此值会自动删除最近最少访问的
