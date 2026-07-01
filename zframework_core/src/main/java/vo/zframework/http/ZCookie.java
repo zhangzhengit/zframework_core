@@ -18,6 +18,8 @@ import vo.zframework.enums.SameSiteEnum;
  */
 public class ZCookie {
 
+	public static final ZCookie UNINITIALIZED = new ZCookie("UNINITIALIZED", "UNINITIALIZED");
+
 	private static final String EXPIRES = "Expires";
 
 	private static final String MAX_AGE = "Max-Age";
@@ -152,7 +154,7 @@ public class ZCookie {
 		final ZCookie cookie = new ZCookie(HeaderEnum.Z_SESSION_ID.getName(), zSessionId).path("/").httpOnly(true);
 		return cookie;
 	}
-	
+
 	public String getName() {
 		return this.name;
 	}

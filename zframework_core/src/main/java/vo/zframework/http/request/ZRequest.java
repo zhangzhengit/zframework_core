@@ -76,6 +76,8 @@ public class ZRequest {
 	BA queryStringBA;
 	String queryStringCache;
 
+	ZCookie zsessionidCache = ZCookie.UNINITIALIZED;
+
 	TF tf;
 
 	/**
@@ -278,40 +280,20 @@ public class ZRequest {
 	/**
 	 * 获取Session，如需写入到Cookie，需要自己处理 ZResponse.cookie.write................
 	 *
-	 * @param create
+	 * @param createIfAbsent
 	 * @return
 	 */
-	public synchronized ZSession getSession(final boolean create) {
-
-		// FIXME 2026年7月1日 16:37:22 zhangzhen : 改：直接从header中找Z_SESSION_ID
-		final ZCookie[] cs = this.getCookies();
-
-		if (AU.isNotEmpty(cs)) {
-			for (final ZCookie zc : cs) {
-				if (HeaderEnum.Z_SESSION_ID.getName().equals(zc.getName())) {
-					final ZSession session = ZSessionMap.get(zc.getValue());
-
-					if (session != null) {
-						return session;
-					}
-
-					// session == null 可能是服务器重启了等
-					if (!create) {
-						return null;
-					}
-
-					final ZSession newSession = ZRequest.newSession();
-					return newSession;
-				}
-			}
+	public ZSession getSession(final boolean createIfAbsent) {
+		if (this.zsessionidCache == ZCookie.UNINITIALIZED) {
+			this.zsessionidCache = this.getCookie(HeaderEnum.Z_SESSION_ID.getName());
 		}
 
-		if (!create) {
-			return null;
+		if (this.zsessionidCache == null) {
+			return createIfAbsent ? ZRequest.newSession() : null;
 		}
 
-		final ZSession newSession = ZRequest.newSession();
-		return newSession;
+		final ZSession session = ZSessionMap.get(this.zsessionidCache.getValue());
+		return session != null ? session : (createIfAbsent ? ZRequest.newSession() : null);
 	}
 
 	public static ZSession newSession() {
