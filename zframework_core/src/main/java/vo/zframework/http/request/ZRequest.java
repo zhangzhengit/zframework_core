@@ -51,6 +51,12 @@ public class ZRequest {
 	public static final ServerConfigurationProperties SERVERCONFIGURATIONPROPERTIES = ZContext
 			.getBean(ServerConfigurationProperties.class);
 	public static final int requestHeaderSizeLimit = SERVERCONFIGURATIONPROPERTIES.getRequestHeaderSizeLimit();
+	public static final boolean isResponseZSessionId = SERVERCONFIGURATIONPROPERTIES.isResponseZSessionId();
+
+	/**
+	 * 必须解析的头的个数
+	 */
+	public static final int isNPHNL = 6;
 	public static final String MULTIPART_FORM_DATA = "multipart/form-data";
 
 	// -------------------------------------------------------------------------------------------------
@@ -469,8 +475,12 @@ public class ZRequest {
 		// 第一个是请求行，不是header，所以-1。headerMap最大存放数量就是size-1，
 		// 大多数情况可能不会用到全部的header，所以大多数header都是不会去解析的
 		// 所以即使容量设置size-1，也是浪费，尤其是带很多头的请求，可能只会有几分之一会用到
-		// 此时设置size-1更是浪费，尤其HashMap容量还会重置为大于此值的2的幂
-		this.headerMap = new HashMap<>(arList.size() - 1, 1F);
+		// 此时设置size-1更是浪费，尤其HashMap容量还会重置为不低于此值的2的幂
+
+		// 2026年7月1日 18:22:12 zhangzhen : 修改初始容量，为isNPHNL里的个数+Cookie(当isResponseZSessionId为true)
+		// 会初始为6或7，最终都是8
+		final int initialCapacity = isNPHNL + (isResponseZSessionId ? 1 : 0);
+		this.headerMap = new HashMap<>(initialCapacity, 1F);
 
 		parseRequest(this);
 	}
@@ -659,8 +669,10 @@ public class ZRequest {
 
 			// FIXME 2026年6月11日 21:39:49 zhangzhen : 注意：下面方法不是完整匹配,
 			// 可能有很多误判导致解析了非必要的头而一直不使用浪费cpu和内存
-			if (isNPHNL(headerNameLength, request.dataRawArray, arrarRange.getFrom())) {
-
+			if (isNPHNL(headerNameLength, request.dataRawArray, arrarRange.getFrom())
+			// isResponseZSessionId 时，直接解析Cookie，因为早晚会用到
+		    || (isResponseZSessionId && isCookie(headerNameLength, request.dataRawArray, arrarRange.getFrom()))
+						) {
 				final String name = new String(request.dataRawArray, arrarRange.getFrom(), nT);
 
 				final String value = gHV(request.dataRawArray, cI, arrarRange);
@@ -694,13 +706,15 @@ public class ZRequest {
 				|| ((headerNameLength == 17) && (dataRawArray[from] == 'T') && (dataRawArray[from + 1] == 'r'));
 	}
 
-	private static boolean isNPHNL(final int headerNameLength) {
-		return (headerNameLength == 4)
-				|| (headerNameLength == 6)
-				|| (headerNameLength == 7)
-				|| (headerNameLength == 10)
-				|| (headerNameLength == 14)
-				|| (headerNameLength == 17);
+	private static boolean isCookie(final int headerNameLength, final byte[] dataRawArray, final int from) {
+		// 暂时只比较几个字符，不比较整个长度的
+		return (headerNameLength == 6)
+			&& (dataRawArray[from] == 'C')
+			&& (dataRawArray[from + 1] == 'o')
+			&& (dataRawArray[from + 2] == 'o')
+			&& (dataRawArray[from + 3] == 'k')
+			&& (dataRawArray[from + 4] == 'i')
+			&& (dataRawArray[from + 5] == 'e');
 	}
 
 	/**
