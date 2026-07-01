@@ -268,17 +268,6 @@ public class ZRequest {
 		return ct == null ? false : ct.contains(MULTIPART_FORM_DATA);
 	}
 
-	/**
-	 * 返回指定名称的session，无则返回null
-	 *
-	 * @param name
-	 * @return
-	 *
-	 */
-	public ZSession getSession(final String name) {
-		return ZSessionMap.get(name);
-	}
-
 	public ZSession getSession() {
 		return this.getSession(true);
 	}
