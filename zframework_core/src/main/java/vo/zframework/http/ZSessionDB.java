@@ -85,7 +85,7 @@ public class ZSessionDB {
 				session.setId(rs.getString(1));
 				session.setCreateTime(rs.getTimestamp(2));
 				session.setLastAccessedTime(rs.getTimestamp(3));
-				session.setIntervalSeconds(rs.getLong(4));
+				session.setIntervalSeconds(rs.getInt(4));
 				session.setData(J.parseObject(rs.getString(5), Map.class));
 				return session;
 			}
@@ -125,7 +125,7 @@ public class ZSessionDB {
 				session.setId(rs.getString(1));
 				session.setCreateTime(rs.getTimestamp(2));
 				session.setLastAccessedTime(rs.getTimestamp(3));
-				session.setIntervalSeconds(rs.getLong(4));
+				session.setIntervalSeconds(rs.getInt(4));
 				// FIXME 2025年12月26日 13:56:32 zhangzhen : 序列华为map
 				final Map<String, Object> object = J.parseObject(rs.getString(5), Map.class);
 				session.setData(object);

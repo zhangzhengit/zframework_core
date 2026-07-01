@@ -20,16 +20,17 @@ import vo.zframework.core.ZContext;
  */
 public class ZSession {
 
-	private static final long sessionTimeout = ZContext.getBean(ServerConfigurationProperties.class)
+	private static final int sessionTimeout = ZContext.getBean(ServerConfigurationProperties.class)
 			.getSessionTimeout();
+
 	private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
 	private Map<String, Object> data;
 
 	private String id;
-	private Date createTime;
-	private Date lastAccessedTime;
-	private long intervalSeconds;
+	private long createTime = -1;
+	private long lastAccessedTime = -1;
+	private int intervalSeconds;
 
 	public Map<String, Object> getData() {
 		return this.data;
@@ -48,6 +49,10 @@ public class ZSession {
 	}
 
 	public void setCreateTime(final Date createTime) {
+		this.setCreateTime(createTime.getTime());
+	}
+
+	public void setCreateTime(final long createTime) {
 		this.createTime = createTime;
 	}
 
@@ -55,7 +60,7 @@ public class ZSession {
 
 	public ZSession() {
 		this.id = gSessionID();
-		this.createTime = new Date();
+		this.createTime = System.currentTimeMillis();
 		this.setMaxInactiveInterval(sessionTimeout);
 		ZSessionMap.put(this);
 	}
@@ -68,7 +73,7 @@ public class ZSession {
 
 	public long getCreationTime() {
 		this.checkInvalidate();
-    	return this.createTime.getTime();
+    	return this.createTime;
     }
 
 	public String getId() {
@@ -78,10 +83,7 @@ public class ZSession {
 
     public long getLastAccessedTime() {
     	this.checkInvalidate();
-		if (this.lastAccessedTime == null) {
-			return -1L;
-    	}
-		return this.lastAccessedTime.getTime();
+		return this.lastAccessedTime;
 	}
 
 	/**
@@ -90,12 +92,12 @@ public class ZSession {
 	 * @param interval
 	 *
 	 */
-	public void setMaxInactiveInterval(final long interval) {
+	public void setMaxInactiveInterval(final int interval) {
 		this.checkInvalidate();
 		this.intervalSeconds = interval;
 	}
 
-    public long getMaxInactiveInterval() {
+    public int getMaxInactiveInterval() {
     	this.checkInvalidate();
     	return this.intervalSeconds;
     }
@@ -136,15 +138,15 @@ public class ZSession {
 		this.data = map;
 	}
 
-	public long getIntervalSeconds() {
+	public int getIntervalSeconds() {
 		return this.intervalSeconds;
 	}
 
-	public void setIntervalSeconds(final long intervalSeconds) {
+	public void setIntervalSeconds(final int intervalSeconds) {
 		this.intervalSeconds = intervalSeconds;
 	}
 
-	public Date getCreateTime() {
+	public long getCreateTime() {
 		return this.createTime;
 	}
 
@@ -153,13 +155,30 @@ public class ZSession {
 	}
 
 	public void setLastAccessedTime(final Date lastAccessedTime) {
+		this.setLastAccessedTime(lastAccessedTime.getTime());
+	}
+
+	public void setLastAccessedTime(final long lastAccessedTime) {
 		this.lastAccessedTime = lastAccessedTime;
 	}
 
 	@Override
 	public String toString() {
-		return "ZSession [id=" + this.id + ", createTime=" + this.createTime + ", lastAccessedTime=" + this.lastAccessedTime
-				+ ", intervalSeconds=" + this.intervalSeconds + ", data=" + this.data + "]";
+		final StringBuilder builder = new StringBuilder();
+		builder.append("ZSession [data=");
+		builder.append(this.data);
+		builder.append(", id=");
+		builder.append(this.id);
+		builder.append(", createTime=");
+		builder.append(this.createTime);
+		builder.append(", lastAccessedTime=");
+		builder.append(this.lastAccessedTime);
+		builder.append(", intervalSeconds=");
+		builder.append(this.intervalSeconds);
+		builder.append(", invalidate=");
+		builder.append(this.invalidate);
+		builder.append("]");
+		return builder.toString();
 	}
 
 
