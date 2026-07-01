@@ -11,6 +11,7 @@ import vo.zframework.enums.ContentTypeEnum;
 import vo.zframework.enums.ETagEnum;
 import vo.zframework.enums.HeaderEnum;
 import vo.zframework.enums.HttpStatusEnum;
+import vo.zframework.enums.SameSiteEnum;
 import vo.zframework.exception.ZControllerAdviceActuator;
 import vo.zframework.exception.ZControllerAdviceThrowable;
 import vo.zframework.exception.ZFException;
@@ -67,8 +68,7 @@ public class HTTPResponseProcessor {
 
 	}
 
-	public
-	static void setZSessionId(final ZRequest request, final ZResponse response) {
+	public static void setZSessionId(final ZRequest request, final ZResponse response) {
 		if ((request == null) || (response == null)) {
 			return;
 		}
@@ -81,7 +81,11 @@ public class HTTPResponseProcessor {
 
 		final ZSession sessionTRUE = request.getSession(true);
 		sessionTRUE.setLastAccessedTime(new Date());
-		final ZCookie cookie = new ZCookie(HeaderEnum.Z_SESSION_ID.getName(), sessionTRUE.getId()).path("/").httpOnly(true);
+		final ZCookie cookie =
+						new ZCookie(HeaderEnum.Z_SESSION_ID.getName(), sessionTRUE.getId())
+							.path("/")
+							.httpOnly()
+							.sameSite(SameSiteEnum.LAX);
 		response.cookie(cookie);
 	}
 

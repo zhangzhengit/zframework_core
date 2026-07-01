@@ -1,12 +1,10 @@
 package vo.zframework.http;
 
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.StringJoiner;
 
 import vo.zframework.common.STU;
-import vo.zframework.enums.HeaderEnum;
+import vo.zframework.common.ZDateUtil;
 import vo.zframework.enums.SameSiteEnum;
 
 /**
@@ -28,46 +26,46 @@ public class ZCookie {
 
 	private static final String PATH = "Path";
 
-	private static final String SECURE2 = "Secure";
+	private static final String SECURE = "Secure";
 
 	private static final String HTTP_ONLY = "HttpOnly";
 
 	private static final String SAME_SITE = "SameSite";
 
-	private final List<Node> nodeList = new ArrayList<>(8);
+	private final String name;
+	private final String value;
 
-	private String name;
-	private String value;
+	private boolean httpOnly;
+	private boolean secure;
+	private String domain;
+	private long maxAge;
+	private String path;
+	private String expires;
+	private SameSiteEnum sameSite;
 
-	public ZCookie sameSiteEnum(final SameSiteEnum sameSiteEnum) {
-		this.nodeList.add(new Node(SAME_SITE, sameSiteEnum.getValue()));
+	public ZCookie sameSite(final SameSiteEnum sameSiteEnum) {
+		this.sameSite = sameSiteEnum;
 		return this;
 	}
 
 	/**
 	 * 表示此cookie仅能通过http或https访问，不能通过js等访问
 	 *
-	 * @param httpOnly
 	 * @return
 	 */
-	public ZCookie httpOnly(final Boolean httpOnly) {
-		if (Boolean.TRUE.equals(httpOnly)) {
-			this.nodeList.add(new Node(HTTP_ONLY, null));
-		}
+	public ZCookie httpOnly() {
+		this.httpOnly = true;
 		return this;
 	}
 
 	/**
 	 * 表示只有在使用https传输时，才会带上此cookie
 	 *
-	 * @param secure
 	 * @return
 	 *
 	 */
-	public ZCookie secure(final boolean secure) {
-		if (secure) {
-			this.nodeList.add(new Node(SECURE2, null));
-		}
+	public ZCookie secure() {
+		this.secure = true;
 		return this;
 	}
 
@@ -81,7 +79,7 @@ public class ZCookie {
 	 * @return
 	 */
 	public ZCookie path(final String path) {
-		this.nodeList.add(new Node(PATH, path));
+		this.path = path;
 		return this;
 	}
 
@@ -94,7 +92,7 @@ public class ZCookie {
 	 *
 	 */
 	public ZCookie domain(final String domain) {
-		this.nodeList.add(new Node(DOMAIN, domain));
+		this.domain = domain;
 		return this;
 	}
 
@@ -107,8 +105,8 @@ public class ZCookie {
 	 * @param maxAge
 	 * @return
 	 */
-	public ZCookie maxAge(final Long maxAge) {
-		this.nodeList.add(new Node(MAX_AGE, maxAge));
+	public ZCookie maxAge(final long maxAge) {
+		this.maxAge = maxAge;
 		return this;
 	}
 
@@ -119,7 +117,7 @@ public class ZCookie {
 	 * @return
 	 */
 	public ZCookie expires(final Date date) {
-		this.nodeList.add(new Node(EXPIRES, date));
+		this.expires = ZDateUtil.gmt(date);
 		return this;
 	}
 
@@ -128,83 +126,77 @@ public class ZCookie {
 		this.value = value;
 	}
 
-	public String toCookieString() {
-		//		Set-Cookie: sessionId=abc123; Expires=Sat, 01 Jan 2022 00:00:00 GMT; Max-Age=3600;
-		//		Domain=example.com; Path=/; Secure; HttpOnly; SameSite=Strict
-
-		final StringJoiner joiner = new StringJoiner(STU.EMPTY);
-		// 不取name
-		joiner.add(this.getValue()).add(STU.SEMICOLON);
-		for (int i = 0; i < this.nodeList.size(); i++) {
-			final Node node = this.nodeList.get(i);
-			joiner.add(node.getName());
-			if (node.getValue() == null) {
-				joiner.add(STU.SEMICOLON);
-			} else {
-				joiner.add(STU.EQUALS)
-					  .add(String.valueOf(node.getValue()))
-					  .add(STU.SEMICOLON);
-			}
-		}
-
-		return joiner.toString();
-	}
-
-	public static ZCookie newCookie(final String zSessionId) {
-		final ZCookie cookie = new ZCookie(HeaderEnum.Z_SESSION_ID.getName(), zSessionId).path("/").httpOnly(true);
-		return cookie;
-	}
-
 	public String getName() {
 		return this.name;
-	}
-
-	public void setName(final String name) {
-		this.name = name;
 	}
 
 	public String getValue() {
 		return this.value;
 	}
 
-	public void setValue(final String value) {
-		this.value = value;
-	}
+	public String toCookieString() {
+		//			Set-Cookie:
+		//			sessionId=abc123;
+		//			Expires=Sat, 01 Jan 2022 00:00:00 GMT;
+		//			Max-Age=3600;
+		//			Domain=example.com;
+		//			Path=/;
+		//			Secure;
+		//			HttpOnly;
+		//			SameSite=Strict
 
-	public List<Node> getNodeList() {
-		return this.nodeList;
-	}
+		final StringJoiner joiner = new StringJoiner(STU.EMPTY);
+		// 不取name，就是不取name，不是忘写了
+		joiner.add(this.getValue()).add(STU.SEMICOLON);
 
-	public static class Node {
-		private String name;
-		private Object value;
-
-		public String getName() {
-			return this.name;
+		if (this.httpOnly) {
+			joiner.add(HTTP_ONLY).add(STU.SEMICOLON);
+		}
+		if (this.secure) {
+			joiner.add(SECURE).add(STU.SEMICOLON);
+		}
+		if (this.sameSite != null) {
+			joiner.add(SAME_SITE).add(STU.EQUALS).add(this.sameSite.getValue()).add(STU.SEMICOLON);
+		}
+		if (this.path != null) {
+			joiner.add(PATH).add(STU.EQUALS).add(this.path).add(STU.SEMICOLON);
+		}
+		if (this.domain != null) {
+			joiner.add(DOMAIN).add(STU.EQUALS).add(this.domain).add(STU.SEMICOLON);
+		}
+		if (this.maxAge != 0) {
+			joiner.add(MAX_AGE).add(STU.EQUALS).add(String.valueOf(this.maxAge)).add(STU.SEMICOLON);
+		}
+		if (this.expires != null) {
+			joiner.add(EXPIRES).add(STU.EQUALS).add(this.expires).add(STU.SEMICOLON);
 		}
 
-		public void setName(final String name) {
-			this.name = name;
-		}
-
-		public Object getValue() {
-			return this.value;
-		}
-
-		public void setValue(final Object value) {
-			this.value = value;
-		}
-
-		public Node(final String name, final Object value) {
-			this.name = name;
-			this.value = value;
-		}
-
+		return joiner.toString();
 	}
 
 	@Override
 	public String toString() {
-		return "ZCookie [name=" + this.name + ", value=" + this.value + ", nodeList=" + this.nodeList + "]";
+		final StringBuilder builder = new StringBuilder();
+		builder.append("ZCookie [name=");
+		builder.append(this.name);
+		builder.append(", value=");
+		builder.append(this.value);
+		builder.append(", httpOnly=");
+		builder.append(this.httpOnly);
+		builder.append(", secure=");
+		builder.append(this.secure);
+		builder.append(", domain=");
+		builder.append(this.domain);
+		builder.append(", maxAge=");
+		builder.append(this.maxAge);
+		builder.append(", path=");
+		builder.append(this.path);
+		builder.append(", expires=");
+		builder.append(this.expires);
+		builder.append(", sameSite=");
+		builder.append(this.sameSite);
+		builder.append("]");
+		return builder.toString();
 	}
 
 }
