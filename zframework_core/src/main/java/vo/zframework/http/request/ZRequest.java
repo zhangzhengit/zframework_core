@@ -282,6 +282,8 @@ public class ZRequest {
 	 * @return
 	 */
 	public synchronized ZSession getSession(final boolean create) {
+
+		// FIXME 2026年7月1日 16:37:22 zhangzhen : 改：直接从header中找Z_SESSION_ID
 		final ZCookie[] cs = this.getCookies();
 
 		if (AU.isNotEmpty(cs)) {
