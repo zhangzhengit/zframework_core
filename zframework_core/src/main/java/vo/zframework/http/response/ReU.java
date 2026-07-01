@@ -1,5 +1,7 @@
 package vo.zframework.http.response;
 
+import java.nio.charset.StandardCharsets;
+
 import vo.zframework.common.CR;
 import vo.zframework.common.J;
 import vo.zframework.enums.ConnectionEnum;
@@ -15,6 +17,17 @@ import vo.zframework.enums.HttpStatusEnum;
  *
  */
 public class ReU {
+
+	private static final byte[] SERVICE_UNAVAILABLE_RESPONSE =
+								("HTTP/1.1 " + HttpStatusEnum.HTTP_503.getStatus() + " " + HttpStatusEnum.HTTP_503.getMessage() + "\r\n" +
+							    "Content-Length: 0\r\n" +
+							    "Connection: close\r\n" +
+							    "\r\n")
+							    .getBytes(StandardCharsets.ISO_8859_1);
+
+	public static byte[] g503Bytes() {
+		return SERVICE_UNAVAILABLE_RESPONSE;
+	}
 
 	public static ZResponse response429(final String message, final boolean keepAlive) {
 		return jsonResponse(keepAlive)

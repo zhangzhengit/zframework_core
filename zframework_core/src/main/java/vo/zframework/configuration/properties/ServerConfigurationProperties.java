@@ -145,6 +145,14 @@ public class ServerConfigurationProperties {
 	private int requestHeaderSizeLimit = 1024 * 4;
 
 	/**
+	 * 允许同时存在的连接数
+	 */
+	@ZNotNull
+	@ZMin(min = 1)
+	@ZMax(max = 10000 * 100)
+	private int connectionLimit = 10000 * 1;
+
+	/**
 	 * 是否启用对一个client的qps限制
 	 */
 	@ZNotNull
@@ -796,6 +804,14 @@ public class ServerConfigurationProperties {
 
 	public void setStaticResourcePreCompressionAlgorithm(final Set<String> staticResourcePreCompressionAlgorithm) {
 		this.staticResourcePreCompressionAlgorithm = staticResourcePreCompressionAlgorithm;
+	}
+
+	public int getConnectionLimit() {
+		return this.connectionLimit;
+	}
+
+	public void setConnectionLimit(final int connectionLimit) {
+		this.connectionLimit = connectionLimit;
 	}
 
 

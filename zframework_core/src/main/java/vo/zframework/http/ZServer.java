@@ -1,10 +1,12 @@
 package vo.zframework.http;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -14,6 +16,7 @@ import vo.zframework.core.ZContext;
 import vo.zframework.enums.QCTimeEnum;
 import vo.zframework.enums.QPSHandlingEnum;
 import vo.zframework.http.request.TaskRequestHandler;
+import vo.zframework.http.response.ReU;
 
 /**
  * 	http服务器
@@ -28,6 +31,9 @@ public class ZServer {
 	private static final ServerConfigurationProperties SERVER_CONFIGURATIONPROPERTIES= ZContext.getBean(ServerConfigurationProperties.class);
 
 	private static final boolean ENABLE_SERVER_QPS_LIMITED = SERVER_CONFIGURATIONPROPERTIES.getQpsLimitEnabled();
+	private static final int CONNECTION_LIMIT = SERVER_CONFIGURATIONPROPERTIES.getConnectionLimit();
+
+	private static final Semaphore CONNECTION_LIMIT_SEMAPHORE = new Semaphore(CONNECTION_LIMIT);
 
 	private static final AtomicLong VT_N = new AtomicLong(0L);
 
@@ -96,9 +102,33 @@ public class ZServer {
 		return socket;
 	}
 
+
 	private static void newConnection(final Socket socket) {
+		if (!CONNECTION_LIMIT_SEMAPHORE.tryAcquire()) {
+			try {
+				try (OutputStream outputStream = socket.getOutputStream()) {
+					outputStream.write(ReU.g503Bytes());
+					outputStream.flush();
+				}
+			} catch (final IOException ingore) {
+				// ingore
+			} finally {
+				try {
+					socket.close();
+				} catch (final IOException ingore) {
+					// ingore
+				}
+				LOG.warn("连接数达到配置阈值{},连接已关闭", CONNECTION_LIMIT);
+			}
+			return;
+		}
+
 		final ZConnection connection = new ZConnection(socket);
-		connection.start();
+		try {
+			connection.start();
+		} finally {
+			CONNECTION_LIMIT_SEMAPHORE.release();
+		}
 	}
 
 	public static boolean allow() {

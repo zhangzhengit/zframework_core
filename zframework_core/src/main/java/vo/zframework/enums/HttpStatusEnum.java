@@ -37,7 +37,11 @@ public enum HttpStatusEnum {
 
 	HTTP_431(431, "Request Header Fields Too Large"),
 
-	HTTP_500(500, "Internal Server Error"),;
+	HTTP_500(500, "Internal Server Error"),
+
+	HTTP_503(503, "Service Unavailable"),
+
+	;
 
 	private int status;
 	private String message;
