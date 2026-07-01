@@ -1,10 +1,10 @@
 package vo.zframework.http;
 
 import java.security.SecureRandom;
+import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import vo.zframework.configuration.properties.ServerConfigurationProperties;
@@ -19,22 +19,10 @@ import vo.zframework.core.ZContext;
  *
  */
 public class ZSession {
-	private static SecureRandom secureRandom;
-	static final long sessionTimeout = ZContext.getBean(ServerConfigurationProperties.class).getSessionTimeout();
 
-//	static {
-//		try {
-//		    // linux用/dev/urandom）
-//		    final String osNameL = System.getProperty("os.name").toLowerCase();
-//			if (osNameL.contains("linux") || osNameL.contains("mac")) {
-//				secureRandom = SecureRandom.getInstance("NativePRNGNonBlocking");
-//			} else {
-//				secureRandom = SecureRandom.getInstance("SHA1PRNG");
-//		    }
-//		} catch (final NoSuchAlgorithmException e) {
-//		    secureRandom = new SecureRandom();
-//		}
-//	}
+	private static final long sessionTimeout = ZContext.getBean(ServerConfigurationProperties.class)
+			.getSessionTimeout();
+	private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
 	private Map<String, Object> data;
 
@@ -42,7 +30,6 @@ public class ZSession {
 	private Date createTime;
 	private Date lastAccessedTime;
 	private long intervalSeconds;
-
 
 	public Map<String, Object> getData() {
 		return this.data;
@@ -74,12 +61,9 @@ public class ZSession {
 	}
 
 	private static String gSessionID() {
-		return UUID.randomUUID().toString();
-//		final byte[] bs = new byte[32];
-//		secureRandom.nextBytes(bs);
-//		final Encoder e = Base64.getEncoder().withoutPadding();
-//		final String id = e.encodeToString(bs);
-//		return id;
+	    final byte[] bytes = new byte[16];
+	    SECURE_RANDOM.nextBytes(bytes);
+	    return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
 	}
 
 	public long getCreationTime() {
