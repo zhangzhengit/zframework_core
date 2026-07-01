@@ -1,7 +1,6 @@
 package vo.zframework.http;
 
 import java.util.Date;
-import java.util.StringJoiner;
 
 import vo.zframework.common.STU;
 import vo.zframework.common.ZDateUtil;
@@ -145,33 +144,33 @@ public class ZCookie {
 		//			HttpOnly;
 		//			SameSite=Strict
 
-		final StringJoiner joiner = new StringJoiner(STU.EMPTY);
+		final StringBuilder builder = new StringBuilder();
 		// 不取name，就是不取name，不是忘写了
-		joiner.add(this.getValue()).add(STU.SEMICOLON);
+		builder.append(this.getValue()).append(STU.SEMICOLON);
 
 		if (this.httpOnly) {
-			joiner.add(HTTP_ONLY).add(STU.SEMICOLON);
+			builder.append(HTTP_ONLY).append(STU.SEMICOLON);
 		}
 		if (this.secure) {
-			joiner.add(SECURE).add(STU.SEMICOLON);
+			builder.append(SECURE).append(STU.SEMICOLON);
 		}
 		if (this.sameSite != null) {
-			joiner.add(SAME_SITE).add(STU.EQUALS).add(this.sameSite.getValue()).add(STU.SEMICOLON);
+			builder.append(SAME_SITE).append(STU.EQUALS).append(this.sameSite.getValue()).append(STU.SEMICOLON);
 		}
 		if (this.path != null) {
-			joiner.add(PATH).add(STU.EQUALS).add(this.path).add(STU.SEMICOLON);
+			builder.append(PATH).append(STU.EQUALS).append(this.path).append(STU.SEMICOLON);
 		}
 		if (this.domain != null) {
-			joiner.add(DOMAIN).add(STU.EQUALS).add(this.domain).add(STU.SEMICOLON);
+			builder.append(DOMAIN).append(STU.EQUALS).append(this.domain).append(STU.SEMICOLON);
 		}
 		if (this.maxAge != 0) {
-			joiner.add(MAX_AGE).add(STU.EQUALS).add(String.valueOf(this.maxAge)).add(STU.SEMICOLON);
+			builder.append(MAX_AGE).append(STU.EQUALS).append(this.maxAge).append(STU.SEMICOLON);
 		}
 		if (this.expires != null) {
-			joiner.add(EXPIRES).add(STU.EQUALS).add(this.expires).add(STU.SEMICOLON);
+			builder.append(EXPIRES).append(STU.EQUALS).append(this.expires).append(STU.SEMICOLON);
 		}
 
-		return joiner.toString();
+		return builder.toString();
 	}
 
 	@Override
