@@ -30,6 +30,8 @@ public class ZServer {
 
 	private static final ServerConfigurationProperties SERVER_CONFIGURATIONPROPERTIES= ZContext.getBean(ServerConfigurationProperties.class);
 
+	private static final String THREAD_NAME = SERVER_CONFIGURATIONPROPERTIES.getThreadName();
+
 	private static final boolean ENABLE_SERVER_QPS_LIMITED = SERVER_CONFIGURATIONPROPERTIES.getQpsLimitEnabled();
 	private static final int CONNECTION_LIMIT = SERVER_CONFIGURATIONPROPERTIES.getConnectionLimit();
 
@@ -142,7 +144,7 @@ public class ZServer {
 	}
 
 	private static String gTName() {
-		return "vht-" + VT_N.incrementAndGet();
+		return THREAD_NAME + VT_N.incrementAndGet();
 	}
 
 }
