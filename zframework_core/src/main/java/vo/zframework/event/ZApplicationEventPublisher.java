@@ -6,6 +6,8 @@ import java.lang.reflect.Parameter;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
@@ -30,6 +32,8 @@ public final class ZApplicationEventPublisher {
 
 	private static final String TRREAD_NAME = "aeT-";
 
+	private static final ExecutorService ves = Executors.newVirtualThreadPerTaskExecutor();
+
 	private static final String VO_ZFRAMEWORK = "vo.zframework";
 	private static final String VO_LOG = "vo.log";
 
@@ -45,24 +49,25 @@ public final class ZApplicationEventPublisher {
 	 * @param event
 	 *
 	 */
-	public synchronized void publishEvent(final ZApplicationEvent event) {
+	public void publishEvent(final ZApplicationEvent event) {
 
 		final Map<Method, Class<?>> row = TABLE.row(event.getClass());
 		final Set<Entry<Method, Class<?>>> entrySet = row.entrySet();
 		for (final Entry<Method, Class<?>> entry : entrySet) {
 			final Object bean = ZContext.getBean(entry.getValue());
-			if (bean == null) {
-				continue;
+			if (bean != null) {
+				ZApplicationEventPublisher.invoke(entry.getKey(), bean, event);
 			}
-
-			ZApplicationEventPublisher.invoke(entry.getKey(), bean, event);
-
 		}
+
 	}
 
 	private static void invoke(final Method method, final Object object, final ZApplicationEvent event) {
 
-		Thread.ofVirtual().name(TRREAD_NAME + VT_N.incrementAndGet()).start(() -> {
+		ves.execute(() ->{
+
+			Thread.currentThread().setName(TRREAD_NAME + VT_N.incrementAndGet());
+
 			try {
 				method.invoke(object, event);
 			} catch (IllegalAccessException | InvocationTargetException e) {
