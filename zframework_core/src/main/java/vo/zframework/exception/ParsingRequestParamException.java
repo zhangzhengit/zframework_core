@@ -1,6 +1,6 @@
 package vo.zframework.exception;
 
-import vo.zframework.http.request.ZRequest.RequestParam;
+import vo.zframework.http.request.RequestParam;
 
 /**
  * @RequestParam 参数解析异常

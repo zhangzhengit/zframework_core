@@ -509,7 +509,7 @@ public class ZRequest {
 
 			final List<RequestParam> params = new ArrayList<>(pa.size());
 			for (int i = 0; i < pa.size(); i++) {
-				final ZRequest.RequestParam requestParam = hParam(pa.get(i));
+				final RequestParam requestParam = hParam(pa.get(i));
 				params.add(requestParam);
 			}
 
@@ -552,7 +552,7 @@ public class ZRequest {
 		return requestURIBytes;
 	}
 
-	private static ZRequest.RequestParam hParam(final byte[] paramBytes) {
+	private static RequestParam hParam(final byte[] paramBytes) {
 
 		final int i = AU.indexOfKeyword(paramBytes, STU.EQUALS_BYTE);
 		if (i <= -1) {
@@ -564,7 +564,7 @@ public class ZRequest {
 		final String value = (i + 1) >= paramBytes.length ? null
 				: new String(paramBytes, i + 1, paramBytes.length - (i + 1));
 
-		final ZRequest.RequestParam requestParam = new ZRequest.RequestParam();
+		final RequestParam requestParam = new RequestParam();
 		requestParam.setName(name);
 		requestParam.setValue(value == null ? null : decode(value));
 
@@ -791,48 +791,6 @@ public class ZRequest {
 
 	public void setBody(final byte[] body) {
 		this.body = body;
-	}
-
-	public static class RequestParam {
-
-		private String name;
-		private Object value;
-
-		public RequestParam(final String name, final Object value) {
-			this.name = name;
-			this.value = value;
-		}
-
-		public String getName() {
-			return this.name;
-		}
-
-		public void setName(final String name) {
-			this.name = name;
-		}
-
-		public void setValue(final Object value) {
-			this.value = value;
-		}
-
-		public Object getValue() {
-			return this.value;
-		}
-
-		public RequestParam() {
-		}
-
-		@Override
-		public String toString() {
-			final StringBuilder builder = new StringBuilder();
-			builder.append("RequestParam [name=");
-			builder.append(this.name);
-			builder.append(", value=");
-			builder.append(this.value);
-			builder.append("]");
-			return builder.toString();
-		}
-
 	}
 
 	public byte[] getMethodNameBytes() {
