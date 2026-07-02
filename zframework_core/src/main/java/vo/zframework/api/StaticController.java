@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import vo.zframework.anno.ZCacheControl;
 import vo.zframework.anno.ZController;
@@ -46,6 +47,7 @@ public class StaticController {
 
 	private static final ServerConfigurationProperties SERVER_CONFIGURATION = ZContext.getBean(ServerConfigurationProperties.class);
 
+	private static final Set<String> R_D_S = ConcurrentHashMap.newKeySet();
 
 	// FIXME 2026年6月25日 11:39:29 zhangzhen : -jar运行时resources下目录就用不到了br预压缩了，
 	//　要不要提前把resources下的目录复制出来(和app.p一样)放在一个目录（用配置项），然后和server.static.path指定的
@@ -99,13 +101,28 @@ public class StaticController {
 
 		response.contentType(ct);
 
+		if (R_D_S.contains(resourceName)) {
+			final byte[] data = ResourcesLoader.loadStaticResourceAsByteArray(resourceName);
+			response.body(data);
+			return;
+		}
+
 		final FIS fis = ResourcesLoader.loadStaticResourceAsInputStream(resourceName);
-		responseBody(response, request, fis);
+		responseBody(response, request, fis, resourceName);
 	}
 
-	private static void responseBody(final ZResponse response, final ZRequest request, final FIS sourceFis) {
+	private static void responseBody(final ZResponse response, final ZRequest request, final FIS sourceFis, final String resourceName) {
 
 		if (sourceFis.getFile() != null) {
+
+			final File file = sourceFis.getFile();
+			// 文件不大于缓存阈值，则直接读入内存并且放入缓存然后直接响应了，就不使用文件流读写了
+			if (file.length() <= ResourcesLoader.StaticResourceCacheSize_BYTE) {
+				final byte[] data = ResourcesLoader.loadStaticResourceAsByteArray(resourceName);
+				response.body(data);
+				R_D_S.add(resourceName);
+				return;
+			}
 
 			// 一次找出所有的压缩文件和原文件，并且按文件大小从小到大排序，四选一优先响应小的
 			final List<CF> cfl = StaticResourcesPreCompressionService.gCFOrderByFileLength(sourceFis.getFile());

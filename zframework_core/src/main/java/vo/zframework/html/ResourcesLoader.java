@@ -34,7 +34,7 @@ public class ResourcesLoader {
 
 	private static ServerConfigurationProperties SERVER_CONFIGURATION= ZContext.getBean(ServerConfigurationProperties.class);
 
-	private static final int StaticResourceCacheSize_BYTE = SERVER_CONFIGURATION.getStaticResourceCacheSize() * 1024;
+	public static final int StaticResourceCacheSize_BYTE = SERVER_CONFIGURATION.getStaticResourceCacheSize() * 1024;
 
 	private static final boolean STATIC_RESOURCE_CACHE_ENABLE = SERVER_CONFIGURATION.getStaticResourceCacheEnable();
 
