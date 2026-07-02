@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 import vo.zframework.anno.ZCacheControl;
 import vo.zframework.anno.ZController;
@@ -47,7 +47,7 @@ public class StaticController {
 
 	private static final ServerConfigurationProperties SERVER_CONFIGURATION = ZContext.getBean(ServerConfigurationProperties.class);
 
-	private static final Set<String> R_D_S = ConcurrentHashMap.newKeySet();
+	private static final Set<String> R_D_S = new CopyOnWriteArraySet<>();
 
 	// FIXME 2026年6月25日 11:39:29 zhangzhen : -jar运行时resources下目录就用不到了br预压缩了，
 	//　要不要提前把resources下的目录复制出来(和app.p一样)放在一个目录（用配置项），然后和server.static.path指定的
