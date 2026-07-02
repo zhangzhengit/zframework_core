@@ -1,9 +1,7 @@
 package vo.zframework.http.request;
 
 import java.io.UnsupportedEncodingException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.Socket;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -74,42 +72,41 @@ public class ZRequest {
 	/**
 	 *	请求行一行完整内容如：GET / HTTP/1.1
 	 */
-	String original;
+	private String original;
 
 	/**
 	 * path中?后面的部分
 	 */
-	BA queryStringBA;
-	String queryStringCache;
+	private BA queryStringBA;
+	private String queryStringCache;
 
-	ZCookie zsessionidCache = ZCookie.UNINITIALIZED;
+	private ZCookie zsessionidCache = ZCookie.UNINITIALIZED;
 
-	TF tf;
+	private TF tf;
 
 	/**
 	 * 请求方法 byte[]
 	 */
 	private byte[] methodNameBytes;
 
-	private
-	String methodCache;
+	private String methodCache;
 
 	/**
 	 * 完整的requestURI，如：/hello?name=z&age=20
 	 */
-	String requestURI;
+	private String requestURI;
 
 	/**
 	 * 简单的path，不含参数，如：/hello
 	 */
-	String path;
+	private String path;
 
-	List<RequestParam> params;
+	private List<RequestParam> params;
 
 	/**
 	 * http版本
 	 */
-	String version;
+	private String version;
 
 	/**
 	 * 请求头,如： Accept-Encoding: gzip, deflate
@@ -135,12 +132,12 @@ public class ZRequest {
 	/**
 	 * 暂存值
 	 */
-	ZCookie[] cookies;
+	private ZCookie[] cookies;
 
 	/**
 	 * 暂存值
 	 */
-	String userAgent = null;
+	private String userAgent = null;
 
 	/**
 	 * 对 isKeepAlive方法结果的暂存
@@ -499,33 +496,6 @@ public class ZRequest {
 		return request;
 	}
 
-	private String getClientIp0() {
-
-		final String xRealIp = this.getHeader(HeaderEnum.X_REAL_IP.getName());
-		if (xRealIp != null) {
-			return xRealIp;
-		}
-
-		final String xForwardedFor = this.getHeader(HeaderEnum.X_Forwarded_For.getName());
-		if (xForwardedFor != null) {
-			return xForwardedFor;
-		}
-
-		// FIXME 2023年11月16日 下午2:47:38 zhanghen: ab 测试这里可能取不到,修复掉
-		final Socket socket = ZConnectionTL.get().getSocket();
-		if (socket == null) {
-			return null;
-		}
-
-		final InetSocketAddress inetSocketAddress = (InetSocketAddress) socket.getRemoteSocketAddress();
-		if (inetSocketAddress == null) {
-			return null;
-		}
-
-		final InetAddress address = inetSocketAddress.getAddress();
-		return address.getHostAddress();
-	}
-
 	private static void parsePath(final ZRequest request) {
 
 		final byte[] requestURIBytes = ZConnectionTL.get().getPd().getRequestURIBytes();
@@ -814,7 +784,7 @@ public class ZRequest {
 
 	public String getClientIp() {
 		if (this.clientIp == null) {
-			this.clientIp = this.getClientIp0();
+			this.clientIp = ((InetSocketAddress) ZConnectionTL.get().getSocket().getRemoteSocketAddress()).getAddress().getHostAddress();
 		}
 		return this.clientIp;
 	}
