@@ -91,9 +91,21 @@ public class ZRC {
 		return this.computeIfAbsent(key, supplier, false);
 	}
 
-	public  <T> T computeIfAbsent(final Object key, final Supplier<T> supplier, final boolean storeNull) {
+	public <T> T computeIfAbsent(final Object key, final Supplier<T> supplier, final boolean storeNull) {
 		final String k = key.getClass().getName() + "@" + key.hashCode();
 		return this.computeIfAbsent(k, supplier, storeNull);
+	}
+
+	public <T> T get(final String key) {
+		return (T) this.CACHE.get(key);
+	}
+
+	public boolean containsKey(final String key) {
+		return this.CACHE.containsKey(key);
+	}
+
+	public void put(final String key,final Object value) {
+		this.CACHE.put(key, value);
 	}
 
 	public void clear(final List<String> keyList) {

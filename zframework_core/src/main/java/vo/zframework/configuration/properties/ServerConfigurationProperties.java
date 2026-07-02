@@ -108,6 +108,13 @@ public class ServerConfigurationProperties {
 	private boolean staticResourceCacheEnable = true;
 
 	/**
+	 * 静态资源不大于多少才放入缓存，单位：KB
+	 */
+	@ZMin(min = 1)
+	@ZMax(max = 1024 * 10)
+	private int staticResourceCacheSize = 100;
+
+	/**
 	 * 是否启用QPS限制 (server.qps)
 	 */
 	@ZNotNull
@@ -812,6 +819,14 @@ public class ServerConfigurationProperties {
 
 	public void setConnectionLimit(final int connectionLimit) {
 		this.connectionLimit = connectionLimit;
+	}
+
+	public int getStaticResourceCacheSize() {
+		return this.staticResourceCacheSize;
+	}
+
+	public void setStaticResourceCacheSize(final int staticResourceCacheSize) {
+		this.staticResourceCacheSize = staticResourceCacheSize;
 	}
 
 

@@ -16,6 +16,7 @@ import java.nio.file.Paths;
 import java.util.UUID;
 
 import vo.zframework.cache.ZRC;
+import vo.zframework.common.AU;
 import vo.zframework.common.STU;
 import vo.zframework.configuration.properties.ServerConfigurationProperties;
 import vo.zframework.core.ZContext;
@@ -33,10 +34,13 @@ public class ResourcesLoader {
 
 	private static ServerConfigurationProperties SERVER_CONFIGURATION= ZContext.getBean(ServerConfigurationProperties.class);
 
+	private static final int StaticResourceCacheSize_BYTE = SERVER_CONFIGURATION.getStaticResourceCacheSize() * 1024;
+
 	private static final boolean STATIC_RESOURCE_CACHE_ENABLE = SERVER_CONFIGURATION.getStaticResourceCacheEnable();
 
 	public static final String STATIC_RESOURCES_PROPERTY_NAME = "resource.path-" + UUID.randomUUID();
 
+	// FIXME 2026年7月3日 01:51:37 zhangzhen : 这两个数也写配置项
 	private final static ZRC BYTE_CACHE = new ZRC(100, 1);
 
 	private final static ZRC STRING_CACHE = new ZRC(100, 1);
@@ -58,6 +62,22 @@ public class ResourcesLoader {
 			return loadStringByCache(key, resourceName);
 		}
 
+		final Object v1 = STRING_CACHE.get(resourceName);
+		if (v1 != null) {
+			return (String) v1;
+		}
+
+		final String vs = s(resourceName, resourcePath);
+		// FIXME 2026年7月3日 01:58:02 zhangzhen : 用v.length()而非，getBytes().length
+		// 可能字节数最多是实际的3倍，即：超过配置值3倍的数据也放入缓存了，但似乎也不是多大的问题
+		if (STU.isNotEmpty(vs) && (vs.length() <= StaticResourceCacheSize_BYTE)) {
+			STRING_CACHE.put(resourceName, vs);
+		}
+
+		return vs;
+	}
+
+	private static String s(final String resourceName, final String resourcePath) {
 		final String name = resourcePath + (resourceName.replace("/", File.separator));
 		FileReader fileReader = null;
 		try {
@@ -139,7 +159,17 @@ public class ResourcesLoader {
 			return loadByteArrayByCache(key);
 		}
 
-		return BYTE_CACHE.computeIfAbsent(resourceName, () -> extracted(resourceName, resourcePath));
+		final Object v = BYTE_CACHE.get(resourceName);
+		if (v != null) {
+			return (byte[]) v;
+		}
+
+		final byte[] v1 = extracted(resourceName, resourcePath);
+		if (AU.isNotEmpty(v1) && (v1.length <= StaticResourceCacheSize_BYTE)) {
+			BYTE_CACHE.put(resourceName, v1);
+		}
+
+		return v1;
 	}
 
 	private static byte[] extracted(final String resourceName, final String resourcePath) {
@@ -164,12 +194,22 @@ public class ResourcesLoader {
 
 	private static byte[] loadByteArrayByCache(final String resourceName) {
 		if (!STATIC_RESOURCE_CACHE_ENABLE) {
-			return readByteArrayFromInputStream(checkInputStream(resourceName, resourceName).getInputStream());
+			final byte[] v1 = readByteArrayFromInputStream(checkInputStream(resourceName, resourceName).getInputStream());
+			return v1;
 		}
 
-		final byte[] v = BYTE_CACHE.computeIfAbsent(resourceName,
-					() -> readByteArrayFromInputStream(checkInputStream(resourceName, resourceName).getInputStream()));
-		return v;
+		final Object v = BYTE_CACHE.get(resourceName);
+		if (v != null) {
+			return (byte[]) v;
+		}
+
+
+		final byte[] v1 = readByteArrayFromInputStream(checkInputStream(resourceName, resourceName).getInputStream());
+		if (AU.isNotEmpty(v1) && (v1.length <= StaticResourceCacheSize_BYTE)) {
+			BYTE_CACHE.put(resourceName, v1);
+		}
+
+		return v1;
 	}
 
 	private static String loadStringByCache(final String name, final String resourceName) {
@@ -177,8 +217,19 @@ public class ResourcesLoader {
 			return loadSring0(name, resourceName);
 		}
 
-		final Object v = STRING_CACHE.computeIfAbsent(name, ()-> loadSring0(name, resourceName));
-		return (String) v;
+		final Object v1 = STRING_CACHE.get(resourceName);
+		if (v1 != null) {
+			return (String) v1;
+		}
+
+		final String vs = loadSring0(name, resourceName);
+		// FIXME 2026年7月3日 01:58:02 zhangzhen : 用v.length()而非，getBytes().length
+		// 可能字节数最多是实际的3倍，即：超过配置值3倍的数据也放入缓存了，但似乎也不是多大的问题
+		if (STU.isNotEmpty(vs) && (vs.length() <= StaticResourceCacheSize_BYTE)) {
+			STRING_CACHE.put(resourceName, vs);
+		}
+
+		return vs;
 	}
 
 	private static String loadSring0(final String name, final String resourceName) {
