@@ -11,7 +11,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
 
 import vo.zframework.common.AU;
 import vo.zframework.common.Hash;
@@ -211,21 +210,25 @@ public class ZResponse {
 		return this;
 	}
 
-	public ZResponse cookie(final ZCookie zCookie) {
-		this.cookie(zCookie.getName(), zCookie.toCookieString());
-		return this;
-	}
-
 	public ZResponse httpStatus(final int httpStatus) {
 		this.httpStatus = httpStatus;
 		return this;
 	}
 
+	public ZResponse cookie(final ZCookie zCookie) {
+		this.initCookieArray();
+
+		this.cookieArray.add(HeaderEnum.SET_COOKIE.getNameBytes());
+		this.cookieArray.add(STU.COLON_BYTES);
+		this.cookieArray.add(zCookie.toSetCookieString().getBytes());
+		this.cookieArray.add(STU.CRLF_BYTES);
+
+		return this;
+	}
+
 	public ZResponse cookie(final String name,final String value) {
 
-		if (this.cookieArray == null) {
-			this.cookieArray = new ZArray(512);
-		}
+		this.initCookieArray();
 
 		this.cookieArray.add(HeaderEnum.SET_COOKIE.getNameBytes());
 		this.cookieArray.add(STU.COLON_BYTES);
@@ -235,6 +238,12 @@ public class ZResponse {
 		this.cookieArray.add(STU.CRLF_BYTES);
 
 		return this;
+	}
+
+	private void initCookieArray() {
+		if (this.cookieArray == null) {
+			this.cookieArray = new ZArray(512);
+		}
 	}
 
 	public boolean containsHeader(final String header) {

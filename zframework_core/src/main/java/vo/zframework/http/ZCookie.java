@@ -133,20 +133,30 @@ public class ZCookie {
 		return this.value;
 	}
 
-	public String toCookieString() {
-		//			Set-Cookie:
-		//			sessionId=abc123;
-		//			Expires=Sat, 01 Jan 2022 00:00:00 GMT;
-		//			Max-Age=3600;
-		//			Domain=example.com;
-		//			Path=/;
-		//			Secure;
-		//			HttpOnly;
-		//			SameSite=Strict
+	/**
+	 * 生成一个Set-Cookie的内容，如：
+	 * name=vo;HttpOnly;Secure;SameSite=Lax;Path=/;Domain=localhost;Max-Age=12345;
+	 * Expires=Thu, 302 Jul 2026 09:51:13 GMT;
+	 *
+	 * @return
+	 */
+	public String toSetCookieString() {
+		// Set-Cookie:
+		// sessionId=abc123;
+		// Expires=Sat, 01 Jan 2022 00:00:00 GMT;
+		// Max-Age=3600;
+		// Domain=example.com;
+		// Path=/;
+		// Secure;
+		// HttpOnly;
+		// SameSite=Strict
 
 		final StringBuilder builder = new StringBuilder();
-		// 不取name，就是不取name，不是忘写了
-		builder.append(this.getValue()).append(STU.SEMICOLON);
+		builder
+				.append(this.getName())
+				.append(STU.EQUALS_C)
+				.append(this.getValue())
+				.append(STU.SEMICOLON);
 
 		if (this.httpOnly) {
 			builder.append(HTTP_ONLY).append(STU.SEMICOLON);
@@ -155,19 +165,19 @@ public class ZCookie {
 			builder.append(SECURE).append(STU.SEMICOLON);
 		}
 		if (this.sameSite != null) {
-			builder.append(SAME_SITE).append(STU.EQUALS).append(this.sameSite.getValue()).append(STU.SEMICOLON);
+			builder.append(SAME_SITE).append(STU.EQUALS_C).append(this.sameSite.getValue()).append(STU.SEMICOLON);
 		}
 		if (this.path != null) {
-			builder.append(PATH).append(STU.EQUALS).append(this.path).append(STU.SEMICOLON);
+			builder.append(PATH).append(STU.EQUALS_C).append(this.path).append(STU.SEMICOLON);
 		}
 		if (this.domain != null) {
-			builder.append(DOMAIN).append(STU.EQUALS).append(this.domain).append(STU.SEMICOLON);
+			builder.append(DOMAIN).append(STU.EQUALS_C).append(this.domain).append(STU.SEMICOLON);
 		}
 		if (this.maxAge != 0) {
-			builder.append(MAX_AGE).append(STU.EQUALS).append(this.maxAge).append(STU.SEMICOLON);
+			builder.append(MAX_AGE).append(STU.EQUALS_C).append(this.maxAge).append(STU.SEMICOLON);
 		}
 		if (this.expires != null) {
-			builder.append(EXPIRES).append(STU.EQUALS).append(this.expires).append(STU.SEMICOLON);
+			builder.append(EXPIRES).append(STU.EQUALS_C).append(this.expires).append(STU.SEMICOLON);
 		}
 
 		return builder.toString();
