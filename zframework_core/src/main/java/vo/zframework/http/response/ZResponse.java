@@ -216,7 +216,7 @@ public class ZResponse {
 	}
 
 	public ZResponse cookie(final ZCookie zCookie) {
-		this.initCookieArray();
+		this.initCookieArray(HTTPResponseProcessor.DEFAULT_RESPONSE_COOKIE_ARRAY_CAPACITY);
 
 		this.cookieArray.add(HeaderEnum.SET_COOKIE.getNameBytes());
 		this.cookieArray.add(STU.COLON_BYTES);
@@ -228,7 +228,7 @@ public class ZResponse {
 
 	public ZResponse cookie(final String name,final String value) {
 
-		this.initCookieArray();
+		this.initCookieArray(100);
 
 		this.cookieArray.add(HeaderEnum.SET_COOKIE.getNameBytes());
 		this.cookieArray.add(STU.COLON_BYTES);
@@ -240,9 +240,9 @@ public class ZResponse {
 		return this;
 	}
 
-	private void initCookieArray() {
+	private void initCookieArray(final int initialCapacity) {
 		if (this.cookieArray == null) {
-			this.cookieArray = new ZArray(512);
+			this.cookieArray = new ZArray(initialCapacity);
 		}
 	}
 

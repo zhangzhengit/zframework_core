@@ -33,6 +33,12 @@ public class HTTPResponseProcessor {
 	private static final boolean RESPONSE_Z_SESSION_ID = ZContext
 			.getBean(ServerConfigurationProperties.class).isResponseZSessionId();
 
+	/**
+	 * 注意:这个76是根据当前 setZSessionId 方法中response.cookie(cookie)的cookie实现方式来确定的，
+	 * 如果以后cookie的生成方式改了，这个值也要改
+	 */
+	public static final int DEFAULT_RESPONSE_COOKIE_ARRAY_CAPACITY = 76;
+
 	public static void response(final ZRequest request) {
 
 		try {
