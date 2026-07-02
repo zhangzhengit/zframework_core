@@ -159,7 +159,7 @@ public class ZResponse {
 	/**
 	 * 清空当前的body
 	 */
-	public synchronized void clearBody() {
+	public void clearBody() {
 		this.body = null;
 		this.bIC = 0;
 	}
@@ -188,7 +188,7 @@ public class ZResponse {
 		return this.body;
 	}
 
-	public synchronized ZResponse contentType(final byte[] contentTypeBytes) {
+	public ZResponse contentType(final byte[] contentTypeBytes) {
 		this.contentTypeHasBeenSet = true;
 		this.contentTypeBytes = contentTypeBytes;
 
@@ -199,7 +199,7 @@ public class ZResponse {
 		return this;
 	}
 
-	public synchronized ZResponse contentType(final String contentType) {
+	public ZResponse contentType(final String contentType) {
 		this.contentTypeHasBeenSet = true;
 		this.contentType = contentType;
 
@@ -336,7 +336,7 @@ public class ZResponse {
 	 * 因为本方法会write到客户端，在调用本方法之后再调用任何方法都无意义了
 	 * @param fis
 	 */
-	public synchronized void body(final FIS fis) {
+	public void body(final FIS fis) {
 
 		this.isBodyStream = true;
 
@@ -642,7 +642,7 @@ public class ZResponse {
 	 * @param body
 	 * @return
 	 */
-	public synchronized ZResponse body(final byte[] body) {
+	public ZResponse body(final byte[] body) {
 		this.checkBIC();
 
 		if (this.getHttpStatus() == HttpStatusEnum.HTTP_204.getStatus()) {
@@ -665,7 +665,7 @@ public class ZResponse {
 				&& SERVER_CONFIGURATIONPROPERTIES.compressionContains(this.getContentType());
 	}
 
-	private synchronized void checkBIC() {
+	private void checkBIC() {
 		if (this.bIC > 0) {
 			throw new IllegalArgumentException("body 只能设置一次");
 		}
@@ -679,7 +679,7 @@ public class ZResponse {
 	 * @param body
 	 * @return
 	 */
-	public synchronized ZResponse body(final Object body) {
+	public ZResponse body(final Object body) {
 		if (this.getHttpStatus() == HttpStatusEnum.HTTP_204.getStatus()) {
 			return this;
 		}
@@ -693,7 +693,7 @@ public class ZResponse {
 	 * @param body
 	 * @return
 	 */
-	public synchronized ZResponse body(final String body) {
+	public ZResponse body(final String body) {
 		// FIXME 2026年6月20日 07:12:04 zhangzhen : 大String在此getBytes成为内存热点，要不要改为ZstdOutputStream流式响应?
 		if (this.getHttpStatus() == HttpStatusEnum.HTTP_204.getStatus()) {
 			return this;
@@ -709,7 +709,7 @@ public class ZResponse {
 	/**
 	 * 根据header和body 来响应结果，只响应一次
 	 */
-	public synchronized void write() {
+	public void write() {
 		if (this.isWritten()) {
 			return;
 		}
