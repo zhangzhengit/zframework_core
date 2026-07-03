@@ -10,6 +10,7 @@ import java.util.StringJoiner;
 import java.util.UUID;
 
 import vo.zframework.common.CU;
+import vo.zframework.common.STU;
 
 /**
  * java的method
@@ -147,7 +148,7 @@ public class ZMethod {
 		builder.add(this.getReturnType());
 		final String n = this.getName();
 
-		builder.add(SCU.isEmpty(n) ? ZMethod.generateDefaultMethodName() : n);
+		builder.add(STU.isEmpty(n) ? ZMethod.generateDefaultMethodName() : n);
 
 		// FIXME 2023年6月11日 下午7:24:06 zhanghen:
 		// 2 开始
@@ -196,7 +197,7 @@ public class ZMethod {
 	}
 
 	public String getBody() {
-		if (SCU.isEmpty(this.body)) {
+		if (STU.isEmpty(this.body)) {
 			return "";
 		}
 		return this.body;

@@ -6,7 +6,7 @@ import java.util.UUID;
 import java.util.function.Supplier;
 
 import vo.zframework.common.CU;
-import vo.zframework.zclass.SCU;
+import vo.zframework.common.STU;
 
 /**
  * 一个通用的的缓存，只适合于[有就更好一点，没有也无所谓]的锦上添花场景。
@@ -118,7 +118,7 @@ public class ZRC {
 	}
 
 	public void clear(final String key) {
-		if (SCU.isEmpty(key)) {
+		if (STU.isEmpty(key)) {
 			return;
 		}
 

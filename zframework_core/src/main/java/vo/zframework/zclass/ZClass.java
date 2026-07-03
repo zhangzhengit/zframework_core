@@ -15,6 +15,7 @@ import java.util.StringJoiner;
 import java.util.UUID;
 
 import vo.zframework.common.CU;
+import vo.zframework.common.STU;
 
 
 /**
@@ -113,12 +114,12 @@ public class ZClass {
 		builder.append(ZClass.CLASS);
 		final String name2 = this.getName();
 
-		final String gName = SCU.isEmpty(name2) ? ZClass.generateDefaultClassName() : name2;
+		final String gName = STU.isEmpty(name2) ? ZClass.generateDefaultClassName() : name2;
 		builder.append(gName);
 		this.setName(gName);
 
 		final String sc = this.getSuperClass();
-		if(SCU.isNotEmpty(sc)) {
+		if(STU.isNotEmpty(sc)) {
 			builder.append(" extends ").append(sc);
 		}
 
@@ -183,7 +184,7 @@ public class ZClass {
 	}
 
 	public String getBody() {
-		if (SCU.isEmpty(this.body)) {
+		if (STU.isEmpty(this.body)) {
 			return "";
 		}
 

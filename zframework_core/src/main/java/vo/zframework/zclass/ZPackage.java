@@ -1,5 +1,7 @@
 package vo.zframework.zclass;
 
+import vo.zframework.common.STU;
+
 /**
  * Package声明
  *
@@ -21,7 +23,7 @@ public class ZPackage {
 	}
 
 	public void setPackageString(final String packageString) {
-		if (SCU.isBlank(packageString)) {
+		if (STU.isBlank(packageString)) {
 			this.packageString = packageString;
 			return;
 		}
@@ -38,11 +40,10 @@ public class ZPackage {
 	}
 
 	public String getPackageString() {
-		return packageString;
+		return this.packageString;
 	}
 
 	public ZPackage() {
-		super();
 	}
 
 }

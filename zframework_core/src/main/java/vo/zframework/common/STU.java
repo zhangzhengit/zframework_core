@@ -84,6 +84,14 @@ public class STU {
 		return !isNullOrEmptyOrBlank(string);
 	}
 
+	public static boolean isBlank(final String string) {
+		if (isEmpty(string)) {
+			return true;
+		}
+
+		return string.trim().isEmpty();
+	}
+
 	public static boolean isPureAscii(final String str) {
 		if ((str == null) || str.isEmpty()) {
 			return true;
