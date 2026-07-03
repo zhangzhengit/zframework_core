@@ -6,7 +6,6 @@ import vo.zframework.anno.ZCacheEvict;
 import vo.zframework.cache.ZCache;
 import vo.zframework.cache.ZCacheR;
 import vo.zframework.common.STU;
-import vo.zframework.configuration.properties.ZCacheConfigurationProperties;
 
 /**
  * @ZCacheEvict 的实现类
@@ -21,9 +20,6 @@ public class ZCacheEvictAOP implements ZIAOP {
 	@ZAutowired(name = ZCache.CACHE_BBUILTIN_FOR_PACKAGE_CACHE)
 	private ZCache<ZCacheR> cache;
 
-	@ZAutowired
-	private ZCacheConfigurationProperties cacheConfigurationProperties;
-
 	@Override
 	public Object before(final AOPParameter aopParameter) {
 		return null;
@@ -31,10 +27,6 @@ public class ZCacheEvictAOP implements ZIAOP {
 
 	@Override
 	public Object around(final AOPParameter aopParameter) {
-
-		if (!this.cacheConfigurationProperties.getEnable()) {
-			return aopParameter.invoke();
-		}
 
 		final ZCacheEvict annotation = aopParameter.getMethod().getAnnotation(ZCacheEvict.class);
 		final String key = annotation.key();

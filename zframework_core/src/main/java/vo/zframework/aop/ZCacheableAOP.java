@@ -12,7 +12,6 @@ import vo.zframework.cache.ZCacheR;
 import vo.zframework.common.AU;
 import vo.zframework.common.RU;
 import vo.zframework.common.STU;
-import vo.zframework.configuration.properties.ZCacheConfigurationProperties;
 import vo.zframework.exception.CacheKeyDeclarationException;
 
 /**
@@ -32,9 +31,6 @@ public class ZCacheableAOP implements ZIAOP {
 	@ZAutowired(name = ZCache.CACHE_BBUILTIN_FOR_PACKAGE_CACHE)
 	private ZCache<ZCacheR> cache;
 
-	@ZAutowired
-	private ZCacheConfigurationProperties cacheConfigurationProperties;
-
 	@Override
 	public Object before(final AOPParameter aopParameter) {
 		return null;
@@ -42,10 +38,6 @@ public class ZCacheableAOP implements ZIAOP {
 
 	@Override
 	public Object around(final AOPParameter aopParameter) {
-		// FIXME 2025年1月17日 下午11:48:24 zhangzhen : 这个偶尔NPE，查找原因
-		if (!this.cacheConfigurationProperties.getEnable()) {
-			return aopParameter.invoke();
-		}
 
 		final ZCacheable annotation = aopParameter.getMethod().getAnnotation(ZCacheable.class);
 

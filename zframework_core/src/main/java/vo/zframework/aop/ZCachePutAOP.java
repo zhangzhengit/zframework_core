@@ -5,7 +5,6 @@ import vo.zframework.anno.ZAutowired;
 import vo.zframework.anno.ZCachePut;
 import vo.zframework.cache.ZCache;
 import vo.zframework.cache.ZCacheR;
-import vo.zframework.configuration.properties.ZCacheConfigurationProperties;
 
 /**
  * @ZCachePut 的实现类
@@ -20,8 +19,6 @@ public class ZCachePutAOP implements ZIAOP {
 	@ZAutowired(name = ZCache.CACHE_BBUILTIN_FOR_PACKAGE_CACHE)
 	private ZCache<ZCacheR> cache;
 
-	@ZAutowired
-	private ZCacheConfigurationProperties cacheConfigurationProperties;
 
 	@Override
 	public Object before(final AOPParameter aopParameter) {
@@ -30,10 +27,6 @@ public class ZCachePutAOP implements ZIAOP {
 
 	@Override
 	public Object around(final AOPParameter aopParameter) {
-
-		if (!this.cacheConfigurationProperties.getEnable()) {
-			return aopParameter.invoke();
-		}
 
 		final ZCachePut annotation = aopParameter.getMethod().getAnnotation(ZCachePut.class);
 		final String key = annotation.key();

@@ -60,11 +60,11 @@
 			<version>1.5.5-11</version>
 		</dependency>
 
-		<dependency>
-			<groupId>redis.clients</groupId>
-			<artifactId>jedis</artifactId>
-			<version>4.4.3</version>
-		</dependency>
+<!--		<dependency>-->
+<!--			<groupId>redis.clients</groupId>-->
+<!--			<artifactId>jedis</artifactId>-->
+<!--			<version>4.4.3</version>-->
+<!--		</dependency>-->
 
 		<dependency>
 			<groupId>org.codehaus.janino</groupId>
