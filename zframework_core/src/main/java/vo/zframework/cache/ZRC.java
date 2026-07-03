@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.function.Supplier;
 
-import vo.zframework.zclass.CU;
+import vo.zframework.common.CU;
 import vo.zframework.zclass.SCU;
 
 /**

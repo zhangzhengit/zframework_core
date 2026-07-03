@@ -14,6 +14,8 @@ import java.util.Set;
 import java.util.StringJoiner;
 import java.util.UUID;
 
+import vo.zframework.common.CU;
+
 
 /**
  * 表示java class对象
@@ -71,7 +73,7 @@ public class ZClass {
 
 	public void addField(final ZField zField) {
 		if (this.getFieldSet() == null) {
-			this.setFieldSet(new HashSet<ZField>());
+			this.setFieldSet(new HashSet<>());
 		}
 
 		this.getFieldSet().add(zField);
@@ -152,7 +154,7 @@ public class ZClass {
 				builder.append(zm.toString());
 			}
 		}
-		
+
 		final Set<String> sss = this.getMethodSetString();
 		if (CU.isNotEmpty(sss)) {
 			for (final String ms : sss) {
@@ -160,7 +162,7 @@ public class ZClass {
 			}
 			builder.append(NEW_LINE);
 		}
-		
+
 
 		builder.append('}');
 
@@ -196,11 +198,11 @@ public class ZClass {
 				throw new IllegalArgumentException("package 未定义，请声明一个 " + ZPackage.class.getName() + " 对象");
 			}
 			final Object newInstance = ZCU.newInstance(source, package12.toString(), this.getName());
-			
+
 			// 2
 			SOURCE_MAP_CLASS_TO_O.put(this, newInstance);
 			SOURCE_MAP_O_TO_CLASS.put(newInstance, this);
-			
+
 			// 1
 //			ZClass.SOURCE_MAP.put(this, newInstance);
 			return newInstance;
@@ -215,7 +217,7 @@ public class ZClass {
 
 		// 2
 		final ZClass zClass = SOURCE_MAP_O_TO_CLASS.get(object);
-		
+
 //		final ZClass zClass = SOURCE_MAP.inverse().get(object);
 		// 1
 //		final ZClass zClass = SOURCE_MAP.inverse().get(object);
@@ -326,7 +328,6 @@ public class ZClass {
 	public ZClass(final ZPackage package1, final Set<String> importSet, final Set<String> annotationSet, final ZMethodAccessEnum accessRights,
 			final String name, final Set<String> implementsSet, final Set<ZField> fieldSet, final String superClass, final String body,
 			final Set<ZMethod> methodSet) {
-		super();
 		this.package1 = package1;
 		this.importSet = importSet;
 		this.annotationSet = annotationSet;
@@ -340,13 +341,12 @@ public class ZClass {
 	}
 
 	public ZClass() {
-		super();
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(accessRights, annotationSet, body, fieldSet, implementsSet, importSet, methodSet, name,
-				package1, superClass);
+		return Objects.hash(this.accessRights, this.annotationSet, this.body, this.fieldSet, this.implementsSet, this.importSet, this.methodSet, this.name,
+				this.package1, this.superClass);
 	}
 
 	@Override
@@ -357,19 +357,19 @@ public class ZClass {
 		if (obj == null) {
 			return false;
 		}
-		if (getClass() != obj.getClass()) {
+		if (this.getClass() != obj.getClass()) {
 			return false;
 		}
 		final ZClass other = (ZClass) obj;
-		return accessRights == other.accessRights && Objects.equals(annotationSet, other.annotationSet)
-				&& Objects.equals(body, other.body) && Objects.equals(fieldSet, other.fieldSet)
-				&& Objects.equals(implementsSet, other.implementsSet) && Objects.equals(importSet, other.importSet)
-				&& Objects.equals(methodSet, other.methodSet) && Objects.equals(name, other.name)
-				&& Objects.equals(package1, other.package1) && Objects.equals(superClass, other.superClass);
+		return (this.accessRights == other.accessRights) && Objects.equals(this.annotationSet, other.annotationSet)
+				&& Objects.equals(this.body, other.body) && Objects.equals(this.fieldSet, other.fieldSet)
+				&& Objects.equals(this.implementsSet, other.implementsSet) && Objects.equals(this.importSet, other.importSet)
+				&& Objects.equals(this.methodSet, other.methodSet) && Objects.equals(this.name, other.name)
+				&& Objects.equals(this.package1, other.package1) && Objects.equals(this.superClass, other.superClass);
 	}
 
 	public ZPackage getPackage1() {
-		return package1;
+		return this.package1;
 	}
 
 	public void setPackage1(final ZPackage package1) {
@@ -377,7 +377,7 @@ public class ZClass {
 	}
 
 	public Set<String> getImportSet() {
-		return importSet;
+		return this.importSet;
 	}
 
 	public void setImportSet(final Set<String> importSet) {
@@ -385,7 +385,7 @@ public class ZClass {
 	}
 
 	public Set<String> getAnnotationSet() {
-		return annotationSet;
+		return this.annotationSet;
 	}
 
 	public void setAnnotationSet(final Set<String> annotationSet) {
@@ -393,7 +393,7 @@ public class ZClass {
 	}
 
 	public ZMethodAccessEnum getAccessRights() {
-		return accessRights;
+		return this.accessRights;
 	}
 
 	public void setAccessRights(final ZMethodAccessEnum accessRights) {
@@ -401,7 +401,7 @@ public class ZClass {
 	}
 
 	public String getName() {
-		return name;
+		return this.name;
 	}
 
 	public void setName(final String name) {
@@ -409,7 +409,7 @@ public class ZClass {
 	}
 
 	public Set<String> getImplementsSet() {
-		return implementsSet;
+		return this.implementsSet;
 	}
 
 	public void setImplementsSet(final Set<String> implementsSet) {
@@ -417,7 +417,7 @@ public class ZClass {
 	}
 
 	public Set<ZField> getFieldSet() {
-		return fieldSet;
+		return this.fieldSet;
 	}
 
 	public void setFieldSet(final Set<ZField> fieldSet) {
@@ -425,7 +425,7 @@ public class ZClass {
 	}
 
 	public String getSuperClass() {
-		return superClass;
+		return this.superClass;
 	}
 
 	public void setSuperClass(final String superClass) {
@@ -433,22 +433,22 @@ public class ZClass {
 	}
 
 	public Set<ZMethod> getMethodSet() {
-		return methodSet;
-	}
-	
-	public Set<String> getMethodSetString() {
-		return methodSetString;
+		return this.methodSet;
 	}
 
-	
+	public Set<String> getMethodSetString() {
+		return this.methodSetString;
+	}
+
+
 	/**
 	 * 添加一个String形式的Method
-	 * 
-	 * @param methodString	
+	 *
+	 * @param methodString
 	 * 		String形式的java Method，如：
-	 * 
-	 * 	 public void hello() { 
-	 * 		System.out.println("hello"); 
+	 *
+	 * 	 public void hello() {
+	 * 		System.out.println("hello");
 	 * 	 }
 	 */
 	public void addMethod(final String methodString) {
@@ -457,14 +457,14 @@ public class ZClass {
 		}
 		this.methodSetString.add(methodString);
 	}
-	
+
 	public void addMethod(final ZMethod method) {
 		if (this.methodSet == null) {
 			this.methodSet = new HashSet<>();
 		}
 		this.methodSet.add(method);
 	}
-	
+
 	public void setMethodSet(final Set<ZMethod> methodSet) {
 		this.methodSet = methodSet;
 	}
@@ -472,5 +472,5 @@ public class ZClass {
 	public void setBody(final String body) {
 		this.body = body;
 	}
-	
+
 }
