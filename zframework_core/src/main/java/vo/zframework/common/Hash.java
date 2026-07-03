@@ -1,8 +1,7 @@
 package vo.zframework.common;
 
-import java.util.List;
-
-import com.google.common.hash.Hashing;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 /**
  * HASH
@@ -13,40 +12,30 @@ import com.google.common.hash.Hashing;
  */
 public class Hash {
 
-	public static String murmur3(final String string) {
-		return murmur3(string.getBytes());
-	}
+	private static final String SHA_512 = "SHA-512";
 
-	public static String murmur3(final byte[] ba) {
-		return Hashing.murmur3_128().newHasher().putBytes(ba).hash().toString();
-	}
 
-	public static String murmur3(final List<Byte> bl) {
-		if ((bl == null) || bl.isEmpty()) {
-			return "";
+	public static String sha512(final byte[] bytes) {
+
+		final byte[] r = DIGEST_THREAD_LOCAL.get().digest(bytes);
+
+		final StringBuilder hex = new StringBuilder(r.length * 2);
+		for (final byte b : r) {
+			final String s = Integer.toHexString(b & 0xFF);
+			if (s.length() == 1) {
+				hex.append('0');
+			}
+			hex.append(s);
 		}
 
-		final byte[] b = new byte[bl.size()];
-		for (int i = 0; i < bl.size(); i++) {
-			b[i] = bl.get(i);
+		return hex.toString();
+	}
+
+	private static final ThreadLocal<MessageDigest> DIGEST_THREAD_LOCAL = ThreadLocal.withInitial(() -> {
+		try {
+			return MessageDigest.getInstance(SHA_512);
+		} catch (final NoSuchAlgorithmException e) {
+			throw new RuntimeException(SHA_512 + "不可用", e);
 		}
-		return murmur3(b);
-	}
-
-	public static String md5(final byte[] ba) {
-		return Hashing.md5().newHasher().putBytes(ba).hash().toString();
-	}
-
-	public static String sha256(final byte[] ba) {
-		return Hashing.sha256().newHasher().putBytes(ba).hash().toString();
-	}
-
-	public static String sha512(final byte[] ba) {
-		return Hashing.sha512().newHasher().putBytes(ba).hash().toString();
-	}
-
-	public static String goodFastHash(final byte[] ba) {
-		return Hashing.goodFastHash(256).newHasher().putBytes(ba).hash().toString();
-	}
-
+	});
 }
