@@ -1,5 +1,7 @@
 package vo.zframework.common;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -35,6 +37,16 @@ public class CU {
 
 	public static boolean isNotEmpty(final Map<?, ?> map) {
 		return (map != null) && (map.size() > 0);
+	}
+
+	public static <E> ArrayList<E> newArrayList(final E... e) {
+		if (AU.isEmpty(e)) {
+			return null;
+		}
+
+		final ArrayList<E> list = new ArrayList<>(e.length);
+		Collections.addAll(list, e);
+		return  list;
 	}
 
 }

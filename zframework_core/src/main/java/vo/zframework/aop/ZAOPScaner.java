@@ -17,8 +17,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
-
 import vo.zframework.anno.ZAOP;
 import vo.zframework.bean.ZSingleton;
 import vo.zframework.common.CU;
@@ -271,7 +269,7 @@ public class ZAOPScaner {
 						+ "parameter.setMethodName(\"" + m.getName() + "\");" + "\n\t"
 						+  Method.class.getName() + " m = ("+ Method.class.getName()+")"+ZAOPScaner.class.getName()+".cmap.get(\""+nnn+"\");" + "\n\t"
 						+ "parameter.setMethod(m);" + "\n\t"
-						+ "parameter.setParameterList("+Lists.class.getName()+".newArrayList("+a+"));" + "\n\t"
+						+ "parameter.setParameterList("+CU.class.getName()+".newArrayList("+a+"));" + "\n\t"
 						+ "\n\t"
 						+ aop + "\n\t"
 
@@ -283,7 +281,7 @@ public class ZAOPScaner {
 							+ "parameter.setMethodName(\"" + m.getName() + "\");" + "\n\t"
 							+  Method.class.getName() + " m = (" + Method.class.getName() + ")" +ZAOPScaner.class.getName()+".cmap.get(\""+nnn+"\");" + "\n\t"
 							+ "parameter.setMethod(m);" + "\n\t"
-							+ "parameter.setParameterList("+Lists.class.getName()+".newArrayList("+a+"));" + "\n\t"
+							+ "parameter.setParameterList("+CU.class.getName()+".newArrayList("+a+"));" + "\n\t"
 							+ "\n\t"
 							+ aop + "\n\t"
 							+ "return (" + returnTypeT + ")v"+(aopClassList.size()-1)+STU.SEMICOLON + "\n\t";
