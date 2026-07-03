@@ -105,8 +105,6 @@ public abstract class AbstractRequestValidator {
 		// getsessionId 放在active前面了，即使超时销毁了，在此用一次也无所谓
 		final String sessionId = session.getId();
 
-		ZSessionMap.active(sessionId);
-
 		final String userAgent = request.getUserAgent();
 
 		final QPSHandlingEnum handlingEnum = this.requestValidatorConfigurationProperties

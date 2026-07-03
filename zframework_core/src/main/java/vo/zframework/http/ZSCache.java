@@ -1,7 +1,7 @@
 package vo.zframework.http;
 
+import java.util.LinkedList;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -14,12 +14,14 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ZSCache<K, V> {
 
 	private final Map<K, CacheEntry<V>> map = new ConcurrentHashMap<>();
+	private final LinkedList<Object> vk;
 	private final int maxSize;
 	private final int maxTimeoutSeconds;
 
 	public ZSCache(final int maxSize, final int maxTimeoutSeconds) {
 		this.maxSize = maxSize;
 		this.maxTimeoutSeconds = maxTimeoutSeconds;
+		this.vk = new LinkedList<>();
 	}
 
 	public Map<K, V> asMap() {
@@ -36,7 +38,6 @@ public class ZSCache<K, V> {
 	}
 
 	public int size() {
-
 		return this.map.size();
 	}
 
@@ -45,50 +46,62 @@ public class ZSCache<K, V> {
 	}
 
 	public V get(final Object key) {
-		final CacheEntry entry = this.map.get(key);
+
+		if (this.vk.size() >= this.maxSize) {
+			synchronized (this) {
+				this.vk.removeFirst();
+				this.vk.addLast(key);
+			}
+		}
+
+		final CacheEntry<?> entry = this.map.get(key);
 		if (entry == null) {
 			return null;
 		}
 
-		// 检查是否过期（expireAfterAccess）
 		if ((System.currentTimeMillis() - entry.lastAccess) > (this.maxTimeoutSeconds * 1000L)) {
-			this.map.remove(key, entry); // 原子删除
+			this.map.remove(key, entry);
 			return null;
 		}
 
-		// 更新访问时间（相当于 Guava 的 get 自动刷新过期时间）
 		entry.lastAccess = System.currentTimeMillis();
 		return (V) entry.v;
 	}
 
 	public void put(final K key, final V v) {
-		// 检查容量，如果超过最大容量，触发清理（移除最久未访问的）
 		if (this.map.size() >= this.maxSize) {
 			this.evictOldest();
 		}
-		this.map.put(key, new CacheEntry(v));
+		this.map.put(key, new CacheEntry<>(v));
+		synchronized (this) {
+			this.vk.addLast(key);
+		}
 	}
 
-	// 惰性清理（可选，但能及时释放内存）
 	public void cleanUp() {
 		final long now = System.currentTimeMillis();
 		this.map.entrySet().removeIf(entry -> (now - entry.getValue().lastAccess) > (this.maxTimeoutSeconds * 1000L));
 	}
 
-	// 淘汰最久未访问的条目（实现 maximumSize）
 	private void evictOldest() {
-		// 注意：只遍历一次，如果容量过大可能有性能问题，但通常 Session 数量可控
-		K oldestKey = null;
-		long oldestAccess = Long.MAX_VALUE;
-		for (final Entry<K, CacheEntry<V>> entry : this.map.entrySet()) {
-			if (entry.getValue().lastAccess < oldestAccess) {
-				oldestAccess = entry.getValue().lastAccess;
-				oldestKey = entry.getKey();
-			}
+		// FIXME 2026年7月4日 07:00:47 zhangzhen : 这个太慢了，暂时存一下访问的k，删最早的
+		if (!this.vk.isEmpty()) {
+			final Object k = this.vk.getFirst();
+			this.map.remove(k);
 		}
-		if (oldestKey != null) {
-			this.map.remove(oldestKey);
-		}
+
+//		K oldestKey = null;
+//		final long oldestAccess = System.currentTimeMillis();
+//		for (final Entry<K, CacheEntry<V>> entry : this.map.entrySet()) {
+//			if (entry.getValue().lastAccess < oldestAccess) {
+////				oldestAccess = entry.getValue().lastAccess;
+//				oldestKey = entry.getKey();
+//				break;
+//			}
+//		}
+//		if (oldestKey != null) {
+//			this.map.remove(oldestKey);
+//		}
 	}
 
 	private static class CacheEntry<V> {

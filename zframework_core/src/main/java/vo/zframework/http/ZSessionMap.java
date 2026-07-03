@@ -38,38 +38,4 @@ public class ZSessionMap {
 		SCS.put(zSession.getId(), zSession);
 	}
 
-	/**
-	 * 仅[活跃]一下session，不返回任何值，如果此session已经过期，则清除
-	 *
-	 * @param zSessionId
-	 */
-	public static void active(final String zSessionId) {
-		final ZSession session = SCS.getIfPresent(zSessionId);
-		final boolean expired = isExpired(session);
-		if (expired) {
-			session.invalidate();
-			remove(zSessionId);
-		}
-
-	}
-
-	/**
-	 * 判断session是否过期
-	 *
-	 * @param session
-	 * @return
-	 */
-	private static boolean isExpired(final ZSession session) {
-		if (session != null) {
-			final long intervalSeconds = session.getIntervalSeconds();
-			final long lastAccessedTime = session.getLastAccessedTime();
-			final long currentTimeMillis = System.currentTimeMillis();
-			if ((currentTimeMillis - lastAccessedTime) >= (intervalSeconds * 1000)) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-
 }
