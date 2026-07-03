@@ -1,12 +1,5 @@
 package vo.zframework.http;
 
-import java.util.concurrent.TimeUnit;
-
-import org.checkerframework.checker.nullness.qual.Nullable;
-
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-
 import vo.zframework.configuration.properties.ServerConfigurationProperties;
 import vo.zframework.core.ZContext;
 
@@ -28,14 +21,10 @@ public class ZSessionMap {
 	// 还是对于长时间不活跃的session会浪费内存，如：最大限制设为10天，session超时半小时。现在的实现没法主动
 	// 清除掉超过半小时未活跃的，只会在此session活跃时(请求了某个接口)在本类active方法中判断超时清除
 	// 如果一直不活跃，可能后面的10天-半小时的时间都会一直占用内存直到达到10天或者达到MAXIMUM_SIZE而被清除
-	private static final long SESSION_MAX_TIMEOUT = ZContext.getBean(ServerConfigurationProperties.class).getSessionMaxTimeout();
+	private static final int SESSION_MAX_TIMEOUT = ZContext.getBean(ServerConfigurationProperties.class).getSessionMaxTimeout();
 	public static final int SessionMaxActiveInMemory = ZContext.getBean(ServerConfigurationProperties.class).getSessionMaxActiveInMemory();
 
-	private static final Cache<String, ZSession> SCS =
-						CacheBuilder.newBuilder()
-						.maximumSize(SessionMaxActiveInMemory)
-						.expireAfterAccess(SESSION_MAX_TIMEOUT, TimeUnit.SECONDS)
-						.build();
+	private static final ZSCache<String, ZSession> SCS = new ZSCache<>(SessionMaxActiveInMemory, SESSION_MAX_TIMEOUT);
 
 	public static void remove(final String zSessionId) {
 		SCS.invalidate(zSessionId);
@@ -55,7 +44,6 @@ public class ZSessionMap {
 	 * @param zSessionId
 	 */
 	public static void active(final String zSessionId) {
-		@Nullable
 		final ZSession session = SCS.getIfPresent(zSessionId);
 		final boolean expired = isExpired(session);
 		if (expired) {

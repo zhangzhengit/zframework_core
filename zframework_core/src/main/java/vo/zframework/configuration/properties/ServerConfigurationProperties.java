@@ -716,7 +716,7 @@ public class ServerConfigurationProperties {
 		this.sessionMaxActive = sessionMaxActive;
 	}
 
-	public long getSessionMaxTimeout() {
+	public int getSessionMaxTimeout() {
 		return this.sessionMaxTimeout;
 	}
 

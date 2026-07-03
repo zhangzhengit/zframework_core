@@ -1,10 +1,5 @@
 package vo.zframework.http;
 
-import java.util.concurrent.TimeUnit;
-
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-
 import vo.zframework.enums.QCTimeEnum;
 import vo.zframework.enums.QPSHandlingEnum;
 
@@ -29,42 +24,18 @@ public class QC {
 	private static final int QPQ_THRESHOLD = QPM_THRESHOLD * 15;
 	private static final int QPH_THRESHOLD = QPM_THRESHOLD * 60;
 
-	private static final Cache<String, Integer> C_SECOND =
-			CacheBuilder.newBuilder()
-			// FIXME 2025年12月12日 21:12:44 zhangzhen : 最大容量不好设置，不只是接口个数*QPS这么简单
-			// 或者简单设置server.qps，因为这个值在最前面挡着，到接口这里时不会超过这个值
-			.maximumSize(10000 * 1000)
-//			.maximumSize(ZControllerMap.getAPIMethodSize() * ZRequestMapping.MAX_COUNT / 1000)
-			.expireAfterWrite(2, TimeUnit.SECONDS)
-			.expireAfterAccess(2, TimeUnit.SECONDS)
-			.build();
-	
-	private static final Cache<String, Integer> C_MINUTE=
-			CacheBuilder.newBuilder()
-			.maximumSize(10000 * 1000)
-//			.maximumSize(ZControllerMap.getAPIMethodSize() * ZRequestMapping.MAX_COUNT / 1000)
-			.expireAfterWrite(60 + 20, TimeUnit.SECONDS)
-			.expireAfterAccess(60 + 20, TimeUnit.SECONDS)
-			.build();
-	
-	private static final Cache<String, Integer> C_QUARTER=
-			CacheBuilder.newBuilder()
-			.maximumSize(10000 * 1000)
-//			.maximumSize(ZControllerMap.getAPIMethodSize() * ZRequestMapping.MAX_COUNT / 1000)
-			.expireAfterWrite(60 * 15 + 30, TimeUnit.SECONDS)
-			.expireAfterAccess(60 * 15 + 30, TimeUnit.SECONDS)
-			.build();
-	
-	private static final Cache<String, Integer> C_HORS=
-			CacheBuilder.newBuilder()
-			.maximumSize(10000 * 1000)
-//			.maximumSize(ZControllerMap.getAPIMethodSize() * ZRequestMapping.MAX_COUNT / 1000)
-			.expireAfterWrite(60 * 60 + 60, TimeUnit.SECONDS)
-			.expireAfterAccess(60 * 60 + 60, TimeUnit.SECONDS)
-			.build();
-	
-	
-	
+
+	// FIXME 2025年12月12日 21:12:44 zhangzhen : 10000 * 1000 最大容量不好设置，不只是接口个数*QPS这么简单
+	// 或者简单设置server.qps，因为这个值在最前面挡着，到接口这里时不会超过这个值
+
+	private static final ZSCache<String, Integer>  C_SECOND = new ZSCache<>(10000 * 1000, 2);
+
+	private static final ZSCache<String, Integer>  C_MINUTE = new ZSCache<>(10000 * 1000, 60 + 20);
+
+	private static final ZSCache<String, Integer>  C_QUARTER = new ZSCache<>(10000 * 1000, (60 * 15) + 30);
+
+	private static final ZSCache<String, Integer>  C_HORS = new ZSCache<>(10000 * 1000, (60 * 60) + 60);
+
 	public static boolean allow(final QCTimeEnum timeEnum, final String keyPrefix, final long qptu, final QPSHandlingEnum handlingEnum) {
 		switch (handlingEnum) {
 		case SMOOTH:
@@ -151,7 +122,7 @@ public class QC {
 		} else {
 			// @ZRM.qps = 100时, > 会导致实际放行数*2，因为改为了>=
 			if (count.intValue() >= qpsNEW) {
-				
+
 				// FIXME 2024年12月21日 下午1:17:11 zhangzhen : 上次加入下面这样是想及时山remove掉不再用的K，结果导致bug了
 				// 现在先注释了，以后再看怎么清楚不再用的K
 				//				C.remove(k);
@@ -169,7 +140,7 @@ public class QC {
 		} else {
 			// @ZRM.qps = 100时, > 会导致实际放行数*2，因为改为了>=
 			if (count.intValue() >= qpsNEW) {
-				
+
 				// FIXME 2024年12月21日 下午1:17:11 zhangzhen : 上次加入下面这样是想及时山remove掉不再用的K，结果导致bug了
 				// 现在先注释了，以后再看怎么清楚不再用的K
 				//				C.remove(k);
@@ -187,7 +158,7 @@ public class QC {
 		} else {
 			// @ZRM.qps = 100时, > 会导致实际放行数*2，因为改为了>=
 			if (count.intValue() >= qpsNEW) {
-				
+
 				// FIXME 2024年12月21日 下午1:17:11 zhangzhen : 上次加入下面这样是想及时山remove掉不再用的K，结果导致bug了
 				// 现在先注释了，以后再看怎么清楚不再用的K
 				//				C.remove(k);
@@ -205,7 +176,7 @@ public class QC {
 		} else {
 			// @ZRM.qps = 100时, > 会导致实际放行数*2，因为改为了>=
 			if (count.intValue() >= qpsNEW) {
-				
+
 				// FIXME 2024年12月21日 下午1:17:11 zhangzhen : 上次加入下面这样是想及时山remove掉不再用的K，结果导致bug了
 				// 现在先注释了，以后再看怎么清楚不再用的K
 				//				C.remove(k);

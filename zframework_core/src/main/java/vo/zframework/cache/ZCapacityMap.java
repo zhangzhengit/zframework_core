@@ -4,10 +4,8 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.TimeUnit;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
+import vo.zframework.http.ZSCache;
 
 /**
  * guava cache
@@ -16,25 +14,22 @@ import com.google.common.cache.CacheBuilder;
  * @date 2025年1月13日 上午7:07:44
  *
  */
-public class ZCapacityMap<K,V> implements ConcurrentMap<K, V>{
+public class ZCapacityMap<K, V> implements ConcurrentMap<K, V> {
 
-	private final Cache<K, V> c;
+	private final ZSCache<K, V> cache;
 
 	public ZCapacityMap(final int capacity, final int expireAfterWriteSECONDS) {
-		this.c = CacheBuilder.newBuilder()
-				.maximumSize(capacity)
-				.expireAfterWrite(expireAfterWriteSECONDS, TimeUnit.SECONDS)
-				.build();
+		this.cache = new ZSCache<>(capacity, expireAfterWriteSECONDS);
 	}
 
 	@Override
 	public int size() {
-		return (int) this.c.size();
+		return this.cache.size();
 	}
 
 	@Override
 	public boolean isEmpty() {
-		return this.c.size() <= 0;
+		return this.cache.size() <= 0;
 	}
 
 	@Override
@@ -49,7 +44,7 @@ public class ZCapacityMap<K,V> implements ConcurrentMap<K, V>{
 
 	@Override
 	public V get(final Object key) {
-		return this.c.getIfPresent(key);
+		return this.cache.getIfPresent(key);
 	}
 
 	@Override
@@ -59,14 +54,14 @@ public class ZCapacityMap<K,V> implements ConcurrentMap<K, V>{
 			return value;
 		}
 
-		this.c.put(key, value);
+		this.cache.put(key, value);
 		return value;
 	}
 
 	@Override
 	public V remove(final Object key) {
 		final V v = this.get(key);
-		this.c.invalidate(key);
+		this.cache.invalidate(key);
 		return v;
 	}
 
@@ -82,17 +77,17 @@ public class ZCapacityMap<K,V> implements ConcurrentMap<K, V>{
 
 	@Override
 	public Set<K> keySet() {
-		return this.c.asMap().keySet();
+		return this.cache.asMap().keySet();
 	}
 
 	@Override
 	public Collection<V> values() {
-		return this.c.asMap().values();
+		return this.cache.asMap().values();
 	}
 
 	@Override
 	public Set<Entry<K, V>> entrySet() {
-		return this.c.asMap().entrySet();
+		return this.cache.asMap().entrySet();
 	}
 
 	@Override

@@ -39,6 +39,10 @@ public class CU {
 		return (map != null) && (map.size() > 0);
 	}
 
+	public static <E> ArrayList<E> newArrayList() {
+		return  new ArrayList<>();
+	}
+
 	public static <E> ArrayList<E> newArrayList(final E... e) {
 		if (AU.isEmpty(e)) {
 			return null;
