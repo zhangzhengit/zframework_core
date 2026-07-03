@@ -15,8 +15,6 @@ import java.util.StringJoiner;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import com.google.common.collect.HashBasedTable;
-
 import vo.log.core.ZLog2;
 import vo.zframework.ZProperties;
 import vo.zframework.anno.ZComponent;
@@ -26,6 +24,7 @@ import vo.zframework.anno.ZService;
 import vo.zframework.anno.ZValue;
 import vo.zframework.common.CU;
 import vo.zframework.common.RU;
+import vo.zframework.common.ZHashBasedTable;
 import vo.zframework.core.ZContext;
 import vo.zframework.validator.ZValidator;
 
@@ -45,7 +44,7 @@ public class ZValueScanner {
 	 * <@ZValue.listenForChanges = true的字段，此字段所在的对象>
 	 */
 	private final static ConcurrentMap<Field, Object> valueMap = new ConcurrentHashMap<>();
-	private final static HashBasedTable<String, Field, Object> valueTable = HashBasedTable.create();
+	private final static ZHashBasedTable<String, Field, Object> valueTable = new ZHashBasedTable<>();
 
 	public static void inject(final String... packageName) {
 		final Set<Class<?>> zcSet = ClassMap.scanPackageByAnnotation(ZComponent.class, packageName);

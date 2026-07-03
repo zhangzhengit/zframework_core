@@ -9,12 +9,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 
-import com.google.common.collect.HashBasedTable;
-
 import vo.zframework.anno.ZQPSLimitation;
 import vo.zframework.anno.ZRequestMapping;
 import vo.zframework.cache.ZRC;
 import vo.zframework.common.STU;
+import vo.zframework.common.ZHashBasedTable;
 import vo.zframework.enums.CTEnum;
 import vo.zframework.enums.MethodEnum;
 import vo.zframework.enums.QPSEnum;
@@ -30,8 +29,8 @@ import vo.zframework.http.request.ZMultipartFile;
  *
  */
 public class ZControllerMap {
-	static final HashBasedTable<ByteArrayKeyWrapper, ByteArrayKeyWrapper, ZRMethod> methodPathTable = HashBasedTable.create();
-	static final HashBasedTable<Method, ByteArrayKeyWrapper, Boolean> methodIsregexTable = HashBasedTable.create();
+	static final ZHashBasedTable<ByteArrayKeyWrapper, ByteArrayKeyWrapper, ZRMethod> methodPathTable = new ZHashBasedTable<>();
+	static final ZHashBasedTable<Method, ByteArrayKeyWrapper, Boolean> methodIsregexTable = new ZHashBasedTable<>();
 	static final HashMap<Method, Object> objectMap = new HashMap<>(16, 1F);
 	static final HashSet<String> mappingSet = new HashSet<>();
 

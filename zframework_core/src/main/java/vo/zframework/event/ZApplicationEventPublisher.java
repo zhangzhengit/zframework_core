@@ -12,10 +12,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.HashBasedTable;
-
 import vo.zframework.anno.ZComponent;
 import vo.zframework.common.AU;
+import vo.zframework.common.ZHashBasedTable;
 import vo.zframework.core.ZContext;
 import vo.zframework.exception.StartupException;
 import vo.zframework.scanner.ClassMap;
@@ -39,7 +38,7 @@ public final class ZApplicationEventPublisher {
 
 	private static final AtomicLong VT_N = new AtomicLong(0L);
 
-	private static final HashBasedTable<Class<? extends ZApplicationEvent>, Method, Class<?>> TABLE = HashBasedTable.create();
+	private static final ZHashBasedTable<Class<? extends ZApplicationEvent>, Method, Class<?>> TABLE = new ZHashBasedTable<>();
 
 	private static final AtomicBoolean executed = new AtomicBoolean(false);
 

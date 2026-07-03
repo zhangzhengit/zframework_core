@@ -17,7 +17,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Lists;
 
 import vo.zframework.anno.ZAOP;
@@ -25,6 +24,7 @@ import vo.zframework.bean.ZSingleton;
 import vo.zframework.common.CU;
 import vo.zframework.common.RU;
 import vo.zframework.common.STU;
+import vo.zframework.common.ZHashBasedTable;
 import vo.zframework.configuration.properties.ServerConfigurationProperties;
 import vo.zframework.core.ZContext;
 import vo.zframework.scanner.ClassMap;
@@ -64,7 +64,7 @@ public class ZAOPScaner {
 		final Map<String, ZClass> map = new HashMap<>(16, 1F);
 		final Set<Class<?>> cs = ClassMap.scanPackage(packageName);
 
-		final HashBasedTable<Class<?>, Method, List<Class<?>>> table = extractedC(cs);
+		final ZHashBasedTable<Class<?>, Method, List<Class<?>>> table = extractedC(cs);
 
 		final Set<Class<?>> rowKeySet = table.rowKeySet();
 		for (final Class<?> cls : rowKeySet) {
@@ -170,7 +170,7 @@ public class ZAOPScaner {
 		return nameBuilder.toString();
 	}
 
-	private static void addZMethod(final HashBasedTable<Class<?>, Method,List<Class<?>>> table, final Class<?> cls,
+	private static void addZMethod(final ZHashBasedTable<Class<?>, Method,List<Class<?>>> table, final Class<?> cls,
 			final ZClass proxyZClass, final HashSet<ZMethod> zms, final Method m) {
 
 		final ArrayList<ZMethodArg> argList = ZMethod.getArgListFromMethod(m);
@@ -325,8 +325,8 @@ public class ZAOPScaner {
 	 * @param cs
 	 * @return <类,方法，此类此方法的AOP类>
 	 */
-	public static HashBasedTable<Class<?>, Method, List<Class<?>>> extractedC(final Set<Class<?>> cs) {
-		final HashBasedTable<Class<?>, Method, List<Class<?>>> table = HashBasedTable.create();
+	public static ZHashBasedTable<Class<?>, Method, List<Class<?>>> extractedC(final Set<Class<?>> cs) {
+		final ZHashBasedTable<Class<?>, Method, List<Class<?>>> table = new ZHashBasedTable<>();
 		for (final Class<?> c : cs) {
 			final Method[] ms = c.getDeclaredMethods();
 			for (final Method m : ms) {
