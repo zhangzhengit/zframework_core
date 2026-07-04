@@ -199,7 +199,7 @@ public class ZResponse {
 
 		// 注意：这个就是故意不调用 public ZResponse header(final byte[] nameBytes,final byte[] valueBytes)
 		// 防止它里面的那个throw异常
-		this.header(new ZHeader(HeaderEnum.CONTENT_TYPE.getName().getBytes(), contentTypeBytes));
+		this.header(new ZHeader(HeaderEnum.CONTENT_TYPE.getNameBytes(), contentTypeBytes));
 
 		return this;
 	}
@@ -210,7 +210,7 @@ public class ZResponse {
 
 		// 注意：这个就是故意不调用 public ZResponse header(final byte[] nameBytes,final byte[] valueBytes)
 		// 防止它里面的那个throw异常
-		this.header(new ZHeader(HeaderEnum.CONTENT_TYPE.getName().getBytes(), contentType.getBytes()));
+		this.header(new ZHeader(HeaderEnum.CONTENT_TYPE.getNameBytes(), contentType.getBytes()));
 
 		return this;
 	}
