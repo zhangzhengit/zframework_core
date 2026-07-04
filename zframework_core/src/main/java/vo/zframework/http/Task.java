@@ -451,12 +451,13 @@ public class Task {
 	 * @return
 	 */
 	private static ZSession getOrGSession(final ZRequest request) {
-		final ZSession sessionFAlSE = request.getSession(false);
-		if (sessionFAlSE != null) {
-			return sessionFAlSE;
-		}
-
 		return request.getSession(true);
+//		final ZSession sessionFAlSE = request.getSession(false);
+//		if (sessionFAlSE != null) {
+//			return sessionFAlSE;
+//		}
+//
+//		return request.getSession(true);
 	}
 
 	/**
