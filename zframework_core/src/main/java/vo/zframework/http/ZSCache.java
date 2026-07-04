@@ -1,5 +1,6 @@
 package vo.zframework.http;
 
+import java.util.Deque;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
@@ -14,7 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ZSCache<K, V> {
 
 	private final Map<K, CacheEntry<V>> map = new ConcurrentHashMap<>();
-	private final LinkedList<Object> vk;
+	private final Deque<Object> vk;
 	private final int maxSize;
 	private final int maxTimeoutSeconds;
 
@@ -47,11 +48,11 @@ public class ZSCache<K, V> {
 
 	public V get(final Object key) {
 
-		if (this.vk.size() >= this.maxSize) {
-			synchronized (this) {
-				this.vk.removeFirst();
-				this.vk.addLast(key);
+		synchronized (this) {
+			if (this.vk.size() >= this.maxSize) {
+				this.vk.pollFirst();
 			}
+			this.vk.offerLast(key);
 		}
 
 		final CacheEntry<?> entry = this.map.get(key);
@@ -72,9 +73,11 @@ public class ZSCache<K, V> {
 		if (this.map.size() >= this.maxSize) {
 			this.evictOldest();
 		}
+
 		this.map.put(key, new CacheEntry<>(v));
+
 		synchronized (this) {
-			this.vk.addLast(key);
+			this.vk.offerLast(key);
 		}
 	}
 
@@ -84,24 +87,12 @@ public class ZSCache<K, V> {
 	}
 
 	private void evictOldest() {
-		// FIXME 2026年7月4日 07:00:47 zhangzhen : 这个太慢了，暂时存一下访问的k，删最早的
-		if (!this.vk.isEmpty()) {
-			final Object k = this.vk.getFirst();
-			this.map.remove(k);
+		synchronized (this) {
+			if (!this.vk.isEmpty()) {
+				final Object key = this.vk.pollFirst();
+				this.map.remove(key);
+			}
 		}
-
-//		K oldestKey = null;
-//		final long oldestAccess = System.currentTimeMillis();
-//		for (final Entry<K, CacheEntry<V>> entry : this.map.entrySet()) {
-//			if (entry.getValue().lastAccess < oldestAccess) {
-////				oldestAccess = entry.getValue().lastAccess;
-//				oldestKey = entry.getKey();
-//				break;
-//			}
-//		}
-//		if (oldestKey != null) {
-//			this.map.remove(oldestKey);
-//		}
 	}
 
 	private static class CacheEntry<V> {
