@@ -23,6 +23,7 @@ import vo.log.core.ZLog2;
 import vo.zframework.common.STU;
 import vo.zframework.compression.Brotli;
 import vo.zframework.compression.CF;
+import vo.zframework.compression.IZSTD;
 import vo.zframework.compression.ZGzip;
 import vo.zframework.configuration.properties.ServerConfigurationProperties;
 import vo.zframework.core.ZContext;
@@ -257,8 +258,9 @@ public class StaticResourcesPreCompressionService {
 
 	private static void compressZSTD0(final Path source) throws IOException {
 		final Path targetTEMPZSTD = source.resolveSibling(source.getFileName() + ZSTD_TEMP_SUFFIX);
-		vo.zframework.compression
-		.ZSTD.compressFile(source, targetTEMPZSTD);
+
+		final IZSTD zstd = ZContext.getBean(IZSTD.class);
+		zstd.compressFile(source, targetTEMPZSTD);
 
 		final Path brp = source.resolveSibling(source.getFileName() + ZSTD_SUFFIX);
 		Files.move(targetTEMPZSTD, brp, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);

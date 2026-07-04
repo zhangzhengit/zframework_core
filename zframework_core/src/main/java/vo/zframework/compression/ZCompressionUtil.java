@@ -1,5 +1,7 @@
 package vo.zframework.compression;
 
+import vo.zframework.core.ZContext;
+
 /**
  * 几种压缩方式
  *
@@ -19,7 +21,8 @@ public class ZCompressionUtil {
 			return Deflater.compress(ba);
 
 		case ZSTD:
-			return ZSTD.compress(ba);
+			final IZSTD zstd = ZContext.getBean(IZSTD.class);
+			return zstd.compress(ba);
 
 		default:
 			break;

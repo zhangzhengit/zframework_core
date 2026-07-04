@@ -1,5 +1,6 @@
 package vo.zframework.compression;
 
+import vo.zframework.core.ZContext;
 import vo.zframework.http.request.ZRequest;
 
 /**
@@ -13,7 +14,8 @@ public class ZResponseCompressor {
 	public static byte[] compressByAcceptEncoding(final ZRequest request, final byte[] data) {
 
 		if (request.isSupportZSTD()) {
-			return ZSTD.compress(data);
+			final IZSTD zstd = ZContext.getBean(IZSTD.class);
+			return zstd.compress(data);
 		}
 		// XXX : 已经支持了br了，但是压缩太慢，就不用于实时接口的压缩了，只用于静态资源的预压缩
 		if (request.isSupportGZIP()) {
