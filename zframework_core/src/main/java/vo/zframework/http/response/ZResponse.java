@@ -90,23 +90,22 @@ import vo.zframework.http.request.ZRequest;
 // 或者用户实现特殊需求，比如某些接口响应某些header，可以覆盖某个方法来很简单的实现
 public class ZResponse {
 
-	private final BufferedOutputStream bufferedOutputStream = ZConnectionTL.get().getBufferedOutputStream();
+	private static final ServerConfigurationProperties SERVER_CONFIGURATIONPROPERTIES = ZContext
+			.getBean(ServerConfigurationProperties.class);
 
-	private final ZArray array = ZConnectionTL.get().getResponseArray();
-
-	/**
-	 * 放header
-	 */
-	private Map<ByteArrayKeyWrapper, byte[]> headerMap = ZConnectionTL.get().getResponseHeaderMap();
+	public final static int RESPONSE_ARRAY_CAPACITY = SERVER_CONFIGURATIONPROPERTIES.getResponseArrayCapacity();
+	public final static int HEADER_MAP_CAPACITY = 16;
 
 	private static final byte[] CRLF_BYTES = STU.CRLF_BYTES;
+
+	public static final int HTTP_STATUS_200 = HttpStatusEnum.HTTP_200.getStatus();
+
+	public static final byte[] HTTP_200_BYTES = Integer.toString(HTTP_STATUS_200).getBytes();
 
 	private static final byte[] ZERO_RNRN_BYTES = ("0" + STU.CRLFCRLF).getBytes();
 
 	private static final int BIS_DEFAULT_BUFFER_SIZE = 1024 * 8;
 
-	private static final ServerConfigurationProperties SERVER_CONFIGURATIONPROPERTIES = ZContext
-			.getBean(ServerConfigurationProperties.class);
 
 	private static final ZHeader[] CUSTOM_HEADER_BYTES = SERVER_CONFIGURATIONPROPERTIES.getResponseHeadersBytes();
 
@@ -122,8 +121,14 @@ public class ZResponse {
 
 	private static final byte[] HTTP_1_1_BYTES = HTTP_1_1.getBytes();
 
-	public final static int RESPONSE_ARRAY_CAPACITY = SERVER_CONFIGURATIONPROPERTIES.getResponseArrayCapacity();
-	public final static int HEADER_MAP_CAPACITY = 16;
+	private final BufferedOutputStream bufferedOutputStream = ZConnectionTL.get().getBufferedOutputStream();
+
+	private final ZArray array = ZConnectionTL.get().getResponseArray();
+
+	/**
+	 * 放header
+	 */
+	private Map<ByteArrayKeyWrapper, byte[]> headerMap = ZConnectionTL.get().getResponseHeaderMap();
 
 	/**
 	 * write 方法是否执行过
@@ -133,7 +138,7 @@ public class ZResponse {
 	private volatile boolean isBodyStream = false;
 	private String contentType;
 	private byte[] contentTypeBytes;
-	private int httpStatus = HttpStatusEnum.HTTP_200.getStatus();
+	private int httpStatus = HTTP_STATUS_200;
 	private boolean contentTypeHasBeenSet = false;
 
 	/**
@@ -590,7 +595,8 @@ public class ZResponse {
 	 */
 	private void addStatusLine() {
 		this.arrayAdd(HTTP_1_1_BYTES);
-		this.arrayAdd(String.valueOf(this.getHttpStatus()).getBytes());
+		final byte[] httpStatusBytes = this.getHttpStatus() == HTTP_STATUS_200 ?  HTTP_200_BYTES : String.valueOf(this.getHttpStatus()).getBytes();
+		this.arrayAdd(httpStatusBytes);
 		this.arrayAdd(CRLF_BYTES);
 	}
 
@@ -779,7 +785,7 @@ public class ZResponse {
 			HTTPResponseProcessor.setZSessionId(request, this);
 		}
 
-		if (this.getHttpStatus() == HttpStatusEnum.HTTP_200.getStatus()) {
+		if (this.getHttpStatus() == HTTP_STATUS_200) {
 			HTTPResponseProcessor.setCacheControl(this);
 		}
 
