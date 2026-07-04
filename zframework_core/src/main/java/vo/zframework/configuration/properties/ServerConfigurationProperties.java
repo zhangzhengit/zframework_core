@@ -317,13 +317,6 @@ public class ServerConfigurationProperties {
 	private int sessionMaxActive = 10000 * 100;
 
 	/**
-	 * 允许内存中同时存在的session的最大数量，超过此值会自动把最近最少访问的存入DB
-	 */
-	@ZMin(min = 1)
-	@ZMax(max = 10000 * 50)
-	private int sessionMaxActiveInMemory = 10000 * 10;
-
-	/**
 	 * 配置硬盘上的资源目录，如：E:\\x
 	 * 此值配置了，则优先读取此值下的资源文件
 	 * 此值没配置，则读取 staticPrefix 目录下的资源文件
@@ -722,14 +715,6 @@ public class ServerConfigurationProperties {
 
 	public void setSessionMaxTimeout(final int sessionMaxTimeout) {
 		this.sessionMaxTimeout = sessionMaxTimeout;
-	}
-
-	public int getSessionMaxActiveInMemory() {
-		return this.sessionMaxActiveInMemory;
-	}
-
-	public void setSessionMaxActiveInMemory(final int sessionMaxActiveInMemory) {
-		this.sessionMaxActiveInMemory = sessionMaxActiveInMemory;
 	}
 
 	public Map<String, String> getStaticControllerContentType() {
