@@ -96,6 +96,14 @@ public class ZRC {
 		return this.computeIfAbsent(k, supplier, storeNull);
 	}
 
+	public void invalidate(final String key) {
+		this.CACHE.remove(key);
+	}
+
+	public <T> T getIfPresent(final String key) {
+		return this.get(key);
+	}
+
 	public <T> T get(final String key) {
 		return (T) this.CACHE.get(key);
 	}

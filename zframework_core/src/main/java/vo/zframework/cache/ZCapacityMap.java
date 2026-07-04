@@ -37,10 +37,6 @@ public class ZCapacityMap<K, V> implements ConcurrentMap<K, V> {
 		return this.get(key) != null;
 	}
 
-	@Override
-	public boolean containsValue(final Object value) {
-		throw new UnsupportedOperationException();
-	}
 
 	@Override
 	public V get(final Object key) {
@@ -66,16 +62,6 @@ public class ZCapacityMap<K, V> implements ConcurrentMap<K, V> {
 	}
 
 	@Override
-	public void putAll(final Map<? extends K, ? extends V> m) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public void clear() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
 	public Set<K> keySet() {
 		return this.cache.asMap().keySet();
 	}
@@ -89,6 +75,22 @@ public class ZCapacityMap<K, V> implements ConcurrentMap<K, V> {
 	public Set<Entry<K, V>> entrySet() {
 		return this.cache.asMap().entrySet();
 	}
+
+	@Override
+	public void putAll(final Map<? extends K, ? extends V> m) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public boolean containsValue(final Object value) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void clear() {
+		throw new UnsupportedOperationException();
+	}
+
 
 	@Override
 	public V putIfAbsent(final K key, final V value) {

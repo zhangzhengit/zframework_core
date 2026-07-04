@@ -1,5 +1,6 @@
 package vo.zframework.http;
 
+import vo.zframework.cache.ZRC;
 import vo.zframework.enums.QCTimeEnum;
 import vo.zframework.enums.QPSHandlingEnum;
 
@@ -28,13 +29,13 @@ public class QC {
 	// FIXME 2025年12月12日 21:12:44 zhangzhen : 10000 * 1000 最大容量不好设置，不只是接口个数*QPS这么简单
 	// 或者简单设置server.qps，因为这个值在最前面挡着，到接口这里时不会超过这个值
 
-	private static final ZSCache<String, Integer>  C_SECOND = new ZSCache<>(10000 * 1000, 2);
+	private static final ZRC C_SECOND = new ZRC(10000 * 1000, 2);
 
-	private static final ZSCache<String, Integer>  C_MINUTE = new ZSCache<>(10000 * 1000, 60 + 20);
+	private static final ZRC C_MINUTE = new ZRC(10000 * 1000, 60 + 20);
 
-	private static final ZSCache<String, Integer>  C_QUARTER = new ZSCache<>(10000 * 1000, (60 * 15) + 30);
+	private static final ZRC C_QUARTER = new ZRC(10000 * 1000, (60 * 15) + 60);
 
-	private static final ZSCache<String, Integer>  C_HORS = new ZSCache<>(10000 * 1000, (60 * 60) + 60);
+	private static final ZRC C_HORS = new ZRC(10000 * 1000, (60 * 60) + 60);
 
 	public static boolean allow(final QCTimeEnum timeEnum, final String keyPrefix, final long qptu, final QPSHandlingEnum handlingEnum) {
 		switch (handlingEnum) {

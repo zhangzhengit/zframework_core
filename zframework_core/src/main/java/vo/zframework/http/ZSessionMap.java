@@ -1,5 +1,6 @@
 package vo.zframework.http;
 
+import vo.zframework.cache.ZRC;
 import vo.zframework.configuration.properties.ServerConfigurationProperties;
 import vo.zframework.core.ZContext;
 
@@ -24,7 +25,7 @@ public class ZSessionMap {
 	private static final int SESSION_MAX_TIMEOUT = ZContext.getBean(ServerConfigurationProperties.class).getSessionMaxTimeout();
 	public static final int SESSION_MAX_ACTIVE = ZContext.getBean(ServerConfigurationProperties.class).getSessionMaxActive();
 
-	private static final ZSCache<String, ZSession> SCS = new ZSCache<>(SESSION_MAX_ACTIVE, SESSION_MAX_TIMEOUT);
+	private static final ZRC SCS = new ZRC(SESSION_MAX_ACTIVE, SESSION_MAX_TIMEOUT);
 
 	public static void remove(final String zSessionId) {
 		SCS.invalidate(zSessionId);
