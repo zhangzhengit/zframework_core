@@ -100,6 +100,10 @@ public class ZRC {
 		return (T) this.CACHE.get(key);
 	}
 
+	public int size() {
+		return this.CACHE.size();
+	}
+
 	public boolean containsKey(final String key) {
 		return this.CACHE.containsKey(key);
 	}
