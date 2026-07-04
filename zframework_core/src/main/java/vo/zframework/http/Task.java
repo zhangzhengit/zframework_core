@@ -542,7 +542,7 @@ public class Task {
 				throw new IllegalArgumentException("无" + ZTemplateEngine.class.getSimpleName() + "，请配置或添加starter");
 			}
 
-			final String html = templateEngine.render(htmlContent, htmlContent);
+			final String html = templateEngine.render(String.valueOf(r), htmlContent);
 			ZModel.clear();
 
 			return new ZResponse().contentType(ContentTypeEnum.TEXT_HTML.getTypeBytes()).body(html);
