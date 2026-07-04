@@ -4,8 +4,10 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
 
-import vo.zframework.http.ZSCache;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 
 /**
  * guava cache
@@ -16,20 +18,25 @@ import vo.zframework.http.ZSCache;
  */
 public class ZCapacityMap<K, V> implements ConcurrentMap<K, V> {
 
-	private final ZSCache<K, V> cache;
+	private final Cache<K,V> cache;
 
 	public ZCapacityMap(final int capacity, final int expireAfterWriteSECONDS) {
-		this.cache = new ZSCache<>(capacity, expireAfterWriteSECONDS);
+
+		this.cache = Caffeine
+							.newBuilder()
+							.maximumSize(capacity)
+							.expireAfterWrite(expireAfterWriteSECONDS,TimeUnit.SECONDS)
+							.build();
 	}
 
 	@Override
 	public int size() {
-		return this.cache.size();
+		return (int) this.cache.estimatedSize();
 	}
 
 	@Override
 	public boolean isEmpty() {
-		return this.cache.size() <= 0;
+		return this.size() <= 0;
 	}
 
 	@Override
@@ -40,13 +47,12 @@ public class ZCapacityMap<K, V> implements ConcurrentMap<K, V> {
 
 	@Override
 	public V get(final Object key) {
-		return this.cache.getIfPresent(key);
+		return this.cache.getIfPresent((K) key);
 	}
 
 	@Override
 	public V put(final K key, final V value) {
 		if (value == null) {
-			// FIXME 2025年1月13日 上午7:39:17 zhangzhen : 暂时处理为null则不put
 			return value;
 		}
 
@@ -57,7 +63,7 @@ public class ZCapacityMap<K, V> implements ConcurrentMap<K, V> {
 	@Override
 	public V remove(final Object key) {
 		final V v = this.get(key);
-		this.cache.invalidate(key);
+		this.cache.invalidate((K) key);
 		return v;
 	}
 
