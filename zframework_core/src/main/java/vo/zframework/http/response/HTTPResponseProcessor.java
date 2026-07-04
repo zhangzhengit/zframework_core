@@ -81,12 +81,12 @@ public class HTTPResponseProcessor {
 
 		final ZSession sessionFALSE = request.getSession(false);
 		if (sessionFALSE != null) {
-			sessionFALSE.setLastAccessedTime(new Date());
+			sessionFALSE.setLastAccessedTime(System.currentTimeMillis());
 			return;
 		}
 
 		final ZSession sessionTRUE = request.getSession(true);
-		sessionTRUE.setLastAccessedTime(new Date());
+		sessionTRUE.setLastAccessedTime(System.currentTimeMillis());
 		final ZCookie cookie =
 						new ZCookie(HeaderEnum.Z_SESSION_ID.getName(), sessionTRUE.getId())
 							.path("/")
