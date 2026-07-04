@@ -40,6 +40,9 @@ import vo.zframework.http.ZSessionMap;
 // 则活跃一下，让存活时间重新计算
 public class ZRequest {
 
+	public static final String KEEP_ALIVE_CAMELCASE = "Keep-Alive";
+	public static final String KEEP_ALIVE_LOWERCASE = ConnectionEnum.KEEP_ALIVE.getValue();
+	public static final int KEEP_ALIVE_LENGTH = KEEP_ALIVE_CAMELCASE.length();
 	public static final String HTTP_11 = "HTTP/1.1";
 	public static final byte[] HTTP_11_BYTES = HTTP_11.getBytes();
 	public static final String BOUNDARY = "boundary=";
@@ -425,9 +428,12 @@ public class ZRequest {
 
 		final String connection = this.getHeader(HeaderEnum.CONNECTION.getName());
 		final boolean keepAlive = STU.isNotEmpty(connection)
-				&& (connection.length() == ConnectionEnum.KEEP_ALIVE.getValue().length())
-				&& (connection.equals(ConnectionEnum.KEEP_ALIVE.getValue())
-						|| connection.toLowerCase().contains(ConnectionEnum.KEEP_ALIVE.getValue().toLowerCase()));
+				&& (connection.length() == KEEP_ALIVE_LENGTH)
+				&& (KEEP_ALIVE_LOWERCASE.equals(connection)
+			     || KEEP_ALIVE_CAMELCASE.equals(connection)
+			 	 || connection.toLowerCase().contains(KEEP_ALIVE_LOWERCASE)
+
+				);
 
 		this.keepAlive = keepAlive ? 1 : 0;
 
