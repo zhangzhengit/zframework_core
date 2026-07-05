@@ -231,13 +231,26 @@ public class ZResponse {
 
 	public ZResponse cookie(final String name,final String value) {
 
-		this.initCookieArray(100);
+		final byte[] nameBytes = name.getBytes();
+		final byte[] valueBytes = value.getBytes();
+
+		final int initialCapacity =
+				HeaderEnum.SET_COOKIE.getNameBytes().length
+					+ STU.COLON_BYTES.length
+					+ nameBytes.length
+					+ STU.EQUALS_LENGTH
+					+ valueBytes.length
+					+ STU.CRLF_BYTES.length;
+
+		// FIXME 2026年7月5日 18:33:36 zhangzhen : 有了初始容量了，要不要判断下扩容容量？避免多次扩容，
+		// 在此扩容一次就行了
+		this.initCookieArray(initialCapacity);
 
 		this.cookieArray.add(HeaderEnum.SET_COOKIE.getNameBytes());
 		this.cookieArray.add(STU.COLON_BYTES);
-		this.cookieArray.add(name.getBytes());
+		this.cookieArray.add(nameBytes);
 		this.cookieArray.add(STU.EQUALS_BYTES);
-		this.cookieArray.add(value.getBytes());
+		this.cookieArray.add(valueBytes);
 		this.cookieArray.add(STU.CRLF_BYTES);
 
 		return this;
