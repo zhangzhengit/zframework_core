@@ -62,6 +62,7 @@ import vo.zframework.http.request.ZMultipartFile;
 import vo.zframework.http.request.ZRequest;
 import vo.zframework.http.request.ZRequestParam;
 import vo.zframework.http.response.HTTPResponseProcessor;
+import vo.zframework.http.response.ReU;
 import vo.zframework.http.response.ZResponse;
 import vo.zframework.http.response.ZResponseStatus;
 import vo.zframework.scanner.ZHandlerInterceptor;
@@ -312,7 +313,8 @@ public class Task {
 			// 什么的判断api.qps的部分，所以频繁上传可能再次导致不执行api
 			// 前几天写的功能[自定义http解析流程]，似乎可以把这个部分逻辑放进去，
 			// 即：先解析header如果API.qps超了，则不解析body
-			return response429();
+
+			return ReU.response429API();
 		}
 
 		return null;
@@ -399,7 +401,7 @@ public class Task {
 					.getHandlingEnum(request.getUserAgent());
 
 			if (!QC.allow(zqpsLimitation.time(), keyword, zqpsLimitation.count(), handlingEnum)) {
-				return response429_2(request);
+				return ReU.response429ZSESSIONID();
 			}
 
 			break;
@@ -418,31 +420,6 @@ public class Task {
 				+ "@ZQPSLimitation" + '_'
 				+ session.getId();
 		return keyword;
-	}
-
-	private static ZResponse response429_2(final ZRequest request) {
-		final CR<Object> error = CR.error(AccessDeniedCodeEnum.ZSESSIONID.getCode(), AccessDeniedCodeEnum.ZSESSIONID.getMessageToClient());
-		final ZResponse response = new ZResponse();
-		response.contentType(ContentTypeEnum.APPLICATION_JSON.getTypeBytes())
-		.httpStatus(HttpStatusEnum.HTTP_429.getStatus())
-		.body(J.toJSONString(error));
-
-		if (SERVER_CONFIGURATIONPROPERTIES.isResponseZSessionId()) {
-			HTTPResponseProcessor.setZSessionId(request, response);
-		}
-		return response;
-	}
-
-	private static ZResponse response429() {
-		final CR<Object> error = CR.error(AccessDeniedCodeEnum.API.getCode(),
-				AccessDeniedCodeEnum.API.getInternalMessage());
-
-		final ZResponse response = new ZResponse();
-		response.contentType(ContentTypeEnum.APPLICATION_JSON.getTypeBytes())
-		.httpStatus(HttpStatusEnum.HTTP_429.getStatus())
-		.body(J.toJSONString(error));
-
-		return response;
 	}
 
 	static String findProduces(final ZRequest request, final String[] ps) {

@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets;
 
 import vo.zframework.common.CR;
 import vo.zframework.common.J;
+import vo.zframework.enums.AccessDeniedCodeEnum;
 import vo.zframework.enums.ConnectionEnum;
 import vo.zframework.enums.ContentTypeEnum;
 import vo.zframework.enums.HeaderEnum;
@@ -17,6 +18,20 @@ import vo.zframework.enums.HttpStatusEnum;
  *
  */
 public class ReU {
+
+	private static final ZResponse RESPONSE_429_ZSESSIONID = new ZResponse()
+					.contentType(ContentTypeEnum.APPLICATION_JSON.getTypeBytes())
+					.httpStatus(HttpStatusEnum.HTTP_429.getStatus())
+					.header(HeaderEnum.CONNECTION.getNameBytes(), ConnectionEnum.CLOSE.getValueBytes())
+					.body(J.toJSONString(CR.error(AccessDeniedCodeEnum.ZSESSIONID.getCode(),
+							AccessDeniedCodeEnum.ZSESSIONID.getMessageToClient())));
+
+	private static final ZResponse RESPONSE_429_API = new ZResponse()
+					.contentType(ContentTypeEnum.APPLICATION_JSON.getTypeBytes())
+					.httpStatus(HttpStatusEnum.HTTP_429.getStatus())
+					.header(HeaderEnum.CONNECTION.getNameBytes(), ConnectionEnum.CLOSE.getValueBytes())
+					.body(J.toJSONString(CR.error(AccessDeniedCodeEnum.API.getCode(),
+							AccessDeniedCodeEnum.API.getInternalMessage())));
 
 	private static final byte[] SERVICE_UNAVAILABLE_RESPONSE =
 								("HTTP/1.1 " + HttpStatusEnum.HTTP_503.getStatus() + " " + HttpStatusEnum.HTTP_503.getMessage() + "\r\n" +
@@ -33,6 +48,14 @@ public class ReU {
 		return jsonResponse(keepAlive)
 				.httpStatus(HttpStatusEnum.HTTP_429.getStatus())
 				.body(J.toJSONString(CR.error(HttpStatusEnum.HTTP_429.getMessage() + " " + message)));
+	}
+
+	public static ZResponse response429API() {
+		return RESPONSE_429_API;
+	}
+
+	public static ZResponse response429ZSESSIONID() {
+		return RESPONSE_429_ZSESSIONID;
 	}
 
 	public static ZResponse response405(final String message, final boolean keepAlive) {
