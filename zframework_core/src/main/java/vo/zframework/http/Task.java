@@ -269,7 +269,8 @@ public class Task {
 		// ZRC则区分returnType为String/基本类型则CT为text/plain，其他一律json
 		final CTEnum ctEnum = zrMethod.getCtEnum();
 		if (ctEnum == CTEnum.NORMAL) {
-			return responseHtml(r);
+			final ZModel zModel = findZModel(parameters);
+			return responseHtml(r, zModel);
 		}
 
 		if ((ctEnum == CTEnum.REST) && (zrMethod.isRTString() || zrMethod.isRTPrimitiveType())) {
@@ -278,6 +279,15 @@ public class Task {
 
 		// 默认响应json
 		return responseAppJSON(r);
+	}
+
+	private static ZModel findZModel(final Object[] parameters) {
+		for (final Object p : parameters) {
+			if (p.getClass() == ZModel.class) {
+				return (ZModel) p;
+			}
+		}
+		return null;
 	}
 
 	private static ZResponse checkZRequestMappingCount(
@@ -538,7 +548,7 @@ public class Task {
 		return new ZResponse().contentType(ContentTypeEnum.APPLICATION_JSON.getTypeBytes()).body(json);
 	}
 
-	private static ZResponse responseHtml(final Object r) {
+	private static ZResponse responseHtml(final Object r, final ZModel zModel) {
 		try {
 
 			final String htmlContent = readHtmlContent(r);
@@ -548,7 +558,7 @@ public class Task {
 				throw new IllegalArgumentException("无" + ZTemplateEngine.class.getSimpleName() + "，请配置或添加starter");
 			}
 
-			final String html = templateEngine.render(String.valueOf(r), htmlContent);
+			final String html = templateEngine.render(String.valueOf(r), htmlContent, zModel);
 
 			final byte[] htmlBytes = HTML_BYTES_ZRC.computeIfAbsent(html, () -> html.getBytes());
 

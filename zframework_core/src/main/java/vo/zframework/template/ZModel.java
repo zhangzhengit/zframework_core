@@ -26,6 +26,10 @@ public class ZModel {
 		return TL.get();
 	}
 
+	public Map<String, Object> getData() {
+		return this.map;
+	}
+
 	public Object get(final String name) {
 		return ZModel.TL.get().get(name);
 	}

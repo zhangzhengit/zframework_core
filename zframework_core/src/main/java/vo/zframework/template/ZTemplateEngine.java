@@ -14,8 +14,9 @@ public interface ZTemplateEngine {
 	 *
 	 * @param htmlName
 	 * @param htmlContent
+	 * @param zModel
 	 * @return
 	 */
-	String render(final String htmlName, final String htmlContent);
+	String render(final String htmlName, final String htmlContent, ZModel zModel);
 
 }
