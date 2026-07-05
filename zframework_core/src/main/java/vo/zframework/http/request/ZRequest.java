@@ -73,11 +73,6 @@ public class ZRequest {
 	private final List<ArrayRange> arList;
 
 	/**
-	 *	请求行一行完整内容如：GET / HTTP/1.1
-	 */
-	private String original;
-
-	/**
 	 * path中?后面的部分
 	 */
 	private BA queryStringBA;
@@ -482,9 +477,6 @@ public class ZRequest {
 			return request;
 		}
 
-		final String requestLine = new String(ZConnectionTL.get().getPd().getRequestLineBytes());
-		request.original = requestLine;
-
 		parsePath(request);
 
 		parseHeader(request);
@@ -740,8 +732,9 @@ public class ZRequest {
 		return value;
 	}
 
-	public String getOriginal() {
-		return this.original;
+	public String getRequestLine() {
+		final String requestLine = new String(ZConnectionTL.get().getPd().getRequestLineBytes());
+		return requestLine;
 	}
 
 	public String getQueryString() {
