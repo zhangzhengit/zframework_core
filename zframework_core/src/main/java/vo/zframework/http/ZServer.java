@@ -107,11 +107,9 @@ public class ZServer {
 
 	private static void newConnection(final Socket socket) {
 		if (!CONNECTION_LIMIT_SEMAPHORE.tryAcquire()) {
-			try {
-				try (OutputStream outputStream = socket.getOutputStream()) {
-					outputStream.write(ReU.g503Bytes());
-					outputStream.flush();
-				}
+			try (OutputStream outputStream = socket.getOutputStream()) {
+				outputStream.write(ReU.g503Bytes());
+				outputStream.flush();
 			} catch (final IOException ingore) {
 				// ingore
 			} finally {
