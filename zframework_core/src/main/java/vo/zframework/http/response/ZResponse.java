@@ -94,6 +94,15 @@ public class ZResponse {
 			.getBean(ServerConfigurationProperties.class);
 
 	public final static int RESPONSE_ARRAY_CAPACITY = SERVER_CONFIGURATIONPROPERTIES.getResponseArrayCapacity();
+
+	private static final ZHeader[] CUSTOM_HEADER_BYTES = SERVER_CONFIGURATIONPROPERTIES.getResponseHeadersBytes();
+
+	private static final boolean compressionEnable = SERVER_CONFIGURATIONPROPERTIES.getCompressionEnable();
+
+	private static final byte[] SERVER_NAME_BYTES = SERVER_CONFIGURATIONPROPERTIES.getName().getBytes();
+
+	private static final int DEFAULT_BUFFER_SIZE = SERVER_CONFIGURATIONPROPERTIES.getStaticResponseBufferSize();
+
 	public final static int HEADER_MAP_CAPACITY = 16;
 
 	private static final byte[] CRLF_BYTES = STU.CRLF_BYTES;
@@ -105,17 +114,6 @@ public class ZResponse {
 	private static final byte[] ZERO_RNRN_BYTES = ("0" + STU.CRLFCRLF).getBytes();
 
 	private static final int BIS_DEFAULT_BUFFER_SIZE = 1024 * 8;
-
-
-	private static final ZHeader[] CUSTOM_HEADER_BYTES = SERVER_CONFIGURATIONPROPERTIES.getResponseHeadersBytes();
-
-	private static final boolean compressionEnable = SERVER_CONFIGURATIONPROPERTIES.getCompressionEnable();
-
-	private static final String SERVER_NAME = SERVER_CONFIGURATIONPROPERTIES.getName();
-
-	private static final byte[] SERVER_NAME_BYTES = SERVER_NAME.getBytes();
-
-	private static final int DEFAULT_BUFFER_SIZE = SERVER_CONFIGURATIONPROPERTIES.getStaticResponseBufferSize();
 
 	public static final String HTTP_1_1 = "HTTP/1.1 ";
 
@@ -686,6 +684,10 @@ public class ZResponse {
 	 * @return
 	 */
 	public ZResponse body(final Object body) {
+		if (body == null) {
+			return this;
+		}
+
 		if (this.getHttpStatus() == HttpStatusEnum.HTTP_204.getStatus()) {
 			return this;
 		}
@@ -700,6 +702,10 @@ public class ZResponse {
 	 * @return
 	 */
 	public ZResponse body(final String body) {
+		if (body == null) {
+			return this;
+		}
+
 		// FIXME 2026年6月20日 07:12:04 zhangzhen : 大String在此getBytes成为内存热点，要不要改为ZstdOutputStream流式响应?
 		if (this.getHttpStatus() == HttpStatusEnum.HTTP_204.getStatus()) {
 			return this;
