@@ -109,8 +109,6 @@ public class ZResponse {
 
 	public static final int HTTP_STATUS_200 = HttpStatusEnum.HTTP_200.getStatus();
 
-	public static final byte[] HTTP_200_BYTES = Integer.toString(HTTP_STATUS_200).getBytes();
-
 	private static final byte[] ZERO_RNRN_BYTES = ("0" + STU.CRLFCRLF).getBytes();
 
 	private static final int BIS_DEFAULT_BUFFER_SIZE = 1024 * 8;
@@ -606,8 +604,7 @@ public class ZResponse {
 	 */
 	private void addStatusLine() {
 		this.arrayAdd(HTTP_1_1_BYTES);
-		final byte[] httpStatusBytes = this.getHttpStatus() == HTTP_STATUS_200 ?  HTTP_200_BYTES : String.valueOf(this.getHttpStatus()).getBytes();
-		this.arrayAdd(httpStatusBytes);
+		this.arrayAdd(HttpStatusBytes.of(this.getHttpStatus()));
 		this.arrayAdd(CRLF_BYTES);
 	}
 
