@@ -36,12 +36,12 @@ public class ByteArrayKeyWrapper {
 		if (this == obj) {
 			return true;
 		}
-		if (obj == null) {
-			return false;
-		}
-		if (this.getClass() != obj.getClass()) {
-			return false;
-		}
+//		if (obj == null) {
+//			return false;
+//		}
+//		if (this.getClass() != obj.getClass()) {
+//			return false;
+//		}
 		final ByteArrayKeyWrapper other = (ByteArrayKeyWrapper) obj;
 		return Arrays.equals(this.bytes, other.bytes);
 	}
