@@ -13,25 +13,25 @@ import java.util.Map;
  */
 public class ZModel {
 
-	private static final ThreadLocal<Map<String, Object>> tl = new ThreadLocal<>();
+	private static final ThreadLocal<Map<String, Object>> TL = new ThreadLocal<>();
 
 	private final Map<String, Object> map = new HashMap<>(4, 1F);
 
 	public void set(final String name, final Object value) {
 		this.map.put(name, value);
-		ZModel.tl.set(this.map);
+		ZModel.TL.set(this.map);
 	}
 
 	public static Map<String, Object> get() {
-		return tl.get();
+		return TL.get();
 	}
 
 	public Object get(final String name) {
-		return ZModel.tl.get().get(name);
+		return ZModel.TL.get().get(name);
 	}
 
 	public static void clear() {
-		 tl.set(Collections.emptyMap());
+		 TL.set(Collections.emptyMap());
 	}
 
 }

@@ -86,6 +86,11 @@ public class Task {
 			.getBean(ServerConfigurationProperties.class);
 	private static final RequestValidatorConfigurationProperties REQUEST_VALIDATOR_CONFIGURATION_PROPERTIES = ZContext.getBean(RequestValidatorConfigurationProperties.class);
 
+	/**
+	 * 避免html.getBytes而加的缓存，只在内容变化不频繁或者纯粹的静态html页面时，此缓存才有效果
+	 */
+	private static final ZRC HTML_BYTES_ZRC = new ZRC(20, 1);
+
 	public static final String DEFAULT_CHARSET_NAME = Charset.defaultCharset().displayName();
 	public static final String VOID = "void";
 	public static final ContentTypeEnum DEFAULT_CONTENT_TYPE = ContentTypeEnum.APPLICATION_JSON;
@@ -544,12 +549,15 @@ public class Task {
 			}
 
 			final String html = templateEngine.render(String.valueOf(r), htmlContent);
-			ZModel.clear();
 
-			return new ZResponse().contentType(ContentTypeEnum.TEXT_HTML.getTypeBytes()).body(html);
+			final byte[] htmlBytes = HTML_BYTES_ZRC.computeIfAbsent(html, () -> html.getBytes());
+
+			return new ZResponse().contentType(ContentTypeEnum.TEXT_HTML.getTypeBytes()).body(htmlBytes);
 
 		} catch (final Exception e) {
 			throw e;
+		} finally {
+			ZModel.clear();
 		}
 	}
 
