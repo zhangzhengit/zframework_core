@@ -12,9 +12,12 @@ import java.util.Map;
  */
 public class ZModel {
 
-	private final Map<String, Object> map = new HashMap<>(4, 1F);
+	private Map<String, Object> map;
 
 	public void set(final String name, final Object value) {
+		if (this.map == null) {
+			this.map = new HashMap<>(2, 1F);
+		}
 		this.map.put(name, value);
 	}
 
@@ -23,6 +26,9 @@ public class ZModel {
 	}
 
 	public Object get(final String name) {
+		if (this.map == null) {
+			return null;
+		}
 		return this.map.get(name);
 	}
 
