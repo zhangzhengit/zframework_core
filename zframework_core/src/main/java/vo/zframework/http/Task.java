@@ -350,9 +350,11 @@ public class Task {
 		// 2 执行目标方法
 		final Object rV = invoke0(zControllerObject, zrMethod, parameters);
 
+		final ZModel zModel = findZModel(parameters);
+
 		final ZModelAndView modelAndView =
 				zrMethod.getCtEnum() == CTEnum.NORMAL
-				? new ZModelAndView(true, String.valueOf(rV), readHtmlContent(rV), ZModel.get(),
+				? new ZModelAndView(true, String.valueOf(rV), readHtmlContent(rV), zModel.getData(),
 						(ZModel) Arrays.stream(parameters).filter(arg -> arg.getClass().equals(ZModel.class))
 						.findAny().orElse(null),
 						null)
@@ -566,8 +568,6 @@ public class Task {
 
 		} catch (final Exception e) {
 			throw e;
-		} finally {
-			ZModel.clear();
 		}
 	}
 
