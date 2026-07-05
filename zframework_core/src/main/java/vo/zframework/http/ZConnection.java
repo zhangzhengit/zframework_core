@@ -29,6 +29,8 @@ import vo.zframework.http.response.ZResponse;
  */
 public class ZConnection {
 
+	private static final int READ_END = -1;
+
 	private static final int BYTE_BUFFER_SIZE = ZContext
 			.getBean(ServerConfigurationProperties.class).getByteBufferSize();
 
@@ -89,7 +91,7 @@ public class ZConnection {
 				}
 
 				final int read = this.read();
-				if (read == -1) {
+				if (read == READ_END) {
 					closed = true;
 					break;
 				}
@@ -241,7 +243,7 @@ public class ZConnection {
 		try {
 			return bufferedInputStream.read(buffer);
 		} catch (final IOException e) {
-			return -1;
+			return READ_END;
 		}
 	}
 
