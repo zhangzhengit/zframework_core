@@ -93,6 +93,8 @@ public class ZResponse {
 	private static final ServerConfigurationProperties SERVER_CONFIGURATIONPROPERTIES = ZContext
 			.getBean(ServerConfigurationProperties.class);
 
+	private static final boolean RESPONSE_Z_SESSION_ID = SERVER_CONFIGURATIONPROPERTIES.isResponseZSessionId();
+
 	public final static int RESPONSE_ARRAY_CAPACITY = SERVER_CONFIGURATIONPROPERTIES.getResponseArrayCapacity();
 
 	public final static boolean RESPONSE_SERVER_HEADER = SERVER_CONFIGURATIONPROPERTIES.isResponseServer();
@@ -309,6 +311,7 @@ public class ZResponse {
 
 	private void setConnection(final ZHeader zHeader) {
 		if (Arrays.equals(HeaderEnum.CONNECTION.getNameBytes(), zHeader.getNameBytes())) {
+			// FIXME 2026年7月7日 05:37:12 zhangzhen : 这里的两个Arrays.equals应该有问题，因为没考虑大小写问题
 			if (Arrays.equals(ConnectionEnum.CLOSE.getValueBytes(), zHeader.getValueBytes())) {
 				this.connectionEnum = ConnectionEnum.CLOSE;
 			} else if (Arrays.equals(ConnectionEnum.KEEP_ALIVE.getValueBytes(), zHeader.getValueBytes())) {
@@ -755,7 +758,8 @@ public class ZResponse {
 
 		final ZRequest request = ReqeustInfo.get();
 		if (request == null) {
-			// XXX : 正常情况下不会是null，在次判断null，因为eclipse改了[访问潜在的null级别]为ERROR，为了编译而改
+			// XXX : 正常情况下不会是null，在此判断null，
+			// 因为eclipse改了[访问潜在的null级别]为ERROR，为了编译通过而改
 			return;
 		}
 
@@ -766,11 +770,10 @@ public class ZResponse {
 		final ConnectionEnum ce = this.getConnectionEnum();
 		// 本对象内未设置过Connection，才看request要求，最后设置默认的keep-alive
 		if (ce == null) {
-			if ((request != null) && !request.isKeepAlive()) {
-				this.header(HeaderEnum.CONNECTION.getNameBytes(), ConnectionEnum.CLOSE.getValueBytes());
-			} else {
-				this.header(HeaderEnum.CONNECTION.getNameBytes(), ConnectionEnum.KEEP_ALIVE.getValueBytes());
-			}
+			this.header(HeaderEnum.CONNECTION.getNameBytes(),
+						request.isKeepAlive()
+						? ConnectionEnum.KEEP_ALIVE.getValueBytes()
+						: ConnectionEnum.CLOSE.getValueBytes());
 		}
 
 		// 注意：下面逻辑注释了，因为不能这么做，应该是用户代码高于一切，
@@ -804,7 +807,7 @@ public class ZResponse {
 			this.setDate();
 		}
 
-		if (SERVER_CONFIGURATIONPROPERTIES.isResponseZSessionId()) {
+		if (RESPONSE_Z_SESSION_ID) {
 			HTTPResponseProcessor.setZSessionId(request, this);
 		}
 
