@@ -56,7 +56,23 @@ public class ServerConfigurationProperties {
 	private boolean responseZSessionId = false;
 
 	/**
-	 * server的name，用于响应头中的Server字段
+	 * 是否响应Date头
+	 */
+	private boolean responseDate = false;
+
+	/**
+	 * 是否响应Server头
+	 */
+	@ZNotNull
+	private boolean responseServer = false;
+
+	/**
+	 * Server的name，用于响应头中的Server字段，如：
+	 * Server:vo
+	 * 仅在[server.response.server]为true时，才响应
+	 */
+	/**
+	 *
 	 */
 	@ZNotEmtpy
 	private String name = "vo";
@@ -812,6 +828,22 @@ public class ServerConfigurationProperties {
 
 	public void setStaticResourceCacheSize(final int staticResourceCacheSize) {
 		this.staticResourceCacheSize = staticResourceCacheSize;
+	}
+
+	public boolean isResponseServer() {
+		return this.responseServer;
+	}
+
+	public void setResponseServer(final boolean responseServer) {
+		this.responseServer = responseServer;
+	}
+
+	public boolean isResponseDate() {
+		return this.responseDate;
+	}
+
+	public void setResponseDate(final boolean responseDate) {
+		this.responseDate = responseDate;
 	}
 
 

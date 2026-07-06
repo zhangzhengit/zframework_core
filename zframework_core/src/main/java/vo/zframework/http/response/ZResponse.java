@@ -95,6 +95,9 @@ public class ZResponse {
 
 	public final static int RESPONSE_ARRAY_CAPACITY = SERVER_CONFIGURATIONPROPERTIES.getResponseArrayCapacity();
 
+	public final static boolean RESPONSE_SERVER_HEADER = SERVER_CONFIGURATIONPROPERTIES.isResponseServer();
+	public final static boolean RESPONSE_DATE_HEADER = SERVER_CONFIGURATIONPROPERTIES.isResponseDate();
+
 	private static final ZHeader[] CUSTOM_HEADER_BYTES = SERVER_CONFIGURATIONPROPERTIES.getResponseHeadersBytes();
 
 	private static final boolean compressionEnable = SERVER_CONFIGURATIONPROPERTIES.getCompressionEnable();
@@ -794,8 +797,12 @@ public class ZResponse {
 		}
 
 		this.setCustomHeader();
-		this.setServerName();
-		this.setDate();
+		if (RESPONSE_SERVER_HEADER) {
+			this.setServerName();
+		}
+		if (RESPONSE_DATE_HEADER) {
+			this.setDate();
+		}
 
 		if (SERVER_CONFIGURATIONPROPERTIES.isResponseZSessionId()) {
 			HTTPResponseProcessor.setZSessionId(request, this);
