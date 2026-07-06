@@ -103,38 +103,41 @@ public class ZControllerScanner {
 
 			ZContext.addBean(cls, newZController1);
 
+			final Object controllerObject = ZControllerScanner.getSingleton(cls);
+
+			final ZRestController restController = cls.getAnnotation(ZRestController.class);
+			final ZController controller = cls.getAnnotation(ZController.class);
+			final String prefix = checkCPrefix(
+					restController != null ? restController.prefix() : controller.prefix());
+
+
 			final Method[] ms = cls.getDeclaredMethods();
 			for (final Method method : ms) {
 
-				checkNoVoidWithZResponse(method);
-
-				final Object controllerObject = ZControllerScanner.getSingleton(cls);
-
-				final ZRestController restController = cls.getAnnotation(ZRestController.class);
-				final ZController controller = cls.getAnnotation(ZController.class);
-				final String prefix = checkCPrefix(
-						restController != null ? restController.prefix() : controller.prefix());
-
 				// 校验 @ZRequestMapping
 				final ZRequestMapping requestMappingAnnotation = method.getAnnotation(ZRequestMapping.class);
-				if (requestMappingAnnotation != null) {
-					final String[] requestMappingArray = requestMappingAnnotation.mapping();
-
-					ZControllerScanner.checkZRequestMapping(method, requestMappingAnnotation, requestMappingArray);
-
-					final boolean[] isRegex = requestMappingAnnotation.isRegex();
-					for (int i = 0; i < requestMappingArray.length; i++) {
-						final String mapping = requestMappingArray[i];
-						final MethodEnum methodEnum = requestMappingAnnotation.method();
-
-						ZControllerMap.put(methodEnum, prefix + mapping, method,
-								restController!=null ? CTEnum.REST : CTEnum.NORMAL
-								, controllerObject, isRegex[i]);
-					}
-
-					checkZMFIleSize(cls, method);
-
+				if (requestMappingAnnotation == null) {
+					continue;
 				}
+
+
+				checkNoVoidWithZResponse(cls, method);
+
+				final String[] requestMappingArray = requestMappingAnnotation.mapping();
+
+				ZControllerScanner.checkZRequestMapping(method, requestMappingAnnotation, requestMappingArray);
+
+				final boolean[] isRegex = requestMappingAnnotation.isRegex();
+				for (int i = 0; i < requestMappingArray.length; i++) {
+					final String mapping = requestMappingArray[i];
+					final MethodEnum methodEnum = requestMappingAnnotation.method();
+
+					ZControllerMap.put(methodEnum, prefix + mapping, method,
+							restController!=null ? CTEnum.REST : CTEnum.NORMAL
+							, controllerObject, isRegex[i]);
+				}
+
+				checkZMFIleSize(cls, method);
 
 			}
 
@@ -189,7 +192,7 @@ public class ZControllerScanner {
 		return prefix;
 	}
 
-	private static void checkNoVoidWithZResponse(final Method method) {
+	private static void checkNoVoidWithZResponse(final Class cls, final Method method) {
 		if (!Task.VOID.equals(method.getReturnType().getCanonicalName())) {
 			final Parameter[] ps = method.getParameters();
 
@@ -199,8 +202,20 @@ public class ZControllerScanner {
 					.findAny();
 			if (ro.isPresent()) {
 				throw new StartupException(
-						"接口方法 " + method.getName() + " 带返回值不允许使用 " + ZResponse.class.getSimpleName() + " 参数，去掉 "
+						"接口方法 " + cls.getCanonicalName() + "." + method.getName() + " 带返回值不允许使用 " + ZResponse.class.getSimpleName() + " 参数，去掉 "
 								+ ZResponse.class.getSimpleName() + " 参数，或者返回值改为 void");
+			}
+		} else {
+			final Parameter[] ps = method.getParameters();
+
+			final Optional<Parameter> ro =
+					Arrays.stream(ps)
+					.filter(p -> p.getType().getCanonicalName().equals(ZResponse.class.getCanonicalName()))
+					.findAny();
+			if (!ro.isPresent()) {
+				throw new StartupException(
+						"接口方法 " + cls.getCanonicalName() + "." + method.getName() + " 无返回值，必须加入 " + ZResponse.class.getSimpleName() + " 参数，加入 "
+								+ ZResponse.class.getSimpleName() + " 参数，或者返回值改为非void");
 			}
 		}
 	}
