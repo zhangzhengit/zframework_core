@@ -311,7 +311,6 @@ public class ServerConfigurationProperties {
 	@ZNotNull
 	@ZMin(min = 1)
 	@ZMax(max = 60 * 60 * 24 * 7)
-	@ZValue(name = "server.session.timeout", listenForChanges = true)
 	private int sessionTimeout = 60 * 30;
 
 	// FIXME 2025年12月20日 06:42:51 zhangzhen :  写一个校验器，检验  sessionTimeout 不能大于 sessionMaxTimeout
