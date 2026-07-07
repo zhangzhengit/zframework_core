@@ -801,6 +801,9 @@ public class ZResponse {
 
 		this.setCustomHeader();
 		if (RESPONSE_SERVER_HEADER) {
+			// FIXME 2026年7月8日 03:42:30 zhangzhen : setServerName和其他所有不变的头
+			// 都可以在ZConnection.responseHeaderMap中初始就put，这样就不用每次响应都put了，
+			// 但是每个响应后clear会把所有K都清除，考虑下要不要写一个HashMap的子类，clear跳过指定某几个K？
 			this.setServerName();
 		}
 		if (RESPONSE_DATE_HEADER) {
