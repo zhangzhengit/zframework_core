@@ -4,13 +4,11 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
+import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 
 import vo.zframework.common.AU;
 import vo.zframework.common.Hash;
@@ -27,7 +25,6 @@ import vo.zframework.enums.HeaderEnum;
 import vo.zframework.enums.HttpStatusEnum;
 import vo.zframework.enums.TransferEncodingEnum;
 import vo.zframework.html.FIS;
-import vo.zframework.http.ByteArrayKeyWrapper;
 import vo.zframework.http.ZConnectionTL;
 import vo.zframework.http.ZCookie;
 import vo.zframework.http.ZHeader;
@@ -97,14 +94,11 @@ public class ZResponse {
 
 	public final static int RESPONSE_ARRAY_CAPACITY = SERVER_CONFIGURATIONPROPERTIES.getResponseArrayCapacity();
 
-	public final static boolean RESPONSE_SERVER_HEADER = SERVER_CONFIGURATIONPROPERTIES.isResponseServer();
 	public final static boolean RESPONSE_DATE_HEADER = SERVER_CONFIGURATIONPROPERTIES.isResponseDate();
 
 	private static final ZHeader[] CUSTOM_HEADER_BYTES = SERVER_CONFIGURATIONPROPERTIES.getResponseHeadersBytes();
 
 	private static final boolean compressionEnable = SERVER_CONFIGURATIONPROPERTIES.getCompressionEnable();
-
-	private static final byte[] SERVER_NAME_BYTES = SERVER_CONFIGURATIONPROPERTIES.getName().getBytes();
 
 	private static final int DEFAULT_BUFFER_SIZE = SERVER_CONFIGURATIONPROPERTIES.getStaticResponseBufferSize();
 
@@ -129,7 +123,8 @@ public class ZResponse {
 	/**
 	 * 放header
 	 */
-	private Map<ByteArrayKeyWrapper, byte[]> headerMap = ZConnectionTL.get().getResponseHeaderMap();
+	private List<ZHeader> headerList = ZConnectionTL.get().getResponseHeaderList();
+	private final int initHLS = this.headerList.size();
 
 	/**
 	 * write 方法是否执行过
@@ -143,7 +138,7 @@ public class ZResponse {
 	private boolean contentTypeHasBeenSet = false;
 
 	/**
-	 * 与headerMap分开，本属性专门存放Set-Cookie头，因为此头可以重复，且响应多个Cookie的话必须重复
+	 * 与headerList分开，本属性专门存放Set-Cookie头，因为此头可以重复，且响应多个Cookie的话必须重复
 	 */
 	private ZArray cookieArray = null;
 
@@ -270,17 +265,47 @@ public class ZResponse {
 	}
 
 	public boolean containsHeader(final byte[] headerBytes) {
-		final ByteArrayKeyWrapper keyWrapper = new ByteArrayKeyWrapper(headerBytes);
-		return this.headerMap.containsKey(keyWrapper);
+
+		for (int i = 0, size = this.headerList.size(); i < size; i++) {
+			final ZHeader h = this.headerList.get(i);
+			if (h == null) {
+				continue;
+			}
+			if (Arrays.equals(h.getNameBytes(), headerBytes)) {
+				return true;
+			}
+
+		}
+
+		return false;
 	}
 
 	public void removeHeader(final byte[] nameBytes) {
-		this.headerMap.remove(new ByteArrayKeyWrapper(nameBytes));
+		for (int i = 0, size = this.headerList.size(); i < size; i++) {
+			final ZHeader h = this.headerList.get(i);
+			if (h == null) {
+				continue;
+			}
+			if (Arrays.equals(h.getNameBytes(), nameBytes)) {
+//				this.headerList.set(i, null);
+				this.headerList.remove(i);
+				return;
+			}
+		}
 	}
 
 	public String getHeader(final byte[] nameBytes) {
-		final byte[] bs = this.headerMap.get(new ByteArrayKeyWrapper(nameBytes));
-		return bs == null ? null : new String(bs);
+		for (int i = 0, size = this.headerList.size(); i < size; i++) {
+			final ZHeader h = this.headerList.get(i);
+			if (h == null) {
+				continue;
+			}
+			if (Arrays.equals(h.getNameBytes(), nameBytes)) {
+				return new String(h.getValueBytes());
+			}
+		}
+
+		return null;
 	}
 
 	public String getHeader(final String name) {
@@ -302,7 +327,26 @@ public class ZResponse {
 	}
 
 	public ZResponse header(final ZHeader zHeader) {
-		this.headerMap.put(new ByteArrayKeyWrapper(zHeader.getNameBytes()), zHeader.getValueBytes());
+
+		if (this.headerList.isEmpty()) {
+			this.headerList.add(zHeader);
+		} else {
+			boolean equals = false;
+			for (int i = 0, size = this.headerList.size(); i < size; i++) {
+				final ZHeader h = this.headerList.get(i);
+				if (h == null) {
+					continue;
+				}
+				if (Arrays.equals(h.getNameBytes(), zHeader.getNameBytes())) {
+					this.headerList.set(i, h);
+					equals = true;
+					break;
+				}
+			}
+			if (!equals) {
+				this.headerList.add(zHeader);
+			}
+		}
 
 		this.setConnection(zHeader);
 
@@ -494,6 +538,7 @@ public class ZResponse {
 		} catch (final IOException e) {
 			e.printStackTrace();
 		} finally {
+			this.reset();
 			if (!request.isKeepAlive()) {
 				ZConnectionTL.get().closeOutputStreamAndSocket();
 			}
@@ -626,13 +671,14 @@ public class ZResponse {
 	 * 写入header部分
 	 */
 	private void addHeaders() {
-
-		final Set<Entry<ByteArrayKeyWrapper, byte[]>> es = this.headerMap.entrySet();
-		for (final Entry<ByteArrayKeyWrapper, byte[]> entry : es) {
-			final ByteArrayKeyWrapper kw = entry.getKey();
-			this.arrayAdd(kw.getBytes());
+		for (int i = 0, size = this.headerList.size(); i < size; i++) {
+			final ZHeader h = this.headerList.get(i);
+			if (h == null) {
+				continue;
+			}
+			this.arrayAdd(h.getNameBytes());
 			this.arrayAdd(STU.COLON_BYTES);
-			this.arrayAdd(entry.getValue());
+			this.arrayAdd(h.getValueBytes());
 			this.arrayAdd(STU.CRLF_BYTES);
 		}
 
@@ -749,6 +795,8 @@ public class ZResponse {
 		this.write = true;
 
 		ZResponseStatus.written();
+
+		this.reset();
 	}
 
 	/**
@@ -800,12 +848,10 @@ public class ZResponse {
 		}
 
 		this.setCustomHeader();
-		if (RESPONSE_SERVER_HEADER) {
-			// FIXME 2026年7月8日 03:42:30 zhangzhen : setServerName和其他所有不变的头
-			// 都可以在ZConnection.responseHeaderMap中初始就put，这样就不用每次响应都put了，
-			// 但是每个响应后clear会把所有K都清除，考虑下要不要写一个HashMap的子类，clear跳过指定某几个K？
-			this.setServerName();
-		}
+		// FIXME 2026年7月8日 11:54:37 zhangzhen : setServerName改为在ZC中初始化时就放入了，其他已确定不变的也改
+//		if (RESPONSE_SERVER_HEADER) {
+//			this.setServerName();
+//		}
 		if (RESPONSE_DATE_HEADER) {
 			this.setDate();
 		}
@@ -830,10 +876,6 @@ public class ZResponse {
 
 	public void setDate() {
 		this.header(HeaderEnum.DATE.getNameBytes(), ZDateUtil.getCurrentGmtDateBytes());
-	}
-
-	private void setServerName() {
-		this.header(HeaderEnum.SERVER.getNameBytes(), SERVER_NAME_BYTES);
 	}
 
 	private void setCustomHeader() {
@@ -917,22 +959,20 @@ public class ZResponse {
 		return null;
 	}
 
-	public ZResponse() {
-		// 构造时判断是否重置
-		this.resetHeaderMapAndZArray();
-	}
-
-	public void resetHeaderMapAndZArray() {
+	public void reset() {
 		if (this.array.length() >= ZResponse.RESPONSE_ARRAY_CAPACITY) {
 			this.array.reset(ZResponse.RESPONSE_ARRAY_CAPACITY);
 		} else {
 			this.array.reset();
 		}
 
-		if (this.headerMap.size() > ZResponse.HEADER_MAP_CAPACITY) {
-			this.headerMap = new HashMap<>(ZResponse.HEADER_MAP_CAPACITY, 1F);
+		if (this.headerList.size() > ZResponse.HEADER_MAP_CAPACITY) {
+			this.headerList = new ArrayList<>(ZResponse.HEADER_MAP_CAPACITY);
 		} else {
-			this.headerMap.clear();
+			// 初始化时已有的不删
+			for (int i = this.initHLS, size = this.headerList.size(); i < size; i++) {
+				this.headerList.set(i, null);
+			}
 		}
 	}
 

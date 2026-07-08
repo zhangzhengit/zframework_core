@@ -7,13 +7,16 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import vo.zframework.common.ZArray;
 import vo.zframework.configuration.properties.ServerConfigurationProperties;
 import vo.zframework.core.ZContext;
 import vo.zframework.enums.ConnectionEnum;
+import vo.zframework.enums.HeaderEnum;
 import vo.zframework.enums.HttpParseStatusEnum;
 import vo.zframework.enums.HttpStatusEnum;
 import vo.zframework.http.request.HttpRequestScheduler;
@@ -33,6 +36,12 @@ public class ZConnection {
 
 	private static final int BYTE_BUFFER_SIZE = ZContext
 			.getBean(ServerConfigurationProperties.class).getByteBufferSize();
+	private static final boolean isResponseServer = ZContext
+			.getBean(ServerConfigurationProperties.class).isResponseServer();
+
+	private static final byte[] SERVER_NAME_BYTES = ZContext
+			.getBean(ServerConfigurationProperties.class).getName().getBytes();
+
 
 	private static final TaskRequestHandler requestHandler = ZContext.getBean(TaskRequestHandler.class);
 
@@ -70,6 +79,15 @@ public class ZConnection {
 	 * 存放响应的header
 	 */
 	private final Map<ByteArrayKeyWrapper, byte[]> responseHeaderMap = new HashMap<>(ZResponse.HEADER_MAP_CAPACITY, 1F);
+	private List<ZHeader> responseHeaderList = this.initRHL();
+
+	private static ArrayList<ZHeader> initRHL() {
+		final ArrayList<ZHeader> v = new ArrayList<>(ZResponse.HEADER_MAP_CAPACITY);
+		if (isResponseServer) {
+			v.add(new ZHeader(HeaderEnum.SERVER.getNameBytes(), SERVER_NAME_BYTES));
+		}
+		return v;
+	}
 
 	public void start() {
 
@@ -265,6 +283,14 @@ public class ZConnection {
 
 	public OutputStream getOutputStream() {
 		return this.outputStream;
+	}
+
+	public List<ZHeader> getResponseHeaderList() {
+		return this.responseHeaderList;
+	}
+
+	public void setResponseHeaderList(final List<ZHeader> responseHeaderList) {
+		this.responseHeaderList = responseHeaderList;
 	}
 
 }
