@@ -970,7 +970,11 @@ public class ZResponse {
 			ZConnectionTL.get().setResponseHeaderList(this.headerList);
 		} else {
 			// 初始化时已有的不删
-			this.headerList.subList(this.initHLS, this.headerList.size()).clear();
+			if (this.initHLS <= 0) {
+				this.headerList.clear();
+			} else {
+				this.headerList.subList(this.initHLS, this.headerList.size()).clear();
+			}
 		}
 	}
 
