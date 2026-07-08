@@ -269,7 +269,7 @@ public class ZResponse {
 		for (int i = 0, size = this.headerList.size(); i < size; i++) {
 			final ZHeader h = this.headerList.get(i);
 			if (h == null) {
-				continue;
+				break;
 			}
 			if (Arrays.equals(h.getNameBytes(), headerBytes)) {
 				return true;
@@ -284,10 +284,9 @@ public class ZResponse {
 		for (int i = 0, size = this.headerList.size(); i < size; i++) {
 			final ZHeader h = this.headerList.get(i);
 			if (h == null) {
-				continue;
+				break;
 			}
 			if (Arrays.equals(h.getNameBytes(), nameBytes)) {
-//				this.headerList.set(i, null);
 				this.headerList.remove(i);
 				return;
 			}
@@ -298,7 +297,7 @@ public class ZResponse {
 		for (int i = 0, size = this.headerList.size(); i < size; i++) {
 			final ZHeader h = this.headerList.get(i);
 			if (h == null) {
-				continue;
+				break;
 			}
 			if (Arrays.equals(h.getNameBytes(), nameBytes)) {
 				return new String(h.getValueBytes());
@@ -335,7 +334,7 @@ public class ZResponse {
 			for (int i = 0, size = this.headerList.size(); i < size; i++) {
 				final ZHeader h = this.headerList.get(i);
 				if (h == null) {
-					continue;
+					break;
 				}
 				if (Arrays.equals(h.getNameBytes(), zHeader.getNameBytes())) {
 					this.headerList.set(i, h);
@@ -674,7 +673,7 @@ public class ZResponse {
 		for (int i = 0, size = this.headerList.size(); i < size; i++) {
 			final ZHeader h = this.headerList.get(i);
 			if (h == null) {
-				continue;
+				break;
 			}
 			this.arrayAdd(h.getNameBytes());
 			this.arrayAdd(STU.COLON_BYTES);
@@ -968,10 +967,11 @@ public class ZResponse {
 
 		if (this.headerList.size() > ZResponse.HEADER_MAP_CAPACITY) {
 			this.headerList = new ArrayList<>(ZResponse.HEADER_MAP_CAPACITY);
+			ZConnectionTL.get().setResponseHeaderList(this.headerList);
 		} else {
 			// 初始化时已有的不删
 			for (int i = this.initHLS, size = this.headerList.size(); i < size; i++) {
-				this.headerList.set(i, null);
+				this.headerList.subList(this.initHLS, this.headerList.size()).clear();
 			}
 		}
 	}
