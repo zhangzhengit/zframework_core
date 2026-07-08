@@ -404,7 +404,7 @@ public class ServerConfigurationProperties {
 	 *	此值设置过大，又会导致连接存活期间动态数组一直浪费内存
 	 */
 	@ZMin(min = 512)
-	@ZMax(max = 1024 * 8)
+	@ZMax(max = 1024 * 1024)
 	private int responseArrayCapacity = 1024 * 4;
 
 	/**
