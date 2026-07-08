@@ -81,7 +81,8 @@ public class ZConnection {
 	private final Map<ByteArrayKeyWrapper, byte[]> responseHeaderMap = new HashMap<>(ZResponse.HEADER_MAP_CAPACITY, 1F);
 	private List<ZHeader> responseHeaderList = this.initRHL();
 
-	private static ArrayList<ZHeader> initRHL() {
+	public
+	 static ArrayList<ZHeader> initRHL() {
 		final ArrayList<ZHeader> v = new ArrayList<>(ZResponse.HEADER_MAP_CAPACITY);
 		if (isResponseServer) {
 			v.add(new ZHeader(HeaderEnum.SERVER.getNameBytes(), SERVER_NAME_BYTES));

@@ -25,6 +25,7 @@ import vo.zframework.enums.HeaderEnum;
 import vo.zframework.enums.HttpStatusEnum;
 import vo.zframework.enums.TransferEncodingEnum;
 import vo.zframework.html.FIS;
+import vo.zframework.http.ZConnection;
 import vo.zframework.http.ZConnectionTL;
 import vo.zframework.http.ZCookie;
 import vo.zframework.http.ZHeader;
@@ -966,7 +967,7 @@ public class ZResponse {
 		}
 
 		if (this.headerList.size() > ZResponse.HEADER_MAP_CAPACITY) {
-			this.headerList = new ArrayList<>(ZResponse.HEADER_MAP_CAPACITY);
+			this.headerList = ZConnection.initRHL();
 			ZConnectionTL.get().setResponseHeaderList(this.headerList);
 		} else {
 			// 初始化时已有的不删
