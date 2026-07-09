@@ -78,12 +78,10 @@ public class ZConnection {
 	/**
 	 * 存放响应的header
 	 */
-	private final Map<ByteArrayKeyWrapper, byte[]> responseHeaderMap = new HashMap<>(ZResponse.HEADER_MAP_CAPACITY, 1F);
-	private List<ZHeader> responseHeaderList = this.initRHL();
+	private List<ZHeader> responseHeaderList = initRHL();
 
-	public
-	 static ArrayList<ZHeader> initRHL() {
-		final ArrayList<ZHeader> v = new ArrayList<>(ZResponse.HEADER_MAP_CAPACITY);
+	public static ArrayList<ZHeader> initRHL() {
+		final ArrayList<ZHeader> v = new ArrayList<>(ZResponse.HEADER_LIST_CAPACITY);
 		if (isResponseServer) {
 			v.add(new ZHeader(HeaderEnum.SERVER.getNameBytes(), SERVER_NAME_BYTES));
 		}
@@ -274,9 +272,6 @@ public class ZConnection {
 		return this.bufferedOutputStream;
 	}
 
-	public Map<ByteArrayKeyWrapper, byte[]> getResponseHeaderMap() {
-		return this.responseHeaderMap;
-	}
 
 	public ZArray getResponseArray() {
 		return this.responseArray;

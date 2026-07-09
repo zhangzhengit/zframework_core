@@ -103,7 +103,7 @@ public class ZResponse {
 
 	private static final int DEFAULT_BUFFER_SIZE = SERVER_CONFIGURATIONPROPERTIES.getStaticResponseBufferSize();
 
-	public final static int HEADER_MAP_CAPACITY = 16;
+	public final static int HEADER_LIST_CAPACITY = 40;
 
 	private static final byte[] CRLF_BYTES = STU.CRLF_BYTES;
 
@@ -966,7 +966,7 @@ public class ZResponse {
 			this.array.reset();
 		}
 
-		if (this.headerList.size() > ZResponse.HEADER_MAP_CAPACITY) {
+		if (this.headerList.size() > ZResponse.HEADER_LIST_CAPACITY) {
 			this.headerList = ZConnection.initRHL();
 			ZConnectionTL.get().setResponseHeaderList(this.headerList);
 		} else {
