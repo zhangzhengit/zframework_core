@@ -394,6 +394,9 @@ public class ZRequest {
 	}
 
 	public String getHeader(final String name) {
+		if (name == null) {
+			return null;
+		}
 
 		final String v = this.headerMap.get(name);
 		if (isHPNV(v)) {
@@ -602,8 +605,12 @@ public class ZRequest {
 	private static void parseHeader(final ZRequest request) {
 		final List<ArrayRange> x = request.arList;
 
+		// 本方法需要解析的header个数
+		final int requiredHeaderCount  = 6 + (isResponseZSessionId ? 1 : 0);
+		// 本方法已解析的header个数
+		int parsedCount = 0;
 		// 第一个是请求行，不是header
-		for (int i = 1, size = x.size(); i < size; i++) {
+		for (int i = 1, size = x.size(); (i < size) && (parsedCount < requiredHeaderCount); i++) {
 
 			final ArrayRange arrarRange = x.get(i);
 
@@ -624,23 +631,48 @@ public class ZRequest {
 
 			final int headerNameLength = cI - arrarRange.getFrom() - nTrimSize;
 
-			// FIXME 2026年6月11日 21:39:49 zhangzhen : 注意：下面方法不是完整匹配,
-			// 可能有很多误判导致解析了非必要的头而一直不使用浪费cpu和内存
-			if (isNPHNL(headerNameLength, request.dataRawArray, arrarRange.getFrom())
-			// isResponseZSessionId 时，直接解析Cookie，因为早晚会用到
-		    || (isResponseZSessionId && isCookie(headerNameLength, request.dataRawArray, arrarRange.getFrom()))
-						) {
-				final String name = new String(request.dataRawArray, arrarRange.getFrom(), nT);
+			final String name = gHName(headerNameLength, request.dataRawArray, arrarRange.getFrom());
+			if (name != null) {
 
-				final String value = gHV(request.dataRawArray, cI, arrarRange);
+				final String value = gHValue(request.dataRawArray, cI, arrarRange);
 
 				request.headerMap.put(name, value);
 
 				arrarRange.setParsed(true);
+
+				parsedCount++;
 			}
 
 		}
 
+	}
+
+	private static String gHName(final int headerNameLength, final byte[] dataRawArray, final int bytesFrom) {
+		if (isHost(headerNameLength, dataRawArray, bytesFrom)) {
+			return HeaderEnum.HOST.getName();
+		}
+		if (isConnection(headerNameLength, dataRawArray, bytesFrom)) {
+			return HeaderEnum.CONNECTION.getName();
+		}
+		if (isResponseZSessionId && isCookie(headerNameLength, dataRawArray, bytesFrom)) {
+			return HeaderEnum.COOKIE.getName();
+		}
+		if (isUpgrade(headerNameLength, dataRawArray, bytesFrom)) {
+			// FIXME 2026年7月11日 05:59:26 zhangzhen : 新增枚举
+			return "Upgrade";
+		}
+		if (isExpect(headerNameLength, dataRawArray, bytesFrom)) {
+			// FIXME 2026年7月11日 05:59:26 zhangzhen : 新增枚举
+			return "Expect";
+		}
+		if (isContentLength(headerNameLength, dataRawArray, bytesFrom)) {
+			return HeaderEnum.CONTENT_LENGTH.getName();
+		}
+		if (isTransferEncoding(headerNameLength, dataRawArray, bytesFrom)) {
+			return HeaderEnum.TRANSFER_ENCODING.getName();
+		}
+
+		return null;
 	}
 
 	/**
@@ -649,18 +681,107 @@ public class ZRequest {
 	 * Host,Expect,Upgrade,Connection,Content-Length,Transfer-Encoding
 	 *
 	 * @param headerNameLength
-	 * @param dataRawArray TODO
-	 * @param from TODO
+	 * @param dataRawArray
+	 * @param from
 	 * @return
 	 */
 	private static boolean isNPHNL(final int headerNameLength, final byte[] dataRawArray, final int from) {
 		// 暂时只比较几个字符，不比较整个长度的
-		return ((headerNameLength == 4) && (dataRawArray[from] == 'H') && (dataRawArray[from + 2] == 's'))
-				|| ((headerNameLength == 6) && (dataRawArray[from] == 'E') && (dataRawArray[from + 2] == 'p'))
-				|| ((headerNameLength == 7) && (dataRawArray[from] == 'U') && (dataRawArray[from + 2] == 'g'))
-				|| ((headerNameLength == 10) && (dataRawArray[from] == 'C') && (dataRawArray[from + 2] == 'n'))
-				|| ((headerNameLength == 14) && (dataRawArray[from] == 'C') && (dataRawArray[from + 3] == 't'))
-				|| ((headerNameLength == 17) && (dataRawArray[from] == 'T') && (dataRawArray[from + 1] == 'r'));
+		return isHost(headerNameLength, dataRawArray, from)
+			|| isConnection(headerNameLength, dataRawArray, from)
+			|| isContentLength(headerNameLength, dataRawArray, from)
+			|| isExpect(headerNameLength, dataRawArray, from)
+			|| isUpgrade(headerNameLength, dataRawArray, from)
+			|| isTransferEncoding(headerNameLength, dataRawArray, from);
+	}
+
+	private static boolean isTransferEncoding(final int headerNameLength, final byte[] dataRawArray, final int from) {
+		return (headerNameLength == 17)
+				&& (dataRawArray[from] == 'T')
+				&& (dataRawArray[from + 1] == 'r')
+				&& (dataRawArray[from + 2] == 'a')
+				&& (dataRawArray[from + 3] == 'n')
+				&& (dataRawArray[from + 4] == 's')
+				&& (dataRawArray[from + 5] == 'f')
+				&& (dataRawArray[from + 6] == 'e')
+				&& (dataRawArray[from + 7] == 'r')
+				&& (dataRawArray[from + 8] == '-')
+				&& (dataRawArray[from + 9] == 'E')
+				&& (dataRawArray[from + 10] == 'n')
+				&& (dataRawArray[from + 11] == 'c')
+				&& (dataRawArray[from + 12] == 'o')
+				&& (dataRawArray[from + 13] == 'd')
+				&& (dataRawArray[from + 14] == 'i')
+				&& (dataRawArray[from + 15] == 'n')
+				&& (dataRawArray[from + 16] == 'g')
+
+				;
+	}
+
+	private static boolean isContentLength(final int headerNameLength, final byte[] dataRawArray, final int from) {
+		return (headerNameLength == 14)
+				&& (dataRawArray[from] == 'C')
+				&& (dataRawArray[from + 1] == 'o')
+				&& (dataRawArray[from + 2] == 'n')
+				&& (dataRawArray[from + 3] == 't')
+				&& (dataRawArray[from + 4] == 'e')
+				&& (dataRawArray[from + 5] == 'n')
+				&& (dataRawArray[from + 6] == 't')
+				&& (dataRawArray[from + 7] == '-')
+				&& (dataRawArray[from + 8] == 'L')
+				&& (dataRawArray[from + 9] == 'e')
+				&& (dataRawArray[from + 10] == 'n')
+				&& (dataRawArray[from + 11] == 'g')
+				&& (dataRawArray[from + 12] == 't')
+				&& (dataRawArray[from + 13] == 'h')
+				;
+	}
+
+	private static boolean isConnection(final int headerNameLength, final byte[] dataRawArray, final int from) {
+		return (headerNameLength == 10)
+				&& (dataRawArray[from] == 'C')
+				&& (dataRawArray[from + 1] == 'o')
+				&& (dataRawArray[from + 2] == 'n')
+				&& (dataRawArray[from + 3] == 'n')
+				&& (dataRawArray[from + 4] == 'e')
+				&& (dataRawArray[from + 5] == 'c')
+				&& (dataRawArray[from + 6] == 't')
+				&& (dataRawArray[from + 7] == 'i')
+				&& (dataRawArray[from + 8] == 'o')
+				&& (dataRawArray[from + 9] == 'n')
+
+				;
+	}
+
+	private static boolean isUpgrade(final int headerNameLength, final byte[] dataRawArray, final int from) {
+		return (headerNameLength == 7)
+				&& (dataRawArray[from] == 'U')
+				&& (dataRawArray[from + 1] == 'p')
+				&& (dataRawArray[from + 2] == 'g')
+				&& (dataRawArray[from + 3] == 'r')
+				&& (dataRawArray[from + 4] == 'a')
+				&& (dataRawArray[from + 5] == 'd')
+				&& (dataRawArray[from + 6] == 'e')
+				;
+	}
+
+	private static boolean isExpect(final int headerNameLength, final byte[] dataRawArray, final int from) {
+		return (headerNameLength == 6)
+				&& (dataRawArray[from] == 'E')
+				&& (dataRawArray[from + 1] == 'x')
+				&& (dataRawArray[from + 2] == 'c')
+				&& (dataRawArray[from + 3] == 'e')
+				&& (dataRawArray[from + 4] == 'p')
+				&& (dataRawArray[from + 5] == 't')
+				;
+	}
+
+	private static boolean isHost(final int headerNameLength, final byte[] dataRawArray, final int from) {
+		return (headerNameLength == 4)
+				&& (dataRawArray[from] == 'H')
+				&& (dataRawArray[from + 1] == 'o')
+				&& (dataRawArray[from + 2] == 's')
+				&& (dataRawArray[from + 3] == 't');
 	}
 
 	private static boolean isCookie(final int headerNameLength, final byte[] dataRawArray, final int from) {
@@ -705,7 +826,7 @@ public class ZRequest {
 			final String name = new String(request.dataRawArray, arrayRange.getFrom(), nameTo);
 			if ((headerName.length() == name.length()) && headerName.equals(name)) {
 
-				final String value = gHV(request.dataRawArray, cI, arrayRange);
+				final String value = gHValue(request.dataRawArray, cI, arrayRange);
 
 				request.headerMap.put(name, value);
 
@@ -717,7 +838,7 @@ public class ZRequest {
 		return HEADER_PARSED_NO_VALUE;
 	}
 
-	private static String gHV(final byte[] dataRawArray, final int cI, final ArrayRange arrayRange) {
+	private static String gHValue(final byte[] dataRawArray, final int cI, final ArrayRange arrayRange) {
 		int valueFromIndex = cI + 1;
 		while ((valueFromIndex < arrayRange.getTo()) && (dataRawArray[valueFromIndex] == STU.SPACE_BYTE)) {
 			valueFromIndex++;
