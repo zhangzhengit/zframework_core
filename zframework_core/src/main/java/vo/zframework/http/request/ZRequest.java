@@ -58,6 +58,12 @@ public class ZRequest {
 	 * 必须解析的头的个数
 	 */
 	public static final int isNPHNL = 6;
+
+	/**
+	 * parseHeader方法需要解析的header个数
+	 */
+	public static final int parseHeader_requiredHeaderCount = isNPHNL + (isResponseZSessionId ? 1 : 0);
+
 	public static final String MULTIPART_FORM_DATA = "multipart/form-data";
 
 	// -------------------------------------------------------------------------------------------------
@@ -605,12 +611,9 @@ public class ZRequest {
 	private static void parseHeader(final ZRequest request) {
 		final List<ArrayRange> x = request.arList;
 
-		// 本方法需要解析的header个数
-		final int requiredHeaderCount  = 6 + (isResponseZSessionId ? 1 : 0);
-		// 本方法已解析的header个数
-		int parsedCount = 0;
 		// 第一个是请求行，不是header
-		for (int i = 1, size = x.size(); (i < size) && (parsedCount < requiredHeaderCount); i++) {
+		for (int i = 1, size = x.size(), parsedCount = 0;
+				(i < size) && (parsedCount < parseHeader_requiredHeaderCount); i++) {
 
 			final ArrayRange arrarRange = x.get(i);
 
