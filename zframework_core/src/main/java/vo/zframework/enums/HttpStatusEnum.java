@@ -9,19 +9,15 @@ package vo.zframework.enums;
  */
 public enum HttpStatusEnum {
 
-
 	HTTP_100 (100 , "Continue"),
 	HTTP_101 (101 , "Switching Protocols"),
 	HTTP_102 (102 , "Processing"),
 	HTTP_103 (103 , "Early Hints"),
 
-
 	HTTP_200(200, "OK"),
 	HTTP_201(201, "Created"),
-
 	HTTP_202(202, "Accepted"),
 	HTTP_203(203, "Non-Authoritative Information"),
-
 	/**
 	 * 204 要求body必须为空且无Content*头
 	 */
@@ -31,28 +27,19 @@ public enum HttpStatusEnum {
 	HTTP_207(207, "Multi-Status"),
 	HTTP_208(208, "Already Reported"),
 	HTTP_226(226, "IM Used"),
-
-
-
-
-
 	HTTP_300(300, "Multiple Choices"),
 	HTTP_301(301, "Moved Permanently"),
 	HTTP_302(302, "Found"),
 	HTTP_303(303, "See Other"),
-
 	HTTP_304(304, "Not Modified"),
 	HTTP_307(307, "Temporary Redirect"),
 	HTTP_308(308, "Permanent Redirect"),
 
 	HTTP_400(400, "Bad Request"),
-
 	HTTP_401(401, "Unauthorized"),
 	HTTP_402(402, "Payment Required"),
 	HTTP_403(403, "Forbidden"),
-
 	HTTP_404(404, "Not Found"),
-
 	HTTP_405(405, "Method Not Allowed"),
 	HTTP_406(406, "Not Acceptable"),
 	HTTP_407(407, "Proxy Authentication Required"),
@@ -61,15 +48,12 @@ public enum HttpStatusEnum {
 	HTTP_410(410, "Gone"),
 	HTTP_411(411, "Length Required"),
 	HTTP_412(412, "Precondition Failed"),
-
 	HTTP_413(413, "Content Too Large"),
 	HTTP_414(414, "URI Too Long"),
 	HTTP_415(415, "Unsupported Media Type"),
 	HTTP_416(416, "Range Not Satisfiable"),
 	HTTP_417(417, "Expectation Failed"),
-
 	HTTP_418(418, "I'm a teapot"),
-
 	HTTP_421(421, "Misdirected Request"),
 	HTTP_422(422, "Unprocessable Entity"),
 	HTTP_423(423, "Locked"),
@@ -78,7 +62,6 @@ public enum HttpStatusEnum {
 	HTTP_426(426, "Upgrade Required"),
 	HTTP_428(428, "Precondition Required"),
 	HTTP_429(429, "Too Many Requests"),
-
 	HTTP_431(431, "Request Header Fields Too Large"),
 	HTTP_451(451, "Unavailable For Legal Reasons"),
 
@@ -93,7 +76,6 @@ public enum HttpStatusEnum {
 	HTTP_508(508, "Loop Detected"),
 	HTTP_510(510, "Not Extended"),
 	HTTP_511(511, "Network Authentication Required"),
-
 
 	;
 
