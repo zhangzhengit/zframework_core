@@ -959,7 +959,7 @@ public class ZResponse {
 		return null;
 	}
 
-	public void reset() {
+	private void reset() {
 		if (this.array.length() >= ZResponse.RESPONSE_ARRAY_CAPACITY) {
 			this.array.reset(ZResponse.RESPONSE_ARRAY_CAPACITY);
 		} else {
