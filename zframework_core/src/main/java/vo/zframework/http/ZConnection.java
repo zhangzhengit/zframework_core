@@ -123,7 +123,7 @@ public class ZConnection {
 					final ZResponse exception = this.getPd().getException();
 					if (exception != null) {
 						exception.write();
-						if ((exception.getHttpStatus() != HttpStatusEnum.HTTP_200.getStatus())
+						if (!exception.isOk()
 						 || (exception.getConnectionEnum() == ConnectionEnum.CLOSE)) {
 							closed = true;
 							break;

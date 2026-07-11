@@ -104,8 +104,7 @@ public class HTTPResponseProcessor {
 				return;
 			}
 
-			final int httpStatus = response.getHttpStatus();
-			if (httpStatus == HttpStatusEnum.HTTP_200.getStatus()) {
+			if (response.isOk()) {
 				response.setETagIfZETagPresent(request, response.getBody(), ETagEnum.STRONG);
 			}
 

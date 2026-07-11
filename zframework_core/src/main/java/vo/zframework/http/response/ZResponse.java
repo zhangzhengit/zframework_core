@@ -780,6 +780,10 @@ public class ZResponse {
 		return this.httpStatus;
 	}
 
+	public boolean isOk() {
+		return this.httpStatus == HTTP_STATUS_200;
+	}
+
 	/**
 	 * 根据header和body 来响应结果，只响应一次
 	 */
