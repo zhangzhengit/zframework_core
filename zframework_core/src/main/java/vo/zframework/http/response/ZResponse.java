@@ -422,7 +422,6 @@ public class ZResponse {
 
 			if (!this.containsHeader(HeaderEnum.ETAG.getName())) {
 				if (ZConnectionTL.get().getPd().getZrMethod().hasZETag()) {
-//				if (PDTL.get().getZrMethod().hasZETag()) {
 					final String eTag = ETagEnum.STRONG.handle(file.length() + "-" + file.lastModified());
 					this.header(HeaderEnum.ETAG.getNameBytes(), eTag.getBytes());
 					rETag = true;
@@ -560,7 +559,6 @@ public class ZResponse {
 	// FIXME 2026年6月7日 03:16:22 zhangzhen : 这个方法不好，违反了单一功能原则，改掉，并且返回返回header
 	void setETagIfZETagPresent(final ZRequest request, final byte[] data, final ETagEnum eTagEnum) {
 
-//		if (!PDTL.get().getZrMethod().hasZETag()) {
 		if (!ZConnectionTL.get().getPd().getZrMethod().hasZETag()) {
 			return;
 		}
@@ -583,7 +581,6 @@ public class ZResponse {
 
 	private String gETag(final byte[] data, final ETagEnum eTagEnum) {
 		if (!this.isBodyStream && ZConnectionTL.get().getPd().getZrMethod().isRTPrimitiveType()) {
-//		if (!this.isBodyStream && PDTL.get().getZrMethod().isRTPrimitiveType()) {
 			// 接口方法返回基本类型，直接用返回值作为ETag头
 			// FIXME 2026年6月19日 15:56:45 zhangzhen : 上面if是为了减少下面的hash的消耗，
 			// 但是这个if不太准确，不该只是基本类型，而是所有body都很小的内容，包括Date/BigInteger/小String/小对象等等
@@ -864,7 +861,7 @@ public class ZResponse {
 			HTTPResponseProcessor.setZSessionId(request, this);
 		}
 
-		if (this.getHttpStatus() == HTTP_STATUS_200) {
+		if (this.isOk()) {
 			HTTPResponseProcessor.setCacheControl(this);
 		}
 
