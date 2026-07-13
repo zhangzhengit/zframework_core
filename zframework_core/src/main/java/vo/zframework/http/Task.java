@@ -79,6 +79,7 @@ import vo.zframework.validator.ZValidator;
  */
 public class Task {
 
+	private static final Class<ZResponse> ZRESPONSE_CLASS = ZResponse.class;
 	private static final Object[] EMPTY_OBJECT_ARRAY = {};
 	private static final ServerConfigurationProperties SERVER_CONFIGURATIONPROPERTIES = ZContext
 			.getBean(ServerConfigurationProperties.class);
@@ -574,7 +575,7 @@ public class Task {
 				continue;
 			}
 
-			if (pType == ZResponse.class) {
+			if (pType == ZRESPONSE_CLASS) {
 				final ZResponse response = new ZResponse();
 				parameters[pI] = response;
 				pI++;
@@ -996,7 +997,7 @@ public class Task {
 				continue;
 			}
 
-			if (ZResponse.class == param.getClass()) {
+			if (ZRESPONSE_CLASS == param.getClass()) {
 				ZHttpContext.setZResponse((ZResponse) param);
 				sR = true;
 				break;
