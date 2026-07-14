@@ -11,6 +11,7 @@ import vo.zframework.enums.QPSHandlingEnum;
  * @date 2024年12月12日 上午9:30:06
  *
  */
+// FIXME 2026年7月14日 15:20:44 zhangzhen : 这个类一堆bug，也太占内存和cpu
 public class QC {
 
 	/**

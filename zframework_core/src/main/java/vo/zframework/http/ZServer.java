@@ -14,7 +14,6 @@ import vo.log.core.ZLog2;
 import vo.zframework.configuration.properties.ServerConfigurationProperties;
 import vo.zframework.core.ZContext;
 import vo.zframework.enums.QCTimeEnum;
-import vo.zframework.enums.QPSHandlingEnum;
 import vo.zframework.http.request.TaskRequestHandler;
 import vo.zframework.http.response.ReU;
 
@@ -39,12 +38,13 @@ public class ZServer {
 
 	private static final AtomicLong VT_N = new AtomicLong(0L);
 
-	public static final int DEFAULT_HTTP_PORT = 80;
-
 	public static final String Z_SERVER_QPS = "zsq";
 
-	private static final TaskRequestHandler requestHandler = new TaskRequestHandler();
+	private static final QC2 serverQPSQC = new QC2(Z_SERVER_QPS, SERVER_CONFIGURATIONPROPERTIES.getQps(), QCTimeEnum.SECOND);
 
+	public static final int DEFAULT_HTTP_PORT = 80;
+
+	private static final TaskRequestHandler requestHandler = new TaskRequestHandler();
 
 	private final ExecutorService ves = Executors.newVirtualThreadPerTaskExecutor();
 
@@ -136,9 +136,7 @@ public class ZServer {
 			return true;
 		}
 
-		return
-		ENABLE_SERVER_QPS_LIMITED && QC.allow(QCTimeEnum.SECOND, Z_SERVER_QPS, SERVER_CONFIGURATIONPROPERTIES.getQps(),
-				QPSHandlingEnum.SMOOTH);
+		return ENABLE_SERVER_QPS_LIMITED && serverQPSQC.allow();
 	}
 
 	private static String gTName() {
