@@ -1,12 +1,12 @@
 package vo.zframework.http.response;
 
 import java.io.IOException;
-import java.util.Date;
 
 import vo.zframework.anno.ZCacheControl;
 import vo.zframework.common.J;
 import vo.zframework.configuration.properties.ServerConfigurationProperties;
 import vo.zframework.core.ZContext;
+import vo.zframework.enums.ConnectionEnum;
 import vo.zframework.enums.ContentTypeEnum;
 import vo.zframework.enums.ETagEnum;
 import vo.zframework.enums.HeaderEnum;
@@ -100,7 +100,14 @@ public class HTTPResponseProcessor {
 		try {
 			final ZResponse response = Task.invoke(request);
 
-			if ((response == null) || response.isWritten()) {
+			if (response == null) {
+				return;
+			}
+
+			if (response.isWritten()) {
+				if (response.getConnectionEnum() == ConnectionEnum.CLOSE) {
+					ZConnectionTL.get().closeOutputStreamAndSocket();
+				}
 				return;
 			}
 

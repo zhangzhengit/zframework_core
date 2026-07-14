@@ -300,7 +300,6 @@ public class Task {
 
 		final String keyPrefix = "a-" + zControllerObject.getClass().getName().hashCode() + '@' + zrMethod.getMethod().getName().hashCode();
 		final boolean allow = QC.allow(
-			 requestMapping.time(),
 						keyPrefix,
 				requestMapping.count(),
 					handlingEnum);
@@ -311,7 +310,6 @@ public class Task {
 			// 什么的判断api.qps的部分，所以频繁上传可能再次导致不执行api
 			// 前几天写的功能[自定义http解析流程]，似乎可以把这个部分逻辑放进去，
 			// 即：先解析header如果API.qps超了，则不解析body
-
 			return ReU.response429API();
 		}
 
@@ -398,7 +396,7 @@ public class Task {
 			final QPSHandlingEnum handlingEnum = REQUEST_VALIDATOR_CONFIGURATION_PROPERTIES
 					.getHandlingEnum(request.getUserAgent());
 
-			if (!QC.allow(zqpsLimitation.time(), keyword, zqpsLimitation.count(), handlingEnum)) {
+			if (!QC.allow(keyword, zqpsLimitation.count(), handlingEnum)) {
 				return ReU.response429ZSESSIONID();
 			}
 

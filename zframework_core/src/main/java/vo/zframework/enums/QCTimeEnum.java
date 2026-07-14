@@ -17,37 +17,39 @@ public enum QCTimeEnum {
 		public long convert(final long currentTimeMillis) {
 			return currentTimeMillis / 1000;
 		}
-	},
+	};
 
-	/**
-	 * 分
-	 */
-	MINUTE {
-		@Override
-		public long convert(final long currentTimeMillis) {
-			return currentTimeMillis / 1000 / 60;
-		}
-	},
+//
+//	/**
+//	 * 分
+//	 */
+//	MINUTE {
+//		@Override
+//		public long convert(final long currentTimeMillis) {
+//			return currentTimeMillis / 1000 / 60;
+//		}
+//	}
+//	;
 
-	/**
-	 * 一刻钟
-	 */
-	QUARTER {
-		@Override
-		public long convert(final long currentTimeMillis) {
-			return currentTimeMillis / 1000 / 60 / 15;
-		}
-	},
-
-	/**
-	 * 小时
-	 */
-	HOUR {
-		@Override
-		public long convert(final long currentTimeMillis) {
-			return currentTimeMillis / 1000 / 60 / 60;
-		}
-	},;
+//	/**
+//	 * 一刻钟
+//	 */
+//	QUARTER {
+//		@Override
+//		public long convert(final long currentTimeMillis) {
+//			return currentTimeMillis / 1000 / 60 / 15;
+//		}
+//	},
+//
+//	/**
+//	 * 小时
+//	 */
+//	HOUR {
+//		@Override
+//		public long convert(final long currentTimeMillis) {
+//			return currentTimeMillis / 1000 / 60 / 60;
+//		}
+//	},;
 
 	public abstract long convert(long currentTimeMillis);
 

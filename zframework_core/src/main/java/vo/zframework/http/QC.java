@@ -1,214 +1,127 @@
 package vo.zframework.http;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 import vo.zframework.cache.ZRC;
-import vo.zframework.enums.QCTimeEnum;
 import vo.zframework.enums.QPSHandlingEnum;
 
 /**
- * 限流器
+ * 问deepseek要的代码：
+ *
+ * 秒级限流器（支持平滑/突发两种模式）
  *
  * @author zhangzhen
- * @date 2024年12月12日 上午9:30:06
- *
+ * @date 2026年7月14日
  */
-// FIXME 2026年7月14日 15:20:44 zhangzhen : 这个类一堆bug，也太占内存和cpu
 public class QC {
 
+	private static final ZRC STATE_MAP = new ZRC(10000 * 10, 2);
+
 	/**
-	 * 按秒，100，一百
+	 * 限流入口
+	 *
+	 * @param keyPrefix    限流 key（例如接口路径）
+	 * @param qps          每秒允许的请求数
+	 * @param handlingEnum SMOOTH（平滑） 或 UNEVEN（突发）
+	 * @return true 允许通过，false 拒绝
 	 */
-	private static final int QPS_THRESHOLD = 100;
-	/**
-	 * 就是600，六百，不是QPS_THRESHOLD * 60
-	 */
-	private static final int QPM_THRESHOLD = 600;
-
-	private static final int QPQ_THRESHOLD = QPM_THRESHOLD * 15;
-	private static final int QPH_THRESHOLD = QPM_THRESHOLD * 60;
-
-
-	// FIXME 2025年12月12日 21:12:44 zhangzhen : 10000 * 1000 最大容量不好设置，不只是接口个数*QPS这么简单
-	// 或者简单设置server.qps，因为这个值在最前面挡着，到接口这里时不会超过这个值
-
-	private static final ZRC C_SECOND = new ZRC(10000 * 1000, 2);
-
-	private static final ZRC C_MINUTE = new ZRC(10000 * 1000, 60 + 20);
-
-	private static final ZRC C_QUARTER = new ZRC(10000 * 1000, (60 * 15) + 60);
-
-	private static final ZRC C_HORS = new ZRC(10000 * 1000, (60 * 60) + 60);
-
-	public static boolean allow(final QCTimeEnum timeEnum, final String keyPrefix, final long qptu, final QPSHandlingEnum handlingEnum) {
-		switch (handlingEnum) {
-		case SMOOTH:
-			return allowSmooth(timeEnum, keyPrefix, qptu);
-
-		case UNEVEN:
-			return allowUneven(timeEnum, keyPrefix, qptu);
-
-		default:
-			break;
-		}
-
-		throw new UnsupportedOperationException("QPSHandlingEnum.value = " + handlingEnum);
-	}
-
-	public static boolean allowUneven(final QCTimeEnum timeEnum, final String keyPrefix, final long qptu) {
-		if (qptu <= 0) {
+	public static boolean allow(final String keyPrefix, final long qps, final QPSHandlingEnum handlingEnum) {
+		if (qps <= 0) {
 			return false;
 		}
 
-		final long ms = System.currentTimeMillis();
-		final long time = timeEnum.convert(ms);
+		final LimiterState state = STATE_MAP.computeIfAbsent(keyPrefix, () -> {
+			if (handlingEnum == QPSHandlingEnum.SMOOTH) {
+				return new SmoothLimiterState(qps);
+			}
+			return new UnevenLimiterState(qps);
+		});
 
-		final long sencod = time;
-		//		final long sencod = ms / 1000;
-		final long qptuNEW = qptu;
-		final boolean ok = a(keyPrefix, sencod, qptuNEW);
-		return ok;
+		// 如果限流模式与已有状态不一致，需要重建（但这里简化处理，首次创建后固定）
+		return state.allow();
 	}
 
+	// ================== 内部状态接口 ==================
+	private interface LimiterState {
+		boolean allow();
+	}
 
-	public static boolean allowSmooth(final QCTimeEnum timeEnum, final String keyPrefix, final long qptu) {
-		if (qptu <= 0) {
-			return false;
-		}
-		final long ms = System.currentTimeMillis();
+	// ================== 突发模式（固定窗口） ==================
+	private static class UnevenLimiterState implements LimiterState {
+		private final AtomicLong count = new AtomicLong(0);
+		private final AtomicLong window = new AtomicLong(0);
+		private final long qps;
 
-		if (timeEnum != null) {
-			switch (timeEnum) {
-			case SECOND: {
-				// 按现在逻辑 QPS_THRESHOLD = 100
-				// 传值 qptu = 10 则,time = 100ms = 1/10秒；qpsNEW = 1。一秒10 ，则平滑处理为1/10秒1个。正确
-				// 传值 qptu = 50 则,time = 20ms = 1/50秒；qpsNEW = 1。一秒50 ，则平滑处理为1/50秒1个。正确
-				// 传值 qptu = 100 则,time = 10ms = 1/100秒；qpsNEW = 1。一秒100 ，则平滑处理为1/100秒1个。正确
-				// 传值 qptu = 1000 则,time = 10ms = 1/100秒；qpsNEW = 10。一秒1000 ，则平滑处理为1/100秒10个。正确
-				// 传值 qptu = 10000 则,time = 10ms = 1/100秒；qpsNEW = 100。一秒10000 ，则平滑处理为1/100秒100个。正确
-				// 传值 qptu = 100000 则,time = 10ms = 1/100秒；qpsNEW = 1000。一秒10000 ，则平滑处理为1/100秒1000个。正确
-				final long time = qptu <= QPS_THRESHOLD ? (ms / (1000 / qptu)) : (ms / (1000 / QPS_THRESHOLD));
-				final long qpsNEW = (qptu / QPS_THRESHOLD) <= 0 ? 1 : (qptu / QPS_THRESHOLD);
-				final boolean ok = aSECOND(keyPrefix, time, qpsNEW);
-				return ok;
-			}
-			case MINUTE: {
-				final long time = qptu <= QPM_THRESHOLD ? (ms / ((1000 * 60) / qptu)) : (ms / (((1000 * 60) / QPM_THRESHOLD)));
-				final long qpnNEW = (qptu / QPM_THRESHOLD) <= 0 ? 1 : (qptu / QPM_THRESHOLD);
-				return aMINUTE(keyPrefix, time, qpnNEW);
-			}
-			case QUARTER: {
-				final long time = qptu <= QPQ_THRESHOLD ? (ms / ((1000 * 60 * 15) / qptu)) : (ms / (((1000 * 60 * 15) / QPQ_THRESHOLD)));
-				final long qpnNEW = (qptu / QPQ_THRESHOLD) <= 0 ? 1 : (qptu / QPQ_THRESHOLD);
-				return aQUARTER(keyPrefix, time, qpnNEW);
-			}
-			case HOUR: {
-				// FIXME 2025年1月21日 下午10:37:46 zhangzhen : 这个也好好算
-				final long time = qptu <= QPH_THRESHOLD ? (ms / ((1000 * 60 * 60) / qptu))
-						: (ms / (((1000 * 60 * 60) / QPH_THRESHOLD)));
-				final long qpnNEW = (qptu / QPH_THRESHOLD) <= 0 ? 1 : (qptu / QPH_THRESHOLD);
-				return aHOUR(keyPrefix, time, qpnNEW);
-			}
-			default:
-				break;
-			}
+		UnevenLimiterState(final long qps) {
+			this.qps = qps;
 		}
 
-		return false;
-	}
-	private static final Integer ONE  = 1;
+		@Override
+		public boolean allow() {
+			final long now = System.currentTimeMillis() / 1000;
+			final long currentWindow = this.window.get();
 
-	private static boolean aSECOND(final String keyPrefix, final long time, final long qpsNEW) {
-		final String k = gK(time, keyPrefix);
-		final Integer count = C_SECOND.getIfPresent(k);
-		if (count == null) {
-			C_SECOND.put(k, ONE);
-		} else {
-			// @ZRM.qps = 100时, > 会导致实际放行数*2，因为改为了>=
-			if (count.intValue() >= qpsNEW) {
-
-				// FIXME 2024年12月21日 下午1:17:11 zhangzhen : 上次加入下面这样是想及时山remove掉不再用的K，结果导致bug了
-				// 现在先注释了，以后再看怎么清楚不再用的K
-				//				C.remove(k);
-				return false;
+			// 窗口切换时重置
+			if (currentWindow != now) {
+				if (!this.window.compareAndSet(currentWindow, now)) {
+					// 其他线程已重置，重试
+					return this.allow();
+				}
+				this.count.set(0);
 			}
-			C_SECOND.put(k, count + 1);
-		}
-		return true;
-	}
-	private static boolean aMINUTE(final String keyPrefix, final long time, final long qpsNEW) {
-		final String k = gK(time, keyPrefix);
-		final Integer count = C_MINUTE.getIfPresent(k);
-		if (count == null) {
-			C_MINUTE.put(k, ONE);
-		} else {
-			// @ZRM.qps = 100时, > 会导致实际放行数*2，因为改为了>=
-			if (count.intValue() >= qpsNEW) {
 
-				// FIXME 2024年12月21日 下午1:17:11 zhangzhen : 上次加入下面这样是想及时山remove掉不再用的K，结果导致bug了
-				// 现在先注释了，以后再看怎么清楚不再用的K
-				//				C.remove(k);
-				return false;
+			// 自旋递增计数
+			while (true) {
+				final long c = this.count.get();
+				if (c >= this.qps) {
+					return false;
+				}
+				if (this.count.compareAndSet(c, c + 1)) {
+					return true;
+				}
 			}
-			C_MINUTE.put(k, count + 1);
 		}
-		return true;
 	}
-	private static boolean aQUARTER(final String keyPrefix, final long time, final long qpsNEW) {
-		final String k = gK(time, keyPrefix);
-		final Integer count = C_QUARTER.getIfPresent(k);
-		if (count == null) {
-			C_QUARTER.put(k, ONE);
-		} else {
-			// @ZRM.qps = 100时, > 会导致实际放行数*2，因为改为了>=
-			if (count.intValue() >= qpsNEW) {
 
-				// FIXME 2024年12月21日 下午1:17:11 zhangzhen : 上次加入下面这样是想及时山remove掉不再用的K，结果导致bug了
-				// 现在先注释了，以后再看怎么清楚不再用的K
-				//				C.remove(k);
-				return false;
+	// ================== 平滑模式（令牌桶） ==================
+	private static class SmoothLimiterState implements LimiterState {
+		private final AtomicLong tokens = new AtomicLong(0);
+		private final AtomicLong lastRefillTime = new AtomicLong(System.currentTimeMillis());
+		private final long qps;
+
+		SmoothLimiterState(final long qps) {
+			this.qps = qps;
+		}
+
+		@Override
+		public boolean allow() {
+			final long now = System.currentTimeMillis();
+			final long last = this.lastRefillTime.get();
+
+			// 计算本秒内应生成的令牌数
+			final long elapsed = now - last;
+			final long newTokens = (elapsed * this.qps) / 1000; // 每毫秒生成 qps/1000 个令牌
+			if (newTokens > 0) {
+				// 尝试更新最后填充时间（只有成功更新才实际增加令牌）
+				if (!this.lastRefillTime.compareAndSet(last, now)) {
+					// 其他线程已经更新，重试
+					return this.allow();
+				}
+				final long current = this.tokens.get();
+				final long refilled = Math.min(current + newTokens, this.qps); // 不超过容量
+				this.tokens.compareAndSet(current, refilled);
 			}
-			C_QUARTER.put(k, count + 1);
-		}
-		return true;
-	}
-	private static boolean aHOUR(final String keyPrefix, final long time, final long qpsNEW) {
-		final String k = gK(time, keyPrefix);
-		final Integer count = C_HORS.getIfPresent(k);
-		if (count == null) {
-			C_HORS.put(k, ONE);
-		} else {
-			// @ZRM.qps = 100时, > 会导致实际放行数*2，因为改为了>=
-			if (count.intValue() >= qpsNEW) {
 
-				// FIXME 2024年12月21日 下午1:17:11 zhangzhen : 上次加入下面这样是想及时山remove掉不再用的K，结果导致bug了
-				// 现在先注释了，以后再看怎么清楚不再用的K
-				//				C.remove(k);
-				return false;
+			// 尝试消耗令牌
+			while (true) {
+				final long currentTokens = this.tokens.get();
+				if (currentTokens <= 0) {
+					return false;
+				}
+				if (this.tokens.compareAndSet(currentTokens, currentTokens - 1)) {
+					return true;
+				}
 			}
-			C_HORS.put(k, count + 1);
 		}
-		return true;
 	}
-	private static boolean a(final String keyPrefix, final long time, final long qpsNEW) {
-		final String k = gK(time, keyPrefix);
-		final Integer count = C_SECOND.getIfPresent(k);
-		if (count == null) {
-			C_SECOND.put(k, ONE);
-		} else {
-			// @ZRM.qps = 100时, > 会导致实际放行数*2，因为改为了>=
-			if (count.intValue() >= qpsNEW) {
-
-				// FIXME 2024年12月21日 下午1:17:11 zhangzhen : 上次加入下面这样是想及时山remove掉不再用的K，结果导致bug了
-				// 现在先注释了，以后再看怎么清楚不再用的K
-				//				C.remove(k);
-				return false;
-			}
-			C_SECOND.put(k, count + 1);
-		}
-		return true;
-	}
-
-	private static String gK(final long time, final String keyPrefix) {
-		return keyPrefix + "_" + time;
-	}
-
 }

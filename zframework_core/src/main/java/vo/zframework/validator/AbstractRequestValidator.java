@@ -4,11 +4,9 @@ import vo.zframework.configuration.properties.RequestValidatorConfigurationPrope
 import vo.zframework.configuration.properties.ServerConfigurationProperties;
 import vo.zframework.core.ZContext;
 import vo.zframework.enums.AccessDeniedCodeEnum;
-import vo.zframework.enums.QCTimeEnum;
 import vo.zframework.enums.QPSHandlingEnum;
 import vo.zframework.http.QC;
 import vo.zframework.http.ZSession;
-import vo.zframework.http.ZSessionMap;
 import vo.zframework.http.request.RequestVerificationResult;
 import vo.zframework.http.request.ZRequest;
 import vo.zframework.http.response.HTTPResponseProcessor;
@@ -85,7 +83,7 @@ public abstract class AbstractRequestValidator {
 
 		final String keyword = request.getClientIp() + "@" + request.getUserAgent();
 		final QPSHandlingEnum handlingEnum = this.requestValidatorConfigurationProperties.getHandlingEnum(request.getUserAgent());
-		final boolean allow = QC.allow(QCTimeEnum.SECOND,keyword, AbstractRequestValidator.getClientQps(), handlingEnum);
+		final boolean allow = QC.allow(keyword, AbstractRequestValidator.getClientQps(), handlingEnum);
 
 		if (allow) {
 			return ALLOW;
@@ -112,7 +110,7 @@ public abstract class AbstractRequestValidator {
 
 		final String smoothUserAgentKeyword = "zsid@" + sessionId;
 
-		final boolean allow = QC.allow(QCTimeEnum.SECOND, smoothUserAgentKeyword,
+		final boolean allow = QC.allow(smoothUserAgentKeyword,
 				AbstractRequestValidator.getSessionIdQps(), handlingEnum);
 
 		if (allow) {
