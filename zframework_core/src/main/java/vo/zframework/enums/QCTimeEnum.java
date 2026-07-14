@@ -25,7 +25,7 @@ public enum QCTimeEnum {
 	MINUTE {
 		@Override
 		public long convert(final long currentTimeMillis) {
-			return SECOND.convert(currentTimeMillis) / 60;
+			return currentTimeMillis / 1000 / 60;
 		}
 	},
 
@@ -35,7 +35,7 @@ public enum QCTimeEnum {
 	QUARTER {
 		@Override
 		public long convert(final long currentTimeMillis) {
-			return MINUTE.convert(currentTimeMillis) / 15;
+			return currentTimeMillis / 1000 / 60 / 15;
 		}
 	},
 
@@ -45,7 +45,7 @@ public enum QCTimeEnum {
 	HOUR {
 		@Override
 		public long convert(final long currentTimeMillis) {
-			return MINUTE.convert(currentTimeMillis) / 60;
+			return currentTimeMillis / 1000 / 60 / 60;
 		}
 	},;
 
