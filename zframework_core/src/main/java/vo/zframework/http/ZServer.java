@@ -105,7 +105,6 @@ public class ZServer {
 	}
 
 
-	@SuppressWarnings("preview")
 	private static void newConnection(final Socket socket) {
 		if (!CONNECTION_LIMIT_SEMAPHORE.tryAcquire()) {
 			try (OutputStream outputStream = socket.getOutputStream()) {
@@ -125,13 +124,12 @@ public class ZServer {
 		}
 
 		final ZConnection connection = new ZConnection(socket);
-		ScopedValue.where(ZConnectionSV.scopedValue, connection).run(() -> {
-			try {
-				connection.start();
-			} finally {
-				CONNECTION_LIMIT_SEMAPHORE.release();
-			}
-		});
+		try {
+			connection.start();
+		} finally {
+			CONNECTION_LIMIT_SEMAPHORE.release();
+			ZConnectionTL.remove();
+		}
 	}
 
 	public static boolean allow() {

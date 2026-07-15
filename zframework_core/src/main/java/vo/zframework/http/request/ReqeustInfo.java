@@ -9,11 +9,18 @@ package vo.zframework.http.request;
  */
 public class ReqeustInfo {
 
-	@SuppressWarnings("preview")
-	public static final ScopedValue<ZRequest> scopedValue = ScopedValue.newInstance();
+	private final static ThreadLocal<ZRequest> tl = new ThreadLocal<>();
+
+	public static void set(final ZRequest request) {
+		tl.set(request);
+	}
 
 	public static ZRequest get() {
-		return scopedValue.get();
+		return tl.get();
+	}
+
+	public static void remove() {
+		tl.remove();
 	}
 
 }

@@ -106,9 +106,6 @@
 					<target>21</target>
 					<fork>false</fork>
 					<release>21</release>
-					<compilerArgs>
-						<arg>--enable-preview</arg>
-					</compilerArgs>
 				</configuration>
 			</plugin>
 		</plugins>
