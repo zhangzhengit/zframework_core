@@ -16,7 +16,7 @@ import vo.zframework.exception.ZControllerAdviceActuator;
 import vo.zframework.exception.ZControllerAdviceThrowable;
 import vo.zframework.exception.ZFException;
 import vo.zframework.http.Task;
-import vo.zframework.http.ZConnectionTL;
+import vo.zframework.http.ZConnectionSV;
 import vo.zframework.http.ZCookie;
 import vo.zframework.http.ZSession;
 import vo.zframework.http.request.ReqeustInfo;
@@ -39,38 +39,35 @@ public class HTTPResponseProcessor {
 	 */
 	public static final int DEFAULT_RESPONSE_COOKIE_ARRAY_CAPACITY = 76;
 
+	@SuppressWarnings("preview")
 	public static void response(final ZRequest request) {
 
-		try {
-			ReqeustInfo.set(request);
-			response0(request);
+		ScopedValue.where(ReqeustInfo.scopedValue, request).run(() -> {
+			try {
+				response0(request);
+			} catch (final Throwable e) {
+				// 这个catch里 真正处理 response里的异常，用统一配置的异常处理器来处理
+				final ZControllerAdviceActuator a = ZContext.getBean(ZControllerAdviceActuator.class);
+				final Object r = a.execute(e, request);
 
-		} catch (final Throwable e) {
+				final int httpStatus = ZControllerAdviceThrowable.findHttpStatus(e);
+				final ZResponse response = new ZResponse()
+						.httpStatus(
+								httpStatus != ZFException.NOT_SET ? httpStatus : HttpStatusEnum.HTTP_500.getStatus())
+						.contentType(ContentTypeEnum.APPLICATION_JSON.getTypeBytes())
+						.body(J.toJSONString(r));
 
-			// 这个catch里 真正处理 response里的异常，用统一配置的异常处理器来处理
-			final ZControllerAdviceActuator a = ZContext.getBean(ZControllerAdviceActuator.class);
-			final Object r = a.execute(e, request);
+				if (RESPONSE_Z_SESSION_ID) {
+					setZSessionId(request, response);
+				}
 
-			final int httpStatus = ZControllerAdviceThrowable.findHttpStatus(e);
-			final ZResponse response =
-					new ZResponse()
-					.httpStatus(httpStatus != ZFException.NOT_SET ? httpStatus : HttpStatusEnum.HTTP_500.getStatus())
-					.contentType(ContentTypeEnum.APPLICATION_JSON.getTypeBytes())
-					.body(J.toJSONString(r));
+				response.write();
 
-			if (RESPONSE_Z_SESSION_ID) {
-				setZSessionId(request, response);
+				if (e instanceof IOException) {
+					ZConnectionSV.get().closeOutputStreamAndSocket();
+				}
 			}
-
-			response.write();
-
-			if (e instanceof IOException) {
-				ZConnectionTL.get().closeOutputStreamAndSocket();
-			}
-
-		} finally {
-			ReqeustInfo.remove();
-		}
+		});
 
 	}
 
@@ -96,18 +93,19 @@ public class HTTPResponseProcessor {
 	}
 
 	private static void response0(final ZRequest request) throws Throwable {
-
+		ZResponse response = null;
 		try {
-			final ZResponse response = Task.invoke(request);
+			 response = Task.invoke(request);
+			final int httpStatus = response.getHttpStatus();
+			if (httpStatus == 429) {
+				final int d = 0;
+			}
 
 			if (response == null) {
 				return;
 			}
 
 			if (response.isWritten()) {
-				if (response.getConnectionEnum() == ConnectionEnum.CLOSE) {
-					ZConnectionTL.get().closeOutputStreamAndSocket();
-				}
 				return;
 			}
 
@@ -117,23 +115,23 @@ public class HTTPResponseProcessor {
 
 			response.write();
 
-			if (!request.isKeepAlive()) {
-				ZConnectionTL.get().closeOutputStreamAndSocket();
-			}
-
 		} catch (final Exception e) {
 			// 这里不能关闭，因为外面的异常处理器类还要write，继续抛
 			throw e;
+		} finally {
+			if (!request.isKeepAlive() || ((response != null) && (response.getConnectionEnum() == ConnectionEnum.CLOSE))) {
+				ZConnectionSV.get().closeOutputStreamAndSocket();
+			}
 		}
 
 	}
 
 	public static void setCacheControl(final ZResponse response) {
 
-		final ZCacheControl cacheControl = ZConnectionTL.get().getPd().getZrMethod().getCacheControl();
+		final ZCacheControl cacheControl = ZConnectionSV.get().getPd().getZrMethod().getCacheControl();
 		if (cacheControl != null) {
 			response.header(HeaderEnum.CACHE_CONTROL.getNameBytes(),
-					ZConnectionTL.get().getPd().getZrMethod().getCacheControlVStringBytes());
+					ZConnectionSV.get().getPd().getZrMethod().getCacheControlVStringBytes());
 		}
 
 	}

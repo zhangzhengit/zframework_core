@@ -25,7 +25,7 @@ import vo.zframework.enums.HttpStatusEnum;
 import vo.zframework.enums.TransferEncodingEnum;
 import vo.zframework.html.FIS;
 import vo.zframework.http.ZConnection;
-import vo.zframework.http.ZConnectionTL;
+import vo.zframework.http.ZConnectionSV;
 import vo.zframework.http.ZCookie;
 import vo.zframework.http.ZHeader;
 import vo.zframework.http.request.ReqeustInfo;
@@ -116,14 +116,14 @@ public class ZResponse {
 
 	private static final byte[] HTTP_1_1_BYTES = HTTP_1_1.getBytes();
 
-	private final BufferedOutputStream bufferedOutputStream = ZConnectionTL.get().getBufferedOutputStream();
+	private final BufferedOutputStream bufferedOutputStream = ZConnectionSV.get().getBufferedOutputStream();
 
-	private final ZArray array = ZConnectionTL.get().getResponseArray();
+	private final ZArray array = ZConnectionSV.get().getResponseArray();
 
 	/**
 	 * 放header
 	 */
-	private List<ZHeader> headerList = ZConnectionTL.get().getResponseHeaderList();
+	private List<ZHeader> headerList = ZConnectionSV.get().getResponseHeaderList();
 	private final int initHLS = this.headerList.size();
 
 	/**
@@ -420,7 +420,7 @@ public class ZResponse {
 		if (file != null) {
 
 			if (!this.containsHeader(HeaderEnum.ETAG.getName())) {
-				if (ZConnectionTL.get().getPd().getZrMethod().hasZETag()) {
+				if (ZConnectionSV.get().getPd().getZrMethod().hasZETag()) {
 					final String eTag = ETagEnum.STRONG.handle(file.length() + "-" + file.lastModified());
 					this.header(HeaderEnum.ETAG.getNameBytes(), eTag.getBytes());
 					rETag = true;
@@ -538,7 +538,7 @@ public class ZResponse {
 		} finally {
 			this.reset();
 			if (!request.isKeepAlive()) {
-				ZConnectionTL.get().closeOutputStreamAndSocket();
+				ZConnectionSV.get().closeOutputStreamAndSocket();
 			}
 		}
 
@@ -558,7 +558,7 @@ public class ZResponse {
 	// FIXME 2026年6月7日 03:16:22 zhangzhen : 这个方法不好，违反了单一功能原则，改掉，并且返回返回header
 	void setETagIfZETagPresent(final ZRequest request, final byte[] data, final ETagEnum eTagEnum) {
 
-		if (!ZConnectionTL.get().getPd().getZrMethod().hasZETag()) {
+		if (!ZConnectionSV.get().getPd().getZrMethod().hasZETag()) {
 			return;
 		}
 
@@ -579,7 +579,7 @@ public class ZResponse {
 	}
 
 	private String gETag(final byte[] data, final ETagEnum eTagEnum) {
-		if (!this.isBodyStream && ZConnectionTL.get().getPd().getZrMethod().isRTPrimitiveType()) {
+		if (!this.isBodyStream && ZConnectionSV.get().getPd().getZrMethod().isRTPrimitiveType()) {
 			// 接口方法返回基本类型，直接用返回值作为ETag头
 			// FIXME 2026年6月19日 15:56:45 zhangzhen : 上面if是为了减少下面的hash的消耗，
 			// 但是这个if不太准确，不该只是基本类型，而是所有body都很小的内容，包括Date/BigInteger/小String/小对象等等
@@ -794,8 +794,6 @@ public class ZResponse {
 
 		this.write = true;
 
-		ZResponseStatus.written();
-
 		this.reset();
 	}
 
@@ -897,7 +895,7 @@ public class ZResponse {
 				this.bufferedOutputStream.write(data, 0, length);
 			}
 		} catch (final IOException e) {
-			ZConnectionTL.get().closeOutputStreamAndSocket();
+			ZConnectionSV.get().closeOutputStreamAndSocket();
 		}
 	}
 
@@ -907,7 +905,7 @@ public class ZResponse {
 		} catch (final IOException e) {
 //			e.printStackTrace();
 //			SocketTL.closeOutputStreamAndSocket();
-			ZConnectionTL.get().closeOutputStreamAndSocket();
+			ZConnectionSV.get().closeOutputStreamAndSocket();
 		}
 	}
 
@@ -968,7 +966,7 @@ public class ZResponse {
 
 		if (this.headerList.size() > ZResponse.HEADER_LIST_CAPACITY) {
 			this.headerList = ZConnection.initRHL();
-			ZConnectionTL.get().setResponseHeaderList(this.headerList);
+			ZConnectionSV.get().setResponseHeaderList(this.headerList);
 		} else {
 			// 初始化时已有的不删
 			if (this.initHLS <= 0) {

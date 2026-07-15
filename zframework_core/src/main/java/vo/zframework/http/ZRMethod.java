@@ -97,6 +97,8 @@ public class ZRMethod {
 
 	private final ZRequestMapping zRequestMapping;
 
+	private SP sp;
+
 	/**
 	 * @param method
 	 * @param ctEnum
@@ -339,6 +341,14 @@ public class ZRMethod {
 
 	public int getMethodParameterSize() {
 		return this.methodParameterSize;
+	}
+
+	public SP getSp() {
+		return this.sp;
+	}
+
+	public void setSp(final SP sp) {
+		this.sp = sp;
 	}
 
 }

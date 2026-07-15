@@ -140,20 +140,25 @@ public class ZControllerMap {
 
 		final Set<ByteArrayKeyWrapper> keySet = methodPathTable.row(methodNameWrapper).keySet();
 		// FIXME 2025年1月22日 下午3:21:16 zhangzhen : 访问 @ZPV的接口值，jp分析getx方法耗时比较长
-		final ByteArrayKeyWrapper pathMKW = getxCache(new String(pathBytes), keySet);
+		final Object[] r = getxCache(new String(pathBytes), keySet);
+		if (r == null) {
+			return null;
+		}
 
-		return pathMKW == null ? null : methodPathTable.get(methodNameWrapper, pathMKW);
+		final ZRMethod zrMethod = methodPathTable.get(methodNameWrapper, (ByteArrayKeyWrapper) r[0]);
+		zrMethod.setSp((SP) r[1]);
+
+		return zrMethod;
 	}
 
-	private static ByteArrayKeyWrapper getxCache(final String path, final Set<ByteArrayKeyWrapper> keySet) {
+	private static Object[] getxCache(final String path, final Set<ByteArrayKeyWrapper> keySet) {
 		final Supplier<SP> getxSupplier = getxSupplier(path, keySet);
 		final SP sp = ZRC.singleton().computeIfAbsent(path, getxSupplier, true);
 		if (sp == null) {
 			return null;
 		}
 
-		ZPVTL.set(sp.getVList());
-		return sp.getKeyWrapper();
+		return new Object[] { sp.getKeyWrapper(), sp };
 	}
 
 	private static Supplier<SP> getxSupplier(final String path, final Set<ByteArrayKeyWrapper> keySet) {

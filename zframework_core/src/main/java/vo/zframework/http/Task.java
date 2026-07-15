@@ -61,7 +61,6 @@ import vo.zframework.http.request.ZRequest;
 import vo.zframework.http.request.ZRequestParam;
 import vo.zframework.http.response.ReU;
 import vo.zframework.http.response.ZResponse;
-import vo.zframework.http.response.ZResponseStatus;
 import vo.zframework.scanner.ZHandlerInterceptor;
 import vo.zframework.scanner.ZHandlerInterceptorScanner;
 import vo.zframework.scanner.ZModelAndView;
@@ -105,7 +104,7 @@ public class Task {
 
 		try {
 
-			final ZRMethod zrMethod = ZConnectionTL.get().getPd().getZrMethod();
+			final ZRMethod zrMethod = ZConnectionSV.get().getPd().getZrMethod();
 			final Object[] parameters = generateParameters(request, request.getPath(), zrMethod);
 
 			final Object zController = ZControllerMap.getObjectByMethod(zrMethod.getMethod());
@@ -197,15 +196,18 @@ public class Task {
 			return checkZQPSLimitation;
 		}
 
-		ZResponseStatus.initialization();
+		final ZResponse response = setZRequestAndZResponse(request, parameters);
 
-		setZRequestAndZResponse(request, parameters);
+		return invokeAndResponse0(zrMethod, parameters, zControllerObject, request, response);
+	}
 
+	private static ZResponse invokeAndResponse0(final ZRMethod zrMethod, final Object[] parameters,
+			final Object zControllerObject, final ZRequest request, final ZResponse response) throws Throwable {
 		final List<ZHandlerInterceptor> hiList = ZHandlerInterceptorScanner.match(request.getRequestURI());
 
 		final Object r = CU.isEmpty(hiList)
 				? invoke0(zControllerObject, zrMethod, parameters)
-				: invokeZHandlerInterceptor(zrMethod, parameters, zControllerObject, request, hiList);
+				: invokeZHandlerInterceptor(zrMethod, parameters, zControllerObject, request, hiList, response);
 
 		// 最高优先级：业务代码处理 接口方法void
 		// 1、先看方法里的业务代码是否new ZResponse.write过了，有则停止，无则继续第二步
@@ -214,13 +216,11 @@ public class Task {
 		//    2无ZR，则给一个默认的json 200
 		// 	到此结束了，不管produces是啥都write
 		if (zrMethod.isVoid()) {
-			final boolean written = ZResponseStatus.isWritten();
-			if (written) {
+			if (response.isWritten()) {
 				// 已write了，业务代码自己处理过了，停止
 				return null;
 			}
 
-			final ZResponse response = ZHttpContext.getZResponseAndRemove();
 			// 无ZR参数，直接给一个默认的json 200
 			if (response == null) {
 				return new ZResponse()
@@ -317,11 +317,9 @@ public class Task {
 	}
 
 	private static Object invokeZHandlerInterceptor(final ZRMethod zrMethod, final Object[] parameters,
-			final Object zControllerObject, final ZRequest request, final List<ZHandlerInterceptor> zhiList) throws Throwable {
+			final Object zControllerObject, final ZRequest request, final List<ZHandlerInterceptor> zhiList, final ZResponse response) throws Throwable {
 
 		// FIXME 2026年6月10日 09:30:02 zhangzhen : 这里又new ZResponse应该是bug，应该取上面set过的ZResponse对象。
-		final ZResponse response = ZHttpContext.getZResponse();
-//		final ZResponse response = new ZResponse();
 
 		final InterceptorParameter interceptorParameter =
 				new InterceptorParameter(
@@ -594,9 +592,9 @@ public class Task {
 			}
 
 			if (RU.isAnnotationPresent(p, ZPathVariable.class)) {
-				final List<Object> list = ZPVTL.get();
 				final Class<?> type = pType;
 				// FIXME 2023年11月8日 下午4:39:18 zhanghen: @ZRM 启动校验是否此类型
+				final List<Object> list = zrMethod.getSp().getVList();
 				final Object v = list.get(zpvPI);
 				try {
 					Task.setZPathVariableValue(parameters, pI, type, v);
@@ -983,29 +981,24 @@ public class Task {
 		return Task.generateParameters0(request, path, zrMethod);
 	}
 
-	private static void setZRequestAndZResponse(final ZRequest request, final Object[] parameterArray) {
+	private static ZResponse setZRequestAndZResponse(final ZRequest request, final Object[] parameterArray) {
 
 		if (AU.isEmpty(parameterArray)) {
-			return;
+			return null;
 		}
 
-		boolean sR = false;
+		final boolean sR = false;
 		for (final Object param : parameterArray) {
 			if (param == null) {
 				continue;
 			}
 
 			if (ZRESPONSE_CLASS == param.getClass()) {
-				ZHttpContext.setZResponse((ZResponse) param);
-				sR = true;
-				break;
+				return (ZResponse) param;
 			}
 		}
 
-		if (!sR) {
-			ZHttpContext.setZResponse(new ZResponse());
-		}
+		return new ZResponse();
 	}
-
 
 }
