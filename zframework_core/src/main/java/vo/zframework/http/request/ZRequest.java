@@ -23,7 +23,7 @@ import vo.zframework.enums.HeaderEnum;
 import vo.zframework.http.ArrayRange;
 import vo.zframework.http.TF;
 import vo.zframework.http.Task;
-import vo.zframework.http.ZConnectionTL;
+import vo.zframework.http.ZConnectionSV;
 import vo.zframework.http.ZCookie;
 import vo.zframework.http.ZServer;
 import vo.zframework.http.ZSession;
@@ -505,7 +505,7 @@ public class ZRequest {
 
 	private static void parsePath(final ZRequest request) {
 
-		final byte[] requestURIBytes = ZConnectionTL.get().getPd().getRequestURIBytes();
+		final byte[] requestURIBytes = ZConnectionSV.get().getPd().getRequestURIBytes();
 
 		final int wI = AU.indexOfKeyword(requestURIBytes, STU.Q_BYTE);
 
@@ -857,7 +857,7 @@ public class ZRequest {
 	}
 
 	public String getRequestLine() {
-		final String requestLine = new String(ZConnectionTL.get().getPd().getRequestLineBytes());
+		final String requestLine = new String(ZConnectionSV.get().getPd().getRequestLineBytes());
 		return requestLine;
 	}
 
@@ -907,7 +907,7 @@ public class ZRequest {
 
 	public String getClientIp() {
 		if (this.clientIp == null) {
-			this.clientIp = ((InetSocketAddress) ZConnectionTL.get().getSocket().getRemoteSocketAddress()).getAddress().getHostAddress();
+			this.clientIp = ((InetSocketAddress) ZConnectionSV.get().getSocket().getRemoteSocketAddress()).getAddress().getHostAddress();
 		}
 		return this.clientIp;
 	}
