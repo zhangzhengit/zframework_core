@@ -31,7 +31,7 @@ import vo.zframework.http.request.ZMultipartFile;
 public class ZControllerMap {
 	static final ZHashBasedTable<ByteArrayKeyWrapper, ByteArrayKeyWrapper, ZRMethod> methodPathTable = new ZHashBasedTable<>();
 	static final ZHashBasedTable<Method, ByteArrayKeyWrapper, Boolean> methodIsregexTable = new ZHashBasedTable<>();
-	static final HashMap<Method, Object> objectMap = new HashMap<>(16, 1F);
+	static final Map<Method, Object> objectMap = new HashMap<>(16, 1F);
 	static final HashSet<String> mappingSet = new HashSet<>();
 
 	/**
@@ -241,8 +241,8 @@ public class ZControllerMap {
 		}
 	}
 
-	public static Set<Method> getMethodSet() {
-		return objectMap.keySet();
+	public static Map<Method, Object> getMCMap() {
+		return objectMap;
 	}
 
 }

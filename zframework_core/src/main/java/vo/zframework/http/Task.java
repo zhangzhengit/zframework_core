@@ -48,6 +48,8 @@ import vo.zframework.enums.ContentTypeEnum;
 import vo.zframework.enums.HttpStatusEnum;
 import vo.zframework.enums.MethodEnum;
 import vo.zframework.enums.QPSHandlingEnum;
+import vo.zframework.event.APIRouteR;
+import vo.zframework.event.IAPIRoute;
 import vo.zframework.exception.FormPairParseException;
 import vo.zframework.exception.ParsingRequestParamException;
 import vo.zframework.exception.PathVariableException;
@@ -206,7 +208,7 @@ public class Task {
 		final List<ZHandlerInterceptor> hiList = ZHandlerInterceptorScanner.match(request.getRequestURI());
 
 		final Object r = CU.isEmpty(hiList)
-				? invoke0(zControllerObject, zrMethod, parameters)
+				? invoke0(request.getPath(), zControllerObject, zrMethod, parameters)
 				: invokeZHandlerInterceptor(zrMethod, parameters, zControllerObject, request, hiList, response);
 
 		// 最高优先级：业务代码处理 接口方法void
@@ -344,7 +346,7 @@ public class Task {
 		}
 
 		// 2 执行目标方法
-		final Object rV = invoke0(zControllerObject, zrMethod, parameters);
+		final Object rV = invoke0(request.getPath(), zControllerObject, zrMethod, parameters);
 
 		final ZModel zModel = findZModel(parameters);
 
@@ -450,33 +452,38 @@ public class Task {
 
 	/**
 	 * 真正的API目标方法执行，统一在本方法里面执行，方便统一处理
-	 *
+	 * @param path TODO
 	 * @param zControllerObject		此method所在的 @ZController 标记的对象
 	 * @param zrMethod 				组合的Method相关内容的对象
 	 * @param parameters			此method的参数数组，如：ZRequest/ZModel/@ZRequestHeader/@ZRequestParam等等
+	 *
 	 * @return
+	 * @throws Exception
 	 * @throws Throwable
 	 */
-	private static Object invoke0(final Object zControllerObject, final ZRMethod zrMethod, final Object[] parameters) throws Throwable {
+	private static Object invoke0(final String path, final Object zControllerObject, final ZRMethod zrMethod, final Object[] parameters) throws Throwable  {
 
 		try {
+			// 先直接调用(当前只支持了不带@ZPV的)
+			final IAPIRoute apiRoute = ZContext.getBean(IAPIRoute.class);
+			final APIRouteR route = apiRoute.route(path, zControllerObject, zrMethod, parameters);
+			if ((route != null) && route.isMatched()) {
+				return route.getRv();
+			}
+
+			// 没找到再使用方法句柄
 			return zrMethod.getMethodHandle().invokeExact(parameters);
 		} catch (final Throwable e) {
 			throw e;
 		} finally {
-
 			if (parameters.length > 0) {
-				try {
-					closeZMFInputStreamAndDeleteTempFile(parameters);
-				} catch (final IOException e) {
-					e.printStackTrace();
-				}
+				closeZMFInputStreamAndDeleteTempFile(parameters);
 			}
 		}
 
 	}
 
-	private static void closeZMFInputStreamAndDeleteTempFile(final Object[] arraygP) throws IOException {
+	private static void closeZMFInputStreamAndDeleteTempFile(final Object[] arraygP) {
 
 		for (int i = arraygP.length - 1; i >= 0; i--) {
 			final Object p = arraygP[i];
@@ -488,6 +495,8 @@ public class Task {
 			if (ZMultipartFile.class.equals(p.getClass())) {
 				final ZMultipartFile file = (ZMultipartFile) p;
 				try (final InputStream inputStream2 = file.getInputStream()) {
+				} catch (final IOException e) {
+//					e.printStackTrace();
 				}
 
 				final String tempFilePath = file.getTempFilePath();
