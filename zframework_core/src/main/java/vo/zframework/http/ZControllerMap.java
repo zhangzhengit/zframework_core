@@ -241,4 +241,8 @@ public class ZControllerMap {
 		}
 	}
 
+	public static Set<Method> getMethodSet() {
+		return objectMap.keySet();
+	}
+
 }
