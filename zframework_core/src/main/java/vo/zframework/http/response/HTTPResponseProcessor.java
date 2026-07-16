@@ -95,11 +95,7 @@ public class HTTPResponseProcessor {
 	private static void response0(final ZRequest request) throws Throwable {
 		ZResponse response = null;
 		try {
-			 response = Task.invoke(request);
-			final int httpStatus = response.getHttpStatus();
-			if (httpStatus == 429) {
-				final int d = 0;
-			}
+			response = Task.invoke(request);
 
 			if (response == null) {
 				return;
