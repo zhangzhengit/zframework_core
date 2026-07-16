@@ -10,7 +10,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
@@ -39,66 +38,50 @@ public final class ZApplicationEventPublisher {
 
 	private static final ExecutorService ves = Executors.newVirtualThreadPerTaskExecutor();
 
+	// FIXME 2026年7月17日 06:21:59 zhangzhen : 排除了这两个包名前缀，为了加快启动速度，因为当前的实现这两个包下无监听器
+	// 但是应该提示用户不可以把事件监听器放在这两个包下,不然就扫描不到了
 	private static final String VO_ZFRAMEWORK = "vo.zframework";
 	private static final String VO_LOG = "vo.log";
 
 	private static final AtomicLong VT_N = new AtomicLong(0L);
 
-	// FIXME 2026年7月16日 09:25:34 zhangzhen : 改为静态调用后，这个TABLE应该可以去掉，待会再看
-	private static final ZHashBasedTable<Class<? extends ZApplicationEvent>, Method, Class<?>> TABLE = new ZHashBasedTable<>();
-
-	private static final AtomicBoolean executed = new AtomicBoolean(false);
+	private static boolean executed = false;
 
 	/**
-	 * 使用此方法来发布时一个事件，通知此事件的 @ZEventListener 来处理
+	 * 使用此方法来发布一个事件，通知此事件的 @ZEventListener 来处理
 	 *
 	 * @param event
 	 *
 	 */
 	public void publishEvent(final ZApplicationEvent event) {
-		// 2
 		ves.execute(() -> {
 			Thread.currentThread().setName(TRREAD_NAME + VT_N.incrementAndGet());
 			final IEventRoute route = ZContext.getBean(IEventRoute.class);
 			route.route(event);
 		});
-
-		// 1
-//		final Map<Method, Class<?>> row = TABLE.row(event.getClass());
-//		final Set<Entry<Method, Class<?>>> entrySet = row.entrySet();
-//		for (final Entry<Method, Class<?>> entry : entrySet) {
-//			final Object bean = ZContext.getBean(entry.getValue());
-//			if (bean != null) {
-//				ZApplicationEventPublisher.invoke(entry.getKey(), bean, event);
-//			}
-//		}
-
 	}
 
-//	private static void invoke(final Method method, final Object object, final ZApplicationEvent event) {
-//
-//		ves.execute(() ->{
-//
-//			Thread.currentThread().setName(TRREAD_NAME + VT_N.incrementAndGet());
-//
-//			try {
-//				method.invoke(object, event);
-//			} catch (IllegalAccessException | InvocationTargetException e) {
-//				e.printStackTrace();
-//			}
-//		});
-//
-//	}
-
+	/**
+	 * 使用此方法来发布多个事件，通知此事件的 @ZEventListener 来处理
+	 *
+	 * @param events
+	 */
 	public void publishEvent(final ZApplicationEvent... events) {
+		if (AU.isEmpty(events)) {
+			return;
+		}
+
 		for (final ZApplicationEvent e : events) {
+			if (e == null) {
+				continue;
+			}
 			this.publishEvent(e);
 		}
 	}
 
 	public synchronized static void start(final String... packageName) {
 
-		if (executed.get()) {
+		if (executed) {
 			return;
 		}
 
@@ -111,6 +94,9 @@ public final class ZApplicationEventPublisher {
 			.filter(cs -> !cs.getPackageName().startsWith(VO_ZFRAMEWORK))
 			.filter(cs -> !cs.getPackageName().startsWith(VO_LOG))
 			.collect(Collectors.toSet());
+
+		// FIXME 2026年7月17日 06:20:52 zhangzhen : 从常量改为局部的了，应该可以继续改，先暂时这样吧
+		final ZHashBasedTable<Class<? extends ZApplicationEvent>, Method, Class<?>> table = new ZHashBasedTable<>();
 
 		for (final Class<?> cls : noVOZFClsSet) {
 
@@ -128,7 +114,7 @@ public final class ZApplicationEventPublisher {
 							+ "." + method.getName() + "]必须有且只有一个[" + eventListener.value().getSimpleName() + "]参数");
 				}
 
-				TABLE.put(eventListener.value(), method, cls);
+				table.put(eventListener.value(), method, cls);
 
 			}
 		}
@@ -149,13 +135,12 @@ public final class ZApplicationEventPublisher {
 				 "String canonicalName = event.getClass().getCanonicalName();"
 					+ "switch (canonicalName) {");
 
-		final Set<Class<? extends ZApplicationEvent>> rowKeySet = TABLE.rowKeySet();
+		final Set<Class<? extends ZApplicationEvent>> rowKeySet = table.rowKeySet();
 
 		int pI = 0;
 		for (final Class<? extends ZApplicationEvent> class1 : rowKeySet) {
-			final Map<Method, Class<?>> row = TABLE.row(class1);
+			final Map<Method, Class<?>> row = table.row(class1);
 			final Set<Entry<Method, Class<?>>> es = row.entrySet();
-
 
 			final Collection<Class<?>> values = row.values();
 			final Set<Class<?>> set = new HashSet<>(values);
@@ -201,6 +186,6 @@ public final class ZApplicationEventPublisher {
 
 		ZContext.addBean(IEventRoute.class, proxyZClass.newInstance());
 
-		executed.set(true);
+		executed = true;
 	}
 }
