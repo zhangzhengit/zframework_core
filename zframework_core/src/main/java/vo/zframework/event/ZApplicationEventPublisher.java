@@ -199,9 +199,6 @@ public final class ZApplicationEventPublisher {
 
 		routeMethod.setBody(routeBody.toString());
 
-		System.out.println("proxyZClass = ");
-		System.out.println(proxyZClass.toString());
-
 		ZContext.addBean(IRoute.class, proxyZClass.newInstance());
 
 		executed.set(true);
