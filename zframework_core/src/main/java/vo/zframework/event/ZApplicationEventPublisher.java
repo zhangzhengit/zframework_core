@@ -59,7 +59,7 @@ public final class ZApplicationEventPublisher {
 		// 2
 		ves.execute(() -> {
 			Thread.currentThread().setName(TRREAD_NAME + VT_N.incrementAndGet());
-			final IRoute route = ZContext.getBean(IRoute.class);
+			final IEventRoute route = ZContext.getBean(IEventRoute.class);
 			route.route(event);
 		});
 
@@ -137,7 +137,7 @@ public final class ZApplicationEventPublisher {
 		proxyZClass.setPackage1(new ZPackage("vo.zframework.generated"));
 		proxyZClass.setName("ZApplicationEventRoute");
 
-		proxyZClass.setImplementsSet(Set.of(IRoute.class.getCanonicalName()));
+		proxyZClass.setImplementsSet(Set.of(IEventRoute.class.getCanonicalName()));
 
 		final ZMethod routeMethod = new ZMethod();
 		routeMethod.setName("route");
@@ -199,7 +199,7 @@ public final class ZApplicationEventPublisher {
 
 		routeMethod.setBody(routeBody.toString());
 
-		ZContext.addBean(IRoute.class, proxyZClass.newInstance());
+		ZContext.addBean(IEventRoute.class, proxyZClass.newInstance());
 
 		executed.set(true);
 	}
