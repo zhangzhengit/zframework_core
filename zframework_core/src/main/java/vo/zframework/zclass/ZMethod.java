@@ -26,7 +26,7 @@ public class ZMethod {
 	 */
 	private static final String SPACE = " ";
 
-	private static final String NEW_LINE = "\n\r";
+	public static final String NEW_LINE = "\n\r";
 
 	private static final String FINAL = "final";
 
@@ -46,16 +46,28 @@ public class ZMethod {
 	private boolean isStatic;
 	private boolean isSynchronized;
 	private boolean isAbstract;
+
+	/**
+	 * 方法返回类型
+	 */
 	private String returnType;
+
+	/**
+	 * body部分的return语句
+	 */
+	private String bodyReturn;
 	private String name;
 	private List<String> annotationList;
 	private String body;
 	private List<ZMethodArg> methodArgList;
 	private boolean gReturn = true;
+	private List<String> throwsE;
 
 	public final String getReturn() {
 
-
+		if (this.bodyReturn != null) {
+			return this.bodyReturn;
+		}
 
 		final String rt = this.getReturnType();
 		if (ZMethod.VOID.toLowerCase().equals(rt.toLowerCase())) {
@@ -163,6 +175,18 @@ public class ZMethod {
 		}
 
 		builder.add(")");
+
+		final List<String> te = this.throwsE;
+		if (CU.isNotEmpty(te)) {
+			builder.add(" throws ");
+			for (int i = 0; i < te.size(); i++) {
+
+				builder.add(te.get(i));
+				if (i < (te.size() - 1)) {
+					builder.add(",");
+				}
+			}
+		}
 
 		// 1
 		//		builder.add("(");
@@ -423,6 +447,22 @@ public class ZMethod {
 				&& (this.isFinal == other.isFinal) && (this.isStatic == other.isStatic) && (this.isSynchronized == other.isSynchronized)
 				&& Objects.equals(this.methodArgList, other.methodArgList) && Objects.equals(this.name, other.name)
 				&& Objects.equals(this.returnType, other.returnType);
+	}
+
+	public List<String> getThrowsE() {
+		return this.throwsE;
+	}
+
+	public void setThrowsE(final List<String> throwsE) {
+		this.throwsE = throwsE;
+	}
+
+	public String getBodyReturn() {
+		return this.bodyReturn;
+	}
+
+	public void setBodyReturn(final String bodyReturn) {
+		this.bodyReturn = bodyReturn;
 	}
 
 }
