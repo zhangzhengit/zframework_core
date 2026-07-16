@@ -21,34 +21,34 @@ public class ZContext {
 	private static final ConcurrentMap<String, Object> BEAN_MAP = new ConcurrentHashMap<>(32, 1F);
 
 	@SuppressWarnings("unchecked")
-	public synchronized static <T> T getBean(final Class<T> beanClass) {
+	public static <T> T getBean(final Class<T> beanClass) {
 		return (T) getBean(gUK(beanClass));
 	}
 
-	public synchronized static <T> Object remove(final Class<T> beanClass) {
+	public static <T> Object remove(final Class<T> beanClass) {
 		return BEAN_MAP.remove(gUK(beanClass));
 	}
 
-	public synchronized static <T> String gUK(final Class<T> beanClass) {
-		//		return "ZContent_Bean-" + beanClass.getName();
+	public static <T> String gUK(final Class<T> beanClass) {
+		// return "ZContent_Bean-" + beanClass.getName();
 
-		//		c.get(beanClass)
+		// c.get(beanClass)
 
 		// FIXME 2024年12月23日 上午1:48:55 zhangzhen : 考虑好用什么比较好
 		return beanClass.getName();
 //		return beanClass.getName()+ "-bean";
-		//		return beanClass.getCanonicalName();
+		// return beanClass.getCanonicalName();
 	}
 
-	public synchronized static Object getBean(final String beanName) {
+	public static Object getBean(final String beanName) {
 		return BEAN_MAP.get(beanName);
 	}
 
-	public synchronized static void addBean(final Class<?> beanClass, final Object bean) {
+	public static void addBean(final Class<?> beanClass, final Object bean) {
 		addBean(gUK(beanClass), bean);
 	}
 
-	public synchronized static void addBean(final String beanName, final Object bean) {
+	public static void addBean(final String beanName, final Object bean) {
 		final Object v = BEAN_MAP.get(beanName);
 		// 同样name已存在一个不同的
 		if ((v != null) && (v != bean)) {
@@ -57,7 +57,7 @@ public class ZContext {
 		BEAN_MAP.put(beanName, bean);
 	}
 
-	public synchronized static Map<String, Object> all() {
+	public static Map<String, Object> all() {
 		return Collections.unmodifiableMap(BEAN_MAP);
 	}
 
