@@ -7,7 +7,6 @@ import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import vo.log.core.ZLog2;
@@ -48,9 +47,9 @@ public class ZServer {
 
 	private final ExecutorService ves = Executors.newVirtualThreadPerTaskExecutor();
 
-	private final AtomicBoolean serverStarted = new AtomicBoolean(false);
+	private volatile boolean serverStarted = false;
 
-	public void startServer(final int serverPort) {
+	public synchronized void startServer(final int serverPort) {
 
 		ZContext.addBean(ZServer.requestHandler.getClass(), ZServer.requestHandler);
 
@@ -59,7 +58,7 @@ public class ZServer {
 		thread.setPriority(Thread.MAX_PRIORITY);
 		thread.start();
 
-		while (!this.serverStarted.get()) {
+		while (!this.serverStarted) {
 			try {
 				Thread.sleep(1);
 			} catch (final InterruptedException e) {
@@ -80,7 +79,8 @@ public class ZServer {
 		}
 
 		LOG.debug("httpServer启动成功,port={}", serverPort);
-		this.serverStarted.set(true);
+
+		this.serverStarted = true;
 
 		while (true) {
 

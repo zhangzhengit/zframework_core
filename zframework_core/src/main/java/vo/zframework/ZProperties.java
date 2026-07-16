@@ -18,7 +18,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 import java.util.StringJoiner;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import vo.zframework.common.STU;
 import vo.zframework.dynamic.AppH;
@@ -257,11 +256,12 @@ public class ZProperties {
 	}
 
 	public static List<ArgR> arL = new ArrayList<>();
-	private static AtomicBoolean load = new AtomicBoolean(false);
+
+	private static volatile boolean load = false;
 
 	public synchronized static void load() {
 
-		if (load.get()) {
+		if (load) {
 			return;
 		}
 
@@ -313,7 +313,7 @@ public class ZProperties {
 
 		properties = p1;
 
-		load.set(true);
+		load = true;
 	}
 
 	/**

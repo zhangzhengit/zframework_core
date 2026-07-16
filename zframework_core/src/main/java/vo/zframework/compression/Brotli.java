@@ -6,7 +6,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.aayushatharva.brotli4j.Brotli4jLoader;
 import com.aayushatharva.brotli4j.encoder.BrotliOutputStream;
@@ -25,10 +24,10 @@ public class Brotli {
 
 	private static final int BUFFER_CAPACITY = 1024 * 64;
 
-	private static final AtomicBoolean AVAILABLE = new AtomicBoolean(true);
+	private static volatile boolean AVAILABLE = true;
 
 	public static boolean isAvailable() {
-		return AVAILABLE.get();
+		return AVAILABLE;
 	}
 
 	public static void compressFile(final Path source, final Path target) {
@@ -73,7 +72,7 @@ public class Brotli {
 		try {
 			Brotli4jLoader.ensureAvailability();
 		} catch (final Throwable ingore) {
-			AVAILABLE.set(false);
+			AVAILABLE = false;
 		}
 	}
 }

@@ -5,7 +5,6 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import vo.zframework.configuration.properties.ServerConfigurationProperties;
 import vo.zframework.core.ZContext;
@@ -56,7 +55,7 @@ public class ZSession {
 		this.createTime = createTime;
 	}
 
-	private final AtomicBoolean invalidate = new AtomicBoolean(false);
+	private volatile boolean invalidate = false;
 
 	public ZSession() {
 		this.id = gSessionID();
@@ -120,11 +119,11 @@ public class ZSession {
 
     public void invalidate() {
     	ZSessionMap.remove(this.getId());
-    	this.invalidate.set(true);
+    	this.invalidate = true;
     }
 
 	private void checkInvalidate() {
-		if (this.invalidate.get()) {
+		if (this.invalidate) {
 			// FIXME 2025年12月26日 17:18:14 zhangzhen :  暂时注释，不抛出
 			throw new IllegalArgumentException(ZSession.class.getCanonicalName() + " 已销毁，当前不可用");
 		}
@@ -150,7 +149,7 @@ public class ZSession {
 		return this.createTime;
 	}
 
-	public AtomicBoolean getInvalidate() {
+	public boolean getInvalidate() {
 		return this.invalidate;
 	}
 
