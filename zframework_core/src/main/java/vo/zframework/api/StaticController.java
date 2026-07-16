@@ -56,8 +56,10 @@ public class StaticController {
 	// FIXME 2026年6月24日 14:16:26 zhangzhen : 要不要加入"/.+\\..+$"支持A.B的形式来匹配所有的静态资源请求，并加一个配置项是否启用此mapping？
 	@ZRequestMapping(mapping = { "/favicon\\.ico",
 			"/.+\\.java$",
+			"/.+\\.woff$",
 			"/.+\\.csv$",
 			"/.+\\.json$",
+			"/.+\\.ttf$",
 			"/.+\\.log$",
 			"/.+\\.sql$",
 			"/.+\\.txt$",
@@ -65,7 +67,7 @@ public class StaticController {
 			"/.+\\.wav$",
 			"/.+\\.js$", "/.+\\.jpg$", "/.+\\.mp3$", "/.+\\.mp4$", "/.+\\.pdf$",
 			"/.+\\.gif$", "/.+\\.doc$", "/.+\\.css$", "/.+\\.html$" }
-		, isRegex = { true, true, true, true, true, true, true, true, true,true,
+		, isRegex = { true, true, true, true, true, true, true, true, true,true,true,true,
 					true,true, true, true, true, true, true, true},
 				count = 10000 * 10)
 
@@ -89,7 +91,19 @@ public class StaticController {
 			return;
 		}
 
-		final String sn = resourceName.substring(i + 1);
+		final int wi = resourceName.lastIndexOf("?");
+		String sn = null;
+
+		String resourceName2 = null;
+		if (wi > -1) {
+			final int i2 = resourceName.indexOf(".", 0);
+			sn = resourceName.substring(i2 + 1, wi);
+			resourceName2 = resourceName.substring(0, wi);
+		} else {
+			sn = resourceName.substring(i + 1, wi > -1 ? wi : resourceName.length());
+			resourceName2 = resourceName;
+		}
+
 		final Map<String, String> ctm = SERVER_CONFIGURATION.getStaticControllerContentType();
 		final String ct = ctm.get(sn);
 		if (STU.isEmpty(ct)) {
@@ -101,14 +115,14 @@ public class StaticController {
 
 		response.contentType(ct);
 
-		if (R_D_S.contains(resourceName)) {
-			final byte[] data = ResourcesLoader.loadStaticResourceAsByteArray(resourceName);
+		if (R_D_S.contains(resourceName2)) {
+			final byte[] data = ResourcesLoader.loadStaticResourceAsByteArray(resourceName2);
 			response.body(data);
 			return;
 		}
 
-		final FIS fis = ResourcesLoader.loadStaticResourceAsInputStream(resourceName);
-		responseBody(response, request, fis, resourceName);
+		final FIS fis = ResourcesLoader.loadStaticResourceAsInputStream(resourceName2);
+		responseBody(response, request, fis, resourceName2);
 	}
 
 	private static void responseBody(final ZResponse response, final ZRequest request, final FIS sourceFis, final String resourceName) {
