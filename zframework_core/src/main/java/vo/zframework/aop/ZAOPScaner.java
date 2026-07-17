@@ -131,7 +131,7 @@ public class ZAOPScaner {
 			final String chiS = proxyZClass.toString();
 			// FIXME 2025年1月1日 下午10:52:07 zhangzhen : 这个整理一下格式
 
-			final Boolean printProxyClass = ZContext.getBean(ServerConfigurationProperties.class).getPrintProxyClass();
+			final boolean printProxyClass = ZContext.getBean(ServerConfigurationProperties.class).getPrintProxyClass();
 			if (printProxyClass) {
 				System.out.println("代理类源码 = \n" + chiS);
 			}
@@ -169,24 +169,27 @@ public class ZAOPScaner {
 	}
 
 	private static void addZMethod(final ZHashBasedTable<Class<?>, Method,List<Class<?>>> table, final Class<?> cls,
-			final ZClass proxyZClass, final HashSet<ZMethod> zms, final Method m) {
+			final ZClass proxyZClass, final HashSet<ZMethod> zms, final Method method) {
 
-		final ArrayList<ZMethodArg> argList = ZMethod.getArgListFromMethod(m);
+		final ArrayList<ZMethodArg> argList = ZMethod.getArgListFromMethod(method);
 		final String a = argList.stream().map(ZMethodArg::getName).collect(Collectors.joining(","));
-		final Class<?> returnType = m.getReturnType();
+
+		final String t = argList.stream().map(ZMethodArg::getType).collect(Collectors.joining(",","",""));
+
+		final Class<?> returnType = method.getReturnType();
 
 		final Map<Method, List<Class<?>>> row = table.row(cls);
 
 		// 如果：此方法有自定义注解并且有拦截此注解的AOP类
-		if (row.containsKey(m)) {
+		if (row.containsKey(method)) {
 
-			final List<Class<?>> aopClassList = table.get(cls, m);
+			final List<Class<?>> aopClassList = table.get(cls, method);
 			for (int i = 0; i < aopClassList.size(); i++) {
 				final Class<?> aopClass = aopClassList.get(i);
 
-				final ZMethod copyZAOPMethod = ZMethod.copyFromMethod(m);
+				final ZMethod copyZAOPMethod = ZMethod.copyFromMethod(method);
 
-				final String zFieldName = "ziaop_" + m.getName() + i;
+				final String zFieldName = "ziaop_" + method.getName() + i;
 				final String zFieldType = ZIAOP.class.getName();
 				final ZField zField = new ZField(zFieldType, zFieldName,
 						"(" + zFieldType + ")" + ZSingleton.class.getName()
@@ -196,11 +199,11 @@ public class ZAOPScaner {
 
 				copyZAOPMethod.setgReturn(false);
 
-				final String nnn = cls.getName() + "@" + m.getName();
-				cmap.put(nnn, m);
+				final String nnn = cls.getName() + "@" + method.getName();
+				cmap.put(nnn, method);
 
-				final String returnTypeT = getReturnTypeT(m);
-				final String body = gZMethodBody(m, a, nnn, returnTypeT, aopClassList);
+				final String returnTypeT = RU.getMethodGenericReturnType(method);
+				final String body = gZMethodBody(method, a, t, nnn, returnTypeT, aopClassList, cls);
 
 				copyZAOPMethod.setBody(body);
 				zms.add(copyZAOPMethod);
@@ -208,10 +211,10 @@ public class ZAOPScaner {
 
 		} else // 无自定义注解的情况：
 		// 1 看此方法参数是否有 @ZValidated 注解，有则给此方法body插入 校验代码
-		if (Arrays.stream(m.getParameterTypes()).filter(pa -> pa.isAnnotationPresent(ZValidated.class)).findAny().isPresent()) {
+		if (Arrays.stream(method.getParameterTypes()).filter(pa -> pa.isAnnotationPresent(ZValidated.class)).findAny().isPresent()) {
 
 			final StringBuilder insert = new StringBuilder();
-			final Parameter[] ps = m.getParameters();
+			final Parameter[] ps = method.getParameters();
 			for (final Parameter p : ps) {
 				final boolean annotationPresent = p.getType().isAnnotationPresent(ZValidated.class);
 				if (!annotationPresent) {
@@ -231,10 +234,10 @@ public class ZAOPScaner {
 			final String insertBody = insert.toString();
 			final String body =
 					VOID.equals(returnType.getName())
-					? "super." + m.getName() + "(" + a + ");"
-							: "return super." + m.getName() + "(" + a + ");";
+					? "super." + method.getName() + "(" + a + ");"
+							: "return super." + method.getName() + "(" + a + ");";
 
-			final ZMethod zm = ZMethod.copyFromMethod(m);
+			final ZMethod zm = ZMethod.copyFromMethod(method);
 			zm.setgReturn(false);
 			zm.setBody(insertBody  + STU.CRLF + body);
 
@@ -244,10 +247,10 @@ public class ZAOPScaner {
 
 			final String body =
 					VOID.equals(returnType.getName())
-					? "super." + m.getName() + "(" + a + ");"
-							: "return super." + m.getName() + "(" + a + ");";
+					? "super." + method.getName() + "(" + a + ");"
+							: "return super." + method.getName() + "(" + a + ");";
 
-			final ZMethod zm = ZMethod.copyFromMethod(m);
+			final ZMethod zm = ZMethod.copyFromMethod(method);
 			zm.setgReturn(false);
 			zm.setBody(body);
 
@@ -255,8 +258,8 @@ public class ZAOPScaner {
 		}
 	}
 
-	private static String gZMethodBody(final Method m, final String a, final String nnn, final String returnTypeT,
-			final List<Class<?>> aopClassList) {
+	private static String gZMethodBody(final Method m, final String a, final String t, final String nnn,
+			final String returnTypeT, final List<Class<?>> aopClassList, final Class cls) {
 
 		final StringBuilder aop = aop(aopClassList, m);
 
@@ -270,21 +273,23 @@ public class ZAOPScaner {
 						+  Method.class.getName() + " m = ("+ Method.class.getName()+")"+ZAOPScaner.class.getName()+".cmap.get(\""+nnn+"\");" + "\n\t"
 						+ "parameter.setMethod(m);" + "\n\t"
 						+ "parameter.setParameterList("+CU.class.getName()+".newArrayList("+a+"));" + "\n\t"
+						+ "parameter.setSwitchValue(\""+cls.getCanonicalName() + "." +
+								m.getName() + "." + t +"\");" + "\n\t"
 						+ "\n\t"
 						+ aop + "\n\t"
-
 						:
-
-							"final "+AOPParameter.class.getName()+" parameter = new "+AOPParameter.class.getName()+"();" + "\n\t"
-							+ "parameter.setIsVOID(false);" + "\n\t"
-							+ "parameter.setTarget("+ZContext.class.getName()+".getBean("+RU.class.getCanonicalName()+".getSuperclass(this.getClass()).getName() + "+ZAOPScaner.class.getName() + ".PROXY_ZCLASS_NAME_SUFFIX));" + "\n\t"
-							+ "parameter.setMethodName(\"" + m.getName() + "\");" + "\n\t"
-							+  Method.class.getName() + " m = (" + Method.class.getName() + ")" +ZAOPScaner.class.getName()+".cmap.get(\""+nnn+"\");" + "\n\t"
-							+ "parameter.setMethod(m);" + "\n\t"
-							+ "parameter.setParameterList("+CU.class.getName()+".newArrayList("+a+"));" + "\n\t"
-							+ "\n\t"
-							+ aop + "\n\t"
-							+ "return (" + returnTypeT + ")v"+(aopClassList.size()-1)+STU.SEMICOLON + "\n\t";
+						"final "+AOPParameter.class.getName()+" parameter = new "+AOPParameter.class.getName()+"();" + "\n\t"
+						+ "parameter.setIsVOID(false);" + "\n\t"
+						+ "parameter.setTarget("+ZContext.class.getName()+".getBean("+RU.class.getCanonicalName()+".getSuperclass(this.getClass()).getName() + "+ZAOPScaner.class.getName() + ".PROXY_ZCLASS_NAME_SUFFIX));" + "\n\t"
+						+ "parameter.setMethodName(\"" + m.getName() + "\");" + "\n\t"
+						+  Method.class.getName() + " m = (" + Method.class.getName() + ")" +ZAOPScaner.class.getName()+".cmap.get(\""+nnn+"\");" + "\n\t"
+						+ "parameter.setMethod(m);" + "\n\t"
+						+ "parameter.setParameterList("+CU.class.getName()+".newArrayList("+a+"));" + "\n\t"
+						+ "parameter.setSwitchValue(\""+cls.getCanonicalName() + "." +
+								m.getName() + "." + t +"\");" + "\n\t"
+						+ "\n\t"
+						+ aop + "\n\t"
+						+ "return (" + returnTypeT + ")v"+(aopClassList.size()-1)+STU.SEMICOLON + "\n\t";
 		return body;
 	}
 
@@ -308,16 +313,7 @@ public class ZAOPScaner {
 		return b;
 	}
 
-	public static String getReturnTypeT(final Method method) {
-		final Type genericReturnType = method.getGenericReturnType();
-		final String string = genericReturnType.toString();
-		final int i = string.indexOf("class");
-		if(i > -1) {
 
-			return string.substring("class".length() + i);
-		}
-		return string;
-	}
 
 	/**
 	 * @param cs
@@ -343,12 +339,12 @@ public class ZAOPScaner {
 					}
 
 					if (CU.isNotEmpty(aL)) {
-						final List<Class<?>> cl = table.get(c	, m);
+						final List<Class<?>> cl = table.get(c, m);
 						if (CU.isEmpty(cl)) {
 							final ArrayList<Class<?>> an = new ArrayList<>();
 							an.add(aL.get(0));
 							table.put(c, m, an);
-						}else {
+						} else {
 							cl.add(aL.get(0));
 							table.put(c, m, cl);
 						}
@@ -361,42 +357,5 @@ public class ZAOPScaner {
 		}
 
 		return table;
-	}
-
-
-
-	/**
-	 * 把string中最后面的一个replace替换为target
-	 *
-	 *
-	 * @param string
-	 * @param replace
-	 * @param target
-	 * @return
-	 *
-	 */
-	private static String replaceLast(final String string, final String replace, final String target) {
-
-		if ((replace == null) || (replace.length() == 0) || "".equals(replace.trim())) {
-			return string;
-		}
-
-		final int i = string.lastIndexOf(replace);
-		if (i < 0) {
-			return string;
-		}
-
-		final int i2 = string.lastIndexOf(target);
-		if (i2 > 0) {
-			return string;
-		}
-
-		final String s1 = string.substring(0, i);
-		final String s2 = target;
-		final String s3 = string.substring(i + replace.length());
-
-		final String r = s1 + s2 + s3;
-
-		return r;
 	}
 }

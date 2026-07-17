@@ -1,8 +1,10 @@
 package vo.zframework.aop;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.List;
+
+import vo.zframework.core.ZContext;
+import vo.zframework.scanner.ISynchronouslyRoute;
 
 /**
  *
@@ -18,25 +20,19 @@ public class AOPParameter {
 	private boolean isVOID;
 
 	private List<Object> parameterList;
+	private String switchValue;
 
 	private Object target;
 
 	public Object invoke() {
-
+		final ISynchronouslyRoute route = ZContext.getBean(ISynchronouslyRoute.class);
 		try {
-			if (this.getIsVOID()) {
-				// FIXME 2026年6月10日 04:37:41 zhangzhen : 搜一下method.invoke记得都改为MethodHandle
-				this.method.invoke(this.target, this.parameterList.toArray());
-				return null;
-			}
-
-			return this.method.invoke(this.target, this.parameterList.toArray());
-
-		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+			// FIXME 2026年7月17日 21:31:19 zhangzhen : 还没测void和非void的，待会测，先提交一下
+			return route.route(this);
+		} catch (final Exception e) {
 			e.printStackTrace();
+			return null;
 		}
-
-		return null;
 	}
 
 	public String getMethodName() {
@@ -93,6 +89,14 @@ public class AOPParameter {
 		this.isVOID = false;
 		this.parameterList = null;
 		this.target = null;
+	}
+
+	public String getSwitchValue() {
+		return this.switchValue;
+	}
+
+	public void setSwitchValue(final String switchValue) {
+		this.switchValue = switchValue;
 	}
 
 }

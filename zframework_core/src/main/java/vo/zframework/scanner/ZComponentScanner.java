@@ -55,6 +55,11 @@ public class ZComponentScanner {
 
 					// 放代理类
 					ZContext.addBean(newComponent.getClass(), newInstanceProxy);
+					// FIXME 2026年7月17日 21:24:34 zhangzhen : 这是为了用AOPP改为直接调用而加的
+					// 因为在此已经放的是代理类，改直接调用取得原类.xx方法，结果取原类拿到的实际是代理类
+					// 就造成了递归了导致stackoverflow
+					// 可以再加两个方法比如叫addBeanOriginal/getBeanOriginal
+					ZContext.addBean(newComponent.getClass().getCanonicalName() + ".original", newComponent);
 				} else {
 
 					// 1、@ZComponent 类中方法的参数是否带有 @ZValidated 注解，有则插入校验代码，无则super.xx(xx);

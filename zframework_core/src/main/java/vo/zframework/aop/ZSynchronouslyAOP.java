@@ -17,6 +17,7 @@ import vo.zframework.exception.ZSynchronouslyAOPException;
  * @date 2023年10月28日
  *
  */
+// FIXME 2026年7月17日 21:29:42 zhangzhen : 这个类虽然  parameter.invoke 改为直接调用了，但是运行时获取参数还是有反射，继续去掉
 @ZAOP(interceptType = ZSynchronously.class)
 public class ZSynchronouslyAOP implements ZIAOP {
 
@@ -31,8 +32,7 @@ public class ZSynchronouslyAOP implements ZIAOP {
 		final String value = ZSynchronouslyAOP.gValue(parameter);
 
 		synchronized (("AOPLock" + value).intern()) {
-			final Object v = parameter.invoke();
-			return v;
+			return parameter.invoke();
 		}
 
 	}

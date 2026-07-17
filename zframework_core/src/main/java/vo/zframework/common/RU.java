@@ -19,6 +19,16 @@ import vo.zframework.cache.ZRC;
  */
 public class RU {
 
+	public static String getMethodGenericReturnType(final Method method) {
+		final Type genericReturnType = method.getGenericReturnType();
+		final String string = genericReturnType.toString();
+		final int i = string.indexOf("class");
+		if (i > -1) {
+			return string.substring("class".length() + i);
+		}
+		return string;
+	}
+
 	public static <T> Class<?> getSuperclass( final Class<T> cls) {
 		final String key = cls.getName();
 		return ZRC.singleton().computeIfAbsent(key, () -> cls.getSuperclass());
