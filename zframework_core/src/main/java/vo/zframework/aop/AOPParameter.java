@@ -27,7 +27,6 @@ public class AOPParameter {
 	public Object invoke() {
 		final ISynchronouslyRoute route = ZContext.getBean(ISynchronouslyRoute.class);
 		try {
-			// FIXME 2026年7月17日 21:31:19 zhangzhen : 还没测void和非void的，待会测，先提交一下
 			return route.route(this);
 		} catch (final Exception e) {
 			e.printStackTrace();
