@@ -23,9 +23,9 @@ public class RequestValidatorConfigurationProperties {
 	/**
 	 * 默认为平滑处理
 	 */
-	private static final QPSHandlingEnum DEFAULT_HANDLINGENUM = QPSHandlingEnum.SMOOTH;
+	public static final QPSHandlingEnum DEFAULT_HANDLINGENUM = QPSHandlingEnum.SMOOTH;
 
-	static private String[] uaL = null;
+	private static volatile String[] uaL = null;
 
 	/**
 	 *
@@ -72,18 +72,18 @@ public class RequestValidatorConfigurationProperties {
 			return DEFAULT_HANDLINGENUM;
 		}
 
-
-		if (uaL == null) {
-			synchronized (this) {
-				if (uaL == null) {
-					uaL = new String[this.getSmoothUserAgent().size()];
-					uaL = this.getSmoothUserAgent().toArray(new String[0]);
-					Arrays.sort(uaL, Comparator.comparing(String::length));
+		String[] localUAL = uaL;
+		if (localUAL == null) {
+			synchronized (RequestValidatorConfigurationProperties.class) {
+				if (localUAL == null) {
+					localUAL = this.getSmoothUserAgent().toArray(new String[0]);
+					Arrays.sort(localUAL, Comparator.comparing(String::length));
+					uaL = localUAL;
 				}
 			}
 		}
 
-		for (final String ua : uaL) {
+		for (final String ua : localUAL) {
 			// FIXME 2025年1月26日 02:16:37 zhangzhen: userAgent.length() < ua.length() 这行NPE，先判断ua是否null吧
 			// 以后再debug
 			if ((ua == null) || (userAgent.length() < ua.length())) {
@@ -107,20 +107,14 @@ public class RequestValidatorConfigurationProperties {
 		return DEFAULT_HANDLINGENUM;
 	}
 
-	public static String[] getUaL() {
-		return uaL;
-	}
-
-	public static void setUaL(final String[] uaL) {
-		RequestValidatorConfigurationProperties.uaL = uaL;
-	}
-
 	public Set<String> getSmoothUserAgent() {
 		return this.smoothUserAgent;
 	}
 
 	public void setSmoothUserAgent(final Set<String> smoothUserAgent) {
 		this.smoothUserAgent = smoothUserAgent;
+		// ual 重置为null，让其自动重建
+		uaL = null;
 	}
 
 	public boolean getPrintHttp() {
@@ -129,10 +123,6 @@ public class RequestValidatorConfigurationProperties {
 
 	public void setPrintHttp(final boolean printHttp) {
 		this.printHttp = printHttp;
-	}
-
-	public static QPSHandlingEnum getDefaultHandlingenum() {
-		return DEFAULT_HANDLINGENUM;
 	}
 
 }
