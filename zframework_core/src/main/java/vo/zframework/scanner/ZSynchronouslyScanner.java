@@ -73,7 +73,7 @@ public class ZSynchronouslyScanner {
 		final ZMethod routeMethod = new ZMethod();
 		routeMethod.setName("route");
 		routeMethod.setThrowsE(List.of(Exception.class.getCanonicalName()));
-		routeMethod.setReturnType(APIRouteR.class.getCanonicalName());
+		routeMethod.setReturnType(Object.class.getCanonicalName());
 
 //		routeMethod.setBodyReturn("return new " + APIRouteR.class.getCanonicalName()
 //				+ "(false);");
@@ -162,6 +162,12 @@ public class ZSynchronouslyScanner {
 					}
 				}
 
+				final Class<?> returnType = method.getReturnType();
+				final boolean isVoid = returnType.getCanonicalName() == void.class.getCanonicalName();
+				if (!isVoid) {
+					routeBody.append("return ");
+				}
+
 				routeBody.append("target")
 				.append(tI).append('.')
 				.append(methodName)
@@ -170,8 +176,9 @@ public class ZSynchronouslyScanner {
 				.append(");")
 				;
 
-
-				routeBody.append("break;");
+				if (isVoid) {
+					routeBody.append("break;");
+				}
 
 //				System.out.println("@ZS.class = " + cls
 //						+ "\t" + "method = " + method.getName()

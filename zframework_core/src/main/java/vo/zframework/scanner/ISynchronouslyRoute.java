@@ -1,7 +1,6 @@
 package vo.zframework.scanner;
 
 import vo.zframework.aop.AOPParameter;
-import vo.zframework.event.APIRouteR;
 
 /**
  * @ZSynchronously 路由
@@ -16,6 +15,6 @@ public interface ISynchronouslyRoute {
 	 * @return
 	 * @throws Exception
 	 */
-	APIRouteR route(AOPParameter parameter) throws Exception;
+	Object route(AOPParameter parameter) throws Exception;
 
 }
