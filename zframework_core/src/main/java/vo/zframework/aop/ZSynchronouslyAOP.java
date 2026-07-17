@@ -21,17 +21,17 @@ import vo.zframework.exception.ZSynchronouslyAOPException;
 public class ZSynchronouslyAOP implements ZIAOP {
 
 	@Override
-	public Object before(final AOPParameter AOPParameter) {
+	public Object before(final AOPParameter parameter) {
 		return null;
 	}
 
 	@Override
-	public Object around(final AOPParameter AOPParameter) {
+	public Object around(final AOPParameter parameter) {
 
-		final String value = ZSynchronouslyAOP.gValue(AOPParameter);
+		final String value = ZSynchronouslyAOP.gValue(parameter);
 
 		synchronized (("AOPLock" + value).intern()) {
-			final Object v = AOPParameter.invoke();
+			final Object v = parameter.invoke();
 			return v;
 		}
 
@@ -48,18 +48,18 @@ public class ZSynchronouslyAOP implements ZIAOP {
 		return ZSynchronouslyAOP.getKeyValue(AOPParameter, key, parameters);
 	}
 
-	private static String getKeyValue(final AOPParameter AOPParameter, final String key, final Parameter[] parameters) {
+	private static String getKeyValue(final AOPParameter parameter, final String key, final Parameter[] parameters) {
 
-		final String p = AOPParameter.getTarget().getClass().getCanonicalName()
-				+ "@" + AOPParameter.getMethodName()
+		final String p = parameter.getTarget().getClass().getCanonicalName()
+				+ "@" + parameter.getMethodName()
 				+ "@" + key
 				;
 
 		for (int i = 0; i < parameters.length; i++) {
-			final Parameter parameter = parameters[i];
-			final String name = parameter.getName();
+			final Parameter pa = parameters[i];
+			final String name = pa.getName();
 			if (name.equals(key)) {
-				final List<Object> pl = AOPParameter.getParameterList();
+				final List<Object> pl = parameter.getParameterList();
 				final Object a = pl.get(i);
 				return p +'='+ a;
 			}
@@ -67,7 +67,7 @@ public class ZSynchronouslyAOP implements ZIAOP {
 			if (key.startsWith(name)) {
 				final int x = key.indexOf(".");
 				if (x > -1) {
-					final List<Object> pl = AOPParameter.getParameterList();
+					final List<Object> pl = parameter.getParameterList();
 					final Object a = pl.get(i);
 					final String fieldName = key.substring(x + 1);
 
@@ -85,7 +85,7 @@ public class ZSynchronouslyAOP implements ZIAOP {
 	}
 
 	@Override
-	public Object after(final AOPParameter AOPParameter) {
+	public Object after(final AOPParameter parameters) {
 		return null;
 	}
 
