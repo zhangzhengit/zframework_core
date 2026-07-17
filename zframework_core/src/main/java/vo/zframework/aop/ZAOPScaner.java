@@ -5,7 +5,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -263,33 +262,24 @@ public class ZAOPScaner {
 
 		final StringBuilder aop = aop(aopClassList, m);
 
-		final String body =
-				VOID.equals(returnTypeT)
-				?
-						"final "+AOPParameter.class.getName()+" parameter = new "+AOPParameter.class.getName()+"();" + "\n\t"
-						+ "parameter.setIsVOID(true);" + "\n\t"
-						+ "parameter.setTarget("+ZContext.class.getName()+".getBean("+RU.class.getCanonicalName()+".getSuperclass(this.getClass()).getName() + "+ZAOPScaner.class.getName() + ".PROXY_ZCLASS_NAME_SUFFIX));" + "\n\t"
-						+ "parameter.setMethodName(\"" + m.getName() + "\");" + "\n\t"
-						+  Method.class.getName() + " m = ("+ Method.class.getName()+")"+ZAOPScaner.class.getName()+".cmap.get(\""+nnn+"\");" + "\n\t"
-						+ "parameter.setMethod(m);" + "\n\t"
-						+ "parameter.setParameterList("+CU.class.getName()+".newArrayList("+a+"));" + "\n\t"
-						+ "parameter.setSwitchValue(\""+cls.getCanonicalName() + "." +
-								m.getName() + "." + t +"\");" + "\n\t"
-						+ "\n\t"
-						+ aop + "\n\t"
-						:
-						"final "+AOPParameter.class.getName()+" parameter = new "+AOPParameter.class.getName()+"();" + "\n\t"
-						+ "parameter.setIsVOID(false);" + "\n\t"
-						+ "parameter.setTarget("+ZContext.class.getName()+".getBean("+RU.class.getCanonicalName()+".getSuperclass(this.getClass()).getName() + "+ZAOPScaner.class.getName() + ".PROXY_ZCLASS_NAME_SUFFIX));" + "\n\t"
-						+ "parameter.setMethodName(\"" + m.getName() + "\");" + "\n\t"
-						+  Method.class.getName() + " m = (" + Method.class.getName() + ")" +ZAOPScaner.class.getName()+".cmap.get(\""+nnn+"\");" + "\n\t"
-						+ "parameter.setMethod(m);" + "\n\t"
-						+ "parameter.setParameterList("+CU.class.getName()+".newArrayList("+a+"));" + "\n\t"
-						+ "parameter.setSwitchValue(\""+cls.getCanonicalName() + "." +
-								m.getName() + "." + t +"\");" + "\n\t"
-						+ "\n\t"
-						+ aop + "\n\t"
-						+ "return (" + returnTypeT + ")v"+(aopClassList.size()-1)+STU.SEMICOLON + "\n\t";
+		final boolean isVoid = VOID.equals(returnTypeT);
+
+		final String b1 =
+				      "final "+AOPParameter.class.getName()+" parameter = new "+AOPParameter.class.getName()+"();" + "\n\t"
+					+ "parameter.setIsVOID(" + isVoid + ");" + "\n\t"
+					+ "parameter.setTarget("+ZContext.class.getName()+".getBean("+RU.class.getCanonicalName()+".getSuperclass(this.getClass()).getName() + "+ZAOPScaner.class.getName() + ".PROXY_ZCLASS_NAME_SUFFIX));" + "\n\t"
+					+ "parameter.setMethodName(\"" + m.getName() + "\");" + "\n\t"
+					+  Method.class.getName() + " m = ("+ Method.class.getName()+")"+ZAOPScaner.class.getName()+".cmap.get(\""+nnn+"\");" + "\n\t"
+					+ "parameter.setMethod(m);" + "\n\t"
+					+ "parameter.setParameterList("+CU.class.getName()+".newArrayList("+a+"));" + "\n\t"
+					+ "parameter.setSwitchValue(\""+cls.getCanonicalName() + "." +
+							m.getName() + "." + t +"\");" + "\n\t"
+					+ "\n\t"
+					+ aop + "\n\t";
+
+		final String body = isVoid ? b1
+			: b1 + "return (" + returnTypeT + ")v" + (aopClassList.size() - 1) + STU.SEMICOLON + "\n\t";
+
 		return body;
 	}
 
@@ -301,8 +291,8 @@ public class ZAOPScaner {
 			final String aop =
 
 					"ziaop_" + (m.getName() + i) + ".before(parameter);" + "\n\t"
-							+ "final Object v"+(i)+" = this.ziaop_" + (m.getName() + i) + ".around(parameter);" + "\n\t"
-							+ "ziaop_" + (m.getName() + i) + ".after(parameter);" + "\n\t"
+				  + "final Object v"+(i)+" = this.ziaop_" + (m.getName() + i) + ".around(parameter);" + "\n\t"
+				  + "ziaop_" + (m.getName() + i) + ".after(parameter);" + "\n\t"
 							;
 
 			b.append(aop);
@@ -312,8 +302,6 @@ public class ZAOPScaner {
 
 		return b;
 	}
-
-
 
 	/**
 	 * @param cs
