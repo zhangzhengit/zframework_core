@@ -4,7 +4,6 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -272,29 +271,6 @@ public class ZClass {
 			e.printStackTrace();
 		}
 		return m;
-	}
-
-
-	public static Object invoke(final Object object, final String name) {
-		final Method method = getMethod(object, name, null);
-		try {
-			final Object r = method.invoke(object, null);
-			return r;
-		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
-
-	public static Object invoke(final Object object, final String name,final Class<?>[]  parameterTypes,final Object... args) {
-		final Method method = getMethod(object, name, parameterTypes);
-		try {
-			final Object r = method.invoke(object, args);
-			return r;
-		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-			e.printStackTrace();
-		}
-		return null;
 	}
 
 	public String getSimpleName() {
