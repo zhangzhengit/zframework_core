@@ -3,12 +3,23 @@ package vo.zframework.scanner;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import vo.log.core.ZLog2;
 import vo.zframework.anno.ZAsync;
+import vo.zframework.aop.AOPParameter;
 import vo.zframework.aop.ZAsyncRV;
+import vo.zframework.common.RU;
+import vo.zframework.core.ZContext;
 import vo.zframework.exception.StartupException;
+import vo.zframework.zclass.ZClass;
+import vo.zframework.zclass.ZMethod;
+import vo.zframework.zclass.ZMethodArg;
+import vo.zframework.zclass.ZPackage;
 
 /**
  * @ZAsync 启动流程
@@ -27,12 +38,40 @@ public class ZAsyncScanner {
 	 * @param packageName
 	 * @return
 	 */
-	public static Set<Class<?>> scan(final Class<? extends Annotation> annoClass,
+	public static Set<Class<?>> scan(final Class<? extends Annotation>[] annoClass,
 			final String... packageName) {
 
 //		LOG.info("开始扫描带有[{}]注解的类", annoClass.getCanonicalName());
-		final Set<Class<?>> zcSet = ClassMap.scanPackageByAnnotation(annoClass,
-				packageName);
+
+		final Set<Class<?>> zcSet= new HashSet<>();
+
+		for (final Class<? extends Annotation> ac : annoClass) {
+			final Set<Class<?>> t = ClassMap.scanPackageByAnnotation(ac,
+					packageName);
+			zcSet.addAll(t);
+		}
+
+
+		final ZClass proxyZClass = new ZClass();
+		proxyZClass.setPackage1(new ZPackage("vo.zframework.generated"));
+		proxyZClass.setName("ZAsyncRoute");
+		proxyZClass.setImplementsSet(Set.of(IAsyncRoute.class.getCanonicalName()));
+
+		final ZMethod routeMethod = new ZMethod();
+		routeMethod.setName("route");
+		routeMethod.setThrowsE(List.of(Exception.class.getCanonicalName()));
+		routeMethod.setReturnType(Object.class.getCanonicalName());
+
+		routeMethod.setMethodArgList(List.of(new ZMethodArg(AOPParameter.class.getCanonicalName(), "parameter")));
+
+		proxyZClass.setMethodSet(Set.of(routeMethod));
+
+
+		final StringBuilder routeBody = new StringBuilder();
+		routeBody.append("final String key = parameter.getSwitchValue();");
+		routeBody.append("switch (key) {");
+
+		int tI = 0;
 
 		for (final Class<?> cls : zcSet) {
 			final Method[] ms = cls.getDeclaredMethods();
@@ -45,14 +84,73 @@ public class ZAsyncScanner {
 				vIsPublic(cls, method);
 
 				final Class<?> mRT = method.getReturnType();
-				if (mRT == Void.TYPE) {
-					continue;
+				if (mRT != Void.TYPE) {
+					vMRTIsZARV(cls, method, mRT);
 				}
 
-				vMRTIsZARV(cls, method, mRT);
+				final String clsname = cls.getCanonicalName();
+				final String methodName = method.getName();
 
+				final String parameterTL = Arrays.stream(method.getParameters()).map(p -> p.getType().getCanonicalName()).collect(Collectors.joining(",","\"","\""));
+
+				final String value = clsname + "." + methodName + "." + parameterTL.replace("\"", "");
+
+				tI++;
+
+				routeBody.append("case ")
+						.append("\"").append(value).append("\":");
+
+				routeBody
+				.append(cls.getCanonicalName()).append(" target").append(tI).append(" = ")
+				.append("(").append(cls.getCanonicalName()).append(")")
+				.append(ZContext.class.getCanonicalName()).append(".getBean")
+//				.append("(").append(cls.getCanonicalName()).append(".class);");
+				.append("(\"").append(cls.getCanonicalName()).append(".original\");");
+
+				final Class<?>[] pt = method.getParameterTypes();
+				final StringBuilder b = new StringBuilder();
+				for (int i = 0;i<pt.length;i++) {
+
+					b
+					.append("(")
+					.append(RU.ptToBox(pt[i].getTypeName()))
+					.append(")parameter.getParameterList().get(").append(i).append(")");
+
+					if(i < (pt.length - 1)) {
+						b.append(",");
+					}
+				}
+
+				final Class<?> returnType = method.getReturnType();
+				final boolean isVoid = returnType.getCanonicalName() == void.class.getCanonicalName();
+				if (!isVoid) {
+					routeBody.append("return ");
+				}
+
+				routeBody.append("target")
+				.append(tI).append('.')
+				.append(methodName)
+				.append("(")
+				.append(b)
+				.append(");")
+				;
+
+				if (isVoid) {
+					routeBody.append("break;");
+				}
 			}
 		}
+
+		routeBody.append("default:\r\n"
+				+ "	break;\r\n"
+				+ "}	");
+
+		routeMethod.setBody(routeBody.toString());
+
+		System.out.println("proxyZClass = ");
+		System.out.println(proxyZClass.toString());
+
+		ZContext.addBean(IAsyncRoute.class, proxyZClass.newInstance());
 
 		return zcSet;
 	}

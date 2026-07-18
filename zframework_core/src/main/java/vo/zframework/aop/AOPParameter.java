@@ -4,6 +4,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.List;
 
+import vo.zframework.core.ZContext;
+
 /**
  *
  *
@@ -22,34 +24,45 @@ public class AOPParameter {
 
 	private Object target;
 
-	// FIXME 2026年7月18日 10:12:25 zhangzhen : 这个方法里下面的直接调用，不能改，因为此类时aop通用的参数
-	// 应该在每一个调用点改，或者干脆删除此方法
-	// 或者invoke()添加一个参数，传进来具体的路由接口,而非现有的写死
+	/**
+	 * 简单的方法调用，Method.invoke
+	 * 只要构造好/set好需要的属性，直接调用本方法即可实现方法调用
+	 *
+	 * @return
+	 */
 	public Object invoke() {
-
 		try {
-			if (this.getIsVOID()) {
-				// FIXME 2026年6月10日 04:37:41 zhangzhen : 搜一下method.invoke记得都改为MethodHandle
+			if (this.isVOID()) {
 				this.method.invoke(this.target, this.parameterList.toArray());
 				return null;
 			}
-
 			return this.method.invoke(this.target, this.parameterList.toArray());
-
 		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
 			e.printStackTrace();
+			return null;
 		}
 
-		return null;
-
-//		final ISynchronouslyRoute route = ZContext.getBean(ISynchronouslyRoute.class);
-//		try {
-//			return route.route(this);
-//		} catch (final Exception e) {
-//			e.printStackTrace();
-//			return null;
-//		}
 	}
+
+	/**
+	 * 提供了一种除了无参invoke方法外的调用形式
+	 *
+	 * 当前框架内的子类实现为启动时动态生成代理子类，
+	 * 源码为a.b(c,d)的直接调用形式，而非无参invoke方法的反射调用
+	 *
+	 * @param aopRouteClass 自己定义的好的IAOPRoute的子类
+	 * @return
+	 */
+	public Object invoke(final Class<? extends IAOPRoute> aopRouteClass) {
+		final IAOPRoute r = ZContext.getBean(aopRouteClass);
+		try {
+			return r.route(this);
+		} catch (final Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
 
 	public String getMethodName() {
 		return this.methodName;
@@ -59,7 +72,7 @@ public class AOPParameter {
 		return this.method;
 	}
 
-	public boolean getIsVOID() {
+	public boolean isVOID() {
 		return this.isVOID;
 	}
 
@@ -79,7 +92,7 @@ public class AOPParameter {
 		this.method = method;
 	}
 
-	public void setIsVOID(final Boolean isVOID) {
+	public void setVOID(final boolean isVOID) {
 		this.isVOID = isVOID;
 	}
 

@@ -19,6 +19,36 @@ import vo.zframework.cache.ZRC;
  */
 public class RU {
 
+	public static String ptToBox(final String typeName) {
+		switch (typeName) {
+		case "int":
+			return "Integer";
+
+		case "boolean":
+			return "Boolean";
+
+		case "long":
+			return "Long";
+
+		case "byte":
+			return "Byte";
+		case "short":
+			return "Short";
+		case "float":
+			return "Float";
+		case "double":
+			return "Double";
+
+		case "char":
+			return "Character";
+
+		default:
+			break;
+		}
+
+		return typeName;
+	}
+
 	public static String getMethodGenericReturnType(final Method method) {
 		final Type genericReturnType = method.getGenericReturnType();
 		final String string = genericReturnType.toString();

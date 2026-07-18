@@ -1,6 +1,6 @@
 package vo.zframework.scanner;
 
-import vo.zframework.aop.AOPParameter;
+import vo.zframework.aop.IAOPRoute;
 
 /**
  * @ZSynchronously 路由
@@ -8,13 +8,6 @@ import vo.zframework.aop.AOPParameter;
  * @author zhangzhen
  * @date 2026年7月17日 19:56:18
  */
-public interface ISynchronouslyRoute {
-
-	/**
-	 * @param parameter
-	 * @return
-	 * @throws Exception
-	 */
-	Object route(AOPParameter parameter) throws Exception;
+public interface ISynchronouslyRoute extends IAOPRoute {
 
 }

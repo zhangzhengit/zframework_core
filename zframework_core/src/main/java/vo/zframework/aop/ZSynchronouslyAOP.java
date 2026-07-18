@@ -8,7 +8,6 @@ import java.util.List;
 import vo.zframework.anno.ZAOP;
 import vo.zframework.anno.ZSynchronously;
 import vo.zframework.common.RU;
-import vo.zframework.core.ZContext;
 import vo.zframework.exception.ZSynchronouslyAOPException;
 import vo.zframework.scanner.ISynchronouslyRoute;
 
@@ -23,6 +22,8 @@ import vo.zframework.scanner.ISynchronouslyRoute;
 @ZAOP(interceptType = ZSynchronously.class)
 public class ZSynchronouslyAOP implements ZIAOP {
 
+	private static final String LOCK = "ZSynchronouslyAOP";
+
 	@Override
 	public Object before(final AOPParameter parameter) {
 		return null;
@@ -33,14 +34,8 @@ public class ZSynchronouslyAOP implements ZIAOP {
 
 		final String value = ZSynchronouslyAOP.gValue(parameter);
 
-		synchronized (("AOPLock" + value).intern()) {
-			final ISynchronouslyRoute route = ZContext.getBean(ISynchronouslyRoute.class);
-			try {
-				return route.route(parameter);
-			} catch (final Exception e) {
-				e.printStackTrace();
-				return null;
-			}
+		synchronized ((LOCK + value).intern()) {
+			return parameter.invoke(ISynchronouslyRoute.class);
 		}
 
 	}

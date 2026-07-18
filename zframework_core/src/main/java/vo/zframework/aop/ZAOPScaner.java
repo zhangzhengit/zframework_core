@@ -266,7 +266,7 @@ public class ZAOPScaner {
 
 		final String b1 =
 				      "final "+AOPParameter.class.getName()+" parameter = new "+AOPParameter.class.getName()+"();" + "\n\t"
-					+ "parameter.setIsVOID(" + isVoid + ");" + "\n\t"
+					+ "parameter.setVOID(" + isVoid + ");" + "\n\t"
 					+ "parameter.setTarget("+ZContext.class.getName()+".getBean("+RU.class.getCanonicalName()+".getSuperclass(this.getClass()).getName() + "+ZAOPScaner.class.getName() + ".PROXY_ZCLASS_NAME_SUFFIX));" + "\n\t"
 					+ "parameter.setMethodName(\"" + m.getName() + "\");" + "\n\t"
 					+  Method.class.getName() + " m = ("+ Method.class.getName()+")"+ZAOPScaner.class.getName()+".cmap.get(\""+nnn+"\");" + "\n\t"

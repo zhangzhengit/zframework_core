@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import vo.zframework.anno.ZAOP;
 import vo.zframework.anno.ZAsync;
+import vo.zframework.scanner.IAsyncRoute;
 
 /**
  * @ZAsync 的AOP类，实现异步处理
@@ -38,17 +39,17 @@ public class ZAsyncAOP implements ZIAOP {
 	@Override
 	public Object around(final AOPParameter aopParameter) {
 
-		if (aopParameter.getIsVOID()) {
+		if (aopParameter.isVOID()) {
 			this.ves.execute(() -> {
 				Thread.currentThread().setName(gTN());
-				aopParameter.invoke();
+				aopParameter.invoke(IAsyncRoute.class);
 			});
 			return null;
 		}
 
 		final CompletableFuture<Object> future = CompletableFuture.supplyAsync(() -> {
 			Thread.currentThread().setName(gTN());
-			final Object rv = aopParameter.invoke();
+			final Object rv = aopParameter.invoke(IAsyncRoute.class);
 			return rv;
 		}, this.ves);
 
