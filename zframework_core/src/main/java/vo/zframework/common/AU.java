@@ -115,7 +115,7 @@ public class AU {
 			to--;
 		}
 
-		if (to > from) {
+		if (to >= from) {
 			return Arrays.copyOfRange(bytes, from, to + 1);
 		}
 
