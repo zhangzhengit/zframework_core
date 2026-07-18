@@ -7,7 +7,7 @@ import java.util.List;
 import vo.zframework.core.ZContext;
 
 /**
- *
+ * ZIAOP 接口方法的参数
  *
  * @author zhangzhen
  * @date 2023年6月18日
