@@ -138,13 +138,15 @@ public class HttpRequestProcessor {
 		for (int i = 0; i < x.size(); i++) {
 			final byte[] b = x.get(i);
 			if ((mbLength == b.length)) {
+				int eC = 0;
 				for (int k = 0; k < b.length; k++) {
-					if (b[k] != methodBytes[k]) {
-						return false;
+					if (b[k] == methodBytes[k]) {
+						eC++;
 					}
 				}
-
-				return true;
+				if (eC >= mbLength) {
+					return true;
+				}
 			}
 		}
 
