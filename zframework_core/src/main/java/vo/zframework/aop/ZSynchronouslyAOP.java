@@ -8,7 +8,9 @@ import java.util.List;
 import vo.zframework.anno.ZAOP;
 import vo.zframework.anno.ZSynchronously;
 import vo.zframework.common.RU;
+import vo.zframework.core.ZContext;
 import vo.zframework.exception.ZSynchronouslyAOPException;
+import vo.zframework.scanner.ISynchronouslyRoute;
 
 /**
  * @ZSynchronously 的AOP类
@@ -32,7 +34,13 @@ public class ZSynchronouslyAOP implements ZIAOP {
 		final String value = ZSynchronouslyAOP.gValue(parameter);
 
 		synchronized (("AOPLock" + value).intern()) {
-			return parameter.invoke();
+			final ISynchronouslyRoute route = ZContext.getBean(ISynchronouslyRoute.class);
+			try {
+				return route.route(parameter);
+			} catch (final Exception e) {
+				e.printStackTrace();
+				return null;
+			}
 		}
 
 	}
