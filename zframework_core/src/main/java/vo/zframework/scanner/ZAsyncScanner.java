@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import vo.log.core.ZLog2;
 import vo.zframework.anno.ZAsync;
 import vo.zframework.aop.AOPParameter;
+import vo.zframework.aop.IAsyncRoute;
 import vo.zframework.aop.ZAsyncRV;
 import vo.zframework.common.RU;
 import vo.zframework.core.ZContext;
@@ -147,8 +148,8 @@ public class ZAsyncScanner {
 
 		routeMethod.setBody(routeBody.toString());
 
-		System.out.println("proxyZClass = ");
-		System.out.println(proxyZClass.toString());
+//		System.out.println("proxyZClass = ");
+//		System.out.println(proxyZClass.toString());
 
 		ZContext.addBean(IAsyncRoute.class, proxyZClass.newInstance());
 

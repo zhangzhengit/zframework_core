@@ -1,6 +1,4 @@
-package vo.zframework.scanner;
-
-import vo.zframework.aop.IAOPRoute;
+package vo.zframework.aop;
 
 /**
  * @ZSynchronously 路由

@@ -12,6 +12,7 @@ import vo.zframework.cache.ZCacheR;
 import vo.zframework.common.AU;
 import vo.zframework.common.RU;
 import vo.zframework.common.STU;
+import vo.zframework.core.ZContext;
 import vo.zframework.exception.CacheKeyDeclarationException;
 
 /**
@@ -56,7 +57,8 @@ public class ZCacheableAOP implements ZIAOP {
 				return vC2.getValue();
 			}
 
-			final Object v = aopParameter.invoke();
+			final Object v = aopParameter.invoke(ICacheableRoute.class);
+
 			final ZCacheR r = new ZCacheR(cacheKey, v, annotation.expire(),
 					System.currentTimeMillis());
 

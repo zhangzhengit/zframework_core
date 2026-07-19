@@ -37,7 +37,8 @@ public class ZCacheEvictAOP implements ZIAOP {
 			this.cache.remove(cacheKey);
 		}
 
-		final Object v = aopParameter.invoke();
+		final Object v = aopParameter.invoke(ICacheEvictRoute.class);
+
 		return v;
 	}
 

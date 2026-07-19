@@ -32,7 +32,7 @@ public class ZCachePutAOP implements ZIAOP {
 		final String key = annotation.key();
 		final String cacheKey = ZCacheableAOP.gKey(aopParameter, key, annotation.group());
 
-		final Object v = aopParameter.invoke();
+		final Object v = aopParameter.invoke(ICachePutRoute.class);
 		final ZCacheR re = this.cache.get(cacheKey);
 		if (re != null) {
 			final ZCacheR newR = new ZCacheR(cacheKey, v, re.getExpire(), System.currentTimeMillis());

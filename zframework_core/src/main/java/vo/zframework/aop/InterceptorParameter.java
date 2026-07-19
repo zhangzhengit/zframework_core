@@ -65,7 +65,7 @@ public class InterceptorParameter {
 	}
 
 	public Object[] getParameters() {
-		return parameters;
+		return this.parameters;
 	}
 
 }

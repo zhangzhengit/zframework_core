@@ -94,6 +94,8 @@ public class Task {
 	public static final String DEFAULT_CHARSET_NAME = Charset.defaultCharset().displayName();
 	public static final String VOID = "void";
 	public static final ContentTypeEnum DEFAULT_CONTENT_TYPE = ContentTypeEnum.APPLICATION_JSON;
+	private
+	static IAPIRoute apiRoute = null;
 
 	/**
 	 * 执行目标方法（接口Method）
@@ -463,9 +465,12 @@ public class Task {
 	 */
 	private static Object invoke0(final String path, final Object zControllerObject, final ZRMethod zrMethod, final Object[] parameters) throws Throwable  {
 
+		if (apiRoute == null) {
+			apiRoute = ZContext.getBean(IAPIRoute.class);
+		}
+
 		try {
 			// 先直接调用(当前只支持了不带@ZPV的)
-			final IAPIRoute apiRoute = ZContext.getBean(IAPIRoute.class);
 			final APIRouteR route = apiRoute.route(path, zControllerObject, zrMethod, parameters);
 			if ((route != null) && route.isMatched()) {
 				return route.getRv();
