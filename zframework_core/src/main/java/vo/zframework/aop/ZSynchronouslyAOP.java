@@ -9,7 +9,6 @@ import vo.zframework.anno.ZAOP;
 import vo.zframework.anno.ZSynchronously;
 import vo.zframework.common.RU;
 import vo.zframework.exception.ZSynchronouslyAOPException;
-import vo.zframework.scanner.ISynchronouslyRoute;
 
 /**
  * @ZSynchronously 的AOP类
