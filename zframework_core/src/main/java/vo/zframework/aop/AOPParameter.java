@@ -13,6 +13,7 @@ import vo.zframework.core.ZContext;
  * @date 2023年6月18日
  *
  */
+// FIXME 2026年7月22日 19:50:35 zhangzhen : 注意：本类和InterceptorParameter的invoke()方法就用反射，不改为方法句柄了，就维持现状
 public class AOPParameter {
 	private String methodName;
 	private Method method;
