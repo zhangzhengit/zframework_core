@@ -10,6 +10,10 @@ import java.lang.reflect.Method;
  * @date 2023年7月11日
  *
  */
+// FIXME 2026年7月22日 16:40:47 zhangzhen : 记录：本类invoke不改，就用反射
+// 因为当前无内置的拦截器，如果有则可以启动时生成代理子类直接调用，但当前无，
+// 则直接提供一个invoke()方法，给ZHandlerInterceptor的自定义子类的pre/post/after中直接调用.invoke()
+// 就可以实现调用目标方法了，简单易用
 public class InterceptorParameter {
 
 	private final String methodName;
