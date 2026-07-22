@@ -5,9 +5,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Method;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.StringJoiner;
@@ -27,10 +25,6 @@ import vo.zframework.common.STU;
 public class ZClass {
 
 	private static final String DEAULT_ZCLASS_NAME_PREFIX = "ZClass_";
-
-	private final static Map<ZClass, Object> SOURCE_MAP_CLASS_TO_O =new HashMap<>();
-	private final static Map< Object, ZClass> SOURCE_MAP_O_TO_CLASS = new HashMap<>();
-//	private final static HashBiMap<ZClass, Object> SOURCE_MAP = HashBiMap.create();
 
 	private static final String DEFAULT_PACKAGE = "com.vo";
 
@@ -197,14 +191,9 @@ public class ZClass {
 			if (package12 == null) {
 				throw new IllegalArgumentException("package 未定义，请声明一个 " + ZPackage.class.getName() + " 对象");
 			}
+
 			final Object newInstance = ZCU.newInstance(source, package12.toString(), this.getName());
 
-			// 2
-			SOURCE_MAP_CLASS_TO_O.put(this, newInstance);
-			SOURCE_MAP_O_TO_CLASS.put(newInstance, this);
-
-			// 1
-//			ZClass.SOURCE_MAP.put(this, newInstance);
 			return newInstance;
 		} catch (SecurityException | IllegalArgumentException e) {
 			e.printStackTrace();
@@ -212,18 +201,6 @@ public class ZClass {
 
 		return null;
 	}
-
-	public static ZClass getZClassByObject(final Object object) {
-
-		// 2
-		final ZClass zClass = SOURCE_MAP_O_TO_CLASS.get(object);
-
-//		final ZClass zClass = SOURCE_MAP.inverse().get(object);
-		// 1
-//		final ZClass zClass = SOURCE_MAP.inverse().get(object);
-		return zClass;
-	}
-
 
 	public static ZClass empty() {
 		return empty(ZClass.generateDefaultClassName());
