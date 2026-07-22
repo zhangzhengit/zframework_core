@@ -99,6 +99,8 @@ public class ZRMethod {
 
 	private SP sp;
 
+	private final String httpMethod;
+
 	/**
 	 * @param method
 	 * @param ctEnum
@@ -123,6 +125,8 @@ public class ZRMethod {
 		this.cacheControl = method.getAnnotation(ZCacheControl.class);
 
 		this.zRequestMapping = method.getAnnotation(ZRequestMapping.class);
+
+		this.httpMethod = this.zRequestMapping.method().name();
 
 		if (this.cacheControl != null) {
 			this.cacheControlVString = this.gCCVS();
@@ -349,6 +353,10 @@ public class ZRMethod {
 
 	public void setSp(final SP sp) {
 		this.sp = sp;
+	}
+
+	public String getHttpMethod() {
+		return this.httpMethod;
 	}
 
 }
