@@ -117,8 +117,8 @@ public class ZCacheScanner {
 
 		routeMethod.setBody(routeBody.toString());
 
-		System.out.println("proxyZClass = ");
-		System.out.println(proxyZClass.toString());
+//		System.out.println("proxyZClass = ");
+//		System.out.println(proxyZClass.toString());
 
 		ZContext.addBean(beanClass, proxyZClass.newInstance());
 	}
