@@ -6,7 +6,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -56,9 +55,6 @@ public class StaticResourcesPreCompressionService {
 	}
 
 	private static void c() {
-
-		System.out.println(LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t"
-				+ "StaticResourcesPreCompressionService.c()");
 
 		final ServerConfigurationProperties scp = ZContext.getBean(ServerConfigurationProperties.class);
 
