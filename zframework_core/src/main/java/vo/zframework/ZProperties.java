@@ -426,7 +426,9 @@ public class ZProperties {
 
 	private static boolean isRunningFromJar() {
 		final String location = ZProperties.class.getProtectionDomain().getCodeSource().getLocation().toString();
-		return location.startsWith("jar:") && location.contains(".jar");
+//		return location.startsWith("jar:") && location.contains(".jar");
+		// XXX 原来一直用的spring自动生成的pom来测试的，现在去掉spring后，需要改为下面这样，本方法功能才正常
+		return location.contains(".jar");
 	}
 
 	private static Properties loadPResources(final String path) {
