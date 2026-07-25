@@ -19,20 +19,6 @@ import vo.zframework.enums.HttpStatusEnum;
  */
 public class ReU {
 
-	private static final ZResponse RESPONSE_429_ZSESSIONID = new ZResponse()
-					.contentType(ContentTypeEnum.APPLICATION_JSON.getTypeBytes())
-					.httpStatus(HttpStatusEnum.HTTP_429.getStatus())
-					.header(HeaderEnum.CONNECTION.getNameBytes(), ConnectionEnum.CLOSE.getValueBytes())
-					.body(J.toJSONString(CR.error(AccessDeniedCodeEnum.ZSESSIONID.getCode(),
-							AccessDeniedCodeEnum.ZSESSIONID.getMessageToClient())));
-
-	private static final ZResponse RESPONSE_429_API = new ZResponse()
-					.contentType(ContentTypeEnum.APPLICATION_JSON.getTypeBytes())
-					.httpStatus(HttpStatusEnum.HTTP_429.getStatus())
-					.header(HeaderEnum.CONNECTION.getNameBytes(), ConnectionEnum.CLOSE.getValueBytes())
-					.body(J.toJSONString(CR.error(AccessDeniedCodeEnum.API.getCode(),
-							AccessDeniedCodeEnum.API.getInternalMessage())));
-
 	private static final byte[] SERVICE_UNAVAILABLE_RESPONSE =
 								("HTTP/1.1 " + HttpStatusEnum.HTTP_503.getStatus() + " " + HttpStatusEnum.HTTP_503.getMessage() + "\r\n" +
 							    "Content-Length: 0\r\n" +
@@ -51,11 +37,21 @@ public class ReU {
 	}
 
 	public static ZResponse response429API() {
-		return RESPONSE_429_API;
+		return new ZResponse()
+						.contentType(ContentTypeEnum.APPLICATION_JSON.getTypeBytes())
+						.httpStatus(HttpStatusEnum.HTTP_429.getStatus())
+						.header(HeaderEnum.CONNECTION.getNameBytes(), ConnectionEnum.CLOSE.getValueBytes())
+						.body(J.toJSONString(CR.error(AccessDeniedCodeEnum.API.getCode(),
+								AccessDeniedCodeEnum.API.getInternalMessage())));
 	}
 
 	public static ZResponse response429ZSESSIONID() {
-		return RESPONSE_429_ZSESSIONID;
+		return new ZResponse()
+						.contentType(ContentTypeEnum.APPLICATION_JSON.getTypeBytes())
+						.httpStatus(HttpStatusEnum.HTTP_429.getStatus())
+						.header(HeaderEnum.CONNECTION.getNameBytes(), ConnectionEnum.CLOSE.getValueBytes())
+						.body(J.toJSONString(CR.error(AccessDeniedCodeEnum.ZSESSIONID.getCode(),
+								AccessDeniedCodeEnum.ZSESSIONID.getMessageToClient())));
 	}
 
 	public static ZResponse response405(final String message, final boolean keepAlive) {
