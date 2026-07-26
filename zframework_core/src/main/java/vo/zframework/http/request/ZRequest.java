@@ -470,8 +470,7 @@ public class ZRequest {
 		return null;
 	}
 
-
-	public ZRequest(final byte[] dataRawArray, final List<ArrayRange> arList) {
+	ZRequest(final byte[] dataRawArray, final List<ArrayRange> arList) {
 		this.dataRawArray = dataRawArray;
 
 		this.arList = arList;
