@@ -806,7 +806,7 @@ public class Task {
 	private static int hZRequestParam(final Object[] parameters, final ZRequest request, final String path,
 			final int pI, final Parameter p, final ZRequestParam requestParam) {
 
-		final List<RequestParam> params = request.getParams();
+		final ArrayList<RequestParam> params = request.getParams();
 		if (CU.isNotEmpty(params)) {
 
 			final RequestParam rp = findRequestParam(p, params);
@@ -866,9 +866,16 @@ public class Task {
 		return Task.setValue(parameters, pI, p, findAny.get().getValue());
 	}
 
-	private static RequestParam findRequestParam(final Parameter p, final List<RequestParam> paramlist) {
-		for (final RequestParam requestParam : paramlist) {
-			if(requestParam.getName().equals(p.getName())) {
+	private static RequestParam findRequestParam(final Parameter p, final ArrayList<RequestParam> params) {
+
+		final String pname = p.getName();
+
+		for (int i = 0, size = params.size(); i < size; i++) {
+			final RequestParam requestParam = params.get(i);
+			if (requestParam == null) {
+				continue;
+			}
+			if (requestParam.getName().equals(pname)) {
 				return requestParam;
 			}
 		}

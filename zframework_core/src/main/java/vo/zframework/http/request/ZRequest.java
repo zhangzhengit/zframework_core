@@ -105,7 +105,7 @@ public class ZRequest {
 	 */
 	private String path;
 
-	private List<RequestParam> params;
+	private ArrayList<RequestParam> params;
 
 	/**
 	 * http版本
@@ -445,14 +445,23 @@ public class ZRequest {
 	}
 
 	public Object getParameter(final String name) {
-		// FIXME 2024年12月9日 下午6:30:42 zhangzhen : 这个方法是否要改
-		// 因为@ZRequestParam加入了默认值，用此方法取还是原值而非默认值
-		final List<RequestParam> ps = this.getParams();
-		if (CU.isEmpty(ps)) {
+
+		if (name == null) {
 			return null;
 		}
 
-		for (final RequestParam requestParam : ps) {
+		final List<RequestParam> p = this.getParams();
+		// FIXME 2024年12月9日 下午6:30:42 zhangzhen : 这个方法是否要改
+		// 因为@ZRequestParam加入了默认值，用此方法取还是原值而非默认值
+		if (CU.isEmpty(p)) {
+			return null;
+		}
+
+		for (int i = 0, size = p.size(); i < size; i++) {
+			final RequestParam requestParam = p.get(i);
+			if (requestParam == null) {
+				continue;
+			}
 			if (requestParam.getName().equals(name)) {
 				return requestParam.getValue();
 			}
@@ -514,7 +523,7 @@ public class ZRequest {
 			final List<byte[]> pa = STU.splitBytes(requestURIBytes, wI + STU.Q_LENGTH, requestURIBytes.length,
 					STU.SP_BYTES);
 
-			final List<RequestParam> params = new ArrayList<>(pa.size());
+			final ArrayList<RequestParam> params = new ArrayList<>(pa.size());
 			for (int i = 0; i < pa.size(); i++) {
 				final RequestParam requestParam = hParam(pa.get(i));
 				params.add(requestParam);
@@ -889,7 +898,7 @@ public class ZRequest {
 		return this.path;
 	}
 
-	public List<RequestParam> getParams() {
+	public ArrayList<RequestParam> getParams() {
 		return this.params;
 	}
 
