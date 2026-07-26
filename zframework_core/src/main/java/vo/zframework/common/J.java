@@ -16,13 +16,12 @@ public class J {
 
 	private static final ObjectMapper MAPPER = new ObjectMapper();
 
-	public static <T> T parseObject(final String json, final Class<T> cls) {
+	public static <T> T parseObject(final String json, final Class<T> cls) throws JsonProcessingException {
 		try {
 			return MAPPER.readValue(json, cls);
 		} catch (final JsonProcessingException e) {
-			e.printStackTrace();
+			throw e;
 		}
-		return null;
 	}
 
 	public static String toJSONString(final Object object, final Include incluedeEnum) {
