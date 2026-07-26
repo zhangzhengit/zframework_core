@@ -887,30 +887,47 @@ public class Task {
 		if (!p.isAnnotationPresent(ZValidated.class)) {
 			return;
 		}
-		final ArrayList<Class<?>> pl = new ArrayList<>();
-		pl.add(object.getClass());
+
+		final Class<? extends Object> getClass = object.getClass();
+		final Class<?> superclass = getClass.getSuperclass();
+
+		// 无父类，就不用new ArrayList了，直接校验本类注解就行了
+		if (superclass == Object.class) {
+			checkZValidated(object, getClass);
+			return;
+		}
+
+		// 有父类，则一直找父类直到Object截止，然后从父到本类挨个校验里面的注解
+		final ArrayList<Class<?>> cl = new ArrayList<>();
+		cl.add(getClass);
+		cl.add(superclass);
+
 		while (true) {
-			final Class<?> superclass = pl.get(pl.size() - 1).getSuperclass();
-			if (superclass == Object.class) {
+			final Class<?> sc = cl.get(cl.size() - 1).getSuperclass();
+			if (sc == Object.class) {
 				break;
 			}
-			pl.add(superclass);
+			cl.add(sc);
 		}
 
-		Collections.reverse(pl);
+		Collections.reverse(cl);
 
-		for (final Class<?> cls : pl) {
-			final Field[] fs = cls.getDeclaredFields();
-			for (final Field f1 : fs) {
-				try {
-					ZValidator.validatedAll(object, f1);
-				} catch (final Exception e) {
-					throw e;
-				}
-				checkT(object, f1);
+		for (final Class<?> cls : cl) {
+			checkZValidated(object, cls);
+		}
+
+	}
+
+	private static void checkZValidated(final Object object, final Class<? extends Object> cls) throws Exception {
+		final Field[] fs = cls.getDeclaredFields();
+		for (final Field f1 : fs) {
+			try {
+				ZValidator.validatedAll(object, f1);
+			} catch (final Exception e) {
+				throw e;
 			}
+			checkT(object, f1);
 		}
-
 	}
 
 	/**
