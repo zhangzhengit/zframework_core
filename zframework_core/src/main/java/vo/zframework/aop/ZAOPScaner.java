@@ -194,6 +194,17 @@ public class ZAOPScaner {
 
 				final ZMethod copyZAOPMethod = ZMethod.copyFromMethod(method);
 
+				if (returnType != void.class) {
+					final Set<String> importSet = proxyZClass.getImportSet() == null ? new HashSet<>()
+							: proxyZClass.getImportSet();
+					importSet.add(returnType.getCanonicalName());
+					proxyZClass.setImportSet(importSet);
+
+					if(!importSet.contains(vo.zframework.common.CR.class.getCanonicalName())) {
+						importSet.add(vo.zframework.common.CR.class.getCanonicalName());
+					}
+				}
+
 				final String zFieldName = "ziaop_" + method.getName() + i;
 				final String zFieldType = ZIAOP.class.getName();
 				final ZField zField = new ZField(zFieldType, zFieldName,

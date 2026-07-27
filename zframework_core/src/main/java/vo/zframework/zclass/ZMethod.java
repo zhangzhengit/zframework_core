@@ -297,13 +297,16 @@ public class ZMethod {
 		this.gReturn = gReturn;
 	}
 
-	public static ZMethod copyFromMethod(final Method m1) {
+	public static ZMethod copyFromMethod(final Method method) {
 		final ZMethod m2 = new ZMethod();
-		m2.setName(m1.getName());
+		m2.setName(method.getName());
 
-		m2.setReturnType(getReturnTypeT(m1));
+		final String returnTypeT = getReturnTypeT(method);
+		final int i = returnTypeT.lastIndexOf(".");
+		final String t = i > -1 ? returnTypeT.substring(i + 1) : returnTypeT;
+		m2.setReturnType(t);
 
-		final ArrayList<ZMethodArg> argLIst = getArgListFromMethod(m1);
+		final ArrayList<ZMethodArg> argLIst = getArgListFromMethod(method);
 
 		m2.setMethodArgList(argLIst);
 
@@ -323,7 +326,8 @@ public class ZMethod {
 	}
 
 	public static String getReturnTypeT(final Method method) {
-		final Type genericReturnType = method.getGenericReturnType();
+		final Type genericReturnType = method.getReturnType();
+//		final Type genericReturnType = method.getGenericReturnType();
 		final String string = genericReturnType.toString();
 		final int i = string.indexOf("class");
 		if (i > -1) {
