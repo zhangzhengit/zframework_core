@@ -1,9 +1,12 @@
 package vo.zframework.http;
 
+import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.StringJoiner;
 
 import vo.zframework.anno.ZCacheControl;
@@ -37,6 +40,11 @@ public class ZRMethod {
 	private final Method method;
 
 	private final Parameter[] methodParameters;
+	/**
+	 * <方法参数,此参数上的注解>
+	 */
+	private Map<String, Annotation[]> pacMap;
+
 	private final int methodParameterSize;
 
 	private	final MethodHandle methodHandle;
@@ -112,6 +120,8 @@ public class ZRMethod {
 
 		this.methodParameters = method.getParameters();
 
+		this.initPA();
+
 		this.methodParameterSize = this.methodParameters.length;
 
 		this.methodHandle = ZRMethod.gMH(method, zcObject);
@@ -170,6 +180,18 @@ public class ZRMethod {
 		this.ctEnum = ctEnum;
 	}
 
+	private void initPA() {
+		if (AU.isNotEmpty(this.methodParameters)) {
+			this.pacMap = new HashMap<>(4, 1F);
+			for (final Parameter p : this.methodParameters) {
+				final Annotation[] annotations = p.getAnnotations();
+				if (AU.isNotEmpty(annotations)) {
+					this.pacMap.put(p.getName(), annotations);
+				}
+			}
+		}
+	}
+
 	private static boolean isPT(final Class<?> cls) {
 		if ((cls == byte.class)
 		 || (cls == short.class)
@@ -193,6 +215,31 @@ public class ZRMethod {
 		}
 
 		return false;
+	}
+
+	public <T extends Annotation> boolean isAnnotationPresent(final Parameter parameter,
+			final Class<T> annoClass) {
+		return this.isAnnotationPresent(parameter.getName(), annoClass);
+	}
+
+	public <T extends Annotation> boolean isAnnotationPresent(final String parameterName,
+			final Class<T> annoClass) {
+		return this.getAnnotation(parameterName, annoClass) != null;
+	}
+
+	public <T extends Annotation> T getAnnotation(final String parameterName, final Class<T> annoClass) {
+		final Annotation[] as = this.pacMap.get(parameterName);
+		if (AU.isEmpty(as)) {
+			return null;
+		}
+
+		for (final Annotation annotation : as) {
+			if (annotation.annotationType().equals(annoClass)) {
+				return (T) annotation;
+			}
+		}
+
+		return null;
 	}
 
 	private String gCCVS() {

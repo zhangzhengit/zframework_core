@@ -599,13 +599,13 @@ public class Task {
 				continue;
 			}
 
-			final ZRequestParam requestParam = RU.getAnnotation(p, ZRequestParam.class);
+			final ZRequestParam requestParam = zrMethod.getAnnotation(p.getName(), ZRequestParam.class);
 			if (requestParam != null) {
 				pI = Task.hZRequestParam(parameters, request, path, pI, p, requestParam);
 				continue;
 			}
 
-			if (RU.isAnnotationPresent(p, ZPathVariable.class)) {
+			if (zrMethod.isAnnotationPresent(p, ZPathVariable.class)) {
 				final Class<?> type = pType;
 				// FIXME 2023年11月8日 下午4:39:18 zhanghen: @ZRM 启动校验是否此类型
 				final List<Object> list = zrMethod.getSp().getVList();
@@ -618,16 +618,16 @@ public class Task {
 				}
 
 				// FIXME 2023年11月8日 下午10:47:54 zhanghen: TODO 继续支持 校验注解
-				final ZMax zmax = RU.getAnnotation(p, ZMax.class);
+				final ZMax zmax = zrMethod.getAnnotation(p.getName(), ZMax.class);
 				if (zmax != null) {
 					ZValidator.validatedZMax(p, parameters[pI], zmax.max());
 				}
 
-				if (RU.isAnnotationPresent(p, ZPositive.class)) {
+				if (zrMethod.isAnnotationPresent(p, ZPositive.class)) {
 					ZValidator.validatedZPositive(p, parameters[pI]);
 				}
 
-				final ZMin zmin = RU.getAnnotation(p, ZMin.class);
+				final ZMin zmin = zrMethod.getAnnotation(p.getName(), ZMin.class);
 				if (zmin != null) {
 					ZValidator.validatedZMin(p, parameters[pI], zmin.min());
 				}
@@ -636,7 +636,7 @@ public class Task {
 				continue;
 			}
 
-			if (RU.isAnnotationPresent(p, ZRequestBody.class)) {
+			if (zrMethod.isAnnotationPresent(p, ZRequestBody.class)) {
 				final byte[] body = request.getBody();
 				if (AU.isEmpty(body)) {
 					final String simpleName = pType.getSimpleName();
@@ -672,7 +672,7 @@ public class Task {
 			}
 
 
-			final ZCookieValue zcv = RU.getAnnotation(p, ZCookieValue.class);
+			final ZCookieValue zcv = zrMethod.getAnnotation(p.getName(), ZCookieValue.class);
 			if (zcv != null) {
 				final String cookieName = zcv.name();
 				final ZCookie ck = request.getCookie(cookieName);

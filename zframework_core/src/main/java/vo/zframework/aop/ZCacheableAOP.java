@@ -12,7 +12,6 @@ import vo.zframework.cache.ZCacheR;
 import vo.zframework.common.AU;
 import vo.zframework.common.RU;
 import vo.zframework.common.STU;
-import vo.zframework.core.ZContext;
 import vo.zframework.exception.CacheKeyDeclarationException;
 
 /**

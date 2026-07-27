@@ -66,21 +66,6 @@ public class RU {
 		return string;
 	}
 
-	public static <T> Class<?> getSuperclass( final Class<T> cls) {
-		final String key = cls.getName();
-		return ZRC.singleton().computeIfAbsent(key, () -> cls.getSuperclass());
-	}
-
-	public static <T extends Annotation> boolean isAnnotationPresent(final Parameter parameter,
-			final Class<T> annoClass) {
-		final T t = getAnnotation(parameter, annoClass);
-		return t != null;
-	}
-
-	public static <T extends Annotation> T getAnnotation(final Parameter parameter, final Class<T> annoClass) {
-		return parameter.getAnnotation(annoClass);
-	}
-
 	public static Parameter[] getParameters(final Method method){
 		final Class<?> declaringClass = method.getDeclaringClass();
 		final int parameterCount = method.getParameterCount();
