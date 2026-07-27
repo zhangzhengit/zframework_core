@@ -644,18 +644,18 @@ public class Task {
 							"@" + ZRequestBody.class.getSimpleName() + " 参数 " + simpleName + " 不存在");
 				}
 
-				final Object object = J.parseObject(new String(body), pType);
-				if (object == null) {
+				final Object requestBodyObject = J.parseObject(new String(body), pType);
+				if (requestBodyObject == null) {
 					final String simpleName = pType.getSimpleName();
 					throw new FormPairParseException(
 							"@" + ZRequestBody.class.getSimpleName() + " 参数 " + simpleName + " 错误");
 				}
 
 				if (zrMethod.isAnnotationPresent(p, ZValidated.class)) {
-					Task.checkZValidated(object);
+					Task.checkZValidated(requestBodyObject);
 				}
 
-				parameters[pI] = object;
+				parameters[pI] = requestBodyObject;
 				pI++;
 				continue;
 			}
@@ -885,14 +885,14 @@ public class Task {
 		return null;
 	}
 
-	private static void checkZValidated(final Object object) throws Exception {
+	private static void checkZValidated(final Object requestBodyObject) throws Exception {
 
-		final Class<? extends Object> getClass = object.getClass();
+		final Class<? extends Object> getClass = requestBodyObject.getClass();
 		final Class<?> superclass = getClass.getSuperclass();
 
 		// 无父类，就不用new ArrayList了，直接校验本类注解就行了
 		if (superclass == Object.class) {
-			checkZValidated(object, getClass);
+			checkZValidated(requestBodyObject, getClass);
 			return;
 		}
 
@@ -912,20 +912,20 @@ public class Task {
 		Collections.reverse(cl);
 
 		for (final Class<?> cls : cl) {
-			checkZValidated(object, cls);
+			checkZValidated(requestBodyObject, cls);
 		}
 
 	}
 
-	private static void checkZValidated(final Object object, final Class<? extends Object> cls) throws Exception {
+	private static void checkZValidated(final Object requestBodyObject, final Class<? extends Object> cls) throws Exception {
 		final Field[] fs = cls.getDeclaredFields();
 		for (final Field f1 : fs) {
 			try {
-				ZValidator.validatedAll(object, f1);
+				ZValidator.validatedAll(requestBodyObject, f1);
 			} catch (final Exception e) {
 				throw e;
 			}
-			checkT(object, f1);
+			checkT(requestBodyObject, f1);
 		}
 	}
 
