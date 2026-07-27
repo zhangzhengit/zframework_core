@@ -51,7 +51,7 @@ public class ZValidator {
 			ZUnique.class,
 			ZMax.class, ZPositive.class);
 
-	public static void validatedZNotNull(final Object object, final Field field) {
+	private static void validatedZNotNull(final Object object, final Field field) {
 		final ZNotNull nn = field.getAnnotation(ZNotNull.class);
 		if (nn == null) {
 			return;
@@ -89,7 +89,7 @@ public class ZValidator {
 
 	}
 
-	public static void validatedZPositive(final Object object, final Field field) {
+	private static void validatedZPositive(final Object object, final Field field) {
 		final ZPositive zp = field.getAnnotation(ZPositive.class);
 		if (zp == null) {
 			return;
@@ -151,7 +151,7 @@ public class ZValidator {
 	}
 
 
-	public static void validatedZUnique(final Object object, final Field field) {
+	private static void validatedZUnique(final Object object, final Field field) {
 
 		final ZUnique zu = field.getAnnotation(ZUnique.class);
 		if (zu == null) {
@@ -171,7 +171,7 @@ public class ZValidator {
 
 	}
 
-	public static void validatedZLength(final Object object, final Field field) {
+	private static void validatedZLength(final Object object, final Field field) {
 		final ZLength zl = field.getAnnotation(ZLength.class);
 		if (zl == null) {
 			return;
@@ -210,7 +210,7 @@ public class ZValidator {
 
 	}
 
-	public static void validatedZStartWith(final Object object, final Field field) {
+	private static void validatedZStartWith(final Object object, final Field field) {
 		final ZStartWith startWidh = field.getAnnotation(ZStartWith.class);
 		if (startWidh == null) {
 			return;
@@ -252,7 +252,7 @@ public class ZValidator {
 		}
 	}
 
-	public static void validatedZEndsWith(final Object object, final Field field) {
+	private static void validatedZEndsWith(final Object object, final Field field) {
 		final ZEndsWith endsWith = field.getAnnotation(ZEndsWith.class);
 		if (endsWith == null) {
 			return;
@@ -412,7 +412,7 @@ public class ZValidator {
 		}
 	}
 
-	public static void validatedZMin(final Object object, final Field field) {
+	private static void validatedZMin(final Object object, final Field field) {
 		final ZMin zMin = field.getAnnotation(ZMin.class);
 		if (zMin == null) {
 			return;
@@ -480,7 +480,7 @@ public class ZValidator {
 
 	}
 
-	public static void validatedZNotEmpty(final Object object, final Field field) {
+	private static void validatedZNotEmpty(final Object object, final Field field) {
 		final ZNotEmtpy nn = field.getAnnotation(ZNotEmtpy.class);
 		if (nn == null) {
 			return;
@@ -525,7 +525,7 @@ public class ZValidator {
 		throw new ValidatedException(format, HttpStatusEnum.HTTP_400.getStatus());
 	}
 
-	public static void validatedZMax(final Object object, final Field field) {
+	private static void validatedZMax(final Object object, final Field field) {
 		final ZMax zMax = field.getAnnotation(ZMax.class);
 		if (zMax == null) {
 			return;
@@ -594,7 +594,7 @@ public class ZValidator {
 
 	}
 
-	public static void validatedZCustom(final Object object, final Field field) throws Exception  {
+	private static void validatedZCustom(final Object object, final Field field) throws Exception  {
 		final ZCustom zc = field.getAnnotation(ZCustom.class);
 		if (zc == null) {
 			return;
