@@ -79,11 +79,13 @@ public class ZConfigurationScanner {
 			ZContext.addBean(cls, newInstance);
 			// 如果Class有 @ZAutowired 字段，则先生成对应的的对象，然后注入进来
 			Arrays.stream(cls.getDeclaredFields())
+			.parallel()
 			.filter(f -> f.isAnnotationPresent(ZAutowired.class))
 			.forEach(f -> ZAutowiredScanner.inject(cls, f));
 
 			// 如果Class有 @ZValue 字段 ，则先给此字段注入值
 			Arrays.stream(cls.getDeclaredFields())
+			.parallel()
 			.filter(f -> f.isAnnotationPresent(ZValue.class))
 			.forEach(f -> ZValueScanner.inject(cls, f));
 
@@ -143,12 +145,14 @@ public class ZConfigurationScanner {
 		for (final Class<?> cls : cal) {
 
 			Arrays.stream(cls.getDeclaredFields())
+					.parallel()
 					// 如果Class有 @ZAutowired 字段，则先生成对应的的对象，然后注入进来
 					.filter(f -> f.isAnnotationPresent(ZAutowired.class))
 					.forEach(f -> ZAutowiredScanner.inject(cls, f));
 
 			Arrays.stream(cls.getDeclaredFields())
 					// 如果Class有 @ZValue 字段 ，则先给此字段注入值
+					.parallel()
 					.filter(f -> f.isAnnotationPresent(ZValue.class))
 					.forEach(f -> ZValueScanner.inject(cls, f));
 		}
