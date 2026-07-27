@@ -1,4 +1,4 @@
-package vo.zframework.event;
+package vo.zframework.route;
 
 /**
  * 事件路由接口

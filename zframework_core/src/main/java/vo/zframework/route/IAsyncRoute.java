@@ -1,4 +1,4 @@
-package vo.zframework.aop;
+package vo.zframework.route;
 
 /**
  * @ZAsync 路由

@@ -6,6 +6,7 @@ import vo.zframework.anno.ZCacheEvict;
 import vo.zframework.cache.ZCache;
 import vo.zframework.cache.ZCacheR;
 import vo.zframework.common.STU;
+import vo.zframework.route.ICacheEvictRoute;
 
 /**
  * @ZCacheEvict 的实现类

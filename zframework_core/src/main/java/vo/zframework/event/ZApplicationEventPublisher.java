@@ -18,6 +18,7 @@ import vo.zframework.common.AU;
 import vo.zframework.common.ZHashBasedTable;
 import vo.zframework.core.ZContext;
 import vo.zframework.exception.StartupException;
+import vo.zframework.route.IEventRoute;
 import vo.zframework.scanner.ClassMap;
 import vo.zframework.zclass.ZClass;
 import vo.zframework.zclass.ZMethod;

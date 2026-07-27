@@ -1,4 +1,6 @@
-package vo.zframework.aop;
+package vo.zframework.route;
+
+import vo.zframework.aop.AOPParameter;
 
 /**
  * AOP 顶级路由接口

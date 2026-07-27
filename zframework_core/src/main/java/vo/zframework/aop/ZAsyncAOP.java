@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import vo.zframework.anno.ZAOP;
 import vo.zframework.anno.ZAsync;
+import vo.zframework.route.IAsyncRoute;
 
 /**
  * @ZAsync 的AOP类，实现异步处理

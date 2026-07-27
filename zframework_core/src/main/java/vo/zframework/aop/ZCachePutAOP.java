@@ -5,6 +5,7 @@ import vo.zframework.anno.ZAutowired;
 import vo.zframework.anno.ZCachePut;
 import vo.zframework.cache.ZCache;
 import vo.zframework.cache.ZCacheR;
+import vo.zframework.route.ICachePutRoute;
 
 /**
  * @ZCachePut 的实现类

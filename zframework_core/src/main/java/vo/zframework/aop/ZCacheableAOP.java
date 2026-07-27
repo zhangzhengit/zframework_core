@@ -13,6 +13,7 @@ import vo.zframework.common.AU;
 import vo.zframework.common.RU;
 import vo.zframework.common.STU;
 import vo.zframework.exception.CacheKeyDeclarationException;
+import vo.zframework.route.ICacheableRoute;
 
 /**
  * @ZCacheable 的AOP实现类
