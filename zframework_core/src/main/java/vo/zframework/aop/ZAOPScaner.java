@@ -5,6 +5,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -64,7 +65,11 @@ public class ZAOPScaner {
 		final ZHashBasedTable<Class<?>, Method, List<Class<?>>> table = extractedC(cs);
 
 		final Set<Class<?>> rowKeySet = table.rowKeySet();
-		for (final Class<?> cls : rowKeySet) {
+
+		rowKeySet
+		.parallelStream()
+		.forEach(cls -> {
+
 			final ZClass proxyZClass = new ZClass();
 			proxyZClass.setPackage1(new ZPackage(cls.getPackage().getName()));
 			proxyZClass.setName(cls.getSimpleName() + PROXY_ZCLASS_NAME_SUFFIX);
@@ -136,7 +141,8 @@ public class ZAOPScaner {
 			}
 
 			map.put(cls.getSimpleName(), proxyZClass);
-		}
+
+		});
 
 		return map;
 	}
@@ -309,16 +315,29 @@ public class ZAOPScaner {
 	 */
 	public static ZHashBasedTable<Class<?>, Method, List<Class<?>>> extractedC(final Set<Class<?>> cs) {
 		final ZHashBasedTable<Class<?>, Method, List<Class<?>>> table = new ZHashBasedTable<>();
+
+		final List<Class<?>> zaopList = cs.parallelStream()
+			.filter(c2 -> c2.isAnnotationPresent(ZAOP.class))
+			.collect(Collectors.toList());
+
+		final Map<Class<?>, Class<?>> cZAOPMap = new HashMap<>(16, 1F);
 		for (final Class<?> c : cs) {
+			final ZAOP zaop = c.getAnnotation(ZAOP.class);
+			if (zaop != null) {
+				cZAOPMap.put(c, zaop.interceptType());
+			}
+		}
+
+		cs.parallelStream().forEach(c -> {
+
 			final Method[] ms = c.getDeclaredMethods();
 			for (final Method m : ms) {
 				final Annotation[] mas = m.getAnnotations();
 				for (final Annotation  a : mas) {
 
-					final List<Class<?>> aL = cs.stream()
-							.filter(c2 -> c2.isAnnotationPresent(ZAOP.class))
-							.filter(c2 -> c2.getAnnotation(ZAOP.class).interceptType().getName()
-									.equals(a.annotationType().getName()))
+					final String aaTName = a.annotationType().getName();
+					final List<Class<?>> aL = zaopList.parallelStream()
+							.filter(c2 -> cZAOPMap.get(c2).getName().equals(aaTName))
 							.collect(Collectors.toList());
 
 					if (aL.size() > 1) {
@@ -339,10 +358,9 @@ public class ZAOPScaner {
 
 					}
 				}
-
 			}
 
-		}
+		});
 
 		return table;
 	}

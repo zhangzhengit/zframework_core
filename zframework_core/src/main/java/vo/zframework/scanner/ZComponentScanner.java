@@ -35,29 +35,35 @@ import vo.zframework.zclass.ZPackage;
  */
 public class ZComponentScanner {
 
-	public static void scanAndCreate(final Class<? extends Annotation> annotationClass, final String... packageName) {
+	public static void scanAndCreate(final Class<? extends Annotation>[] annotationClass, final String... packageName) {
+
 		final Map<String, ZClass> map = ZAOPScaner.scanAndGenerateProxyClass(packageName);
 
-		final Set<Class<?>> zcSet = ClassMap.scanPackageByAnnotation(annotationClass, packageName);
+		final Set<Class<?>> zcSet = new HashSet<>();
+		for (final Class<? extends Annotation> a : annotationClass) {
+			final Set<Class<?>> t = ClassMap.scanPackageByAnnotation(a, packageName);
+			zcSet.addAll(t);
+		}
 
 		zcSet
 			.parallelStream()
 			.forEach(cls1 -> {
 				final Object newComponent = ZObjectGeneratorStarter.generate(cls1);
-				final ZClass proxyClass = map.get(newComponent.getClass().getSimpleName());
-				if (proxyClass != null) {
-					final Object newInstanceProxy = proxyClass.newInstance();
+				final ZClass proxyClass = map.get(cls1.getSimpleName());
+					if (proxyClass != null) {
 
-					injectParentFieldForProxy(newInstanceProxy);
+						final Object newInstanceProxy = proxyClass.newInstance();
 
-					// 放代理类
-					ZContext.addBean(newComponent.getClass(), newInstanceProxy);
-					// FIXME 2026年7月17日 21:24:34 zhangzhen : 这是为了用AOPP改为直接调用而加的
-					// 因为在此已经放的是代理类，改直接调用取得原类.xx方法，结果取原类拿到的实际是代理类
-					// 就造成了递归了导致stackoverflow
-					// 可以再加两个方法比如叫addBeanOriginal/getBeanOriginal
-					ZContext.addBean(newComponent.getClass().getCanonicalName() + ".original", newComponent);
-				} else {
+						injectParentFieldForProxy(newInstanceProxy);
+
+						// 放代理类
+						ZContext.addBean(cls1, newInstanceProxy);
+						// FIXME 2026年7月17日 21:24:34 zhangzhen : 这是为了用AOPP改为直接调用而加的
+						// 因为在此已经放的是代理类，改直接调用取得原类.xx方法，结果取原类拿到的实际是代理类
+						// 就造成了递归了导致stackoverflow
+						// 可以再加两个方法比如叫addBeanOriginal/getBeanOriginal
+						ZContext.addBean(cls1.getCanonicalName() + ".original", newComponent);
+					} else {
 
 					// 1、@ZComponent 类中方法的参数是否带有 @ZValidated 注解，有则插入校验代码，无则super.xx(xx);
 					final Optional<Method> anyMethodIsAnnotationPresentZValidated = Arrays
@@ -71,7 +77,7 @@ public class ZComponentScanner {
 						addZValidatedProxyClass(cls1, newComponent);
 					} else {
 						// 正常放原类
-						ZContext.addBean(newComponent.getClass(), newComponent);
+						ZContext.addBean(cls1, newComponent);
 					}
 
 				}
