@@ -651,7 +651,9 @@ public class Task {
 							"@" + ZRequestBody.class.getSimpleName() + " 参数 " + simpleName + " 错误");
 				}
 
-				Task.checkZValidated(p, object);
+				if (zrMethod.isAnnotationPresent(p, ZValidated.class)) {
+					Task.checkZValidated(object);
+				}
 
 				parameters[pI] = object;
 				pI++;
@@ -883,10 +885,7 @@ public class Task {
 		return null;
 	}
 
-	private static void checkZValidated(final Parameter p, final Object object) throws Exception {
-		if (!p.isAnnotationPresent(ZValidated.class)) {
-			return;
-		}
+	private static void checkZValidated(final Object object) throws Exception {
 
 		final Class<? extends Object> getClass = object.getClass();
 		final Class<?> superclass = getClass.getSuperclass();
