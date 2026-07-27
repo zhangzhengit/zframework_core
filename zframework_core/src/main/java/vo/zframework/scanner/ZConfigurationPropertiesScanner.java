@@ -21,6 +21,7 @@ import java.util.StringJoiner;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -79,30 +80,31 @@ public class ZConfigurationPropertiesScanner {
 			}
 		}
 
-		for (final Class<?> cs : csSet) {
+		for (final Class<?> cls : csSet) {
 
-			 final ZConfigurationProperties zcp = cs.getAnnotation(ZConfigurationProperties.class);
+			 final ZConfigurationProperties zcp = cls.getAnnotation(ZConfigurationProperties.class);
 
 			 final String prefix = STU.isEmpty(zcp.prefix()) ? ""
 					 : zcp.prefix().endsWith(".") ? zcp.prefix() : zcp.prefix() + ".";
 
-		 	 final Object object = ZSingleton.getSingletonByClass(cs);
+		 	 final Object object = ZSingleton.getSingletonByClass(cls);
 
-			 final Field[] fs = cs.getDeclaredFields();
+			 final Field[] fs = cls.getDeclaredFields();
 
 			 for (final Field field : fs) {
 
-				 checkModifiers(cs, field);
+				 checkModifiers(cls, field);
 				 try {
 					 findValueAndSetValue(prefix, object, field);
 				 } catch (final Exception e) {
 					 throw e;
 				 }
+
 				 // 赋值后校验一下
 				 ZValidator.validatedAll(object, field);
 			}
 
-			ZContext.addBean(cs, object);
+			ZContext.addBean(cls, object);
 		}
 
 		for (final Class<?> cls : csSet) {
@@ -110,16 +112,18 @@ public class ZConfigurationPropertiesScanner {
 
 			// 如果Class有 @ZAutowired 字段，则先生成对应的的对象，然后注入进来
 			Arrays.stream(declaredFields)
+			.parallel()
 			.filter(f -> f.isAnnotationPresent(ZAutowired.class))
 			.forEach(f -> ZAutowiredScanner.inject(cls, f));
 
 			// 如果Class有 @ZValue 字段 ，则先给此字段注入值
 			Arrays.stream(declaredFields)
+			.parallel()
 			.filter(f -> f.isAnnotationPresent(ZValue.class))
 			.forEach(f -> ZValueScanner.inject(cls, f));
 		}
 
-		final List<Object> zcpList = ZContext.all().values().stream()
+		final List<Object> zcpList = ZContext.all().values().parallelStream()
 				.filter(b -> b.getClass().isAnnotationPresent(ZConfigurationProperties.class))
 				.collect(Collectors.toList());
 		final ZConfigurationPropertiesRegistry configurationPropertiesRegistry = ZSingleton.getSingletonByClass(ZConfigurationPropertiesRegistry.class);

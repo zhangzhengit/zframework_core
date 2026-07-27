@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.Supplier;
 
 import vo.zframework.exception.BeanAlreadyEexistsException;
 
@@ -44,6 +45,9 @@ public class ZContext {
 		return BEAN_MAP.get(beanName);
 	}
 
+	public static void addBeanAsync(final Class<?> beanClass, final Supplier<Object> supplier) {
+		Thread.ofVirtual().start(() -> addBean(gUK(beanClass), supplier.get()));
+	}
 	public static void addBean(final Class<?> beanClass, final Object bean) {
 		addBean(gUK(beanClass), bean);
 	}

@@ -185,7 +185,7 @@ public final class ZApplicationEventPublisher {
 
 		routeMethod.setBody(routeBody.toString());
 
-		ZContext.addBean(IEventRoute.class, proxyZClass.newInstance());
+		ZContext.addBeanAsync(IEventRoute.class, () -> proxyZClass.newInstance());
 
 		executed = true;
 	}

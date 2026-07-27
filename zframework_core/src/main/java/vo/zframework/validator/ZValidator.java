@@ -5,6 +5,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Parameter;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -787,9 +788,14 @@ public class ZValidator {
 				.filter(cls -> BAOHAN.contains(cls.getPackageName()))
 				.collect(Collectors.toList());
 
-		for (final Class<?> cls : list) {
+		list.parallelStream()
+		.forEach(cls -> {
+
 			final Field[] fs = cls.getDeclaredFields();
-			for (final Field f : fs) {
+			Arrays.stream(fs)
+			.parallel()
+			.forEach(f -> {
+
 				final Annotation[] as = f.getDeclaredAnnotations();
 				for (final Annotation annotation : as) {
 					final Class<? extends Annotation> annotationType = annotation.annotationType();
@@ -827,14 +833,11 @@ public class ZValidator {
 							throw new ValidatedException("@" + ZCustom.class.getSimpleName() + ".cls 指定的类型["
 									+ customClass + "]初始化异常,message=" + message,HttpStatusEnum.HTTP_400.getStatus());
 						}
-
 					}
-
 				}
 
-			}
-		}
-
+			});
+		});
 	}
 
 	public static void throwTypeNotSupportedExcpetion(final Class<?> cls, final Class<? extends Annotation> annoCls,

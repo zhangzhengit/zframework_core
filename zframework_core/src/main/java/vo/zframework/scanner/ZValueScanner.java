@@ -12,8 +12,6 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.StringJoiner;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 import vo.log.core.ZLog2;
 import vo.zframework.ZProperties;
@@ -40,10 +38,6 @@ public class ZValueScanner {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
-	/**
-	 * <@ZValue.listenForChanges = true的字段，此字段所在的对象>
-	 */
-	private final static ConcurrentMap<Field, Object> valueMap = new ConcurrentHashMap<>();
 	private final static ZHashBasedTable<String, Field, Object> valueTable = new ZHashBasedTable<>();
 
 	public static void inject(final String... packageName) {
@@ -75,7 +69,7 @@ public class ZValueScanner {
 		}
 	}
 
-	public static void inject(final Class<?> cls, final Field field) {
+	public synchronized static void inject(final Class<?> cls, final Field field) {
 		final Object bean = ZContext.getBean(cls);
 		final ZValue value = field.getAnnotation(ZValue.class);
 		if (value == null) {
@@ -83,7 +77,6 @@ public class ZValueScanner {
 		}
 
 		if (value.listenForChanges()) {
-			valueMap.put(field, bean);
 			valueTable.put(value.name(), field, bean);
 		}
 
