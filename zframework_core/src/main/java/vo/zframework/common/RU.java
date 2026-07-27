@@ -1,12 +1,17 @@
 package vo.zframework.common;
 
 import java.lang.annotation.Annotation;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodHandles.Lookup;
+import java.lang.invoke.VarHandle;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 import vo.zframework.cache.ZRC;
 
@@ -18,6 +23,8 @@ import vo.zframework.cache.ZRC;
  *
  */
 public class RU {
+
+	private static final ConcurrentHashMap<Field, VarHandle> VAR_HANDLE_CACHE = new ConcurrentHashMap<>(16, 1F);
 
 	public static String ptToBox(final String typeName) {
 		switch (typeName) {
@@ -98,24 +105,30 @@ public class RU {
 	}
 
 	public static void setFiledValue(final Field field, final Object object, final Object value) {
-		try {
-			field.setAccessible(true);
-			field.set(object, value);
-		} catch (IllegalArgumentException | IllegalAccessException e) {
-			e.printStackTrace();
-		}
+		final VarHandle varHandle = getVarHandle(field);
+		varHandle.set(object,value);
+	}
+
+	private static VarHandle getVarHandle(final Field field) {
+		final VarHandle v = VAR_HANDLE_CACHE.computeIfAbsent(field, f -> {
+			try {
+				final Lookup privateLookupIn = MethodHandles.privateLookupIn(f.getDeclaringClass(),
+						MethodHandles.lookup());
+				final VarHandle varHandle = privateLookupIn.findVarHandle(f.getDeclaringClass(), f.getName(),
+						f.getType());
+				return varHandle;
+			} catch (IllegalAccessException | NoSuchFieldException e) {
+				e.printStackTrace();
+			}
+			return null;
+		});
+
+		return v;
 	}
 
 	public static Object getFiledValue(final Object object, final Field field) {
-		try {
-			field.setAccessible(true);
-			final Object v = field.get(object);
-			return v;
-		} catch (IllegalArgumentException | IllegalAccessException e) {
-			e.printStackTrace();
-		}
-
-		return null;
+		final VarHandle varHandle = getVarHandle(field);
+		return varHandle.get(object);
 	}
 
 	public static Field getDeclaredField(final Object object, final String fieldName) {
