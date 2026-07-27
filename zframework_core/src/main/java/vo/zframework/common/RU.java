@@ -116,6 +116,10 @@ public class RU {
 		return varHandle.get(object);
 	}
 
+	public static <T> Class<?> getSuperclass(final Class<T> cls) {
+		return cls.getSuperclass();
+	}
+
 	public static Field getDeclaredField(final Object object, final String fieldName) {
 		try {
 			final Field declaredField = object.getClass().getDeclaredField(fieldName);
