@@ -41,10 +41,7 @@ public class ZComponentScanner {
 		final Set<Class<?>> zcSet = ClassMap.scanPackageByAnnotation(annotationClass, packageName);
 
 		zcSet
-				// FIXME 2025年1月18日 上午10:13:56 zhangzhen :
-				// 在armbian的pantherX2上这行并行导致启动报错NPE了，暂时注释掉
-				// 以后再看时什么原因
-				// .parallelStream()
+			.parallelStream()
 			.forEach(cls1 -> {
 				final Object newComponent = ZObjectGeneratorStarter.generate(cls1);
 				final ZClass proxyClass = map.get(newComponent.getClass().getSimpleName());
@@ -65,6 +62,7 @@ public class ZComponentScanner {
 					// 1、@ZComponent 类中方法的参数是否带有 @ZValidated 注解，有则插入校验代码，无则super.xx(xx);
 					final Optional<Method> anyMethodIsAnnotationPresentZValidated = Arrays
 							.stream(cls1.getDeclaredMethods())
+							.parallel()
 							.filter(m -> Arrays.stream(m.getParameterTypes())
 									.filter(pa -> pa.isAnnotationPresent(ZValidated.class)).findAny().isPresent())
 							.findAny();

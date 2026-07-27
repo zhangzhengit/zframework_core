@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import vo.log.core.ZLog2;
 import vo.zframework.anno.ZAutowired;
 import vo.zframework.anno.ZBean;
 import vo.zframework.anno.ZCondition;
@@ -33,8 +32,6 @@ import vo.zframework.http.Task;
  */
 public class ZConfigurationScanner {
 
-	private static final ZLog2 LOG = ZLog2.getInstance();
-
 	private static final Class<ZConfiguration> CLASS = ZConfiguration.class;
 
 	public static void scanAndCreate(final String... packageName) throws Exception {
@@ -46,7 +43,7 @@ public class ZConfigurationScanner {
 			return;
 		}
 
-		final List<Class<?>> nol = clsSet.stream()
+		final List<Class<?>> nol = clsSet.parallelStream()
 				.filter(cls -> !cls.isAnnotationPresent(ZOrder.class))
 				.collect(Collectors.toList());
 		if (!nol.isEmpty()) {
