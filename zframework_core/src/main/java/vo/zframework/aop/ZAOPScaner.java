@@ -5,7 +5,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -193,17 +192,7 @@ public class ZAOPScaner {
 				final Class<?> aopClass = aopClassList.get(i);
 
 				final ZMethod copyZAOPMethod = ZMethod.copyFromMethod(method);
-
-				if (returnType != void.class) {
-					final Set<String> importSet = proxyZClass.getImportSet() == null ? new HashSet<>()
-							: proxyZClass.getImportSet();
-					importSet.add(returnType.getCanonicalName());
-					proxyZClass.setImportSet(importSet);
-
-					if(!importSet.contains(vo.zframework.common.CR.class.getCanonicalName())) {
-						importSet.add(vo.zframework.common.CR.class.getCanonicalName());
-					}
-				}
+				addImport(proxyZClass, method);
 
 				final String zFieldName = "ziaop_" + method.getName() + i;
 				final String zFieldType = ZIAOP.class.getName();
@@ -254,6 +243,7 @@ public class ZAOPScaner {
 							: "return super." + method.getName() + "(" + a + ");";
 
 			final ZMethod zm = ZMethod.copyFromMethod(method);
+			addImport(proxyZClass, method);
 			zm.setgReturn(false);
 			zm.setBody(insertBody  + STU.CRLF + body);
 
@@ -267,12 +257,35 @@ public class ZAOPScaner {
 							: "return super." + method.getName() + "(" + a + ");";
 
 			final ZMethod zm = ZMethod.copyFromMethod(method);
+			addImport(proxyZClass, method);
 			zm.setgReturn(false);
 			zm.setBody(body);
 
 			zms.add(zm);
 		}
 	}
+
+
+	private static void addImport(final ZClass proxyZClass, final Method method) {
+		final String returnTypeT = RU.getMethodGenericReturnType(method);
+
+		if (!returnTypeT.equals(void.class.getCanonicalName()) && !JPT.contains(returnTypeT)) {
+			final int fi = returnTypeT.indexOf("<");
+			final int toI = fi <= -1 ? returnTypeT.length() : fi;
+
+			final String t2 = returnTypeT.substring(0, toI);
+
+			final Set<String> importSet = proxyZClass.getImportSet() == null ? new HashSet<>()
+					: proxyZClass.getImportSet();
+			importSet.add(t2);
+			proxyZClass.setImportSet(importSet);
+
+			importSet.add(vo.zframework.common.CR.class.getCanonicalName());
+		}
+	}
+
+	public static final Set<String> JPT = Set.of("byte", "short", "int", "long", "float", "double", "boolean", "char");
+
 
 	private static String gZMethodBody(final Method m, final String a, final String t, final String nnn,
 			final String returnTypeT, final List<Class<?>> aopClassList, final Class cls) {

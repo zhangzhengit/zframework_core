@@ -2,7 +2,6 @@ package vo.zframework.zclass;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -10,6 +9,7 @@ import java.util.StringJoiner;
 import java.util.UUID;
 
 import vo.zframework.common.CU;
+import vo.zframework.common.RU;
 import vo.zframework.common.STU;
 
 /**
@@ -298,19 +298,19 @@ public class ZMethod {
 	}
 
 	public static ZMethod copyFromMethod(final Method method) {
-		final ZMethod m2 = new ZMethod();
-		m2.setName(method.getName());
+		final ZMethod zm = new ZMethod();
+		zm.setName(method.getName());
 
-		final String returnTypeT = getReturnTypeT(method);
-		final int i = returnTypeT.lastIndexOf(".");
-		final String t = i > -1 ? returnTypeT.substring(i + 1) : returnTypeT;
-		m2.setReturnType(t);
+		final String returnTypeT = RU.getMethodGenericReturnType(method);
+		final int fi = returnTypeT.indexOf("<");
+		final int fromI = fi <= -1 ? returnTypeT.length():fi;
 
-		final ArrayList<ZMethodArg> argLIst = getArgListFromMethod(method);
+		final int i = returnTypeT.lastIndexOf(".",fromI);
+		final String t = i > -1 ? returnTypeT.substring(i + 1,fi > -1 ? fi:returnTypeT.length()) : returnTypeT;
 
-		m2.setMethodArgList(argLIst);
-
-		return m2;
+		zm.setReturnType(t);
+		zm.setMethodArgList(getArgListFromMethod(method));
+		return zm;
 
 	}
 
@@ -323,18 +323,6 @@ public class ZMethod {
 			argLIst.add(arg);
 		}
 		return argLIst;
-	}
-
-	public static String getReturnTypeT(final Method method) {
-		final Type genericReturnType = method.getReturnType();
-//		final Type genericReturnType = method.getGenericReturnType();
-		final String string = genericReturnType.toString();
-		final int i = string.indexOf("class");
-		if (i > -1) {
-
-			return string.substring("class".length() + i);
-		}
-		return string;
 	}
 
 	public ZMethodAccessEnum getAccessRights() {
