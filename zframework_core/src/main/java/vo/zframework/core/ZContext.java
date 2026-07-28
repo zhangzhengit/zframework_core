@@ -45,6 +45,9 @@ public class ZContext {
 		return BEAN_MAP.get(beanName);
 	}
 
+	// FIXME 2026年7月28日 19:21:19 zhangzhen : addBeanAsync这个方法似乎不合理
+	// 至少在启动过程中不该用，启动过程中可以并行，但是不应该异步，因为启动过程前后的对象
+	// 有依赖关系，异步的话可能A没执行完，B依赖A但找不到，导致启动失败
 	public static void addBeanAsync(final Class<?> beanClass, final Supplier<Object> supplier) {
 		Thread.ofVirtual().start(() -> addBean(gUK(beanClass), supplier.get()));
 	}

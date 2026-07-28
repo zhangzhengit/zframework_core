@@ -22,13 +22,13 @@ package vo.zframework.scanner;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import vo.zframework.anno.ZAsync;
 import vo.zframework.anno.ZCacheEvict;
 import vo.zframework.anno.ZCachePut;
 import vo.zframework.anno.ZCacheable;
@@ -64,6 +64,16 @@ public class ZCacheScanner {
 					packageName);
 			zcSet.addAll(t);
 		}
+
+//		final List<Runnable> rl = List.of(
+//				() -> gCacheProxyZClass(zcSet, ZCacheable.class, "ZCacheableRoute", ICacheableRoute.class,
+//						ICacheableRoute.class),
+//				() -> gCacheProxyZClass(zcSet, ZCachePut.class, "ZCachePutRoute", ICachePutRoute.class,
+//						ICachePutRoute.class),
+//				() -> gCacheProxyZClass(zcSet, ZCacheEvict.class, "ZCacheEvictRoute", ICacheEvictRoute.class,
+//						ICacheEvictRoute.class));
+//		rl.stream().forEach(Runnable::run);
+//		rl.parallelStream().forEach(Runnable::run);
 
 		gCacheProxyZClass(zcSet, ZCacheable.class, "ZCacheableRoute",
 				ICacheableRoute.class, ICacheableRoute.class);
