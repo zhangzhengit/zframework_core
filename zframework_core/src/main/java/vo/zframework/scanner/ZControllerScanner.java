@@ -88,7 +88,7 @@ public class ZControllerScanner {
 		for (final Class<?> cls : zcSet) {
 			final boolean staticControllerEnable = serverConfiguration.getStaticControllerEnable();
 			if (!staticControllerEnable
-					&& cls.getCanonicalName().equals(StaticController.class.getCanonicalName())) {
+					&& cls.getName().equals(StaticController.class.getName())) {
 
 				//				ZControllerScanner.LOG.info("[{}] 未启用，不创建[{}]对象", StaticController.class.getSimpleName(),
 				//						StaticController.class.getSimpleName());
@@ -112,14 +112,17 @@ public class ZControllerScanner {
 
 
 			final Method[] ms = cls.getDeclaredMethods();
-			for (final Method method : ms) {
+
+			Arrays.stream(ms)
+			.parallel()
+			.forEach(method ->{
+
 
 				// 校验 @ZRequestMapping
 				final ZRequestMapping requestMappingAnnotation = method.getAnnotation(ZRequestMapping.class);
 				if (requestMappingAnnotation == null) {
-					continue;
+					return;
 				}
-
 
 				checkNoVoidWithZResponse(cls, method);
 
@@ -128,9 +131,9 @@ public class ZControllerScanner {
 				ZControllerScanner.checkZRequestMapping(method, requestMappingAnnotation, requestMappingArray);
 
 				final boolean[] isRegex = requestMappingAnnotation.isRegex();
+				final MethodEnum methodEnum = requestMappingAnnotation.method();
 				for (int i = 0; i < requestMappingArray.length; i++) {
 					final String mapping = requestMappingArray[i];
-					final MethodEnum methodEnum = requestMappingAnnotation.method();
 
 					ZControllerMap.put(methodEnum, prefix + mapping, method,
 							restController!=null ? CTEnum.REST : CTEnum.NORMAL
@@ -139,8 +142,7 @@ public class ZControllerScanner {
 
 				checkZMFIleSize(cls, method);
 
-			}
-
+			});
 		}
 
 		return zcSet;
