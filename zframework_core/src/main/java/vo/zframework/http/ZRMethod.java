@@ -147,18 +147,17 @@ public class ZRMethod {
 		}
 
 		// FIXME 2025年12月6日 14:38:05 zhangzhen :  接下来实现这个功能
-		this.consumes = method.getAnnotation(ZRequestMapping.class).consumes();
-		this.produces = method.getAnnotation(ZRequestMapping.class).produces();
+		this.consumes = this.zRequestMapping.consumes();
+		this.produces = this.zRequestMapping.produces();
 
-		final Parameter[] ps = method.getParameters();
+		this.hasZRequestParam = gZRequestParam(this.methodParameters);
+		this.hasZMultipartFile = gZMultipartFile(this.methodParameters);
 
-		this.hasZRequestParam = gZRequestParam(ps);
-		this.hasZMultipartFile = gZMultipartFile(ps);
+		final Class<?> returnType = method.getReturnType();
+		this.isVoid = returnType == void.class;
+		this.isRTString = returnType.getName().equals(STRING_NAME);
 
-		this.isVoid = method.getReturnType() == void.class;
-		this.isRTString = method.getReturnType().getName().equals(STRING_NAME);
-
-		this.isRTPrimitiveType = ZRMethod.isPT(method.getReturnType());
+		this.isRTPrimitiveType = ZRMethod.isPT(returnType);
 
 		this.hasResponseBody = method.isAnnotationPresent(ZResponseBody.class);
 		if (this.produces.length > 0) {
