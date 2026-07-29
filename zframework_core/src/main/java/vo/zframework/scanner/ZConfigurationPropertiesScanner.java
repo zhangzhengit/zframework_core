@@ -36,6 +36,7 @@ import vo.zframework.common.CU;
 import vo.zframework.common.RU;
 import vo.zframework.common.STU;
 import vo.zframework.configuration.properties.ZConfigurationProperties;
+import vo.zframework.core.ZApplicationStartupInfo;
 import vo.zframework.core.ZContext;
 import vo.zframework.exception.ConfigurationPropertiesParameterException;
 import vo.zframework.exception.StartupException;
@@ -64,9 +65,10 @@ public class ZConfigurationPropertiesScanner {
 	private static final List<Class<?>> LT = List.of(Byte.class, Short.class,
 			Integer.class, Long.class, Float.class, Double.class, Character.class, Boolean.class, String.class);
 
-	public static void scanAndCreate(final String... packageName) throws Exception {
+	public static void scanAndCreate(final ZApplicationStartupInfo startupInfo) throws Exception {
 
-		final Set<Class<?>> csSet = ClassMap.scanPackageByAnnotation(ZConfigurationProperties.class, packageName);
+		final Set<Class<?>> csSet = ClassMap.scanPackageByAnnotation(ZConfigurationProperties.class, startupInfo.getPackageNameArray()
+				);
 		if (CU.isEmpty(csSet)) {
 			return;
 		}
