@@ -73,7 +73,7 @@ public class ZControllerScanner {
 		final Set<Class<?>> cR = new HashSet<>(controllerSet);
 
 		rcR.retainAll(cR);
-		if(rcR.size() > 0) {
+		if (rcR.size() > 0) {
 			final String cn = rcR.stream().map(Class::getCanonicalName).collect(Collectors.joining(","));
 			throw new StartupException(
 					"不允许 @" + ZRestController.class.getName()
@@ -82,7 +82,7 @@ public class ZControllerScanner {
 			);
 		}
 
-		final ServerConfigurationProperties serverConfiguration = ZSingleton.getSingletonByClass(ServerConfigurationProperties.class);
+		final ServerConfigurationProperties serverConfiguration = ZContext.getBean(ServerConfigurationProperties.class);
 
 
 		final Set<Class<?>> zcSet = new HashSet<>(restControllerSet);
