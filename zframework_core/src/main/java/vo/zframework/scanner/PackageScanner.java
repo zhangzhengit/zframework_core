@@ -6,10 +6,10 @@ import java.net.JarURLConnection;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.util.Enumeration;
-import java.util.LinkedHashSet;
+import java.util.HashSet;
 import java.util.Set;
-import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.stream.Collectors;
 
 /**
  * 这个类是问豆包要的代码
@@ -30,7 +30,9 @@ public class PackageScanner {
 	 * @throws ClassNotFoundException 类加载异常
 	 */
 	public static Set<Class<?>> scanPackage(final String packageName) throws IOException  {
-		final Set<Class<?>> classSet = new LinkedHashSet<>();
+
+		final HashSet<String> classNameSet = new HashSet<>();
+
 		// 替换包名中的点为文件路径分隔符
 		final String packagePath = packageName.replace('.', '/');
 		// 获取当前线程的类加载器（核心：适配不同运行环境）
@@ -46,18 +48,26 @@ public class PackageScanner {
 			if ("file".equals(protocol)) {
 				// 场景1：本地目录形式（如IDE中运行）
 				final String filePath = URLDecoder.decode(resource.getFile());
-				scanDirectoryClasses(packageName, filePath, classSet);
+
+				 scanDirectoryClasses(packageName, filePath, classNameSet);
 			} else if ("jar".equals(protocol)) {
 				// 场景2：JAR包形式（如打包后运行）
 				final JarURLConnection jarURLConnection = (JarURLConnection) resource.openConnection();
 				final JarFile jarFile = jarURLConnection.getJarFile();
 				try {
-					scanJarClasses(packageName, jarFile, classSet);
+					final HashSet<String> scanJarClasses = scanJarClasses(packageName, jarFile);
+					classNameSet.addAll(scanJarClasses);
 				} catch (final ClassNotFoundException e) {
 					e.printStackTrace();
 				}
 			}
 		}
+
+		final Set<Class<?>> classSet = 
+				classNameSet
+					.parallelStream()
+					.map(PackageScanner::load)
+					.collect(Collectors.toSet());
 		return classSet;
 	}
 
@@ -66,11 +76,11 @@ public class PackageScanner {
 	 *
 	 * @param packageName 包名
 	 * @param filePath    包对应的目录路径
-	 * @param classSet    存储结果的集合
+	 * @param classNameSet
 	 * @throws ClassNotFoundException 类加载异常
 	 */
-	private static void scanDirectoryClasses(final String packageName, final String filePath,
-			final Set<Class<?>> classSet) {
+	private static void scanDirectoryClasses(final String packageName, final String filePath, final HashSet<String> classNameSet) {
+
 		final File dir = new File(filePath);
 		// 过滤非目录/不可读的情况
 		if (!dir.exists() || !dir.isDirectory()) {
@@ -90,14 +100,13 @@ public class PackageScanner {
 			if (file.isDirectory()) {
 				// 递归扫描子目录（拼接子包名）
 				final String subPackageName = packageName + "." + fileName;
-				scanDirectoryClasses(subPackageName, file.getAbsolutePath(), classSet);
+
+				scanDirectoryClasses(subPackageName, file.getAbsolutePath(), classNameSet);
 			} else {
 				// 加载 .class 文件（去掉后缀，转为类名）
 				final String className = fileName.substring(0, fileName.length() - 6);
 				final String fullClassName = packageName + "." + className;
-				// 加载类（使用当前类加载器，避免类加载冲突）
-				final Class<?> clazz = load(fullClassName);
-				classSet.add(clazz);
+				classNameSet.add(fullClassName);
 			}
 		}
 	}
@@ -116,26 +125,33 @@ public class PackageScanner {
 	 *
 	 * @param packageName 包名
 	 * @param jarFile     JAR 文件对象
-	 * @param classSet    存储结果的集合
+	 * @return
 	 * @throws ClassNotFoundException 类加载异常
 	 */
-	private static void scanJarClasses(final String packageName, final JarFile jarFile, final Set<Class<?>> classSet)
+	private static HashSet<String> scanJarClasses(final String packageName, final JarFile jarFile)
 			throws ClassNotFoundException {
-		final String packagePath = packageName.replace('.', '/');
-		final Enumeration<JarEntry> entries = jarFile.entries();
 
-		while (entries.hasMoreElements()) {
-			final JarEntry jarEntry = entries.nextElement();
+		final String packagePath = packageName.replace('.', '/');
+
+		final HashSet<String> classNameSet = new HashSet<>();
+
+		jarFile.stream()
+		.parallel()
+		.forEach(jarEntry -> {
+
 			final String entryName = jarEntry.getName();
 
 			// 过滤：只处理当前包下的 .class 文件，且排除目录
 			if (entryName.startsWith(packagePath) && entryName.endsWith(".class") && !jarEntry.isDirectory()) {
 				// 把 JAR 路径转为类名（如：com/vo/User.class → com.vo.User）
 				final String className = entryName.replace('/', '.').substring(0, entryName.length() - 6);
-				final Class<?> clazz = Class.forName(className,false,Thread.currentThread().getContextClassLoader());
-				classSet.add(clazz);
+				synchronized (classNameSet) {
+					classNameSet.add(className);
+				}
 			}
-		}
+		});
+		
+		return classNameSet;
 	}
 
 }

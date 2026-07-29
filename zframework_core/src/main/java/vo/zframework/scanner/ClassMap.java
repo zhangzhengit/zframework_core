@@ -34,7 +34,8 @@ public class ClassMap {
 			return Collections.emptySet();
 		}
 
-		final Set<Class<?>> annoSet = clsSet.parallelStream()
+		final Set<Class<?>> annoSet = clsSet
+				.parallelStream()
 				.filter(cls -> cls.isAnnotationPresent(annotationClass))
 				.collect(Collectors.toSet());
 		return Collections.unmodifiableSet(annoSet);
