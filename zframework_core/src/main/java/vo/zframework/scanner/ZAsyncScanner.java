@@ -96,7 +96,6 @@ public class ZAsyncScanner {
 				.append(cls.getCanonicalName()).append(" target").append(tI).append(" = ")
 				.append("(").append(cls.getCanonicalName()).append(")")
 				.append(ZContext.class.getCanonicalName()).append(".getBean")
-//				.append("(").append(cls.getCanonicalName()).append(".class);");
 				.append("(\"").append(cls.getCanonicalName()).append(".original\");");
 
 				final Class<?>[] pt = method.getParameterTypes();
@@ -142,7 +141,7 @@ public class ZAsyncScanner {
 //		System.out.println("proxyZClass = ");
 //		System.out.println(proxyZClass.toString());
 
-		ZContext.addBean(IAsyncRoute.class, proxyZClass.newInstance());
+		ZContext.addBeanAsync(IAsyncRoute.class, () -> proxyZClass.newInstance());
 
 		return zcSet;
 	}

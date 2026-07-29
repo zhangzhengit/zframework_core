@@ -1,7 +1,6 @@
 package vo.zframework.event;
 
 import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -99,7 +98,9 @@ public final class ZApplicationEventPublisher {
 		// FIXME 2026年7月17日 06:20:52 zhangzhen : 从常量改为局部的了，应该可以继续改，先暂时这样吧
 		final ZHashBasedTable<Class<? extends ZApplicationEvent>, Method, Class<?>> table = new ZHashBasedTable<>();
 
-		for (final Class<?> cls : noVOZFClsSet) {
+		noVOZFClsSet
+		.parallelStream()
+		.forEach(cls ->{
 
 			final Method[] ms = cls.getDeclaredMethods();
 
@@ -109,17 +110,29 @@ public final class ZApplicationEventPublisher {
 					continue;
 				}
 
-				final Parameter[] ps = method.getParameters();
-				if (AU.isEmpty(ps) || (ps.length != 1) || !ps[0].getType().equals(eventListener.value())) {
+				if ((method.getParameterCount() != 1)
+				|| !method.getParameterTypes()[0].equals(eventListener.value())) {
 					throw new StartupException("@" + ZEventListener.class.getSimpleName() + "方法[" + cls.getSimpleName()
 							+ "." + method.getName() + "]必须有且只有一个[" + eventListener.value().getSimpleName() + "]参数");
 				}
 
-				table.put(eventListener.value(), method, cls);
-
+				synchronized (table) {
+					table.put(eventListener.value(), method, cls);
+				}
 			}
-		}
 
+		});
+
+		Thread.ofVirtual().start(() -> {
+			final ZClass proxyZClass = gProxyZClass(table);
+			ZContext.addBeanAsync(IEventRoute.class, () -> proxyZClass.newInstance());
+		});
+
+		executed = true;
+	}
+
+	private static ZClass gProxyZClass(
+			final ZHashBasedTable<Class<? extends ZApplicationEvent>, Method, Class<?>> table) {
 		final ZClass proxyZClass = new ZClass();
 		proxyZClass.setPackage1(new ZPackage("vo.zframework.generated"));
 		proxyZClass.setName("ZApplicationEventRoute");
@@ -184,9 +197,6 @@ public final class ZApplicationEventPublisher {
 							+ "}	");
 
 		routeMethod.setBody(routeBody.toString());
-
-		ZContext.addBeanAsync(IEventRoute.class, () -> proxyZClass.newInstance());
-
-		executed = true;
+		return proxyZClass;
 	}
 }

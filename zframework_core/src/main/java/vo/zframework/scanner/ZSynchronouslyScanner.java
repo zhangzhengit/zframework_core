@@ -177,7 +177,7 @@ public class ZSynchronouslyScanner {
 //		System.out.println("proxyZClass = ");
 //		System.out.println(proxyZClass.toString());
 
-		ZContext.addBean(ISynchronouslyRoute.class, proxyZClass.newInstance());
+		ZContext.addBeanAsync(ISynchronouslyRoute.class, () -> proxyZClass.newInstance());
 
 		return zcSet;
 	}

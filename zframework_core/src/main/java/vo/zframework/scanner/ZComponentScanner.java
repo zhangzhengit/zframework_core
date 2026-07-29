@@ -1,6 +1,5 @@
 package vo.zframework.scanner;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -40,12 +39,11 @@ public class ZComponentScanner {
 
 	public static void scanAndCreate(final ZApplicationStartupInfo startupInfo) {
 
-		final String[] pna = startupInfo.getPackageNameList().toArray(new String[0]);
+		final Map<String, ZClass> map =
+				ZAOPScaner.scanAndGenerateProxyClass(startupInfo.getPackageScanResult());
 
-		final Map<String, ZClass> map = ZAOPScaner.scanAndGenerateProxyClass(pna);
-
-		final Set<Class<?>> zcSet = new HashSet<>(ClassMap.scanPackageByAnnotation(ZComponent.class, pna));
-		zcSet.addAll(ClassMap.scanPackageByAnnotation(ZService.class, pna));
+		final Set<Class<?>> zcSet = new HashSet<>(ClassMap.scanPackageByAnnotation(ZComponent.class, startupInfo.getPackageNameList().toArray(new String[0])));
+		zcSet.addAll(ClassMap.scanPackageByAnnotation(ZService.class, startupInfo.getPackageNameList().toArray(new String[0])));
 
 		zcSet
 			.parallelStream()

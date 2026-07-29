@@ -130,7 +130,7 @@ public class ZCacheScanner {
 //		System.out.println("proxyZClass = ");
 //		System.out.println(proxyZClass.toString());
 
-		ZContext.addBean(beanClass, proxyZClass.newInstance());
+		ZContext.addBeanAsync(beanClass, () -> proxyZClass.newInstance());
 	}
 
 	private static int hZCacheable(final StringBuilder routeBody, int tI, final Class<?> cls, final Method method) {

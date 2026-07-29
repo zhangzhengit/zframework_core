@@ -56,14 +56,12 @@ public class ZAOPScaner {
 	}
 
 
-	public static Map<String, ZClass> scanAndGenerateProxyClass(final String... packageName) {
+	public static Map<String, ZClass> scanAndGenerateProxyClass(final Set<Class<?>> clsSet) {
 
-		final Map<String, ZClass> map = new HashMap<>(16, 1F);
-		final Set<Class<?>> cs = ClassMap.scanPackage(packageName);
-
-		final ZHashBasedTable<Class<?>, Method, List<Class<?>>> table = extractedC(cs);
+		final ZHashBasedTable<Class<?>, Method, List<Class<?>>> table = extractedC(clsSet);
 
 		final Set<Class<?>> rowKeySet = table.rowKeySet();
+		final Map<String, ZClass> map = new HashMap<>(16, 1F);
 
 		rowKeySet
 		.parallelStream()
