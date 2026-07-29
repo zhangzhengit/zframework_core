@@ -19,6 +19,7 @@ import vo.zframework.aop.ZAOPScaner;
 import vo.zframework.bean.ZSingleton;
 import vo.zframework.common.RU;
 import vo.zframework.common.STU;
+import vo.zframework.core.ZApplicationStartupInfo;
 import vo.zframework.core.ZContext;
 import vo.zframework.exception.BeanNotExistException;
 
@@ -31,10 +32,12 @@ import vo.zframework.exception.BeanNotExistException;
  */
 public class ZAutowiredScanner {
 
-	public static Set<Class<?>> inject(final Class<? extends Annotation> annoClass, final String... packageName) {
+	// FIXME 2026年7月30日 00:44:49 zhangzhen : 这个class也去掉，改为放在本方法内
+	public static Set<Class<?>> inject(final Class<? extends Annotation> annoClass,
+			final ZApplicationStartupInfo startupInfo) {
 
 		//		ZAutowiredScanner.LOG.info("开始扫描带有[{}]注解的类", annoClass.getCanonicalName());
-		final Set<Class<?>> zcSet = ClassMap.scanPackageByAnnotation(annoClass, packageName);
+		final Set<Class<?>> zcSet = ClassMap.scanPackageByAnnotation(annoClass, startupInfo.getPackageNameArray());
 
 		//		ZAutowiredScanner.LOG.info("带有[{}]注解的类个数={}", annoClass.getCanonicalName(), zcSet.size());
 
@@ -135,7 +138,7 @@ public class ZAutowiredScanner {
 		return name;
 	}
 
-	public static void after() {
+	public static void after(ZApplicationStartupInfo startupInfo) {
 		final Collection<Object> bs = ZContext.all().values();
 		for (final Object bean : bs) {
 

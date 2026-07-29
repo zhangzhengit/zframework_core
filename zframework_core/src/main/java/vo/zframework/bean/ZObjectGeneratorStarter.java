@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import vo.zframework.aop.ZAOPScaner;
 import vo.zframework.common.CU;
+import vo.zframework.core.ZApplicationStartupInfo;
 import vo.zframework.scanner.ClassMap;
 
 /**
@@ -33,9 +34,9 @@ public class ZObjectGeneratorStarter {
 		return glis;
 	}
 
-	public static void start(final String... packageName) {
+	public static void start(final ZApplicationStartupInfo startupInfo) {
 
-		final List<ZObjectGenerator> zogList = scan(packageName);
+		final List<ZObjectGenerator> zogList = scan(startupInfo.getPackageNameArray());
 		final List<ZObjectGenerator> zogList2 = zogList.stream()
 				.filter(o -> o.getClass() != ZDefaultObjectGenerator.class)
 				.collect(Collectors.toList());

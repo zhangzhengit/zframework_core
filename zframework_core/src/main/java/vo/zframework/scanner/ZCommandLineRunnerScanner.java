@@ -40,7 +40,7 @@ public class ZCommandLineRunnerScanner {
 		for (final Object bean : bs) {
 			final Class<?>[] is = bean.getClass().getInterfaces();
 			for (final Class<?> c : is) {
-				if(c.equals(ZCommandLineRunner.class)) {
+				if (c.equals(ZCommandLineRunner.class)) {
 					set.add(bean);
 				}
 			}

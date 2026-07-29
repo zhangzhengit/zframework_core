@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 import vo.zframework.bean.ZSingleton;
 import vo.zframework.common.AU;
 import vo.zframework.common.CU;
+import vo.zframework.core.ZApplicationStartupInfo;
 import vo.zframework.core.ZContext;
 import vo.zframework.http.Task;
 import vo.zframework.scanner.ClassMap;
@@ -29,9 +30,9 @@ public class ZControllerAdviceScanner {
 
 	public static final List<ZControllerAdviceBody> LIST = new ArrayList<>();
 
-	public static void scan(final String... packageName) {
+	public static void scan(final ZApplicationStartupInfo startupInfo) {
 
-		final Set<Class<?>> csset = ClassMap.scanPackage(packageName);
+		final Set<Class<?>> csset = ClassMap.scanPackage(startupInfo.getPackageNameArray());
 		final List<Class<?>> zcaList = csset.stream().filter(c -> c.isAnnotationPresent(ZControllerAdvice.class))
 				.collect(Collectors.toList());
 		for (final Class<?> cls : zcaList) {

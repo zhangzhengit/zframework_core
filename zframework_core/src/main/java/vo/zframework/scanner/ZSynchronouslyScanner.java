@@ -1,6 +1,5 @@
 package vo.zframework.scanner;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -15,6 +14,8 @@ import java.util.stream.Collectors;
 import vo.log.core.ZLog2;
 import vo.zframework.anno.ZAOP;
 import vo.zframework.anno.ZAutowired;
+import vo.zframework.anno.ZComponent;
+import vo.zframework.anno.ZService;
 import vo.zframework.anno.ZSynchronously;
 import vo.zframework.aop.AOPParameter;
 import vo.zframework.aop.ZAOPScaner;
@@ -22,6 +23,7 @@ import vo.zframework.bean.ZSingleton;
 import vo.zframework.common.AU;
 import vo.zframework.common.RU;
 import vo.zframework.common.STU;
+import vo.zframework.core.ZApplicationStartupInfo;
 import vo.zframework.core.ZContext;
 import vo.zframework.exception.BeanNotExistException;
 import vo.zframework.exception.StartupException;
@@ -41,47 +43,31 @@ public class ZSynchronouslyScanner {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
-	/**
-	 * @param annoClass
-	 * @param packageName
-	 * @return
-	 */
-	public static Set<Class<?>> scan(final Class<? extends Annotation>[] annoClass,
-			final String... packageName) {
+	public static Set<Class<?>> scan(final ZApplicationStartupInfo statupInfo) {
 
 		// FIXME 2026年5月4日 09:02:20 zhangzhen : 这个方法写的太乱了，记得整理
 		// 其他所有的报错信息也都记得改，改为统一的提示格式
 
 //		LOG.info("开始扫描带有[{}]注解的类", annoClass.getCanonicalName());
-		final Set<Class<?>> zcSet= new HashSet<>();
+		final Set<Class<?>> zcSet= new HashSet<>(ClassMap.scanPackageByAnnotation(ZComponent.class,
+				statupInfo.getPackageNameArray()));
 
-		for (final Class<? extends Annotation> ac : annoClass) {
-			final Set<Class<?>> t = ClassMap.scanPackageByAnnotation(ac,
-					packageName);
-			zcSet.addAll(t);
-		}
-
+		zcSet.addAll(ClassMap.scanPackageByAnnotation(ZService.class,
+				statupInfo.getPackageNameArray()));
 
 		final ZClass proxyZClass = new ZClass();
 		proxyZClass.setPackage1(new ZPackage("vo.zframework.generated"));
 		proxyZClass.setName("ZSynchronouslyRoute");
 		proxyZClass.setImplementsSet(Set.of(ISynchronouslyRoute.class.getCanonicalName()));
 
-//		proxyZClass.addField(new ZField(APIRouteR.class.getName(), "MATCHED",
-//				"new " + APIRouteR.class.getCanonicalName() + "(true);"));
-
 		final ZMethod routeMethod = new ZMethod();
 		routeMethod.setName("route");
 		routeMethod.setThrowsE(List.of(Exception.class.getCanonicalName()));
 		routeMethod.setReturnType(Object.class.getCanonicalName());
 
-//		routeMethod.setBodyReturn("return new " + APIRouteR.class.getCanonicalName()
-//				+ "(false);");
-
 		routeMethod.setMethodArgList(List.of(new ZMethodArg(AOPParameter.class.getCanonicalName(), "parameter")));
 
 		proxyZClass.setMethodSet(Set.of(routeMethod));
-
 
 
 		final StringBuilder routeBody = new StringBuilder();
@@ -146,7 +132,6 @@ public class ZSynchronouslyScanner {
 				.append(cls.getCanonicalName()).append(" target").append(tI).append(" = ")
 				.append("(").append(cls.getCanonicalName()).append(")")
 				.append(ZContext.class.getCanonicalName()).append(".getBean")
-//				.append("(").append(cls.getCanonicalName()).append(".class);");
 				.append("(\"").append(cls.getCanonicalName()).append(".original\");");
 
 				final Class<?>[] pt = method.getParameterTypes();
@@ -180,9 +165,6 @@ public class ZSynchronouslyScanner {
 					routeBody.append("break;");
 				}
 
-//				System.out.println("@ZS.class = " + cls
-//						+ "\t" + "method = " + method.getName()
-//						);
 			}
 		}
 
@@ -196,7 +178,6 @@ public class ZSynchronouslyScanner {
 //		System.out.println(proxyZClass.toString());
 
 		ZContext.addBean(ISynchronouslyRoute.class, proxyZClass.newInstance());
-
 
 		return zcSet;
 	}

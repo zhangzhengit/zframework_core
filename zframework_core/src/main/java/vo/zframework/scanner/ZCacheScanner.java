@@ -32,8 +32,11 @@ import java.util.stream.Collectors;
 import vo.zframework.anno.ZCacheEvict;
 import vo.zframework.anno.ZCachePut;
 import vo.zframework.anno.ZCacheable;
+import vo.zframework.anno.ZComponent;
+import vo.zframework.anno.ZService;
 import vo.zframework.aop.AOPParameter;
 import vo.zframework.common.RU;
+import vo.zframework.core.ZApplicationStartupInfo;
 import vo.zframework.core.ZContext;
 import vo.zframework.route.IAOPRoute;
 import vo.zframework.route.ICacheEvictRoute;
@@ -52,18 +55,15 @@ import vo.zframework.zclass.ZPackage;
  */
 public class ZCacheScanner {
 
-	public static Set<Class<?>> scan(final Class<? extends Annotation>[] annoClass,
-			final String... packageName) {
+	public static Set<Class<?>> scan(final ZApplicationStartupInfo startupInfo) {
 
 //		LOG.info("开始扫描带有[{}]注解的类", annoClass.getCanonicalName());
 
-		final Set<Class<?>> zcSet = new HashSet<>();
+		final Set<Class<?>> zcSet = new HashSet<>(ClassMap.scanPackageByAnnotation(ZComponent.class,
+				startupInfo.getPackageNameArray()));
 
-		for (final Class<? extends Annotation> ac : annoClass) {
-			final Set<Class<?>> t = ClassMap.scanPackageByAnnotation(ac,
-					packageName);
-			zcSet.addAll(t);
-		}
+		zcSet.addAll(ClassMap.scanPackageByAnnotation(ZService.class,
+				startupInfo.getPackageNameArray()));
 
 //		final List<Runnable> rl = List.of(
 //				() -> gCacheProxyZClass(zcSet, ZCacheable.class, "ZCacheableRoute", ICacheableRoute.class,

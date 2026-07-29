@@ -12,6 +12,7 @@ import java.util.regex.Pattern;
 import vo.zframework.anno.ZOrder;
 import vo.zframework.cache.ZRC;
 import vo.zframework.common.CU;
+import vo.zframework.core.ZApplicationStartupInfo;
 import vo.zframework.core.ZContext;
 import vo.zframework.exception.StartupException;
 
@@ -28,9 +29,10 @@ public class ZHandlerInterceptorScanner {
 
 	/**
 	 * 扫描 ZHandlerInterceptor 的实现类
+	 * @param startupInfo TODO
 	 *
 	 */
-	public static void scan() {
+	public static void scan(ZApplicationStartupInfo startupInfo) {
 
 		final Collection<Object> values = ZContext.all().values();
 		final HashSet<Integer> ovSet = new HashSet<>();

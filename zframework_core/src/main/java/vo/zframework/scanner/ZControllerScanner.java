@@ -23,6 +23,7 @@ import vo.zframework.bean.ZSingleton;
 import vo.zframework.common.AU;
 import vo.zframework.common.STU;
 import vo.zframework.configuration.properties.ServerConfigurationProperties;
+import vo.zframework.core.ZApplicationStartupInfo;
 import vo.zframework.core.ZContext;
 import vo.zframework.enums.BeanModeEnum;
 import vo.zframework.enums.CTEnum;
@@ -62,28 +63,30 @@ public class ZControllerScanner {
 		HTTP_METHOD_SET.add(ZRequestMapping.class);
 	}
 
-	public static Set<Class<?>> scanAndCreateObject(final String... packageName) {
+	public static Set<Class<?>> scanAndCreateObject(final ZApplicationStartupInfo startupInfo) {
 		//		ZControllerScanner.LOG.info("开始扫描带有[{}]的类", ZController.class.getCanonicalName());
-		final Set<Class<?>> zcSet1 = ClassMap.scanPackageByAnnotation(ZRestController.class, packageName);
-		final Set<Class<?>> cSet = ClassMap.scanPackageByAnnotation(ZController.class, packageName);
+		final Set<Class<?>> restControllerSet = ClassMap.scanPackageByAnnotation(ZRestController.class, startupInfo.getPackageNameArray());
+		final Set<Class<?>> controllerSet = ClassMap.scanPackageByAnnotation(ZController.class, startupInfo.getPackageNameArray());
 		//		ZControllerScanner.LOG.info("带有[{}]的类个数={}", ZController.class.getCanonicalName(), zcSet.size());
 
-		for (final Class<?> cc : cSet) {
-			for (final Class<?> zcc : zcSet1) {
-				if (zcc == cc) {
-					throw new StartupException(
-							"不允许 @" + ZRestController.class.getName()
-							+ " 和 @" + ZController.class.getName()
-							+ " 同时使用,class = " + cc
-					);
-				}
-			}
+		final Set<Class<?>> rcR = new HashSet<>(restControllerSet);
+		final Set<Class<?>> cR = new HashSet<>(controllerSet);
+
+		rcR.retainAll(cR);
+		if(rcR.size() > 0) {
+			final String cn = rcR.stream().map(Class::getCanonicalName).collect(Collectors.joining(","));
+			throw new StartupException(
+					"不允许 @" + ZRestController.class.getName()
+					+ " 和 @" + ZController.class.getName()
+					+ " 同时使用,class = " + cn
+			);
 		}
 
-		final Set<Class<?>> zcSet = new HashSet<>(zcSet1);
-		zcSet.addAll(cSet);
-
 		final ServerConfigurationProperties serverConfiguration = ZSingleton.getSingletonByClass(ServerConfigurationProperties.class);
+
+
+		final Set<Class<?>> zcSet = new HashSet<>(restControllerSet);
+		zcSet.addAll(controllerSet);
 
 		for (final Class<?> cls : zcSet) {
 			final boolean staticControllerEnable = serverConfiguration.getStaticControllerEnable();

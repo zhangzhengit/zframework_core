@@ -23,6 +23,7 @@ import vo.zframework.anno.ZValue;
 import vo.zframework.common.CU;
 import vo.zframework.common.RU;
 import vo.zframework.common.ZHashBasedTable;
+import vo.zframework.core.ZApplicationStartupInfo;
 import vo.zframework.core.ZContext;
 import vo.zframework.validator.ZValidator;
 
@@ -40,11 +41,11 @@ public class ZValueScanner {
 
 	private final static ZHashBasedTable<String, Field, Object> valueTable = new ZHashBasedTable<>();
 
-	public static void inject(final String... packageName) {
-		final Set<Class<?>> zcSet = ClassMap.scanPackageByAnnotation(ZComponent.class, packageName);
-		final Set<Class<?>> zc2Set = ClassMap.scanPackageByAnnotation(ZRestController.class, packageName);
-		final Set<Class<?>> zc3Set = ClassMap.scanPackageByAnnotation(ZService.class, packageName);
-		final Set<Class<?>> zc4Set = ClassMap.scanPackageByAnnotation(ZController.class, packageName);
+	public static void inject(final ZApplicationStartupInfo statupInfo) {
+		final Set<Class<?>> zcSet = ClassMap.scanPackageByAnnotation(ZComponent.class, statupInfo.getPackageNameArray());
+		final Set<Class<?>> zc2Set = ClassMap.scanPackageByAnnotation(ZRestController.class, statupInfo.getPackageNameArray());
+		final Set<Class<?>> zc3Set = ClassMap.scanPackageByAnnotation(ZService.class, statupInfo.getPackageNameArray());
+		final Set<Class<?>> zc4Set = ClassMap.scanPackageByAnnotation(ZController.class, statupInfo.getPackageNameArray());
 
 		final List<Class<?>> clist = new ArrayList<>(zcSet.size() + zc2Set.size() + zc3Set.size() + zc4Set.size());
 		clist.addAll(zcSet);

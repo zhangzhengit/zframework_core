@@ -1,6 +1,5 @@
 package vo.zframework.scanner;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
@@ -11,9 +10,12 @@ import java.util.stream.Collectors;
 
 import vo.log.core.ZLog2;
 import vo.zframework.anno.ZAsync;
+import vo.zframework.anno.ZComponent;
+import vo.zframework.anno.ZService;
 import vo.zframework.aop.AOPParameter;
 import vo.zframework.aop.ZAsyncRV;
 import vo.zframework.common.RU;
+import vo.zframework.core.ZApplicationStartupInfo;
 import vo.zframework.core.ZContext;
 import vo.zframework.exception.StartupException;
 import vo.zframework.route.IAsyncRoute;
@@ -34,24 +36,13 @@ public class ZAsyncScanner {
 
 	private static final Class<ZAsync> TYPE = ZAsync.class;
 
-	/**
-	 * @param annoClass
-	 * @param packageName
-	 * @return
-	 */
-	public static Set<Class<?>> scan(final Class<? extends Annotation>[] annoClass,
-			final String... packageName) {
+	public static Set<Class<?>> scan(final ZApplicationStartupInfo startupInfo) {
 
 //		LOG.info("开始扫描带有[{}]注解的类", annoClass.getCanonicalName());
 
-		final Set<Class<?>> zcSet= new HashSet<>();
+		final Set<Class<?>> zcSet= new HashSet<>(ClassMap.scanPackageByAnnotation(ZComponent.class, startupInfo.getPackageNameArray()));
 
-		for (final Class<? extends Annotation> ac : annoClass) {
-			final Set<Class<?>> t = ClassMap.scanPackageByAnnotation(ac,
-					packageName);
-			zcSet.addAll(t);
-		}
-
+		zcSet.addAll(ClassMap.scanPackageByAnnotation(ZService.class, startupInfo.getPackageNameArray()));
 
 		final ZClass proxyZClass = new ZClass();
 		proxyZClass.setPackage1(new ZPackage("vo.zframework.generated"));

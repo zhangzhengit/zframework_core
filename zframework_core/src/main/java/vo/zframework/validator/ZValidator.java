@@ -29,6 +29,7 @@ import vo.zframework.bean.ZSingleton;
 import vo.zframework.common.RU;
 import vo.zframework.common.STU;
 import vo.zframework.configuration.properties.ZConfigurationProperties;
+import vo.zframework.core.ZApplicationStartupInfo;
 import vo.zframework.enums.HttpStatusEnum;
 import vo.zframework.exception.TypeNotSupportedExcpetion;
 import vo.zframework.exception.ValidatedException;
@@ -777,12 +778,11 @@ public class ZValidator {
 
 	/**
 	 * 程序启动时调用此方法，扫描所有带有校验注解的字段，来判断此字段是否支持
-	 *
-	 * @param packageName
+	 * @param startupInfo
 	 *
 	 */
-	public static void start(final String... packageName) {
-		final Set<Class<?>> clsSet = ClassMap.scanPackage(packageName);
+	public static void start(final ZApplicationStartupInfo startupInfo) {
+		final Set<Class<?>> clsSet = startupInfo.getPackageScanResult();
 
 		final List<Class<?>> list = clsSet.parallelStream()
 				.filter(cls -> BAOHAN.contains(cls.getPackageName()))

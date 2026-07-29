@@ -13,11 +13,14 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import vo.zframework.anno.ZAutowired;
+import vo.zframework.anno.ZComponent;
+import vo.zframework.anno.ZService;
 import vo.zframework.aop.ZAOPProxyClass;
 import vo.zframework.aop.ZAOPScaner;
 import vo.zframework.bean.ZObjectGeneratorStarter;
 import vo.zframework.common.RU;
 import vo.zframework.common.STU;
+import vo.zframework.core.ZApplicationStartupInfo;
 import vo.zframework.core.ZContext;
 import vo.zframework.validator.ZValidated;
 import vo.zframework.validator.ZValidator;
@@ -35,15 +38,14 @@ import vo.zframework.zclass.ZPackage;
  */
 public class ZComponentScanner {
 
-	public static void scanAndCreate(final Class<? extends Annotation>[] annotationClass, final String... packageName) {
+	public static void scanAndCreate(final ZApplicationStartupInfo startupInfo) {
 
-		final Map<String, ZClass> map = ZAOPScaner.scanAndGenerateProxyClass(packageName);
+		final String[] pna = startupInfo.getPackageNameList().toArray(new String[0]);
 
-		final Set<Class<?>> zcSet = new HashSet<>();
-		for (final Class<? extends Annotation> a : annotationClass) {
-			final Set<Class<?>> t = ClassMap.scanPackageByAnnotation(a, packageName);
-			zcSet.addAll(t);
-		}
+		final Map<String, ZClass> map = ZAOPScaner.scanAndGenerateProxyClass(pna);
+
+		final Set<Class<?>> zcSet = new HashSet<>(ClassMap.scanPackageByAnnotation(ZComponent.class, pna));
+		zcSet.addAll(ClassMap.scanPackageByAnnotation(ZService.class, pna));
 
 		zcSet
 			.parallelStream()
