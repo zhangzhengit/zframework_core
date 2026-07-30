@@ -15,10 +15,10 @@ import java.util.stream.Collectors;
 import vo.zframework.anno.ZComponent;
 import vo.zframework.common.AU;
 import vo.zframework.common.ZHashBasedTable;
+import vo.zframework.core.ZApplicationStartupInfo;
 import vo.zframework.core.ZContext;
 import vo.zframework.exception.StartupException;
 import vo.zframework.route.IEventRoute;
-import vo.zframework.scanner.ClassMap;
 import vo.zframework.zclass.ZClass;
 import vo.zframework.zclass.ZMethod;
 import vo.zframework.zclass.ZMethodArg;
@@ -79,13 +79,13 @@ public final class ZApplicationEventPublisher {
 		}
 	}
 
-	public synchronized static void start(final String... packageName) {
+	public synchronized static void start(final ZApplicationStartupInfo startupInfo) {
 
 		if (executed) {
 			return;
 		}
 
-		final Set<Class<?>> csSet = ClassMap.scanPackage(packageName);
+		final Set<Class<?>> csSet = startupInfo.getPackageScanResult();
 
 		final Set<Class<?>> noVOZFClsSet = csSet
 			.parallelStream()
