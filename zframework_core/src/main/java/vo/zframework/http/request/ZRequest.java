@@ -42,6 +42,8 @@ public class ZRequest {
 
 	public static final String KEEP_ALIVE_CAMELCASE = "Keep-Alive";
 	public static final String KEEP_ALIVE_LOWERCASE = ConnectionEnum.KEEP_ALIVE.getValue();
+	public static final String HOST_LOWERCASE = HeaderEnum.HOST.getName().toLowerCase();
+
 	public static final int KEEP_ALIVE_LENGTH = KEEP_ALIVE_CAMELCASE.length();
 	public static final String HTTP_11 = "HTTP/1.1";
 	public static final byte[] HTTP_11_BYTES = HTTP_11.getBytes();
@@ -191,7 +193,12 @@ public class ZRequest {
 	}
 
 	public String getHost() {
-		return this.getHeader(HeaderEnum.HOST.getName());
+		final String Host = this.getHeader(HeaderEnum.HOST.getName());
+		if (Host != null) {
+			return Host;
+		}
+
+		return this.getHeader(HOST_LOWERCASE);
 	}
 
 	public String getMethod() {
