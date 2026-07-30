@@ -34,7 +34,6 @@ import vo.zframework.enums.HttpStatusEnum;
 import vo.zframework.exception.TypeNotSupportedExcpetion;
 import vo.zframework.exception.ValidatedException;
 import vo.zframework.http.Task;
-import vo.zframework.scanner.ClassMap;
 import vo.zframework.scanner.ZConfigurationPropertiesScanner;
 
 /**
@@ -629,6 +628,7 @@ public class ZValidator {
 
 	public static void validatedAll(final Object object, final Field field) throws Exception {
 
+
 		ZValidator.validatedZNotNull(object, field);
 		ZValidator.validatedZNotEmpty(object, field);
 		ZValidator.validatedZLength(object, field);
@@ -795,46 +795,45 @@ public class ZValidator {
 			Arrays.stream(fs)
 			.parallel()
 			.forEach(f -> {
-
-				final Annotation[] as = f.getDeclaredAnnotations();
-				for (final Annotation annotation : as) {
-					final Class<? extends Annotation> annotationType = annotation.annotationType();
-					if (!ZValidator.isValidatorAnnotation(annotationType)) {
-						continue;
-					}
-
-					if (annotationType == ZNotNull.class) {
-						// @ZNotNull 不用校验，因为它支持所有类型
-					} else if ((annotationType == ZNotEmtpy.class) && !ZValidator.isZNotEmptySupported(f.getType())) {
-						ZValidator.throwTypeNotSupportedExcpetion(cls, ZNotEmtpy.class, f);
-					} else if ((annotationType == ZMin.class) && !ZValidator.isZMinZMaxSupported(f.getType())) {
-						ZValidator.throwTypeNotSupportedExcpetion(cls, ZMin.class, f);
-					} else if ((annotationType == ZMax.class) && !ZValidator.isZMinZMaxSupported(f.getType())) {
-						ZValidator.throwTypeNotSupportedExcpetion(cls, ZMax.class, f);
-					} else if ((annotationType == ZLength.class) && !ZValidator.isString(f.getType())) {
-						ZValidator.throwTypeNotSupportedExcpetion(cls, ZLength.class, f);
-					} else if ((annotationType == ZStartWith.class) && !ZValidator.isString(f.getType())) {
-						ZValidator.throwTypeNotSupportedExcpetion(cls, ZStartWith.class, f);
-					} else if ((annotationType == ZEndsWith.class) && !ZValidator.isString(f.getType())) {
-						ZValidator.throwTypeNotSupportedExcpetion(cls, ZEndsWith.class, f);
-					} else if ((annotationType == ZPositive.class) && !ZValidator.isZMinZMaxSupported(f.getType())) {
-						ZValidator.throwTypeNotSupportedExcpetion(cls, ZPositive.class, f);
-					} else if (annotationType == ZCustom.class) {
-
-						if (!ZValidator.isZCustomSupported(f.getType())) {
-							ZValidator.throwTypeNotSupportedExcpetion(cls, ZCustom.class, f);
-						}
-
-						final Class<? extends ZCustomValidator> customClass = f.getAnnotation(ZCustom.class).cls();
-						try {
-							ZSingleton.getSingletonByClass(customClass);
-						} catch (final Exception e) {
-							final String message = Task.gExceptionMessage(e);
-							throw new ValidatedException("@" + ZCustom.class.getSimpleName() + ".cls 指定的类型["
-									+ customClass + "]初始化异常,message=" + message,HttpStatusEnum.HTTP_400.getStatus());
-						}
-					}
+				// 2
+				// @ZNotNull 不用校验，因为它支持所有类型
+				//	ZNotNull zNotNull = f.getAnnotation(ZNotNull.class);
+				if ((f.getAnnotation(ZNotEmtpy.class) !=null) && !ZValidator.isZNotEmptySupported(f.getType())) {
+					ZValidator.throwTypeNotSupportedExcpetion(cls, ZNotEmtpy.class, f);
 				}
+
+				if ((f.getAnnotation(ZMin.class) !=null) && !ZValidator.isZMinZMaxSupported(f.getType())) {
+					ZValidator.throwTypeNotSupportedExcpetion(cls, ZMin.class, f);
+				}
+				if ((f.getAnnotation(ZMax.class) !=null) && !ZValidator.isZMinZMaxSupported(f.getType())) {
+					ZValidator.throwTypeNotSupportedExcpetion(cls, ZMax.class, f);
+				}
+				if ((f.getAnnotation(ZLength.class) !=null) && !ZValidator.isString(f.getType())) {
+					ZValidator.throwTypeNotSupportedExcpetion(cls, ZLength.class, f);
+				}
+				if ((f.getAnnotation(ZStartWith.class) !=null) && !ZValidator.isString(f.getType())) {
+					ZValidator.throwTypeNotSupportedExcpetion(cls, ZStartWith.class, f);
+				}
+				if ((f.getAnnotation(ZEndsWith.class) !=null) && !ZValidator.isString(f.getType())) {
+					ZValidator.throwTypeNotSupportedExcpetion(cls, ZEndsWith.class, f);
+				}
+				if ((f.getAnnotation(ZPositive.class) !=null) && !ZValidator.isZMinZMaxSupported(f.getType())) {
+					ZValidator.throwTypeNotSupportedExcpetion(cls, ZPositive.class, f);
+				}
+				final ZCustom zc = f.getAnnotation(ZCustom.class);
+				if ((zc !=null) && !ZValidator.isZCustomSupported(f.getType())) {
+
+					final Class<? extends ZCustomValidator> customClass = zc.cls();
+					try {
+						ZSingleton.getSingletonByClass(customClass);
+					} catch (final Exception e) {
+						final String message = Task.gExceptionMessage(e);
+						throw new ValidatedException("@" + ZCustom.class.getSimpleName() + ".cls 指定的类型["
+								+ customClass + "]初始化异常,message=" + message,HttpStatusEnum.HTTP_400.getStatus());
+					}
+
+				}
+				// FIXME 2026年7月30日 17:04:48 zhangzhen : 似乎之前忘了 @ZUnique ?
 
 			});
 		});
