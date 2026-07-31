@@ -1,0 +1,946 @@
+package vo.vortex.http.request;
+
+import java.io.UnsupportedEncodingException;
+import java.net.InetSocketAddress;
+import java.net.URLDecoder;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import vo.vortex.common.AU;
+import vo.vortex.common.BA;
+import vo.vortex.common.CU;
+import vo.vortex.common.STU;
+import vo.vortex.configuration.properties.ServerConfigurationProperties;
+import vo.vortex.core.ZContext;
+import vo.vortex.enums.AcceptEncodingEnum;
+import vo.vortex.enums.ConnectionEnum;
+import vo.vortex.enums.HeaderEnum;
+import vo.vortex.http.ArrayRange;
+import vo.vortex.http.TF;
+import vo.vortex.http.Task;
+import vo.vortex.http.ZConnectionTL;
+import vo.vortex.http.ZCookie;
+import vo.vortex.http.ZServer;
+import vo.vortex.http.ZSession;
+import vo.vortex.http.ZSessionMap;
+
+/**
+ * 表示http 的请求信息
+ *
+ * @author zhangzhen
+ * @date 2023年6月12日
+ *
+ */
+// FIXME 2025年12月20日 07:40:29 zhangzhen :  写功能：请求来了，如果带来了ZSESSIONID并且存在
+// 则活跃一下，让存活时间重新计算
+public class ZRequest {
+
+	public static final String KEEP_ALIVE_CAMELCASE = "Keep-Alive";
+	public static final String KEEP_ALIVE_LOWERCASE = ConnectionEnum.KEEP_ALIVE.getValue();
+	public static final String HOST_LOWERCASE = HeaderEnum.HOST.getName().toLowerCase();
+
+	public static final int KEEP_ALIVE_LENGTH = KEEP_ALIVE_CAMELCASE.length();
+	public static final String HTTP_11 = "HTTP/1.1";
+	public static final byte[] HTTP_11_BYTES = HTTP_11.getBytes();
+	public static final String BOUNDARY = "boundary=";
+	private static final ZCookie[] EMPTY_ZCOOKIE = {};
+	private static final String HEADER_PARSED_NO_VALUE = "\u0000" + "\0" + "PARSED_NO_VALUE" + UUID.randomUUID();
+	private static final int HEADER_PARSED_NO_VALUE_LENGTH = HEADER_PARSED_NO_VALUE.length();
+	public static final ServerConfigurationProperties SERVERCONFIGURATIONPROPERTIES = ZContext
+			.getBean(ServerConfigurationProperties.class);
+	public static final int requestHeaderSizeLimit = SERVERCONFIGURATIONPROPERTIES.getRequestHeaderSizeLimit();
+	public static final boolean isResponseZSessionId = SERVERCONFIGURATIONPROPERTIES.isResponseZSessionId();
+
+	/**
+	 * 必须解析的头的个数
+	 */
+	public static final int isNPHNL = 6;
+
+	/**
+	 * parseHeader方法需要解析的header个数
+	 */
+	public static final int parseHeader_requiredHeaderCount = isNPHNL + (isResponseZSessionId ? 1 : 0);
+
+	public static final String MULTIPART_FORM_DATA = "multipart/form-data";
+
+	// -------------------------------------------------------------------------------------------------
+
+	/**
+	 * 一个http请求的完整byte[]
+	 */
+	private final byte[] dataRawArray;
+
+	/**
+	 * 标记了 dataRawArray 里的每个header的起止位置
+	 */
+	private final List<ArrayRange> arList;
+
+	/**
+	 * path中?后面的部分
+	 */
+	private BA queryStringBA;
+	private String queryStringCache;
+
+	private ZCookie zsessionidCache = ZCookie.UNINITIALIZED;
+
+	private TF tf;
+
+	/**
+	 * 请求方法 byte[]
+	 */
+	private byte[] methodNameBytes;
+
+	private String methodCache;
+
+	/**
+	 * 完整的requestURI，如：/hello?name=z&age=20
+	 */
+	private String requestURI;
+
+	/**
+	 * 简单的path，不含参数，如：/hello
+	 */
+	private String path;
+
+	private ArrayList<RequestParam> params;
+
+	/**
+	 * http版本
+	 */
+	private String version;
+
+	/**
+	 * 请求头,如： Accept-Encoding: gzip, deflate
+	 */
+	// FIXME 2026年6月11日 19:52:40 zhangzhen : 解析和匹配时，要不要处理为大小写统一风格？
+	private final Map<String, String> headerMap;
+
+	/**
+	 * http完整的请求信息
+	 */
+	private byte[] originalRequestBytes;
+
+	/**
+	 * http中body部分
+	 */
+	private byte[] body;
+
+	/**
+	 * 客户端IP
+	 */
+	private String clientIp;
+
+	/**
+	 * 暂存值
+	 */
+	private ZCookie[] cookies;
+
+	/**
+	 * 暂存值
+	 */
+	private String userAgent = null;
+
+	/**
+	 * 对 isKeepAlive方法结果的暂存
+	 * -1 未设置过 0 否 1 是
+	 */
+	private volatile int keepAlive = -1;
+
+	public boolean isSupportZSTD() {
+		return this.supportCompression(AcceptEncodingEnum.ZSTD);
+	}
+
+	public boolean isSupportBR() {
+		return this.supportCompression(AcceptEncodingEnum.BR);
+	}
+
+	public boolean isSupportDEFLATE() {
+		return this.supportCompression(AcceptEncodingEnum.DEFLATE);
+	}
+
+	public boolean isSupportGZIP() {
+		return this.supportCompression(AcceptEncodingEnum.GZIP);
+	}
+
+	private boolean supportCompression(final AcceptEncodingEnum aeEnum) {
+		final String ae = this.getAcceptEncoding();
+		if (STU.isEmpty(ae)) {
+			return false;
+		}
+
+		// FIXME 2026年6月20日 15:53:29 zhangzhen : 下面会生成多个String成为内存热点，
+		// 但是似乎只能这样，使用byte[]貌似不好处理，连if ((ae.indexOf(aeEnum.getValue()) > -1)
+		//	 || (ae.toLowerCase().indexOf(aeEnum.getValue()) > -1)) 也不行，虽然简单,
+		// 但只能匹配正规的合法的且严格小写的AcceptEncoding
+		// 还会有误判，如恶意请求的agzipb也会误判为gzip，虽无安全问题，但也多做了无用的压缩
+		final String[] array = ae.split(",");
+		for (final String a : array) {
+			if (aeEnum.getValue().equals(a)
+			 ||	aeEnum.getValue().equals(a.trim())
+			 ||	aeEnum.getValue().equals(a.toLowerCase())
+			 ||	aeEnum.getValue().equals(a.trim().toLowerCase())
+					) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	public String getHost() {
+		final String Host = this.getHeader(HeaderEnum.HOST.getName());
+		if (Host != null) {
+			return Host;
+		}
+
+		return this.getHeader(HOST_LOWERCASE);
+	}
+
+	public String getMethod() {
+		if (this.methodCache == null) {
+			this.methodCache = new String(this.methodNameBytes);
+		}
+
+		return this.methodCache;
+	}
+
+	public byte[] getBody() {
+		return this.body;
+	}
+
+	public int getServerPort() {
+
+		final String host = this.getHeader(HeaderEnum.HOST.getName());
+
+		final int i = host.indexOf(STU.COLON);
+		if (i > -1) {
+			final String port = host.substring(i + 1);
+			return Integer.parseInt(port);
+		}
+
+		return ZServer.DEFAULT_HTTP_PORT;
+	}
+
+	public String getRequestURL() {
+		return this.getHost() + this.getRequestURI();
+	}
+
+	public String getRequestURI() {
+		return this.requestURI;
+	}
+
+	/**
+	 * 获取Content-Type值
+	 *
+	 * @return
+	 */
+	public String getContentType() {
+		return this.getHeader(HeaderEnum.CONTENT_TYPE.getName());
+	}
+
+	/**
+	 * 获取Content-Type为multipart/form-data时的boundary值，非multipart/form-data则返回null
+	 * 如：
+	 * 		Content-Type: multipart/form-data; boundary=----WebKitFormBoundaryk6aoPrFv24xMcfUf
+	 * 则本方法返回内容为：
+	 * 		----WebKitFormBoundaryk6aoPrFv24xMcfUf
+	 *
+	 * @return
+	 */
+	public String getBoundary() {
+		if (!this.isContentTypeFormData()) {
+			return null;
+		}
+
+		final String ct = this.getHeader(HeaderEnum.CONTENT_TYPE.getName());
+		final int i = ct.indexOf(BOUNDARY);
+		if (i > -1) {
+			return ct.substring(i + BOUNDARY.length());
+		}
+
+		return null;
+	}
+
+	/**
+	 * 判断Content-Type是否multipart/form-data
+	 *
+	 * @return
+	 */
+	public boolean isContentTypeFormData() {
+		final String ct = this.getContentType();
+		return ct == null ? false : ct.contains(MULTIPART_FORM_DATA);
+	}
+
+	public ZSession getSession() {
+		return this.getSession(true);
+	}
+
+	/**
+	 * 获取Session，如需写入到Cookie，需要自己处理 ZResponse.cookie.write................
+	 *
+	 * @param createIfAbsent
+	 * @return
+	 */
+	public ZSession getSession(final boolean createIfAbsent) {
+		if (this.zsessionidCache == ZCookie.UNINITIALIZED) {
+			this.zsessionidCache = this.getCookie(HeaderEnum.Z_SESSION_ID.getName());
+		}
+
+		if (this.zsessionidCache == null) {
+			return createIfAbsent ? ZRequest.newSession() : null;
+		}
+
+		final ZSession session = ZSessionMap.get(this.zsessionidCache.getValue());
+		return session != null ? session : (createIfAbsent ? ZRequest.newSession() : null);
+	}
+
+	public static ZSession newSession() {
+		return new ZSession();
+	}
+
+	public long getContentLength() {
+		final String s = this.getHeader(HeaderEnum.CONTENT_LENGTH.getName());
+		return s == null ? -1 : Long.parseLong(s);
+	}
+
+	public ZCookie getCookie(final String name) {
+		return this.gcn(name);
+	}
+
+	public ZCookie[] getCookies() {
+
+		if (this.cookies == null) {
+			this.cookies = this.gcs();
+		}
+
+		return this.cookies;
+	}
+
+	private ZCookie gcn(final String cookieName) {
+		final String cookieString = this.getHeader(HeaderEnum.COOKIE.getName());
+		if (STU.isEmpty(cookieString)) {
+			return null;
+		}
+
+		final int nI = cookieString.indexOf(cookieName);
+		if (nI <= -1) {
+			return null;
+		}
+
+		final int dI = cookieString.indexOf("=", nI + cookieName.length());
+		if (dI <= -1) {
+			return null;
+		}
+
+		final int fI = cookieString.indexOf(";", dI + 1);
+		if (fI <= -1) {
+			if (cookieString.length() > dI) {
+				final String substring = cookieString.substring(nI);
+				final String[] c1 = substring.split(STU.EQUALS);
+				final ZCookie zCookie = new ZCookie(c1[0].trim(), c1[1].trim());
+				return zCookie;
+			}
+			if (cookieString.length() == dI) {
+				return null;
+			}
+		}
+
+		final String substring = cookieString.substring(nI, fI);
+		final String[] c1 = substring.split(STU.EQUALS);
+		final ZCookie zCookie = new ZCookie(c1[0].trim(), c1[1].trim());
+
+		return zCookie;
+	}
+
+	private ZCookie[] gcs() {
+		final String cookisString = this.getHeader(HeaderEnum.COOKIE.getName());
+		if (STU.isEmpty(cookisString)) {
+			return EMPTY_ZCOOKIE;
+		}
+
+		final int si = cookisString.indexOf(STU.SEMICOLON);
+		if (si <= -1) {
+			final ZCookie[] c = new ZCookie[1];
+
+			final String[] c1 = cookisString.split(STU.EQUALS);
+			final ZCookie zCookie = new ZCookie(c1[0].trim(), c1[1].trim());
+
+			c[0] = zCookie;
+
+			return c;
+		}
+
+		final String[] a = cookisString.split(STU.SEMICOLON);
+		final ZCookie[] c = new ZCookie[a.length];
+		int cI = 0;
+		for (final String s : a) {
+			final String[] c1 = s.split(STU.EQUALS);
+			final ZCookie zCookie = new ZCookie(c1[0].trim(), c1[1].trim());
+
+			c[cI] = zCookie;
+			cI++;
+		}
+
+		return c;
+	}
+
+	public ZCookie getZSESSIONID() {
+		return this.gcn(HeaderEnum.Z_SESSION_ID.getName());
+	}
+
+	public String getUserAgent() {
+		if (this.userAgent == null) {
+			this.userAgent = this.getHeader(HeaderEnum.USER_AGENT.getName());
+		}
+
+		return this.userAgent;
+	}
+
+	public String getAcceptEncoding() {
+		final String acceptEncoding = this.getHeader(HeaderEnum.ACCEPT_ENCODING.getName());
+		return acceptEncoding;
+	}
+
+	public String getHeader(final String name) {
+		if (name == null) {
+			return null;
+		}
+
+		final String v = this.headerMap.get(name);
+		if (isHPNV(v)) {
+			return null;
+		}
+
+		if (v != null) {
+			return v;
+		}
+
+		final String nV = parseHeaderARHeader(this, name);
+		if (isHPNV(nV)) {
+			return null;
+		}
+
+		return nV;
+	}
+
+	private static boolean isHPNV(final String v) {
+		return (v != null) && (v.length() == HEADER_PARSED_NO_VALUE_LENGTH) && (v == HEADER_PARSED_NO_VALUE);
+	}
+
+	public boolean isKeepAlive() {
+		if (this.keepAlive != -1) {
+			return this.keepAlive == 1;
+		}
+
+		final String connection = this.getHeader(HeaderEnum.CONNECTION.getName());
+		final boolean keepAlive = STU.isNotEmpty(connection)
+				&& (connection.length() == KEEP_ALIVE_LENGTH)
+				&& (KEEP_ALIVE_LOWERCASE.equals(connection)
+			     || KEEP_ALIVE_CAMELCASE.equals(connection)
+			 	 || connection.toLowerCase().contains(KEEP_ALIVE_LOWERCASE)
+
+				);
+
+		this.keepAlive = keepAlive ? 1 : 0;
+
+		return keepAlive;
+	}
+
+	public Object getParameter(final String name) {
+
+		if (name == null) {
+			return null;
+		}
+
+		final List<RequestParam> p = this.getParams();
+		// FIXME 2024年12月9日 下午6:30:42 zhangzhen : 这个方法是否要改
+		// 因为@ZRequestParam加入了默认值，用此方法取还是原值而非默认值
+		if (CU.isEmpty(p)) {
+			return null;
+		}
+
+		for (int i = 0, size = p.size(); i < size; i++) {
+			final RequestParam requestParam = p.get(i);
+			if (requestParam == null) {
+				continue;
+			}
+			if (requestParam.getName().equals(name)) {
+				return requestParam.getValue();
+			}
+		}
+
+		return null;
+	}
+
+	ZRequest(final byte[] dataRawArray, final List<ArrayRange> arList) {
+		this.dataRawArray = dataRawArray;
+
+		this.arList = arList;
+
+		// 构造参数逻辑考虑：
+		// 第一个是请求行，不是header，所以-1。headerMap最大存放数量就是size-1，
+		// 大多数情况可能不会用到全部的header，所以大多数header都是不会去解析的
+		// 所以即使容量设置size-1，也是浪费，尤其是带很多头的请求，可能只会有几分之一会用到
+		// 此时设置size-1更是浪费，尤其HashMap容量还会重置为不低于此值的2的幂
+
+		// 2026年7月1日 18:22:12 zhangzhen : 修改初始容量，为isNPHNL里的个数+Cookie(当isResponseZSessionId为true)
+		// 会初始为6或7，最终都是8
+		final int initialCapacity = isNPHNL + (isResponseZSessionId ? 1 : 0);
+		this.headerMap = new HashMap<>(initialCapacity, 1F);
+
+		parseRequest(this);
+	}
+
+	private static ZRequest parseRequest(final ZRequest request) {
+		if (CU.isEmpty(request.arList)) {
+			return request;
+		}
+
+		parsePath(request);
+
+		parseHeader(request);
+
+		// HTTP1.1必须有 HOST 头
+		final String header = request.getHost();
+		if (STU.isNullOrEmptyOrBlank(header)) {
+			throw new IllegalArgumentException("缺少 " + HeaderEnum.HOST.getName() + " 头");
+		}
+
+		// parseBody
+		// FIXME 2024年12月9日 下午6:32:57 zhangzhen : 不需要parseBody了，在BodyReader里面已经setBody(byte[])了
+		//		parseBody(request, requestLine);
+
+		return request;
+	}
+
+	private static void parsePath(final ZRequest request) {
+
+		final byte[] requestURIBytes = ZConnectionTL.get().getPd().getRequestURIBytes();
+
+		final int wI = AU.indexOfKeyword(requestURIBytes, STU.Q_BYTE);
+
+		if (wI > -1) {
+
+			final List<byte[]> pa = STU.splitBytes(requestURIBytes, wI + STU.Q_LENGTH, requestURIBytes.length,
+					STU.SP_BYTES);
+
+			final ArrayList<RequestParam> params = new ArrayList<>(pa.size());
+			for (int i = 0; i < pa.size(); i++) {
+				final RequestParam requestParam = hParam(pa.get(i));
+				params.add(requestParam);
+			}
+
+			request.params = params;
+			request.path = decode(new String(requestURIBytes, 0, wI));
+			request.queryStringBA = new BA(requestURIBytes, wI, requestURIBytes.length);
+			request.requestURI = decode(new String(requestURIBytes));
+		} else {
+			// requestURI中无?符号
+			final String requestURI = new String(requestURIBytes);
+			final String requestURIDECODE = decode(requestURI);
+			request.params = null;
+			request.path = requestURIDECODE;
+			request.queryStringBA = null;
+			request.requestURI = requestURIDECODE;
+		}
+	}
+
+	public static byte[] parseRequestURIBytes(final byte[] requestLineBytes) {
+		final int si = AU.indexOfKeyword(requestLineBytes, STU.SPACE_BYTE);
+		if (si > -1) {
+			final int s2i = AU.indexOfKeyword(requestLineBytes, si + 1, STU.SPACE_BYTE);
+			if (s2i > (si + 1)) {
+				final byte[] pathBytes = Arrays.copyOfRange(requestLineBytes, si + 1, s2i);
+				return pathBytes;
+			}
+		}
+
+		return null;
+	}
+
+	public static byte[] parsePATHBytes(final byte[] requestURIBytes) {
+
+		final int wI = AU.indexOfKeyword(requestURIBytes, 0, STU.Q_BYTE);
+		if (wI > -1) {
+			final byte[] pathBytes = Arrays.copyOfRange(requestURIBytes, 0, wI);
+			return pathBytes;
+		}
+
+		return requestURIBytes;
+	}
+
+	private static RequestParam hParam(final byte[] paramBytes) {
+
+		final int i = AU.indexOfKeyword(paramBytes, STU.EQUALS_BYTE);
+		if (i <= -1) {
+			return null;
+		}
+
+		final String name = new String(paramBytes, 0, i);
+
+		final String value = (i + 1) >= paramBytes.length ? null
+				: new String(paramBytes, i + 1, paramBytes.length - (i + 1));
+
+		final RequestParam requestParam = new RequestParam();
+		requestParam.setName(name);
+		requestParam.setValue(value == null ? null : decode(value));
+
+		return requestParam;
+	}
+
+	private static String decode(final String s) {
+		try {
+			return java.net.URLDecoder.decode(s, Task.DEFAULT_CHARSET_NAME);
+		} catch (final UnsupportedEncodingException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	private static void parseHost(final String line, final ZRequest request) {
+
+	}
+
+	private static void parseVersion(final String requestLine, final ZRequest request) {
+		final int hI = requestLine.lastIndexOf("HTTP/");
+		if (hI <= -1) {
+			throw new IllegalArgumentException("请求行错误：找不到HTTP版本");
+		}
+		final String version = requestLine.substring(hI);
+		if (!HTTP_11.equalsIgnoreCase(version)) {
+			// FIXME 2024年12月19日 下午1:41:45 zhangzhen : ab 命令测试会走到异常，要不要抛异常以后再看
+			//				throw new IllegalArgumentException("请求行错误：HTTP版本错误,本服务器支持HTTP/1.1");
+		}
+		request.version = version;
+	}
+
+	// FIXME 2026年6月15日 06:43:20 zhangzhen : 这个方法默认用isNPHNL方法过滤需要解析的，
+	// 但是就本程序本身的实现来说，就有问题，比如server.enable.client.qps=true的话,
+	// AbstractRequestValidator.validated 中的request.getClientIp和getUserAgent都会导致再次解析
+	// 所以，要不直接再加一个配置项：哪些头直接解析。反正这些头已经明确会用到，早晚都要解析，延迟解析还会带来额外开销
+	private static void parseHeader(final ZRequest request) {
+		final List<ArrayRange> x = request.arList;
+
+		// 第一个是请求行，不是header
+		for (int i = 1, size = x.size(), parsedCount = 0;
+				(i < size) && (parsedCount < parseHeader_requiredHeaderCount); i++) {
+
+			final ArrayRange arrarRange = x.get(i);
+
+			final int cI = AU.indexOfKeyword(request.dataRawArray,arrarRange.getFrom(), STU.COLON_C_BYTE);
+
+			if (cI <= -1) {
+				// FIXME 2026年6月11日 19:45:28 zhangzhen : 头无:符号，应该需要400
+				continue;
+			}
+
+			// 此时的ba已经去除了前后的空格了,现在只需要去除:符号旁边的空格
+			int nT = (cI - arrarRange.getFrom());
+			int nTrimSize = 0;
+			while ((nT > 0) && (request.dataRawArray[cI] == STU.SPACE_BYTE)) {
+				nT--;
+				nTrimSize++;
+			}
+
+			final int headerNameLength = cI - arrarRange.getFrom() - nTrimSize;
+
+			final String name = gHName(headerNameLength, request.dataRawArray, arrarRange.getFrom());
+			if (name != null) {
+
+				final String value = gHValue(request.dataRawArray, cI, arrarRange);
+
+				request.headerMap.put(name, value);
+
+				arrarRange.setParsed(true);
+
+				parsedCount++;
+			}
+
+		}
+
+	}
+
+	private static String gHName(final int headerNameLength, final byte[] dataRawArray, final int bytesFrom) {
+		if (isHost(headerNameLength, dataRawArray, bytesFrom)) {
+			return HeaderEnum.HOST.getName();
+		}
+		if (isConnection(headerNameLength, dataRawArray, bytesFrom)) {
+			return HeaderEnum.CONNECTION.getName();
+		}
+		if (isResponseZSessionId && isCookie(headerNameLength, dataRawArray, bytesFrom)) {
+			return HeaderEnum.COOKIE.getName();
+		}
+		if (isUpgrade(headerNameLength, dataRawArray, bytesFrom)) {
+			// FIXME 2026年7月11日 05:59:26 zhangzhen : 新增枚举
+			return "Upgrade";
+		}
+		if (isExpect(headerNameLength, dataRawArray, bytesFrom)) {
+			// FIXME 2026年7月11日 05:59:26 zhangzhen : 新增枚举
+			return "Expect";
+		}
+		if (isContentLength(headerNameLength, dataRawArray, bytesFrom)) {
+			return HeaderEnum.CONTENT_LENGTH.getName();
+		}
+		if (isTransferEncoding(headerNameLength, dataRawArray, bytesFrom)) {
+			return HeaderEnum.TRANSFER_ENCODING.getName();
+		}
+
+		return null;
+	}
+
+	/**
+	 * 是否必须解析的头的name的长度，即：以下这些头的长度，
+	 *
+	 * Host,Expect,Upgrade,Connection,Content-Length,Transfer-Encoding
+	 *
+	 * @param headerNameLength
+	 * @param dataRawArray
+	 * @param from
+	 * @return
+	 */
+	private static boolean isNPHNL(final int headerNameLength, final byte[] dataRawArray, final int from) {
+		// 暂时只比较几个字符，不比较整个长度的
+		return isHost(headerNameLength, dataRawArray, from)
+			|| isConnection(headerNameLength, dataRawArray, from)
+			|| isContentLength(headerNameLength, dataRawArray, from)
+			|| isExpect(headerNameLength, dataRawArray, from)
+			|| isUpgrade(headerNameLength, dataRawArray, from)
+			|| isTransferEncoding(headerNameLength, dataRawArray, from);
+	}
+
+	private static boolean isTransferEncoding(final int headerNameLength, final byte[] dataRawArray, final int from) {
+		return (headerNameLength == 17)
+				&& (dataRawArray[from] == 'T')
+				&& (dataRawArray[from + 1] == 'r')
+				&& (dataRawArray[from + 2] == 'a')
+				&& (dataRawArray[from + 3] == 'n')
+				&& (dataRawArray[from + 4] == 's')
+				&& (dataRawArray[from + 5] == 'f')
+				&& (dataRawArray[from + 6] == 'e')
+				&& (dataRawArray[from + 7] == 'r')
+				&& (dataRawArray[from + 8] == '-')
+				&& (dataRawArray[from + 9] == 'E')
+				&& (dataRawArray[from + 10] == 'n')
+				&& (dataRawArray[from + 11] == 'c')
+				&& (dataRawArray[from + 12] == 'o')
+				&& (dataRawArray[from + 13] == 'd')
+				&& (dataRawArray[from + 14] == 'i')
+				&& (dataRawArray[from + 15] == 'n')
+				&& (dataRawArray[from + 16] == 'g')
+
+				;
+	}
+
+	private static boolean isContentLength(final int headerNameLength, final byte[] dataRawArray, final int from) {
+		return (headerNameLength == 14)
+				&& (dataRawArray[from] == 'C')
+				&& (dataRawArray[from + 1] == 'o')
+				&& (dataRawArray[from + 2] == 'n')
+				&& (dataRawArray[from + 3] == 't')
+				&& (dataRawArray[from + 4] == 'e')
+				&& (dataRawArray[from + 5] == 'n')
+				&& (dataRawArray[from + 6] == 't')
+				&& (dataRawArray[from + 7] == '-')
+				&& (dataRawArray[from + 8] == 'L')
+				&& (dataRawArray[from + 9] == 'e')
+				&& (dataRawArray[from + 10] == 'n')
+				&& (dataRawArray[from + 11] == 'g')
+				&& (dataRawArray[from + 12] == 't')
+				&& (dataRawArray[from + 13] == 'h')
+				;
+	}
+
+	private static boolean isConnection(final int headerNameLength, final byte[] dataRawArray, final int from) {
+		return (headerNameLength == 10)
+				&& (dataRawArray[from] == 'C')
+				&& (dataRawArray[from + 1] == 'o')
+				&& (dataRawArray[from + 2] == 'n')
+				&& (dataRawArray[from + 3] == 'n')
+				&& (dataRawArray[from + 4] == 'e')
+				&& (dataRawArray[from + 5] == 'c')
+				&& (dataRawArray[from + 6] == 't')
+				&& (dataRawArray[from + 7] == 'i')
+				&& (dataRawArray[from + 8] == 'o')
+				&& (dataRawArray[from + 9] == 'n')
+
+				;
+	}
+
+	private static boolean isUpgrade(final int headerNameLength, final byte[] dataRawArray, final int from) {
+		return (headerNameLength == 7)
+				&& (dataRawArray[from] == 'U')
+				&& (dataRawArray[from + 1] == 'p')
+				&& (dataRawArray[from + 2] == 'g')
+				&& (dataRawArray[from + 3] == 'r')
+				&& (dataRawArray[from + 4] == 'a')
+				&& (dataRawArray[from + 5] == 'd')
+				&& (dataRawArray[from + 6] == 'e')
+				;
+	}
+
+	private static boolean isExpect(final int headerNameLength, final byte[] dataRawArray, final int from) {
+		return (headerNameLength == 6)
+				&& (dataRawArray[from] == 'E')
+				&& (dataRawArray[from + 1] == 'x')
+				&& (dataRawArray[from + 2] == 'c')
+				&& (dataRawArray[from + 3] == 'e')
+				&& (dataRawArray[from + 4] == 'p')
+				&& (dataRawArray[from + 5] == 't')
+				;
+	}
+
+	private static boolean isHost(final int headerNameLength, final byte[] dataRawArray, final int from) {
+		return (headerNameLength == 4)
+				&& (dataRawArray[from] == 'H')
+				&& (dataRawArray[from + 1] == 'o')
+				&& (dataRawArray[from + 2] == 's')
+				&& (dataRawArray[from + 3] == 't');
+	}
+
+	private static boolean isCookie(final int headerNameLength, final byte[] dataRawArray, final int from) {
+		// 暂时只比较几个字符，不比较整个长度的
+		return (headerNameLength == 6)
+			&& (dataRawArray[from] == 'C')
+			&& (dataRawArray[from + 1] == 'o')
+			&& (dataRawArray[from + 2] == 'o')
+			&& (dataRawArray[from + 3] == 'k')
+			&& (dataRawArray[from + 4] == 'i')
+			&& (dataRawArray[from + 5] == 'e');
+	}
+
+	/**
+	 * 解析指定的header，并且返回value
+	 *
+	 * @param request
+	 * @param headerName
+	 * @return
+	 */
+	private static String parseHeaderARHeader(final ZRequest request, final String headerName) {
+
+		final List<ArrayRange> x = request.arList;
+
+		for (int i = 1, size = x.size(); i < size; i++) {
+			final ArrayRange arrayRange = x.get(i);
+			if (arrayRange.isParsed()) {
+				continue;
+			}
+
+			final int cI = AU.search(request.dataRawArray, arrayRange.getTo(), STU.COLON_C_BYTES, 1, arrayRange.getFrom());
+			if (cI <= -1) {
+				continue;
+			}
+
+			// 此时的ba已经去除了前后的空格了,现在只需要去除:符号旁边的空格
+			int nameTo = (cI - arrayRange.getFrom());
+			while ((nameTo > 0) && (request.dataRawArray[cI] == STU.SPACE_BYTE)) {
+				nameTo--;
+			}
+
+			final String name = new String(request.dataRawArray, arrayRange.getFrom(), nameTo);
+			if ((headerName.length() == name.length()) && headerName.equals(name)) {
+
+				final String value = gHValue(request.dataRawArray, cI, arrayRange);
+
+				request.headerMap.put(name, value);
+
+				return value;
+			}
+
+		}
+
+		return HEADER_PARSED_NO_VALUE;
+	}
+
+	private static String gHValue(final byte[] dataRawArray, final int cI, final ArrayRange arrayRange) {
+		int valueFromIndex = cI + 1;
+		while ((valueFromIndex < arrayRange.getTo()) && (dataRawArray[valueFromIndex] == STU.SPACE_BYTE)) {
+			valueFromIndex++;
+		}
+
+		final int hvLength = arrayRange.getTo() - valueFromIndex;
+		// value为null，则设为""
+		final String value =
+				hvLength == 0
+				? STU.EMPTY
+				: new String(dataRawArray, valueFromIndex, hvLength);
+		return value;
+	}
+
+	public String getRequestLine() {
+		final String requestLine = new String(ZConnectionTL.get().getPd().getRequestLineBytes());
+		return requestLine;
+	}
+
+	public String getQueryString() {
+		if (this.queryStringBA == null) {
+			return null;
+		}
+
+		if (this.queryStringCache == null) {
+			this.queryStringCache =
+					URLDecoder.decode(
+							new String(this.queryStringBA.getData(), this.queryStringBA.getFrom(),
+									this.queryStringBA.getTo() - this.queryStringBA.getFrom()),
+							Charset.defaultCharset());
+		}
+
+		return this.queryStringCache;
+	}
+
+	public TF getTf() {
+		return this.tf;
+	}
+
+	public void setTf(final TF tf) {
+		this.tf = tf;
+	}
+
+	public String getPath() {
+		return this.path;
+	}
+
+	public ArrayList<RequestParam> getParams() {
+		return this.params;
+	}
+
+	public String getVersion() {
+		return this.version;
+	}
+
+	public byte[] getOriginalRequestBytes() {
+		return this.originalRequestBytes;
+	}
+
+	public void setOriginalRequestBytes(final byte[] originalRequestBytes) {
+		this.originalRequestBytes = originalRequestBytes;
+	}
+
+	public String getClientIp() {
+		if (this.clientIp == null) {
+			this.clientIp = ((InetSocketAddress) ZConnectionTL.get().getSocket().getRemoteSocketAddress()).getAddress().getHostAddress();
+		}
+		return this.clientIp;
+	}
+
+	public void setBody(final byte[] body) {
+		this.body = body;
+	}
+
+	public byte[] getMethodNameBytes() {
+		return this.methodNameBytes;
+	}
+
+	public void setMethodNameBytes(final byte[] methodNameBytes) {
+		this.methodNameBytes = methodNameBytes;
+	}
+
+	public String toHeaderString() {
+		return new String(this.dataRawArray);
+	}
+
+}
