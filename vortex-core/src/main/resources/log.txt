@@ -1,0 +1,12 @@
+记录完成的功能，开始日期：20241208
+
+1、修改了读取上传文件的逻辑，如下接口没问题了：
+	@ZRequestMapping(mapping = { "/upload" },method = MethodEnum.POST)
+	public CR<?> upload(final ZMultipartFile file
+			,@ZRequestParam final String token,
+			@ZCookieValue(name = "ZSESSIONID") final String cookie,
+			@ZRequestHeader(value = "Connection") final String connection
+			) {
+		
+			
+			
