@@ -39,6 +39,8 @@ public final class ZApplicationEventPublisher {
 
 	private static final String TRREAD_NAME = "aeT-";
 
+	private static final String CLASS_NAME = "vo.vortex.generated.maven.ZApplicationEventRoute";
+
 	private static final ExecutorService ves = Executors.newVirtualThreadPerTaskExecutor();
 
 	// FIXME 2026年7月17日 06:21:59 zhangzhen : 排除了这两个包名前缀，为了加快启动速度，因为当前的实现这两个包下无监听器
@@ -137,82 +139,9 @@ public final class ZApplicationEventPublisher {
 
 		});
 
-		Thread.ofVirtual().start(() -> {
-			final ZClass proxyZClass = gProxyZClass(table);
-//			System.out.println("proxyZClass = ");
-//			System.out.println(proxyZClass);
-			ZContext.addBeanAsync(IEventRoute.class, () -> proxyZClass.newInstance());
-		});
+		final Object proxyZClassInstance = G.newInstance(G.load(CLASS_NAME));
+		ZContext.addBean(IEventRoute.class, proxyZClassInstance);
 
 		executed = true;
-	}
-
-	private static ZClass gProxyZClass(
-			final ZHashBasedTable<Class<? extends ZApplicationEvent>, Method, Class<?>> table) {
-		final ZClass proxyZClass = new ZClass();
-		proxyZClass.setPackage1(new ZPackage("vo.vortex.generated"));
-		proxyZClass.setName("ZApplicationEventRoute");
-
-		proxyZClass.setImplementsSet(Set.of(IEventRoute.class.getCanonicalName()));
-
-		final ZMethod routeMethod = new ZMethod();
-		routeMethod.setName("route");
-		routeMethod.setMethodArgList(List.of(new ZMethodArg(ZApplicationEvent.class, "event")));
-
-		proxyZClass.setMethodSet(Set.of(routeMethod));
-
-		final StringBuilder routeBody = new StringBuilder(
-				 "String canonicalName = event.getClass().getCanonicalName();"
-					+ "switch (canonicalName) {");
-
-		final Set<Class<? extends ZApplicationEvent>> rowKeySet = table.rowKeySet();
-
-		int pI = 0;
-		for (final Class<? extends ZApplicationEvent> class1 : rowKeySet) {
-			final Map<Method, Class<?>> row = table.row(class1);
-			final Set<Entry<Method, Class<?>>> es = row.entrySet();
-
-			final Collection<Class<?>> values = row.values();
-			final Set<Class<?>> set = new HashSet<>(values);
-			for (final Class<?> cls : set) {
-				pI++;
-
-				final List<Entry<Method, Class<?>>> ml = es.stream().filter(e -> e.getValue().equals(cls)).collect(Collectors.toList());
-
-				final String eName = class1.getCanonicalName();
-
-				routeBody.append("case \"").append(eName).append("\"").append(':');
-
-				final String clscanonicalName = cls.getCanonicalName();
-				routeBody.append(clscanonicalName)
-
-				.append(" p").append(pI).append(" = (").append(clscanonicalName)
-				.append(")")
-				.append(ZContext.class.getCanonicalName())
-				.append(".getBean(\"")
-				.append(cls.getCanonicalName()).append("\");");
-
-				final String name = class1.getName();
-
-				for (final Entry<Method, Class<?>> e : ml) {
-					final Method method = e.getKey();
-					routeBody
-					.append("p").append(pI).append('.').append(method.getName())
-					.append("(")
-					.append("(").append(name).append(")")
-					.append("event")
-					.append(");");
-				}
-			}
-
-			routeBody.append("break;");
-		}
-
-		routeBody.append("default:\r\n"
-							+ "	break;\r\n"
-							+ "}	");
-
-		routeMethod.setBody(routeBody.toString());
-		return proxyZClass;
 	}
 }
