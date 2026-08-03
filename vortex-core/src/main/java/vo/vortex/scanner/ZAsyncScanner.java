@@ -45,7 +45,7 @@ public class ZAsyncScanner {
 		zcSet.addAll(ClassMap.scanPackageByAnnotation(ZService.class, startupInfo.getPackageNameArray()));
 
 		final ZClass proxyZClass = new ZClass();
-		proxyZClass.setPackage1(new ZPackage("vo.zframework.generated"));
+		proxyZClass.setPackage1(new ZPackage("vo.vortex.generated"));
 		proxyZClass.setName("ZAsyncRoute");
 		proxyZClass.setImplementsSet(Set.of(IAsyncRoute.class.getCanonicalName()));
 

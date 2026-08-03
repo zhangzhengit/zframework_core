@@ -40,7 +40,7 @@ public final class ZApplicationEventPublisher {
 
 	// FIXME 2026年7月17日 06:21:59 zhangzhen : 排除了这两个包名前缀，为了加快启动速度，因为当前的实现这两个包下无监听器
 	// 但是应该提示用户不可以把事件监听器放在这两个包下,不然就扫描不到了
-	private static final String VO_ZFRAMEWORK = "vo.zframework";
+	private static final String VO_VORTEX = "vo.vortex";
 	private static final String VO_LOG = "vo.log";
 
 	private static final AtomicLong VT_N = new AtomicLong(0L);
@@ -91,7 +91,7 @@ public final class ZApplicationEventPublisher {
 			.parallelStream()
 			// FIXME 2026年6月23日 15:36:40 zhangzhen : 因为当前没有内置的 @ZEventListener，所以把
 			// vo.zframework.XX和vo.log.XX包全排除，当然最好是精准匹配每个包名，暂时先这样
-			.filter(cs -> !cs.getPackageName().startsWith(VO_ZFRAMEWORK))
+			.filter(cs -> !cs.getPackageName().startsWith(VO_VORTEX))
 			.filter(cs -> !cs.getPackageName().startsWith(VO_LOG))
 			.collect(Collectors.toSet());
 
@@ -134,7 +134,7 @@ public final class ZApplicationEventPublisher {
 	private static ZClass gProxyZClass(
 			final ZHashBasedTable<Class<? extends ZApplicationEvent>, Method, Class<?>> table) {
 		final ZClass proxyZClass = new ZClass();
-		proxyZClass.setPackage1(new ZPackage("vo.zframework.generated"));
+		proxyZClass.setPackage1(new ZPackage("vo.vortex.generated"));
 		proxyZClass.setName("ZApplicationEventRoute");
 
 		proxyZClass.setImplementsSet(Set.of(IEventRoute.class.getCanonicalName()));

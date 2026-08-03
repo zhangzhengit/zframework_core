@@ -742,8 +742,8 @@ public class ZValidator {
 		throw new ValidatedException(format, HttpStatusEnum.HTTP_400.getStatus());
 	}
 
-	public static final Set<String> BAOHAN = Set.of("vo.zframework.configuration",
-			"vo.zframework.configuration.properties");
+	public static final Set<String> BAOHAN = Set.of("vo.vortex.configuration",
+			"vo.vortex.configuration.properties");
 
 	public static final Set<String> TIAO_GUO = Set.of(
 				"vo.log",
@@ -753,25 +753,25 @@ public class ZValidator {
 				"vo.log.enums",
 				"vo.log.handler",
 
-				"vo.zframework.anno",
-				"vo.zframework.aop",
-				"vo.zframework.api",
-				"vo.zframework.cache",
-				"vo.zframework.common",
-				"vo.zframework.compression",
+				"vo.vortex.anno",
+				"vo.vortex.aop",
+				"vo.vortex.api",
+				"vo.vortex.cache",
+				"vo.vortex.common",
+				"vo.vortex.compression",
 
-				"vo.zframework.dynamic",
-				"vo.zframework.email",
-				"vo.zframework.enums",
-				"vo.zframework.event",
-				"vo.zframework.exception",
-				"vo.zframework.html",
-				"vo.zframework.http",
-				"vo.zframework.protobuf",
-				"vo.zframework.scanner",
-				"vo.zframework.template",
-				"vo.zframework.validator",
-				"vo.zframework.zclass"
+				"vo.vortex.dynamic",
+				"vo.vortex.email",
+				"vo.vortex.enums",
+				"vo.vortex.event",
+				"vo.vortex.exception",
+				"vo.vortex.html",
+				"vo.vortex.http",
+				"vo.vortex.protobuf",
+				"vo.vortex.scanner",
+				"vo.vortex.template",
+				"vo.vortex.validator",
+				"vo.vortex.zclass"
 
 		);
 
