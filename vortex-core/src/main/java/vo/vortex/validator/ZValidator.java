@@ -7,6 +7,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -784,9 +785,19 @@ public class ZValidator {
 	public static void start(final ZApplicationStartupInfo startupInfo) {
 		final Set<Class<?>> clsSet = startupInfo.getPackageScanResult();
 
+		final Set<String> x = new HashSet<>(BAOHAN);
+		x.addAll(startupInfo.getPackageNameList());
+
+		// 1
 		final List<Class<?>> list = clsSet.parallelStream()
-				.filter(cls -> BAOHAN.contains(cls.getPackageName()))
-				.collect(Collectors.toList());
+				.filter(cls -> cls != null).filter(cls -> {
+					for (final String pn : x) {
+						if (cls.getPackageName().startsWith(pn)) {
+							return true;
+						}
+					}
+					return false;
+				}).collect(Collectors.toList());
 
 		list.parallelStream()
 		.forEach(cls -> {
