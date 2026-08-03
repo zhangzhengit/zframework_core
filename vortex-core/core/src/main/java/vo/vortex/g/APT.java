@@ -13,15 +13,15 @@ import vo.vortex.anno.processor.ZAllAnnoProcessor;
 import vo.vortex.common.CU;
 
 /**
- *
+ * 读取APT读取到的Class信息
  *
  * @author zhangzhen
  * @date 2026年8月2日 11:45:14
  */
 public class APT {
 
-	private static final String path = "/META-INF/native-image/registry/"+ZAllAnnoProcessor.Z_ALL_BEAN_REGISTRY+".json";
-//	private static final String path = "/META-INF/native-image/registry/ZAllBeanRegistry.json";
+	private static final String path = "/META-INF/vortex/registry/" + ZAllAnnoProcessor.Z_ALL_BEAN_REGISTRY
+			+ ".json";
 
 	private static final String VO_VORTEX = "vo.vortex";
 

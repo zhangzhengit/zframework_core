@@ -103,27 +103,27 @@ public class ZAllAnnoProcessor extends AbstractProcessor {
 
 	private void gZConfigurationProperties(final RoundEnvironment roundEnv) {
 		final Set<? extends Element> configurationPropertiesSet = roundEnv.getElementsAnnotatedWith(ZConfigurationProperties.class);
-		this.gClass(configurationPropertiesSet, PACKAGE_NAME, "ZConfigurationPropertiesRegistry");
+		this.gJson(configurationPropertiesSet, PACKAGE_NAME, "ZConfigurationPropertiesRegistry");
 	}
 
 	private void gZConfiguration(final RoundEnvironment roundEnv) {
 		final Set<? extends Element> configurationSet = roundEnv.getElementsAnnotatedWith(ZConfiguration.class);
-		this.gClass(configurationSet, PACKAGE_NAME, "ZConfigurationRegistry");
+		this.gJson(configurationSet, PACKAGE_NAME, "ZConfigurationRegistry");
 	}
 
 	private void gZAOP(final RoundEnvironment roundEnv) {
 		final Set<? extends Element> zaopSet = roundEnv.getElementsAnnotatedWith(ZAOP.class);
-		this.gClass(zaopSet, PACKAGE_NAME, "ZAOPRegistry");
+		this.gJson(zaopSet, PACKAGE_NAME, "ZAOPRegistry");
 	}
 
 	private void gZService(final RoundEnvironment roundEnv) {
 		final Set<? extends Element> serviceSet = roundEnv.getElementsAnnotatedWith(ZService.class);
-		this.gClass(serviceSet, PACKAGE_NAME, "ZServiceRegistry");
+		this.gJson(serviceSet, PACKAGE_NAME, "ZServiceRegistry");
 	}
 
 	private void gZComponent(final RoundEnvironment roundEnv) {
 		final Set<? extends Element> componentSet = roundEnv.getElementsAnnotatedWith(ZComponent.class);
-		this.gClass(componentSet, PACKAGE_NAME, "ZComponentRegistry");
+		this.gJson(componentSet, PACKAGE_NAME, "ZComponentRegistry");
 	}
 
 	private void gZEventListener(final RoundEnvironment roundEnv) {
@@ -172,14 +172,14 @@ public class ZAllAnnoProcessor extends AbstractProcessor {
 		}
 		System.out.println("elSet.size = " + elSet.size());
 
-	    this.gClass(eventListenerTypeSet, PACKAGE_NAME, "ZEventListenerRegistry");
+	    this.gJson(eventListenerTypeSet, PACKAGE_NAME, "ZEventListenerRegistry");
 	}
 
 	private void gAllClass(final RoundEnvironment roundEnv) {
 		final Set<? extends Element> rootElements = roundEnv.getRootElements();
 	    final Set<Element> csset = rootElements.stream().filter(e -> e.getKind() == ElementKind.CLASS)
 	    .collect(Collectors.toSet());
-	    this.gClass(csset, PACKAGE_NAME, Z_ALL_BEAN_REGISTRY);
+	    this.gJson(csset, PACKAGE_NAME, Z_ALL_BEAN_REGISTRY);
 	}
 
 	private void gZValidator(final RoundEnvironment roundEnv) {
@@ -202,20 +202,20 @@ public class ZAllAnnoProcessor extends AbstractProcessor {
 		typeSet.addAll(t8);
 		typeSet.addAll(t9);
 
-		this.gClass(typeSet, PACKAGE_NAME, "ZValidatorRegistry");
+		this.gJson(typeSet, PACKAGE_NAME, "ZValidatorRegistry");
 	}
 
 	private void gZController(final RoundEnvironment roundEnv) {
 		final Set<? extends Element> restControllerSet = roundEnv.getElementsAnnotatedWith(ZRestController.class);
-		this.gClass(restControllerSet, PACKAGE_NAME, "ZRestControllerRegistry");
+		this.gJson(restControllerSet, PACKAGE_NAME, "ZRestControllerRegistry");
 
 		final Set<? extends Element> controllerSet = roundEnv.getElementsAnnotatedWith(ZController.class);
-		this.gClass(controllerSet, PACKAGE_NAME, "ZControllerRegistry");
+		this.gJson(controllerSet, PACKAGE_NAME, "ZControllerRegistry");
 	}
 
 	private void gZControllerAdvice(final RoundEnvironment roundEnv) {
 		final Set<? extends Element> controllerAdviceSet = roundEnv.getElementsAnnotatedWith(ZControllerAdvice.class);
-		this.gClass(controllerAdviceSet, PACKAGE_NAME, "ZControllerAdviceRegistry");
+		this.gJson(controllerAdviceSet, PACKAGE_NAME, "ZControllerAdviceRegistry");
 	}
 
 	private void gZCache(final RoundEnvironment roundEnv) {
@@ -225,10 +225,10 @@ public class ZAllAnnoProcessor extends AbstractProcessor {
 				.collect(Collectors.toSet()));
 		cacheESet.addAll(roundEnv.getElementsAnnotatedWith(ZCacheEvict.class).stream().map(Element::getEnclosingElement)
 				.collect(Collectors.toSet()));
-		this.gClass(cacheESet, PACKAGE_NAME, "ZCacheRegistry");
+		this.gJson(cacheESet, PACKAGE_NAME, "ZCacheRegistry");
 	}
 
-	private void gClass(final Set<? extends Element> elementSet, final String packageName, final String className) {
+	private void gJson(final Set<? extends Element> elementSet, final String packageName, final String className) {
 	    // 提取全限定名并排序
 	    final List<String> classNames = elementSet.stream()
 	            .map(Element::toString)
@@ -247,12 +247,12 @@ public class ZAllAnnoProcessor extends AbstractProcessor {
 	        final FileObject fileObject = filer.createResource(
 	                StandardLocation.CLASS_OUTPUT,
 	                "",   // 包名，空字符串表示根
-	                "META-INF/native-image/registry/" + className + ".json");
+	                "META-INF/vortex/registry/" + className + ".json");
 	        try (Writer writer = fileObject.openWriter()) {
 	            writer.write(json);
 	        }
 	        this.processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE,
-	                "Generated registry JSON: META-INF/native-image/registry/" + className + ".json");
+	                "Generated registry JSON: META-INF/vortex/registry/" + className + ".json");
 	    } catch (final IOException e) {
 	        this.processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR,
 	                "Failed to generate registry JSON: " + e.getMessage());

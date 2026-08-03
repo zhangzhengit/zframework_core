@@ -6,11 +6,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import vo.vortex.common.CU;
-import vo.vortex.exception.ZControllerAdviceThrowableConfigurationProperties;
-import vo.vortex.http.request.HttpRequestProcessor;
 
 /**
- * 获取maven构建时生成的类名
+ * 提前初始化的Class对象
  *
  * @author zhangzhen
  * @date 2026年8月2日 06:31:10

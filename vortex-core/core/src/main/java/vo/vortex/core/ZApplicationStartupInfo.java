@@ -1,9 +1,6 @@
 package vo.vortex.core;
 
 import java.util.List;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 
 /**
  * 程序启动信息
@@ -18,8 +15,6 @@ public class ZApplicationStartupInfo {
 	private final boolean httpEnable;
 
 	private final String[] args;
-
-//	private final CompletableFuture<Set<Class<?>>> scanFuture;
 
 	public List<String> getPackageNameList() {
 		return this.packageNameList;
@@ -37,24 +32,10 @@ public class ZApplicationStartupInfo {
 		return this.args;
 	}
 
-//	public Set<Class<?>> getPackageScanResult() {
-//		try {
-//			return this.scanFuture.get();
-//		} catch (InterruptedException | ExecutionException e) {
-//			e.printStackTrace();
-//		}
-//		return null;
-//	}
-
-	public ZApplicationStartupInfo(final List<String> packageNameList, final boolean httpEnable,
-			final String[] args
-//			,
-//			final CompletableFuture<Set<Class<?>>> scanFuture
-			) {
+	public ZApplicationStartupInfo(final List<String> packageNameList, final boolean httpEnable, final String[] args) {
 		this.packageNameList = packageNameList;
 		this.httpEnable = httpEnable;
 		this.args = args;
-//		this.scanFuture = scanFuture;
 	}
 
 }

@@ -792,11 +792,19 @@ public class ZValidator {
 		clsSet.addAll(G.getAllClass());
 //		System.err.println("clsSet.size = " + (clsSet.size()));
 
+		final Set<String> x = new HashSet<>(BAOHAN);
+		x.addAll(startupInfo.getPackageNameList());
+
 		// 1
 		final List<Class<?>> list = clsSet.parallelStream()
-				.filter(cls -> cls!=null)
-				.filter(cls -> BAOHAN.contains(cls.getPackageName()))
-				.collect(Collectors.toList());
+				.filter(cls -> cls != null).filter(cls -> {
+					for (final String pn : x) {
+						if (cls.getPackageName().startsWith(pn)) {
+							return true;
+						}
+					}
+					return false;
+				}).collect(Collectors.toList());
 
 		// 2
 //		final List<Class<?>> list =new ArrayList<>(clsSet);

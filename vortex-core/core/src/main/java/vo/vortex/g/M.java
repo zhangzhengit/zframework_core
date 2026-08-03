@@ -7,7 +7,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
- *
+ * 读取vortex-maven-plugin插件读取到的Class信息
  *
  * @author zhangzhen
  * @date 2026年8月3日 03:19:24

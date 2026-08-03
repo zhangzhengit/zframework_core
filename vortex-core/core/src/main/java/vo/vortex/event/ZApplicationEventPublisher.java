@@ -19,8 +19,9 @@ import vo.vortex.common.ZHashBasedTable;
 import vo.vortex.core.ZApplicationStartupInfo;
 import vo.vortex.core.ZContext;
 import vo.vortex.exception.StartupException;
+import vo.vortex.g.APT;
+import vo.vortex.g.G;
 import vo.vortex.route.IEventRoute;
-import vo.vortex.scanner.ClassMap;
 import vo.vortex.zclass.ZClass;
 import vo.vortex.zclass.ZMethod;
 import vo.vortex.zclass.ZMethodArg;
@@ -91,12 +92,12 @@ public final class ZApplicationEventPublisher {
 //		final Set<Class<?>> clsSet = allClass;
 
 		// 2
-//		final Set<Class<?>> clsSet = APT.getAllClass();
-//		final Set<Class<?>> x = G.getAllClass();
-//		clsSet.addAll(x);
+		final Set<Class<?>> clsSet = APT.getAllClass();
+		final Set<Class<?>> x = G.getAllClass();
+		clsSet.addAll(x);
 
 		// 1
-		final Set<Class<?>> clsSet = ClassMap.scanPackage(startupInfo.getPackageNameArray());
+//		final Set<Class<?>> clsSet = ClassMap.scanPackage(startupInfo.getPackageNameArray());
 
 		final Set<Class<?>> noVOZFClsSet = clsSet
 			.parallelStream()
