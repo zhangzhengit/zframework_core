@@ -1,0 +1,39 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>vo</groupId>
+		<artifactId>vortex-core-parent</artifactId>
+		<version>1.0.0-SNAPSHOT-jdk25</version>
+	</parent>
+
+	<artifactId>vortex-core-annotation-processor</artifactId>
+
+	<dependencies>
+		<dependency>
+			<groupId>vo</groupId>
+			<artifactId>vortex-core-annotation</artifactId>
+			<version>1.0.0-SNAPSHOT-jdk25</version>
+			<scope>compile</scope>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>25</source>
+					<target>25</target>
+					<compilerArgs>
+						<arg>-proc:none</arg>
+					</compilerArgs>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+
+</project>

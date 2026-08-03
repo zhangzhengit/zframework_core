@@ -1,0 +1,175 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>vo</groupId>
+		<artifactId>vortex-core-parent</artifactId>
+		<version>1.0.0-SNAPSHOT-jdk25</version>
+	</parent>
+
+	<artifactId>vortex-core</artifactId>
+
+	<dependencies>
+		<!-- 依赖注解定义模块（编译时和运行时都需要） -->
+		<dependency>
+			<groupId>vo</groupId>
+			<artifactId>vortex-core-annotation</artifactId>
+			<version>1.0.0-SNAPSHOT-jdk25</version>
+		</dependency>
+		<!-- 依赖处理器模块（编译时需要，运行时不需要） -->
+		<dependency>
+			<groupId>vo</groupId>
+			<artifactId>vortex-core-annotation-processor</artifactId>
+			<version>1.0.0-SNAPSHOT-jdk25</version>
+		</dependency>
+
+		<dependency>
+			<groupId>vo</groupId>
+			<artifactId>log</artifactId>
+			<version>1.0.0-SNAPSHOT</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.github.ben-manes.caffeine</groupId>
+			<artifactId>caffeine</artifactId>
+			<version>3.2.4</version>
+		</dependency>
+
+		<!--		<dependency>-->
+		<!--			<groupId>com.sun.mail</groupId>-->
+		<!--			<artifactId>javax.mail</artifactId>-->
+		<!--			<version>1.6.2</version>-->
+		<!--		</dependency>-->
+
+		<!-- 原生zstd支持 -->
+		<dependency>
+			<groupId>io.airlift</groupId>
+			<artifactId>aircompressor</artifactId>
+			<version>0.21</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.aayushatharva.brotli4j</groupId>
+			<artifactId>brotli4j</artifactId>
+			<version>1.23.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.aayushatharva.brotli4j</groupId>
+			<artifactId>native-linux-x86_64</artifactId>
+			<version>1.23.0</version>
+		</dependency>
+
+		<!-- jni zstd支持 -->
+		<!--		<dependency>-->
+		<!--			<groupId>com.github.luben</groupId>-->
+		<!--			<artifactId>zstd-jni</artifactId>-->
+		<!--			<version>1.5.5-11</version>-->
+		<!--		</dependency>-->
+
+		<!--		<dependency>-->
+		<!--			<groupId>redis.clients</groupId>-->
+		<!--			<artifactId>jedis</artifactId>-->
+		<!--			<version>4.4.3</version>-->
+		<!--		</dependency>-->
+
+		<dependency>
+			<groupId>org.codehaus.janino</groupId>
+			<artifactId>janino</artifactId>
+			<version>3.1.9</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>2.15.2</version>
+		</dependency>
+
+
+		<!-- https://mvnrepository.com/artifact/io.protostuff/protostuff-runtime -->
+		<!--		<dependency>-->
+		<!--			<groupId>io.protostuff</groupId>-->
+		<!--			<artifactId>protostuff-runtime</artifactId>-->
+		<!--			<version>1.7.1</version>-->
+		<!--		</dependency>-->
+
+		<!--		 https://mvnrepository.com/artifact/io.protostuff/protostuff-core -->
+		<!--		<dependency>-->
+		<!--			<groupId>io.protostuff</groupId>-->
+		<!--			<artifactId>protostuff-core</artifactId>-->
+		<!--			<version>1.7.1</version>-->
+		<!--		</dependency>-->
+
+
+	</dependencies>
+
+	<build>
+		<plugins>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>3.3.1</version>
+				<executions>
+					<execution>
+						<id>copy-generated-sources</id>
+						<phase>process-classes</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.build.outputDirectory}</outputDirectory>
+							<resources>
+								<resource>
+									<directory>
+										${project.build.directory}/generated-sources/annotations</directory>
+									<includes>
+										<include>**/*.java</include>
+									</includes>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+<!--			<plugin>-->
+<!--				<groupId>org.apache.maven.plugins</groupId>-->
+<!--				<artifactId>maven-compiler-plugin</artifactId>-->
+<!--				<configuration>-->
+<!--					 显式指定注解处理器路径（关键！） -->
+<!--					<annotationProcessorPaths>-->
+<!--						<path>-->
+<!--							<groupId>vo</groupId>-->
+<!--							<artifactId>vortex-core-annotation-processor</artifactId>-->
+<!--							<version>1.0.0-SNAPSHOT-jdk25</version>-->
+<!--						</path>-->
+<!--					</annotationProcessorPaths>-->
+<!--					<annotationProcessors>-->
+<!--						 可选：指定要运行的处理器全类名，不指定则自动发现 -->
+<!--						<annotationProcessor>-->
+<!--							vo.vortex.anno.processor.ZAllAnnoProcessor</annotationProcessor>-->
+<!--					</annotationProcessors>-->
+<!--				</configuration>-->
+<!--			</plugin>-->
+
+<!--			<plugin>-->
+<!--				<groupId>vo</groupId>-->
+<!--				<artifactId>vortex-maven-plugin</artifactId>-->
+<!--				<version>1.0.0-SNAPSHOT</version>-->
+<!--				<executions>-->
+<!--					<execution>-->
+<!--						<goals>-->
+<!--							<goal>process-annotations</goal>-->
+<!--						</goals>-->
+<!--						<phase>process-classes</phase>-->
+<!--					</execution>-->
+<!--				</executions>-->
+<!--			</plugin>-->
+
+
+		</plugins>
+	</build>
+
+</project>
