@@ -55,13 +55,7 @@ public class APT {
 
 	public static Set<Class<?>> getAllClass() {
 		if (zsSet == null) {
-			final Set<String> cnset = getAllClassName();
-			zsSet = cnset.stream()
-//					.filter(cn -> cn.startsWith(VO_VORTEX))
-					.map(G::load)
-					.filter(c -> c!=null)
-					.collect(Collectors.toSet());
-
+			zsSet = cnset.stream().map(G::load).collect(Collectors.toSet());
 		}
 		return zsSet;
 	}
@@ -79,24 +73,6 @@ public class APT {
 			return Collections.emptySet();
 		}
 		return classNameSet.stream().map(G::load).collect(Collectors.toSet());
-	}
-
-	static Set<String> getAllClassName() {
-
-		// 2
-		return cnset;
-
-		// 1
-//		try {
-//			final Class<?> clazz = Class.forName("vo.vortex.generated.IndexHolder");
-//			final java.lang.reflect.Method method = clazz.getMethod("getClassNames");
-//			final Set<String> classNames = (Set<String>) method.invoke(null);
-//			return classNames;
-//		} catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException
-//				| InvocationTargetException e) {
-//			e.printStackTrace();
-//		}
-//		return Collections.emptySet();
 	}
 
 }
