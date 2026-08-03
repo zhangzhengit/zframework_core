@@ -10,7 +10,6 @@ import vo.vortex.anno.ZCacheable;
 import vo.vortex.exception.CacheKeyDeclarationException;
 import vo.vortex.g.APT;
 import vo.vortex.g.G;
-import vo.vortex.scanner.ClassMap;
 
 /**
  * cache包的校验器

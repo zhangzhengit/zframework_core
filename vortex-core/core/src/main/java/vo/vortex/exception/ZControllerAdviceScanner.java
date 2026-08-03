@@ -12,7 +12,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import vo.vortex.anno.ZControllerAdvice;
-import vo.vortex.anno.ZRestController;
 import vo.vortex.bean.ZSingleton;
 import vo.vortex.common.AU;
 import vo.vortex.common.CU;
@@ -20,7 +19,6 @@ import vo.vortex.core.ZApplicationStartupInfo;
 import vo.vortex.core.ZContext;
 import vo.vortex.g.APT;
 import vo.vortex.http.Task;
-import vo.vortex.scanner.ClassMap;
 
 /**
  * 扫描 @ZControllerAdvice 类

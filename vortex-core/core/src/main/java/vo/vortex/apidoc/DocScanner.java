@@ -17,7 +17,6 @@ import vo.vortex.g.APT;
 import vo.vortex.g.G;
 import vo.vortex.http.request.ZRequest;
 import vo.vortex.http.response.ZResponse;
-import vo.vortex.scanner.ClassMap;
 import vo.vortex.template.ZModel;
 
 /**
