@@ -149,7 +149,7 @@ public final class ZApplicationEventPublisher {
 	private static ZClass gProxyZClass(
 			final ZHashBasedTable<Class<? extends ZApplicationEvent>, Method, Class<?>> table) {
 		final ZClass proxyZClass = new ZClass();
-		proxyZClass.setPackage1(new ZPackage("vo.zframework.generated"));
+		proxyZClass.setPackage1(new ZPackage("vo.vortex.generated"));
 		proxyZClass.setName("ZApplicationEventRoute");
 
 		proxyZClass.setImplementsSet(Set.of(IEventRoute.class.getCanonicalName()));

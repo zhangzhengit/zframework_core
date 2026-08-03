@@ -107,7 +107,7 @@ public class ZCacheScanner {
 
 		final ZClass proxyZClass = new ZClass();
 
-		proxyZClass.setPackage1(new ZPackage("vo.zframework.generated"));
+		proxyZClass.setPackage1(new ZPackage("vo.vortex.generated"));
 		proxyZClass.setName(proxyClassName);
 		proxyZClass.setImplementsSet(Set.of(proxyClassImplement.getCanonicalName()));
 
