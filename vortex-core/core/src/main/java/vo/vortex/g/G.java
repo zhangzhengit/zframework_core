@@ -1,5 +1,6 @@
 package vo.vortex.g;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -132,6 +133,17 @@ public class G {
 		cnset.add(vo.vortex.aop.ZFH.class);
 		cnset.add(vo.vortex.aop.ZIAOP.class);
 		cnset.add(vo.vortex.aop.ZSynchronouslyAOP.class);
+	}
+
+	public static Object newInstance(final Class<?> cls) {
+		try {
+			final Object newInstance = cls.getDeclaredConstructor().newInstance();
+			return newInstance;
+		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
+				| NoSuchMethodException e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 
 	public static Class<?> load(final String className) {
