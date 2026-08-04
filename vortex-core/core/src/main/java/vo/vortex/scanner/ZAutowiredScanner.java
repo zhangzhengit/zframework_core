@@ -108,7 +108,9 @@ public class ZAutowiredScanner {
 
 			if (isZAOP) {
 				// 放进去，给后面扫描AOP类时使用
-				ZContext.addBean(cls, o2);
+				// FIXME 2026年8月4日 11:11:07 zhangzhen : native后，启动偶尔报错XXX.class已存在，所以这个addBean暂时注释，并且暂时没发现
+				// 注释了有啥问题
+//				ZContext.addBean(cls, o2);
 			}
 
 			final Object superClassObject = vo.vortex.bean.ZSingleton.getSingletonByClass(o2.getClass().getSuperclass());

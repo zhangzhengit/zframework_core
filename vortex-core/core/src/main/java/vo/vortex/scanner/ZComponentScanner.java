@@ -186,8 +186,8 @@ public class ZComponentScanner {
 			}
 		}
 		proxyZClass.setMethodSet(zms);
-
-		ZContext.addBean(newComponent.getClass(), proxyZClass.newInstance());
+// FIXME 2026年8月4日 11:11:07 zhangzhen : 为了去掉janino而暂时注释，native后简单点了几下没发现有啥问题
+//		ZContext.addBean(newComponent.getClass(), proxyZClass.newInstance());
 	}
 
 }
