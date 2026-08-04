@@ -1,6 +1,7 @@
 package vo.vortex.scanner;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
@@ -24,6 +25,7 @@ import vo.vortex.core.ZApplicationStartupInfo;
 import vo.vortex.core.ZContext;
 import vo.vortex.g.APT;
 import vo.vortex.g.G;
+import vo.vortex.route.ISynchronouslyRoute;
 import vo.vortex.validator.ZValidated;
 import vo.vortex.validator.ZValidator;
 import vo.vortex.zclass.ZClass;
@@ -57,21 +59,16 @@ public class ZComponentScanner {
 						|| cls.isAnnotationPresent(ZAOP.class))
 				.collect(Collectors.toSet()));
 
-		final Map<String, ZClass> map = ZAOPScaner.scanAndGenerateProxyClass(zcSet);
+//		final Map<String, ZClass> map = ZAOPScaner.scanAndGenerateProxyClass(zcSet);
+		final Map<String, Class<?>> map = ZAOPScaner.scanAndGenerateProxyClass2(zcSet);
 
-		// 1
-//		final Set<Class<?>> zcSet = new HashSet<>(ClassMap.scanPackageByAnnotation(ZComponent.class, startupInfo.getPackageNameList().toArray(new String[0])));
-//		zcSet.addAll(ClassMap.scanPackageByAnnotation(ZService.class, startupInfo.getPackageNameList().toArray(new String[0])));
-//		final Map<String, ZClass> map =
-//				ZAOPScaner.scanAndGenerateProxyClass(zcSet);
 		zcSet
 			.parallelStream()
 			.forEach(cls1 -> {
 				final Object newComponent = ZObjectGeneratorStarter.generate(cls1);
-				final ZClass proxyClass = map.get(cls1.getSimpleName());
-					if (proxyClass != null) {
-
-						final Object newInstanceProxy = proxyClass.newInstance();
+				final Class<?> oClass = map.get(cls1.getSimpleName());
+					if (oClass != null) {
+						final Object newInstanceProxy = G.newInstance(G.load(cls1.getCanonicalName() + ZAOPScaner.PROXY_ZCLASS_NAME_SUFFIX));
 
 						injectParentFieldForProxy(newInstanceProxy);
 
@@ -86,20 +83,20 @@ public class ZComponentScanner {
 //						System.out.println(proxyClass.toString());
 					} else {
 
-					// 1、@ZComponent 类中方法的参数是否带有 @ZValidated 注解，有则插入校验代码，无则super.xx(xx);
-					final Optional<Method> anyMethodIsAnnotationPresentZValidated = Arrays
-							.stream(cls1.getDeclaredMethods())
-							.parallel()
-							.filter(m -> Arrays.stream(m.getParameterTypes())
-									.filter(pa -> pa.isAnnotationPresent(ZValidated.class)).findAny().isPresent())
-							.findAny();
+						// 1、@ZComponent 类中方法的参数是否带有 @ZValidated 注解，有则插入校验代码，无则super.xx(xx);
+						final Optional<Method> anyMethodIsAnnotationPresentZValidated = Arrays
+								.stream(cls1.getDeclaredMethods())
+								.parallel()
+								.filter(m -> Arrays.stream(m.getParameterTypes())
+										.filter(pa -> pa.isAnnotationPresent(ZValidated.class)).findAny().isPresent())
+								.findAny();
 
-					if (anyMethodIsAnnotationPresentZValidated.isPresent()) {
-						addZValidatedProxyClass(cls1, newComponent);
-					} else {
-						// 正常放原类
-						ZContext.addBean(cls1, newComponent);
-					}
+						if (anyMethodIsAnnotationPresentZValidated.isPresent()) {
+							addZValidatedProxyClass(cls1, newComponent);
+						} else {
+							// 正常放原类
+							ZContext.addBean(cls1, newComponent);
+						}
 
 				}
 			});

@@ -142,31 +142,44 @@ public class ZAOPScaner {
 
 		return map;
 	}
+	public static Map<String, Class<?>> scanAndGenerateProxyClass2(final Set<Class<?>> clsSet) {
 
-	private static String getAnnoName(final Annotation a) {
-		final String assss = a.toString();
+		final ZHashBasedTable<Class<?>, Method, List<Class<?>>> table = extractedC(clsSet);
 
-		final StringBuilder nameBuilder = new StringBuilder();
-		final char[] ch = assss.toCharArray();
-		if (ch[assss.length() - 1] != ')') {
-			throw new IllegalArgumentException("注解声明错误: Annotation = " + a);
-		}
-		for (int i = ch.length - 2; i > 0;) {
-			if (ch[i] == ' ') {
-				i--;
-			} else {
-				int k = i;
-				while (k > 0) {
-					if ((ch[k] == ' ') || (ch[k] == STU.EQUALS_C)) {
-						i = -1;
-						break;
-					}
-					nameBuilder.insert(0, ch[k]);
-					k--;
+		final Set<Class<?>> rowKeySet = table.rowKeySet();
+
+		rowKeySet
+		.parallelStream()
+		.forEach(cls -> {
+
+			final ZClass proxyZClass = new ZClass();
+			proxyZClass.setPackage1(new ZPackage(cls.getPackage().getName()));
+			proxyZClass.setName(cls.getSimpleName() + PROXY_ZCLASS_NAME_SUFFIX);
+			proxyZClass.setSuperClass(cls.getName());
+			final HashSet<String> sdet = new HashSet<>();
+			sdet.add(ZAOPProxyClass.class.getName());
+			proxyZClass.setAnnotationSet(sdet);
+
+			final Method[] mss = cls.getDeclaredMethods();
+
+			final HashSet<ZMethod> zms = new HashSet<>();
+			for (final Method m : mss) {
+
+				if (m.isSynthetic() || (Modifier.isPrivate(m.getModifiers()))) {
+					continue;
 				}
+
+				addZMethod(table, cls, proxyZClass, zms, m);
 			}
-		}
-		return nameBuilder.toString();
+		});
+
+		final Map<String, Class<?>> map = new HashMap<>(16, 1F);
+
+		rowKeySet.stream().forEach(cls -> {
+			map.put(cls.getSimpleName(), cls);
+		});
+
+		return map;
 	}
 
 	private static void addZMethod(final ZHashBasedTable<Class<?>, Method,List<Class<?>>> table, final Class<?> cls,
@@ -189,19 +202,13 @@ public class ZAOPScaner {
 				final Class<?> aopClass = aopClassList.get(i);
 
 				final ZMethod copyZAOPMethod = ZMethod.copyFromMethod(method);
-				addImport(proxyZClass, method);
+//				addImport(proxyZClass, method);
 
-				final String zFieldName = "ziaop_" + method.getName() + i;
-				final String zFieldType = ZIAOP.class.getName();
-				final ZField zField = new ZField(zFieldType, zFieldName,
-						"(" + zFieldType + ")" + ZSingleton.class.getName()
-						+ ".getSingletonByClassName(\"" + aopClass.getName() + "\")");
-
-				proxyZClass.addField(zField);
 
 				copyZAOPMethod.setgReturn(false);
 
 				final String nnn = cls.getName() + "@" + method.getName();
+				System.out.println("cmap.put(nnn, method);");
 				cmap.put(nnn, method);
 
 				final String returnTypeT = RU.getMethodGenericReturnType(method);
