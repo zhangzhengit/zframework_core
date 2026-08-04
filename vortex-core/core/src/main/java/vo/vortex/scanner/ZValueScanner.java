@@ -8,8 +8,6 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.StringJoiner;
@@ -22,14 +20,12 @@ import vo.vortex.anno.ZController;
 import vo.vortex.anno.ZRestController;
 import vo.vortex.anno.ZService;
 import vo.vortex.anno.ZValue;
-import vo.vortex.common.CU;
 import vo.vortex.common.RU;
 import vo.vortex.common.ZHashBasedTable;
 import vo.vortex.core.ZApplicationStartupInfo;
 import vo.vortex.core.ZContext;
 import vo.vortex.g.APT;
 import vo.vortex.g.G;
-import vo.vortex.validator.ZValidator;
 
 /**
  *
@@ -95,80 +91,8 @@ public class ZValueScanner {
 			return;
 		}
 
-		if (value.listenForChanges()) {
-			valueTable.put(value.name(), field, bean);
-		}
-
 		setValue(field, value, bean);
 	}
-
-	public static void updateValueAndValidate(final String name, final Object newValue) {
-
-		final Map<Field, Object> map = valueTable.row(name);
-		if (CU.isEmpty(map)) {
-			return;
-		}
-
-		final Set<Entry<Field, Object>> es = map.entrySet();
-		for (final Entry<Field, Object> entry : es) {
-			final Field field = entry.getKey();
-			final Object object = entry.getValue();
-
-			final Object oldValue = RU.getFiledValue(object, field);
-
-			// 新值和原值一样，continue
-			if (((newValue == null) && (newValue == oldValue))
-					|| (String.valueOf(newValue).equals(String.valueOf(oldValue)))) {
-				continue;
-			}
-
-			final Class<?> type = field.getType();
-
-			// 1 先赋值为新值
-			setValue(newValue, field, object, type);
-
-			try {
-				// 2 校验新值
-				ZValidator.validatedAll(object, field);
-				LOG.info("配置热更新:配置项[{}]已从原值[{}]更新为新值[{}]", name, oldValue, newValue);
-			} catch (final Exception e) {
-				LOG.error("配置热更新:配置项[{}]更新异常,开始重置为旧值[{}]", name, oldValue, e);
-				// 3 如果新值校验不通过，则重新赋值为旧值
-				setValue(oldValue, field, object, type);
-			}
-		}
-
-	}
-
-	private static void setValue(final Object value, final Field field, final Object object, final Class<?> type) {
-		if (type.getCanonicalName().equals(String.class.getCanonicalName())) {
-			setValue(field, object, String.valueOf(value));
-		} else if ("byte".equals(type.getCanonicalName()) || type.getCanonicalName().equals(Byte.class.getCanonicalName())) {
-			setValue(field, object, Byte.valueOf(String.valueOf(value)));
-		} else if ("short".equals(type.getCanonicalName()) || type.getCanonicalName().equals(Short.class.getCanonicalName())) {
-			setValue(field, object, Short.valueOf(String.valueOf(value)));
-		} else if ("int".equals(type.getCanonicalName()) || type.getCanonicalName().equals(Integer.class.getCanonicalName())) {
-			setValue(field, object, Integer.valueOf(String.valueOf(value)));
-		} else if ("long".equals(type.getCanonicalName()) || type.getCanonicalName().equals(Long.class.getCanonicalName())) {
-			setValue(field, object, Long.valueOf(String.valueOf(value)));
-		} else if (type.getCanonicalName().equals(BigInteger.class.getCanonicalName())) {
-			setValue(field, object, new BigInteger(String.valueOf(value)));
-		} else if (type.getCanonicalName().equals(BigDecimal.class.getCanonicalName())) {
-			setValue(field, object, new BigDecimal(String.valueOf(value)));
-		} else if ("boolean".equals(type.getCanonicalName()) || type.getCanonicalName().equals(Boolean.class.getCanonicalName())) {
-			setValue(field, object, Boolean.valueOf(String.valueOf(value)));
-		} else if ("double".equals(type.getCanonicalName()) || type.getCanonicalName().equals(Double.class.getCanonicalName())) {
-			setValue(field, object, Double.valueOf(String.valueOf(value)));
-		} else if ("float".equals(type.getCanonicalName()) || type.getCanonicalName().equals(Float.class.getCanonicalName())) {
-			setValue(field, object, Float.valueOf(String.valueOf(value)));
-		} else if ("char".equals(type.getCanonicalName()) || type.getCanonicalName().equals(Character.class.getCanonicalName())) {
-			setValue(field, object, Character.valueOf(String.valueOf(value).charAt(0)));
-		} else {
-			throw new IllegalArgumentException("@" + ZValue.class.getSimpleName() + " 字段 " + field.getName() + " 的类型 "
-					+ field.getType().getSimpleName() + " 暂不支持");
-		}
-	}
-
 
 	private static String getStringValue(final String key) {
 		final StringJoiner joiner = new StringJoiner(",");

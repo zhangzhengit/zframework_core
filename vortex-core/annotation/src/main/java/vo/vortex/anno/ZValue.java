@@ -35,16 +35,4 @@ public @interface ZValue {
 	 */
 	String name();
 
-	/**
-	 * 是否监听配置文件变动来更新值，可选项，默认[false]不监听。
-	 * 设为true，则此注解标记的字段值会随着配置文件中的K的变化而自动更新
-	 *
-	 * @return
-	 *
-	 */
-	// FIXME 2025年9月1日 上午1:26:39 zhangzhen: 考虑问题：
-	// 代码默认值为A，.p文件修改为B又改为C，最后注释了.p中这个配置，此时怎么办？
-	// 恢复为A？还是默认为C？
-	boolean listenForChanges() default false;
-
 }

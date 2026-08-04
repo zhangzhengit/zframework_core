@@ -20,7 +20,6 @@ import java.util.Properties;
 import java.util.StringJoiner;
 
 import vo.vortex.common.STU;
-import vo.vortex.scanner.ZPropertiesListener;
 
 /**
  * 读取配置文件
@@ -293,7 +292,7 @@ public class ZProperties {
 			}
 		}
 
-		ZPropertiesListener.listen(filePath);
+//		ZPropertiesListener.listen(filePath);
 
 		if (p1 == null) {
 			// 到此，无 app.p配置文件，程序仍可以正常启动运行(支持0配置启动)

@@ -121,7 +121,7 @@ public class ServerConfigurationProperties {
 	 * 是否启用静态资源的缓存
 	 */
 	@ZNotNull
-	@ZValue(name = "server.static.resource.cache.enable", listenForChanges = true)
+	@ZValue(name = "server.static.resource.cache.enable")
 	private boolean staticResourceCacheEnable = true;
 
 	/**
@@ -144,7 +144,7 @@ public class ServerConfigurationProperties {
 	@ZNotNull
 	@ZMin(min = 0)
 	@ZMax(max = ZServerQPSValidator.MAX_VALUE)
-	@ZValue(name = "server.qps", listenForChanges = true)
+	@ZValue(name = "server.qps")
 	@ZCustom(cls = ZServerQPSValidator.class)
 	// FIXME 2023年11月15日 下午3:02:12 zhanghen: TODO 是否限制同一个clientip短时间内高频率访问（脚本刷）？
 	// 如果不限制的话，是否其他ip的请求优先处理？
@@ -156,7 +156,7 @@ public class ServerConfigurationProperties {
 	 * 访问超过 本类 [server.qps] 配置值限制时给客户端的提示语
 	 */
 	@ZNotEmtpy
-	@ZValue(name = "server.qps.exceed.message", listenForChanges = true)
+	@ZValue(name = "server.qps.exceed.message")
 	private String qpsExceedMessage = "访问频繁,请稍后再试";
 
 	/**
@@ -187,7 +187,7 @@ public class ServerConfigurationProperties {
 	 */
 	@ZMin(min = ZClientQPSValidator.MIN_VALUE)
 	@ZMax(max = ZClientQPSValidator.MAX_VALUE)
-	@ZValue(name = "server.client.qps", listenForChanges = true)
+	@ZValue(name = "server.client.qps")
 	@ZCustom(cls = ZClientQPSValidator.class)
 	private int clientQps = QPSEnum.CLIENT.getDefaultValue();
 
@@ -196,7 +196,7 @@ public class ServerConfigurationProperties {
 	 */
 	@ZMin(min = ZSessionIdQPSValidator.MIN_VALUE)
 	@ZMax(max = ZSessionIdQPSValidator.MAX_VALUE)
-	@ZValue(name = "server.session.id.qps", listenForChanges = true)
+	@ZValue(name = "server.session.id.qps")
 	@ZCustom(cls = ZSessionIdQPSValidator.class)
 	private int sessionIdQps = QPSEnum.Z_SESSION_ID.getDefaultValue();
 

@@ -47,7 +47,7 @@ public class RequestValidatorConfigurationProperties {
 	 * 是否打印http请求头（日志输出）
 	 */
 	@ZNotNull
-	@ZValue(name = "request.print.http", listenForChanges = true)
+	@ZValue(name = "request.print.http")
 	private boolean printHttp = false;
 
 	/**
