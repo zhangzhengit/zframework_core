@@ -1,0 +1,22 @@
+步骤如下：
+1、
+./native-image \
+  -O3 \
+  -march=native \
+  --gc=G1 \
+  --pgo-instrument \
+  -H:MaxHeapSize=4g \
+  -jar zf1-1.0.0-jdk21.jar \
+  zf1-instrumented
+  
+ 2、
+ ./zf1-instrumented
+ 
+ 3、
+ ./native-image \
+  -O3 \
+  -march=native \
+  --gc=G1 \
+  --pgo=default.iprof \
+  -H:MaxHeapSize=4g \
+  -jar zf1-1.0.0-jdk21.jar
