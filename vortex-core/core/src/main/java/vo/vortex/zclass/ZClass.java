@@ -184,23 +184,23 @@ public class ZClass {
 		return this.body;
 	}
 
-	public Object newInstance() {
-		final String source = this.toString();
-		try {
-			final ZPackage package12 = this.getPackage1();
-			if (package12 == null) {
-				throw new IllegalArgumentException("package 未定义，请声明一个 " + ZPackage.class.getName() + " 对象");
-			}
-
-			final Object newInstance = ZCU.newInstance(source, package12.toString(), this.getName());
-
-			return newInstance;
-		} catch (SecurityException | IllegalArgumentException e) {
-			e.printStackTrace();
-		}
-
-		return null;
-	}
+//	public Object newInstance() {
+//		final String source = this.toString();
+//		try {
+//			final ZPackage package12 = this.getPackage1();
+//			if (package12 == null) {
+//				throw new IllegalArgumentException("package 未定义，请声明一个 " + ZPackage.class.getName() + " 对象");
+//			}
+//
+//			final Object newInstance = ZCU.newInstance(source, package12.toString(), this.getName());
+//
+//			return newInstance;
+//		} catch (SecurityException | IllegalArgumentException e) {
+//			e.printStackTrace();
+//		}
+//
+//		return null;
+//	}
 
 	public static ZClass empty() {
 		return empty(ZClass.generateDefaultClassName());

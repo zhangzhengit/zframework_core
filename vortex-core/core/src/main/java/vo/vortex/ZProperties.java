@@ -20,8 +20,6 @@ import java.util.Properties;
 import java.util.StringJoiner;
 
 import vo.vortex.common.STU;
-import vo.vortex.dynamic.AppH;
-import vo.vortex.dynamic.EE;
 import vo.vortex.scanner.ZPropertiesListener;
 
 /**
@@ -69,10 +67,10 @@ public class ZProperties {
 			return null;
 		}
 
-		if (AppH.isExpression(v)) {
-			final Object r = EE.execute(AppH.gExpression(v));
-			return Byte.parseByte(String.valueOf(r));
-		}
+//		if (AppH.isExpression(v)) {
+//			final Object r = EE.execute(AppH.gExpression(v));
+//			return Byte.parseByte(String.valueOf(r));
+//		}
 
 		return Byte.parseByte(v);
 	}
@@ -83,10 +81,10 @@ public class ZProperties {
 			return null;
 		}
 
-		if (AppH.isExpression(v)) {
-			final Object r = EE.execute(AppH.gExpression(v));
-			return Short.parseShort(String.valueOf(r));
-		}
+//		if (AppH.isExpression(v)) {
+//			final Object r = EE.execute(AppH.gExpression(v));
+//			return Short.parseShort(String.valueOf(r));
+//		}
 
 		return Short.parseShort(v);
 	}
@@ -97,10 +95,10 @@ public class ZProperties {
 			return defaultValue;
 		}
 
-		if (AppH.isExpression(v)) {
-			final Object r = EE.execute(AppH.gExpression(v));
-			return Integer.parseInt(String.valueOf(r));
-		}
+//		if (AppH.isExpression(v)) {
+//			final Object r = EE.execute(AppH.gExpression(v));
+//			return Integer.parseInt(String.valueOf(r));
+//		}
 
 		return Integer.parseInt(v);
 	}
@@ -112,10 +110,10 @@ public class ZProperties {
 		}
 
 		// FIXME 2025年12月26日 18:30:18 zhangzhen :  继续支持其他的
-		if (AppH.isExpression(v)) {
-			final Object r = EE.execute(AppH.gExpression(v));
-			return Integer.parseInt(String.valueOf(r));
-		}
+//		if (AppH.isExpression(v)) {
+//			final Object r = EE.execute(AppH.gExpression(v));
+//			return Integer.parseInt(String.valueOf(r));
+//		}
 
 		return Integer.parseInt(v);
 	}
@@ -126,10 +124,10 @@ public class ZProperties {
 			return null;
 		}
 
-		if (AppH.isExpression(v)) {
-			final Object r = EE.execute(AppH.gExpression(v));
-			return Long.parseLong(String.valueOf(r));
-		}
+//		if (AppH.isExpression(v)) {
+//			final Object r = EE.execute(AppH.gExpression(v));
+//			return Long.parseLong(String.valueOf(r));
+//		}
 
 		return Long.parseLong(v);
 	}
@@ -140,10 +138,10 @@ public class ZProperties {
 			return null;
 		}
 
-		if (AppH.isExpression(v)) {
-			final Object r = EE.execute(AppH.gExpression(v));
-			return new BigInteger(String.valueOf(r));
-		}
+//		if (AppH.isExpression(v)) {
+//			final Object r = EE.execute(AppH.gExpression(v));
+//			return new BigInteger(String.valueOf(r));
+//		}
 
 		return new BigInteger(v);
 	}
@@ -154,10 +152,10 @@ public class ZProperties {
 			return null;
 		}
 
-		if (AppH.isExpression(v)) {
-			final Object r = EE.execute(AppH.gExpression(v));
-			return new BigDecimal(String.valueOf(r));
-		}
+//		if (AppH.isExpression(v)) {
+//			final Object r = EE.execute(AppH.gExpression(v));
+//			return new BigDecimal(String.valueOf(r));
+//		}
 
 		return new BigDecimal(v);
 	}
@@ -168,10 +166,10 @@ public class ZProperties {
 			return null;
 		}
 
-		if (AppH.isExpression(v)) {
-			final Object r = EE.execute(AppH.gExpression(v));
-			return Float.parseFloat(String.valueOf(r));
-		}
+//		if (AppH.isExpression(v)) {
+//			final Object r = EE.execute(AppH.gExpression(v));
+//			return Float.parseFloat(String.valueOf(r));
+//		}
 
 		return Float.parseFloat(v);
 	}
@@ -181,10 +179,10 @@ public class ZProperties {
 			return null;
 		}
 
-		if (AppH.isExpression(v)) {
-			final Object r = EE.execute(AppH.gExpression(v));
-			return Double.parseDouble(String.valueOf(r));
-		}
+//		if (AppH.isExpression(v)) {
+//			final Object r = EE.execute(AppH.gExpression(v));
+//			return Double.parseDouble(String.valueOf(r));
+//		}
 
 		return Double.parseDouble(v);
 	}
@@ -195,10 +193,10 @@ public class ZProperties {
 			return null;
 		}
 
-		if (AppH.isExpression(v)) {
-			final Object r = EE.execute(AppH.gExpression(v));
-			return Boolean.parseBoolean(String.valueOf(r));
-		}
+//		if (AppH.isExpression(v)) {
+//			final Object r = EE.execute(AppH.gExpression(v));
+//			return Boolean.parseBoolean(String.valueOf(r));
+//		}
 
 		return Boolean.parseBoolean(v);
 	}
@@ -219,16 +217,13 @@ public class ZProperties {
 
 	public static String getString(final String key) {
 		final String v = properties.getProperty(key);
-		if (v == null) {
-			return null;
-		}
-
-		if (AppH.isExpression(v)) {
-			final Object r = EE.execute(AppH.gExpression(v));
-			return String.valueOf(r);
-		}
-
 		return v;
+
+//		if (AppH.isExpression(v)) {
+//			final Object r = EE.execute(AppH.gExpression(v));
+//			return String.valueOf(r);
+//		}
+
 	}
 
 	public static String[] getStringArray(final String key) {
@@ -237,11 +232,11 @@ public class ZProperties {
 			return EMPTY_STRING_ARRAY;
 		}
 
-		if (AppH.isExpression(String.valueOf(v))) {
-			final Object r = EE.execute(AppH.gExpression(String.valueOf(v)));
-			final String s1 = String.valueOf(r);
-			return s1.split(",");
-		}
+//		if (AppH.isExpression(String.valueOf(v))) {
+//			final Object r = EE.execute(AppH.gExpression(String.valueOf(v)));
+//			final String s1 = String.valueOf(r);
+//			return s1.split(",");
+//		}
 
 		final String s1 = String.valueOf(v);
 		final String[] a = s1.split(",");

@@ -17,8 +17,6 @@ import java.util.Properties;
 
 import vo.log.core.ZLog2;
 import vo.vortex.ZProperties;
-import vo.vortex.dynamic.AppH;
-import vo.vortex.dynamic.EE;
 
 /**
  * 配置文件监听器，监听配置变动，及时更新 @ZConfigurationProperties、 @ZValue 等
@@ -112,8 +110,9 @@ public class ZPropertiesListener {
 
 			final Object v = properties.get(k);
 
-			final String vS = String.valueOf(v);
-			final Object newValue = AppH.isExpression(vS) ? EE.execute(AppH.gExpression(vS)) : v;
+//			final String vS = String.valueOf(v);
+//			final Object newValue = AppH.isExpression(vS) ? EE.execute(AppH.gExpression(vS)) : v;
+			final Object newValue = v;
 
 			try {
 				ZValueScanner.updateValueAndValidate(String.valueOf(k), newValue);
