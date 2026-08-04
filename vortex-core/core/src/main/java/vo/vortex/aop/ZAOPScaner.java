@@ -208,7 +208,6 @@ public class ZAOPScaner {
 				copyZAOPMethod.setgReturn(false);
 
 				final String nnn = cls.getName() + "@" + method.getName();
-				System.out.println("cmap.put(nnn, method);");
 				cmap.put(nnn, method);
 
 				final String returnTypeT = RU.getMethodGenericReturnType(method);
