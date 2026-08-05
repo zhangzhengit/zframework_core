@@ -806,6 +806,12 @@ public class ZResponse {
 		if (request == null) {
 			// XXX : 正常情况下不会是null，在此判断null，
 			// 因为eclipse改了[访问潜在的null级别]为ERROR，为了编译通过而改
+
+			// XXX 2026年8月6日 04:11:54 zhangzhen :
+			// 再次记录：上面的XXX应该是错的，应该是原来的ThreadLocal没set(非200情况下直接走到本方法)
+			// 直接get的情况下无异常而把问题掩盖了，恰巧改了eclipse设置，而不得不判空；
+			// 现在改为了ScopedValue后没走到绑定值的分支(200情况)下直接get会抛异常，所以再次记录下
+
 			return;
 		}
 

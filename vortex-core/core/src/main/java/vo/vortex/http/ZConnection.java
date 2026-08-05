@@ -8,9 +8,7 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import vo.vortex.common.ZArray;
 import vo.vortex.configuration.properties.ServerConfigurationProperties;
@@ -18,9 +16,9 @@ import vo.vortex.core.ZContext;
 import vo.vortex.enums.ConnectionEnum;
 import vo.vortex.enums.HeaderEnum;
 import vo.vortex.enums.HttpParseStatusEnum;
-import vo.vortex.enums.HttpStatusEnum;
 import vo.vortex.http.request.HttpRequestScheduler;
 import vo.vortex.http.request.TaskRequestHandler;
+import vo.vortex.http.request.ZReqeustSV;
 import vo.vortex.http.request.ZRequest;
 import vo.vortex.http.response.ZResponse;
 
@@ -122,9 +120,14 @@ public class ZConnection {
 				} else if (process == HttpParseStatusEnum.EXCEPTION) {
 					final ZResponse exception = this.getPd().getException();
 					if (exception != null) {
-						exception.write();
+						// 在此，无ZRequest对象，直接绑定null算了
+						ScopedValue.where(ZReqeustSV.SV, null)
+						.run(() -> {
+							exception.write();
+						});
+
 						if (!exception.isOk()
-						 || (exception.getConnectionEnum() == ConnectionEnum.CLOSE)) {
+								|| (exception.getConnectionEnum() == ConnectionEnum.CLOSE)) {
 							closed = true;
 							break;
 						}
