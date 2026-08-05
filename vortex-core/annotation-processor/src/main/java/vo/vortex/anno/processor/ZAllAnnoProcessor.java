@@ -1,7 +1,6 @@
 package vo.vortex.anno.processor;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.io.Writer;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -19,7 +18,6 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
 import javax.tools.FileObject;
-import javax.tools.JavaFileObject;
 import javax.tools.StandardLocation;
 
 import vo.vortex.anno.ZAOP;
@@ -32,7 +30,6 @@ import vo.vortex.anno.ZConfigurationProperties;
 import vo.vortex.anno.ZController;
 import vo.vortex.anno.ZControllerAdvice;
 import vo.vortex.anno.ZEndsWith;
-import vo.vortex.anno.ZEventListener;
 import vo.vortex.anno.ZLength;
 import vo.vortex.anno.ZMax;
 import vo.vortex.anno.ZMin;
@@ -55,13 +52,11 @@ import vo.vortex.anno.ZUnique;
 public class ZAllAnnoProcessor extends AbstractProcessor {
 
 	public static final String Z_ALL_BEAN_REGISTRY = "ZAllBeanRegistry";
-//	 public static final String Z_ALL_BEAN_REGISTRY = "ZAllBeanRegistry" + UUID.randomUUID();
-	 private static boolean generated = false;
 	public static final String PACKAGE_NAME = "vo.vortex.generated.apt";
 	public static final String ZCacheRegistry = "ZCacheRegistry";
 	public static final String ZControllerAdviceRegistry = "ZControllerAdviceRegistry";
 	public static final String ZRestControllerRegistry = "ZRestControllerRegistry";
-
+	private static boolean generated = false;
 
 	@Override
 	public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
@@ -74,28 +69,26 @@ public class ZAllAnnoProcessor extends AbstractProcessor {
 
 		this.gAllClass(roundEnv);
 
-		this.gZCache(roundEnv);
+//		this.gZCache(roundEnv);
+//
+//		this.gZControllerAdvice(roundEnv);
+//
+//
+//		this.gZConfiguration(roundEnv);
+//
+//		this.gZAOP(roundEnv);
+//
+//
+//		this.gZComponent(roundEnv);
+//
+//		this.gZService(roundEnv);
+//
+//		this.gZController(roundEnv);
+//
+//		this.gZConfigurationProperties(roundEnv);
+//
+//		this.gZValidator(roundEnv);
 
-		this.gZControllerAdvice(roundEnv);
-
-
-		this.gZConfiguration(roundEnv);
-
-		this.gZAOP(roundEnv);
-
-
-		this.gZComponent(roundEnv);
-
-		this.gZService(roundEnv);
-
-		this.gZController(roundEnv);
-
-		this.gZConfigurationProperties(roundEnv);
-
-		this.gZValidator(roundEnv);
-
-
-	    this.gZEventListener(roundEnv);
 
 		generated = true;
 		return true;
@@ -103,83 +96,34 @@ public class ZAllAnnoProcessor extends AbstractProcessor {
 
 	private void gZConfigurationProperties(final RoundEnvironment roundEnv) {
 		final Set<? extends Element> configurationPropertiesSet = roundEnv.getElementsAnnotatedWith(ZConfigurationProperties.class);
-		this.gJson(configurationPropertiesSet, PACKAGE_NAME, "ZConfigurationPropertiesRegistry");
+		this.gJson(configurationPropertiesSet, "ZConfigurationPropertiesRegistry");
 	}
 
 	private void gZConfiguration(final RoundEnvironment roundEnv) {
 		final Set<? extends Element> configurationSet = roundEnv.getElementsAnnotatedWith(ZConfiguration.class);
-		this.gJson(configurationSet, PACKAGE_NAME, "ZConfigurationRegistry");
+		this.gJson(configurationSet, "ZConfigurationRegistry");
 	}
 
 	private void gZAOP(final RoundEnvironment roundEnv) {
 		final Set<? extends Element> zaopSet = roundEnv.getElementsAnnotatedWith(ZAOP.class);
-		this.gJson(zaopSet, PACKAGE_NAME, "ZAOPRegistry");
+		this.gJson(zaopSet, "ZAOPRegistry");
 	}
 
 	private void gZService(final RoundEnvironment roundEnv) {
 		final Set<? extends Element> serviceSet = roundEnv.getElementsAnnotatedWith(ZService.class);
-		this.gJson(serviceSet, PACKAGE_NAME, "ZServiceRegistry");
+		this.gJson(serviceSet, "ZServiceRegistry");
 	}
 
 	private void gZComponent(final RoundEnvironment roundEnv) {
 		final Set<? extends Element> componentSet = roundEnv.getElementsAnnotatedWith(ZComponent.class);
-		this.gJson(componentSet, PACKAGE_NAME, "ZComponentRegistry");
-	}
-
-	private void gZEventListener(final RoundEnvironment roundEnv) {
-
-		final Set<? extends Element> elSet = roundEnv.getElementsAnnotatedWith(ZEventListener.class);
-		final Set<Element> eventListenerTypeSet = elSet.stream()
-				.map(Element::getEnclosingElement).collect(Collectors.toSet());
-
-		final String className = "ZApplicationEventRoute";
-
-		 try {
- 	         final Filer filer = this.processingEnv.getFiler();
- 	         final JavaFileObject sourceFile = filer.createSourceFile(PACKAGE_NAME + "." + className);
- 	         try (PrintWriter out = new PrintWriter(sourceFile.openWriter())) {
- 	             out.println("package " + PACKAGE_NAME + ";");
- 	             out.println();
- 	             out.println("import java.util.Set;");
- 	             out.println("import java.util.LinkedHashSet;");
- 	             out.println();
-// 	             out.println("public class " + className + " implements vo.vortex.route.IEventRoute {");
- 	             out.println("public class " + className + " {");
- 	             out.println();
- 	             out.println("    public static Set<String> getAllClass() {");
- 	             out.println("        Set<String> set = new LinkedHashSet<>();");
-
- 	             for (final Element e : elSet) {
- 	                 final String fullName = e.toString();
- 	                 out.println("        set.add(\"" + fullName + "\");");
- 	             }
-
- 	             out.println("        return set;");
- 	             out.println("    }");
- 	             out.println("}");
- 	         }
- 		} catch (final Exception e) {
- 			this.processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR,
- 					"Failed to generate " + className + ": " + e.getMessage());
- 		}
-
-		System.out.println("elSet.size = " + elSet.size());
-		for (final Element element : elSet) {
-//			System.out.println(element);
-			final Element enclosingElement = element.getEnclosingElement();
-			System.out.println(enclosingElement+"."+ element);
-
-		}
-		System.out.println("elSet.size = " + elSet.size());
-
-	    this.gJson(eventListenerTypeSet, PACKAGE_NAME, "ZEventListenerRegistry");
+		this.gJson(componentSet, "ZComponentRegistry");
 	}
 
 	private void gAllClass(final RoundEnvironment roundEnv) {
 		final Set<? extends Element> rootElements = roundEnv.getRootElements();
 	    final Set<Element> csset = rootElements.stream().filter(e -> e.getKind() == ElementKind.CLASS)
 	    .collect(Collectors.toSet());
-	    this.gJson(csset, PACKAGE_NAME, Z_ALL_BEAN_REGISTRY);
+	    this.gJson(csset, Z_ALL_BEAN_REGISTRY);
 	}
 
 	private void gZValidator(final RoundEnvironment roundEnv) {
@@ -202,20 +146,20 @@ public class ZAllAnnoProcessor extends AbstractProcessor {
 		typeSet.addAll(t8);
 		typeSet.addAll(t9);
 
-		this.gJson(typeSet, PACKAGE_NAME, "ZValidatorRegistry");
+		this.gJson(typeSet, "ZValidatorRegistry");
 	}
 
 	private void gZController(final RoundEnvironment roundEnv) {
 		final Set<? extends Element> restControllerSet = roundEnv.getElementsAnnotatedWith(ZRestController.class);
-		this.gJson(restControllerSet, PACKAGE_NAME, "ZRestControllerRegistry");
+		this.gJson(restControllerSet, "ZRestControllerRegistry");
 
 		final Set<? extends Element> controllerSet = roundEnv.getElementsAnnotatedWith(ZController.class);
-		this.gJson(controllerSet, PACKAGE_NAME, "ZControllerRegistry");
+		this.gJson(controllerSet, "ZControllerRegistry");
 	}
 
 	private void gZControllerAdvice(final RoundEnvironment roundEnv) {
 		final Set<? extends Element> controllerAdviceSet = roundEnv.getElementsAnnotatedWith(ZControllerAdvice.class);
-		this.gJson(controllerAdviceSet, PACKAGE_NAME, "ZControllerAdviceRegistry");
+		this.gJson(controllerAdviceSet, "ZControllerAdviceRegistry");
 	}
 
 	private void gZCache(final RoundEnvironment roundEnv) {
@@ -225,28 +169,24 @@ public class ZAllAnnoProcessor extends AbstractProcessor {
 				.collect(Collectors.toSet()));
 		cacheESet.addAll(roundEnv.getElementsAnnotatedWith(ZCacheEvict.class).stream().map(Element::getEnclosingElement)
 				.collect(Collectors.toSet()));
-		this.gJson(cacheESet, PACKAGE_NAME, "ZCacheRegistry");
+		this.gJson(cacheESet, "ZCacheRegistry");
 	}
 
-	private void gJson(final Set<? extends Element> elementSet, final String packageName, final String className) {
-	    // 提取全限定名并排序
+	private void gJson(final Set<? extends Element> elementSet, final String className) {
 	    final List<String> classNames = elementSet.stream()
 	            .map(Element::toString)
 	            .sorted()
 	            .collect(Collectors.toList());
 
-	    // 构建 JSON 数组字符串
 	    final String json = classNames.stream()
 	            .map(s -> "\"" + s + "\"")
 	            .collect(Collectors.joining(", ", "[", "]"));
 
 	    try {
 	        final Filer filer = this.processingEnv.getFiler();
-	        // 注意：第二个参数是包名，应为空字符串表示根目录
-	        // 第三个参数是相对于 CLASS_OUTPUT 的完整路径
 	        final FileObject fileObject = filer.createResource(
 	                StandardLocation.CLASS_OUTPUT,
-	                "",   // 包名，空字符串表示根
+	                "",
 	                "META-INF/vortex/registry/" + className + ".json");
 	        try (Writer writer = fileObject.openWriter()) {
 	            writer.write(json);
@@ -258,44 +198,5 @@ public class ZAllAnnoProcessor extends AbstractProcessor {
 	                "Failed to generate registry JSON: " + e.getMessage());
 	    }
 	}
-
-//	private void gClass(final Set<? extends Element> elementSet, final String packageName, final String className) {
-//		System.out.println("typeSet.size = " + elementSet.size());
-//		for (final Element element : elementSet) {
-//			System.out.println(element);
-//			System.out.println(element.toString());
-//
-//		}
-//		System.out.println("typeSet.size = " + elementSet.size());
-//
-//	     try {
-//
-//	         final Filer filer = this.processingEnv.getFiler();
-//	         final JavaFileObject sourceFile = filer.createSourceFile(packageName + "." + className);
-//	         try (PrintWriter out = new PrintWriter(sourceFile.openWriter())) {
-//	             out.println("package " + packageName + ";");
-//	             out.println();
-//	             out.println("import java.util.Set;");
-//	             out.println("import java.util.LinkedHashSet;");
-//	             out.println();
-//	             out.println("public class " + className + " {");
-//	             out.println();
-//	             out.println("    public static Set<String> getAllClass() {");
-//	             out.println("        Set<String> set = new LinkedHashSet<>();");
-//
-//	             for (final Element e : elementSet) {
-//	                 final String fullName = e.toString();
-//	                 out.println("        set.add(\"" + fullName + "\");");
-//	             }
-//
-//	             out.println("        return set;");
-//	             out.println("    }");
-//	             out.println("}");
-//	         }
-//		} catch (final Exception e) {
-//			this.processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR,
-//					"Failed to generate " + className + ": " + e.getMessage());
-//		}
-//	}
 
 }
