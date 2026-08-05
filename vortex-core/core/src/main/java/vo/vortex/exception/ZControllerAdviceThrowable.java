@@ -6,7 +6,7 @@ import vo.vortex.common.CR;
 import vo.vortex.common.STU;
 import vo.vortex.core.ZContext;
 import vo.vortex.http.ZCookie;
-import vo.vortex.http.request.ReqeustInfo;
+import vo.vortex.http.request.ZReqeustSV;
 import vo.vortex.http.request.ZRequest;
 
 /**
@@ -30,7 +30,7 @@ public class ZControllerAdviceThrowable {
 		final String m = findCausedby(throwable);
 		final ZControllerAdviceThrowableConfigurationProperties conf = ZContext.getBean(ZControllerAdviceThrowableConfigurationProperties.class);
 
-		final ZRequest request = ReqeustInfo.get();
+		final ZRequest request = ZReqeustSV.get();
 		if (request != null) {
 			final ZCookie zsessionid = request.getZSESSIONID();
 			LOG.error("请求出错：path={},clientIp={},ZSESSIONID={}", request.getRequestURI(), request.getClientIp(),

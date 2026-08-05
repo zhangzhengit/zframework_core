@@ -16,10 +16,10 @@ import vo.vortex.exception.ZControllerAdviceActuator;
 import vo.vortex.exception.ZControllerAdviceThrowable;
 import vo.vortex.exception.ZFException;
 import vo.vortex.http.Task;
-import vo.vortex.http.ZConnectionTL;
+import vo.vortex.http.ZConnectionSV;
 import vo.vortex.http.ZCookie;
 import vo.vortex.http.ZSession;
-import vo.vortex.http.request.ReqeustInfo;
+import vo.vortex.http.request.ZReqeustSV;
 import vo.vortex.http.request.ZRequest;
 
 /**
@@ -41,33 +41,32 @@ public class HTTPResponseProcessor {
 
 	public static void response(final ZRequest request) {
 
-		try {
-			ReqeustInfo.set(request);
-			response0(request);
-		} catch (final Throwable e) {
-			// 这个catch里 真正处理 response里的异常，用统一配置的异常处理器来处理
-			final ZControllerAdviceActuator a = ZContext.getBean(ZControllerAdviceActuator.class);
-			final Object r = a.execute(e, request);
+		ScopedValue.where(ZReqeustSV.SV, request).run(()->{
+			try {
+				response0(request);
+			} catch (final Throwable e) {
+				// 这个catch里 真正处理 response里的异常，用统一配置的异常处理器来处理
+				final ZControllerAdviceActuator a = ZContext.getBean(ZControllerAdviceActuator.class);
+				final Object r = a.execute(e, request);
 
-			final int httpStatus = ZControllerAdviceThrowable.findHttpStatus(e);
-			final ZResponse response = new ZResponse()
-					.httpStatus(
-							httpStatus != ZFException.NOT_SET ? httpStatus : HttpStatusEnum.HTTP_500.getStatus())
-					.contentType(ContentTypeEnum.APPLICATION_JSON.getTypeBytes())
-					.body(J.toJSONString(r));
+				final int httpStatus = ZControllerAdviceThrowable.findHttpStatus(e);
+				final ZResponse response = new ZResponse()
+						.httpStatus(
+								httpStatus != ZFException.NOT_SET ? httpStatus : HttpStatusEnum.HTTP_500.getStatus())
+						.contentType(ContentTypeEnum.APPLICATION_JSON.getTypeBytes())
+						.body(J.toJSONString(r));
 
-			if (RESPONSE_Z_SESSION_ID) {
-				setZSessionId(request, response);
+				if (RESPONSE_Z_SESSION_ID) {
+					setZSessionId(request, response);
+				}
+
+				response.write();
+
+				if (e instanceof IOException) {
+					ZConnectionSV.get().closeOutputStreamAndSocket();
+				}
 			}
-
-			response.write();
-
-			if (e instanceof IOException) {
-				ZConnectionTL.get().closeOutputStreamAndSocket();
-			}
-		} finally {
-			ReqeustInfo.remove();
-		}
+		});
 
 	}
 
@@ -116,7 +115,7 @@ public class HTTPResponseProcessor {
 			throw e;
 		} finally {
 			if (!request.isKeepAlive() || ((response != null) && (response.getConnectionEnum() == ConnectionEnum.CLOSE))) {
-				ZConnectionTL.get().closeOutputStreamAndSocket();
+				ZConnectionSV.get().closeOutputStreamAndSocket();
 			}
 		}
 
@@ -124,10 +123,10 @@ public class HTTPResponseProcessor {
 
 	public static void setCacheControl(final ZResponse response) {
 
-		final ZCacheControl cacheControl = ZConnectionTL.get().getPd().getZrMethod().getCacheControl();
+		final ZCacheControl cacheControl = ZConnectionSV.get().getPd().getZrMethod().getCacheControl();
 		if (cacheControl != null) {
 			response.header(HeaderEnum.CACHE_CONTROL.getNameBytes(),
-					ZConnectionTL.get().getPd().getZrMethod().getCacheControlVStringBytes());
+					ZConnectionSV.get().getPd().getZrMethod().getCacheControlVStringBytes());
 		}
 
 	}

@@ -124,12 +124,14 @@ public class ZServer {
 		}
 
 		final ZConnection connection = new ZConnection(socket);
-		try {
-			connection.start();
-		} finally {
-			CONNECTION_LIMIT_SEMAPHORE.release();
-			ZConnectionTL.remove();
-		}
+		ScopedValue.where(ZConnectionSV.SV, connection).run(() -> {
+			try {
+				connection.start();
+			} finally {
+				CONNECTION_LIMIT_SEMAPHORE.release();
+			}
+		});
+
 	}
 
 	public static boolean allow() {

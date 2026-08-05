@@ -23,7 +23,7 @@ import vo.vortex.enums.HeaderEnum;
 import vo.vortex.http.ArrayRange;
 import vo.vortex.http.TF;
 import vo.vortex.http.Task;
-import vo.vortex.http.ZConnectionTL;
+import vo.vortex.http.ZConnectionSV;
 import vo.vortex.http.ZCookie;
 import vo.vortex.http.ZServer;
 import vo.vortex.http.ZSession;
@@ -520,7 +520,7 @@ public class ZRequest {
 
 	private static void parsePath(final ZRequest request) {
 
-		final byte[] requestURIBytes = ZConnectionTL.get().getPd().getRequestURIBytes();
+		final byte[] requestURIBytes = ZConnectionSV.get().getPd().getRequestURIBytes();
 
 		final int wI = AU.indexOfKeyword(requestURIBytes, STU.Q_BYTE);
 
@@ -872,7 +872,7 @@ public class ZRequest {
 	}
 
 	public String getRequestLine() {
-		final String requestLine = new String(ZConnectionTL.get().getPd().getRequestLineBytes());
+		final String requestLine = new String(ZConnectionSV.get().getPd().getRequestLineBytes());
 		return requestLine;
 	}
 
@@ -922,7 +922,7 @@ public class ZRequest {
 
 	public String getClientIp() {
 		if (this.clientIp == null) {
-			this.clientIp = ((InetSocketAddress) ZConnectionTL.get().getSocket().getRemoteSocketAddress()).getAddress().getHostAddress();
+			this.clientIp = ((InetSocketAddress) ZConnectionSV.get().getSocket().getRemoteSocketAddress()).getAddress().getHostAddress();
 		}
 		return this.clientIp;
 	}

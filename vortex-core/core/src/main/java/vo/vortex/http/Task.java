@@ -108,7 +108,7 @@ public class Task {
 
 		try {
 
-			final ZRMethod zrMethod = ZConnectionTL.get().getPd().getZrMethod();
+			final ZRMethod zrMethod = ZConnectionSV.get().getPd().getZrMethod();
 			final Object[] parameters = generateParameters(request, request.getPath(), zrMethod);
 
 			final Object zController = ZControllerMap.getObjectByMethod(zrMethod.getMethod());

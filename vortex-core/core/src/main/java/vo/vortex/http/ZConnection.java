@@ -157,7 +157,6 @@ public class ZConnection {
 
 		this.bufferedOutputStream = new BufferedOutputStream(this.getOutputStream());
 
-		ZConnectionTL.set(this);
 	}
 
 	private void setSoTimeout() {
