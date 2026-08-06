@@ -70,20 +70,6 @@ public class ZConnection {
 	 */
 	private final ZArray responseArray = new ZArray(ZResponse.RESPONSE_ARRAY_CAPACITY);
 
-	// FIXME 2026年8月6日 07:53:59 zhangzhen : 改为SocpedValue后复用responseHeaderList出现了两个bug，可能还有更多，暂时发现了两个暂时注释，改为不复用了,待会再查原因
-//	/**
-//	 * 存放响应的header
-//	 */
-//	private List<ZHeader> responseHeaderList = initRHL();
-//
-//	public static ArrayList<ZHeader> initRHL() {
-//		final ArrayList<ZHeader> v = new ArrayList<>(ZResponse.HEADER_LIST_CAPACITY);
-//		if (isResponseServer) {
-//			v.add(new ZHeader(HeaderEnum.SERVER.getNameBytes(), SERVER_NAME_BYTES));
-//		}
-//		return v;
-//	}
-
 	public void start() {
 
 		this.pd.setBufferedInputStream(this.bufferedInputStream);
@@ -279,13 +265,5 @@ public class ZConnection {
 	public OutputStream getOutputStream() {
 		return this.outputStream;
 	}
-
-//	public List<ZHeader> getResponseHeaderList() {
-//		return this.responseHeaderList;
-//	}
-//
-//	public void setResponseHeaderList(final List<ZHeader> responseHeaderList) {
-//		this.responseHeaderList = responseHeaderList;
-//	}
 
 }

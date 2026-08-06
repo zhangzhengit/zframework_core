@@ -130,11 +130,7 @@ public class ZResponse {
 	/**
 	 * 放header
 	 */
-	// FIXME 2026年8月6日 07:53:59 zhangzhen : 改为SocpedValue后复用responseHeaderList出现了两个bug，
-//	可能还有更多，暂时发现了两个暂时注释，改为不复用了,待会再查原因
-//	private List<ZHeader> headerList = ZConnectionSV.get().getResponseHeaderList();
 	private List<ZHeader> headerList = new ArrayList<>(4);
-//	private final int initHLS = this.getHeaderList().size();
 
 	/**
 	 * write 方法是否执行过
@@ -984,27 +980,6 @@ public class ZResponse {
 		} else {
 			this.array.reset();
 		}
-
-		// FIXME 2026年8月6日 07:53:59 zhangzhen : 改为SocpedValue后下面逻辑 subList出现了from >to，暂时注释，改为不复用了,待会再查原因
-//		if (this.getHeaderList().size() > ZResponse.HEADER_LIST_CAPACITY) {
-//			this.setHeaderList(ZConnection.initRHL());
-//			ZConnectionSV.get().setResponseHeaderList(this.getHeaderList());
-//		} else {
-//			// 初始化时已有的不删
-//			if (this.initHLS <= 0) {
-//				this.getHeaderList().clear();
-//			} else {
-//				if(this.initHLS > this.getHeaderList().size()) {
-//					System.out.println("initHLS = " + this.initHLS);
-//					System.out.println("initHLS-headerList.size = " + this.headerList.size());
-//					for (final ZHeader zHeader : this.headerList) {
-//						System.out.println("initHLS-hName = " + new String(zHeader.getNameBytes()));
-//						System.out.println("initHLS-hValue = " + new String(zHeader.getValueBytes()));
-//					}
-//				}
-//				this.getHeaderList().subList(this.initHLS, this.getHeaderList().size()).clear();
-//			}
-//		}
 	}
 
 	public void setHeaderList(final List<ZHeader> headerList) {
