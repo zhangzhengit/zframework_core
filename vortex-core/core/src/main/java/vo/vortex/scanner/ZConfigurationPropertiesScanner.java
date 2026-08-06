@@ -68,57 +68,20 @@ public class ZConfigurationPropertiesScanner {
 
 	public static void scanAndCreate(final ZApplicationStartupInfo startupInfo) throws Exception {
 
-//		final Set<String> allClass2 = vo.vortex.apt.generated.ZConfigurationPropertiesRegistry.getAllClass();
+		final Set<Class<?>> x = new HashSet<>(G.getAllClass());
 
-		// 2 APT
-		final Set<Class<?>> csSet = new HashSet<>();
+		x.addAll(APT.getAllClass());
 
-		final Set<Class<?>> ggetAllClass = G.getAllClass();
-//		System.out.println("ZConfigurationPropertiesScanner.scanAndCreate.ggetAllClass.size = " + ggetAllClass.size());
-//		for (final Class<?> class1 : ggetAllClass) {
-//			System.out.println(class1);
-//		}
-//		System.out.println("ZConfigurationPropertiesScanner.scanAndCreate.ggetAllClass.size = " + ggetAllClass.size());
-
-		final Set<Class<?>> x = ggetAllClass.stream()
-				.filter(cls -> cls!=null)
-				.filter(cls -> cls.isAnnotationPresent(ZConfigurationProperties.class))
-				.collect(Collectors.toSet());
-
-//		System.out.println("ZConfigurationPropertiesScanner.scanAndCreate.x.size = " + x.size());
-//		for (final Class<?> class1 : x) {
-//			System.out.println(class1);
-//		}
-//		System.out.println("ZConfigurationPropertiesScanner.scanAndCreate.x.size = " + x.size());
-
-		csSet.addAll(x);
-		final Set<Class<?>> zcpr = APT.getAllClass().stream()
-				.filter(cls -> cls!=null)
-				.filter(cls -> cls.isAnnotationPresent(ZConfigurationProperties.class))
-				.collect(Collectors.toSet());
-
-//		System.out.println("ZConfigurationPropertiesScanner.scanAndCreate.zcpr.size = " + zcpr.size());
-//		for (final Class<?> class1 : zcpr) {
-//			System.out.println(class1);
-//		}
-//		System.out.println("ZConfigurationPropertiesScanner.scanAndCreate.zcpr.size = " + zcpr.size());
-		csSet.addAll(zcpr);
-
-		// 1 scanPackageByAnnotation
-//		final Set<Class<?>> csSet = ClassMap.scanPackageByAnnotation(ZConfigurationProperties.class, startupInfo.getPackageNameArray()
-//				);
+		final Set<Class<?>> csSet = x.stream().filter(cls -> cls != null)
+				.filter(cls -> cls.isAnnotationPresent(ZConfigurationProperties.class)).collect(Collectors.toSet());
 
 		if (CU.isEmpty(csSet)) {
 			return;
 		}
 
 		final Set<Integer> valueSet = new HashSet<>();
-//		System.out.println("ZConfigurationPropertiesScanner.scanAndCreate.csSet.size = " + csSet.size());
-//		final String cn = csSet.stream().map(Class::getCanonicalName).collect(Collectors.joining(","));
-//		System.out.println("ZConfigurationPropertiesScanner.scanAndCreate.csSet.cn = " + cn);
 
 		for (final Class<?> cls : csSet) {
-//			System.out.println("ZConfigurationPropertiesScanner.scanAndCreate.cls = " + cls);
 			final ZOrder annotation = cls.getAnnotation(ZOrder.class);
 			if ((annotation != null) && !valueSet.add(annotation.value())) {
 				throw new StartupException("@" + ZConfigurationProperties.class.getSimpleName() + " 类 " + "@"
