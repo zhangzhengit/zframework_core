@@ -1,7 +1,9 @@
 package vo.vortex.http.response;
 
 import java.io.IOException;
+import java.util.List;
 
+import vo.log.core.ZLog2;
 import vo.vortex.anno.ZCacheControl;
 import vo.vortex.common.J;
 import vo.vortex.configuration.properties.ServerConfigurationProperties;
@@ -18,6 +20,7 @@ import vo.vortex.exception.ZFException;
 import vo.vortex.http.Task;
 import vo.vortex.http.ZConnectionSV;
 import vo.vortex.http.ZCookie;
+import vo.vortex.http.ZHeader;
 import vo.vortex.http.ZSession;
 import vo.vortex.http.request.ZReqeustSV;
 import vo.vortex.http.request.ZRequest;
@@ -38,10 +41,10 @@ public class HTTPResponseProcessor {
 	 * 如果以后cookie的生成方式改了，这个值也要改
 	 */
 	public static final int DEFAULT_RESPONSE_COOKIE_ARRAY_CAPACITY = 76;
-
+	private static final ZLog2 LOG = ZLog2.getInstance();
 	public static void response(final ZRequest request) {
 
-		ScopedValue.where(ZReqeustSV.SV, request).run(()->{
+		ScopedValue.where(ZReqeustSV.SV, request).run(() -> {
 			try {
 				response0(request);
 			} catch (final Throwable e) {
@@ -53,8 +56,7 @@ public class HTTPResponseProcessor {
 				final ZResponse response = new ZResponse()
 						.httpStatus(
 								httpStatus != ZFException.NOT_SET ? httpStatus : HttpStatusEnum.HTTP_500.getStatus())
-						.contentType(ContentTypeEnum.APPLICATION_JSON.getTypeBytes())
-						.body(J.toJSONString(r));
+						.contentType(ContentTypeEnum.APPLICATION_JSON.getTypeBytes()).body(J.toJSONString(r));
 
 				if (RESPONSE_Z_SESSION_ID) {
 					setZSessionId(request, response);
@@ -69,6 +71,7 @@ public class HTTPResponseProcessor {
 		});
 
 	}
+
 
 	public static void setZSessionId(final ZRequest request, final ZResponse response) {
 		if ((request == null) || (response == null)) {
@@ -110,7 +113,7 @@ public class HTTPResponseProcessor {
 
 			response.write();
 
-		} catch (final Exception e) {
+		} catch (final Throwable e) {
 			// 这里不能关闭，因为外面的异常处理器类还要write，继续抛
 			throw e;
 		} finally {
