@@ -6,11 +6,12 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import vo.vortex.anno.ZOrder;
-import vo.vortex.cache.ZRC;
 import vo.vortex.common.CU;
 import vo.vortex.core.ZApplicationStartupInfo;
 import vo.vortex.core.ZContext;
@@ -27,12 +28,14 @@ public class ZHandlerInterceptorScanner {
 
 	private static final List<ZHandlerInterceptor> BEAN_LIST = new ArrayList<>();
 
+	private static final ConcurrentMap<String, List<ZHandlerInterceptor>> hiMap = new ConcurrentHashMap<>();
+
 	/**
 	 * 扫描 ZHandlerInterceptor 的实现类
 	 * @param startupInfo TODO
 	 *
 	 */
-	public static void scan(ZApplicationStartupInfo startupInfo) {
+	public static void scan(final ZApplicationStartupInfo startupInfo) {
 
 		final Collection<Object> values = ZContext.all().values();
 		final HashSet<Integer> ovSet = new HashSet<>();
@@ -64,31 +67,20 @@ public class ZHandlerInterceptorScanner {
 	}
 
 	/**
-	 * 获取 ZHandlerInterceptor 的实现类
-	 *
-	 * @return
-	 *
-	 */
-	public static List<ZHandlerInterceptor> get() {
-		return BEAN_LIST;
-	}
-
-	/**
 	 * 返回匹配请求路径的拦截器，已经按从前到后的执行顺序排序了
 	 *
 	 * @param requestURI 请求路径,如：/index、/user/1
 	 * @return
 	 *
 	 */
-	public static List<ZHandlerInterceptor> match(final String requestURI) {
-		final String key = "match-" + requestURI;
-		return ZRC.singleton().computeIfAbsent(key, () ->  match0(requestURI));
+	public static List<ZHandlerInterceptor> getZHandlerInterceptorList(final String requestURI) {
+		return hiMap.computeIfAbsent(requestURI, ZHandlerInterceptorScanner::match0);
 	}
 
 	private static List<ZHandlerInterceptor> match0(final String requestURI) {
 		final List<ZHandlerInterceptor> zhiRList = new ArrayList<>();
 
-		final List<ZHandlerInterceptor> list = get();
+		final List<ZHandlerInterceptor> list = BEAN_LIST;
 		if (CU.isNotEmpty(list)) {
 			for (final ZHandlerInterceptor zhi : list) {
 				final String[] interceptionPath = zhi.interceptionPathRegex();

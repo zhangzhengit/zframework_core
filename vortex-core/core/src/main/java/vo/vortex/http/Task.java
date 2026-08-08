@@ -207,9 +207,10 @@ public class Task {
 
 	private static ZResponse invokeAndResponse0(final ZRMethod zrMethod, final Object[] parameters,
 			final Object zControllerObject, final ZRequest request, final ZResponse response) throws Throwable {
-		final List<ZHandlerInterceptor> hiList = ZHandlerInterceptorScanner.match(request.getRequestURI());
 
-		final Object r = CU.isEmpty(hiList)
+		final List<ZHandlerInterceptor> hiList = ZHandlerInterceptorScanner.getZHandlerInterceptorList(request.getRequestURI());
+
+		final Object rv = CU.isEmpty(hiList)
 				? invoke0(request.getPath(), zControllerObject, zrMethod, parameters)
 				: invokeZHandlerInterceptor(zrMethod, parameters, zControllerObject, request, hiList, response);
 
@@ -252,7 +253,7 @@ public class Task {
 		final String[] ps = zrMethod.getProduces();
 		if (AU.isNotEmpty(ps)) {
 			if (ps.length == 1) {
-				return responseCT(r, ps[0], zrMethod.getCtea()[0]);
+				return responseCT(rv, ps[0], zrMethod.getCtea()[0]);
 			}
 			final int x = 20;
 			// FIXME 2025年12月6日 00:39:34 zhangzhen : 多个ps的待会再做，先做下面简单的
@@ -263,9 +264,9 @@ public class Task {
 		// 否则一律application/json
 		if (zrMethod.hasResponseBody()) {
 			if (zrMethod.isRTString() || zrMethod.isRTPrimitiveType()) {
-				return responseTextPlain(r);
+				return responseTextPlain(rv);
 			}
-			return responseAppJSON(r);
+			return responseAppJSON(rv);
 		}
 
 		// 第4优先：@ZRestCon还是@ZCon注解,ZC则默认为html名称，
@@ -273,15 +274,15 @@ public class Task {
 		final CTEnum ctEnum = zrMethod.getCtEnum();
 		if (ctEnum == CTEnum.NORMAL) {
 			final ZModel zModel = findZModel(parameters);
-			return responseHtml(r, zModel);
+			return responseHtml(rv, zModel);
 		}
 
 		if ((ctEnum == CTEnum.REST) && (zrMethod.isRTString() || zrMethod.isRTPrimitiveType())) {
-			return responseTextPlain(r);
+			return responseTextPlain(rv);
 		}
 
 		// 默认响应json
-		return responseAppJSON(r);
+		return responseAppJSON(rv);
 	}
 
 	private static ZModel findZModel(final Object[] parameters) {
