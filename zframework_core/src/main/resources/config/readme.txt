@@ -1,2 +1,0 @@
-本目录下那个配置文件正确名称是application.properties
-如有工程依赖本工程，则新工程下应命名为application.properties
