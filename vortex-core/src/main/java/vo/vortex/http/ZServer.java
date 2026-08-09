@@ -10,7 +10,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.ThreadPoolExecutor.AbortPolicy;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -53,13 +52,15 @@ public class ZServer {
 	private static final TaskRequestHandler requestHandler = new TaskRequestHandler();
 
 	private static final ExecutorService es = ENABLE_VIRTUAL_THREAD ? null
-			: new ThreadPoolExecutor(SERVER_CONFIGURATIONPROPERTIES.getThreadCount(),
+			: new ThreadPoolExecutor(
+					SERVER_CONFIGURATIONPROPERTIES.getThreadCount(),
 					SERVER_CONFIGURATIONPROPERTIES.getThreadCount(), 0, TimeUnit.MILLISECONDS,
 					new LinkedBlockingQueue<>(), (ThreadFactory) r -> {
 						Objects.requireNonNull(r);
-						final Thread thread = new Thread(gTName());
+						final Thread thread = new Thread(r, gTName());
+						thread.setDaemon(true);
 						return thread;
-					},new AbortPolicy());
+					});
 
 	private volatile boolean serverStarted = false;
 
