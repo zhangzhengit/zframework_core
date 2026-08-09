@@ -8,6 +8,8 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import vo.vortex.anno.ZAOP;
 import vo.vortex.anno.ZAsync;
+import vo.vortex.configuration.properties.ZAsyncProperties;
+import vo.vortex.core.ZContext;
 import vo.vortex.route.IAsyncRoute;
 
 /**
@@ -20,17 +22,14 @@ import vo.vortex.route.IAsyncRoute;
 @ZAOP(interceptType = ZAsync.class)
 public class ZAsyncAOP implements ZIAOP {
 
-	private static final String THREAD_NAME = "asyncT-";
+	private static final ZAsyncProperties configurationProperties = ZContext
+			.getBean(ZAsyncProperties.class);
+
+	private static final String THREAD_NAME = configurationProperties.getThreadName();
 
 	private static final AtomicLong VT_N = new AtomicLong(0L);
 
-	// FIXME 2026年5月4日 19:03:28 zhangzhen : 这个我看本机的jdk24是被newVirtualThreadPerTaskExecutor调用的，
-	// 但查看 new 出的不是虚拟线程。还是用下面的newV吧 然后在执行点 Thread.currentThread().setName
-
-//	private final ExecutorService ves = Executors.newThreadPerTaskExecutor(new TF());
-
-//	private final ExecutorService ves = Executors.newVirtualThreadPerTaskExecutor();
-	private final ExecutorService ves = Executors.newFixedThreadPool(100);
+	private final ExecutorService ves = Executors.newFixedThreadPool(configurationProperties.getThreadCount());
 
 	@Override
 	public Object before(final AOPParameter aopParameter) {
