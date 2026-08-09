@@ -13,7 +13,7 @@ import vo.vortex.anno.ZOrder;
  * @date 2026年8月9日 17:40:17
  */
 @ZConfigurationProperties(prefix = "async")
-@ZOrder(value = Integer.MIN_VALUE)
+@ZOrder(value = Integer.MIN_VALUE + 3)
 public class ZAsyncProperties {
 
 	/**

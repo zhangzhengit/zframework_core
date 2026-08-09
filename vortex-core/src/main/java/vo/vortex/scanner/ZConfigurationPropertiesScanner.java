@@ -76,7 +76,9 @@ public class ZConfigurationPropertiesScanner {
 		for (final Class<?> cls : csSet) {
 			final ZOrder annotation = cls.getAnnotation(ZOrder.class);
 			if ((annotation != null) && !valueSet.add(annotation.value())) {
-				throw new StartupException("@" + ZConfigurationProperties.class.getSimpleName() + " 类 " + "@"
+				throw new StartupException("@" + ZConfigurationProperties.class.getSimpleName() + " 类 "
+						+ cls.getCanonicalName()
+						+ " @"
 						+ ZOrder.class.getSimpleName() + ".value" + "[" + annotation.value() + "]" + "重复，请检查代码");
 			}
 		}

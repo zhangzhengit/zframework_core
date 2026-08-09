@@ -12,7 +12,7 @@ import vo.vortex.anno.ZOrder;
  * @date 2026年8月9日 17:34:46
  */
 @ZConfigurationProperties(prefix = "application.event")
-@ZOrder(value = Integer.MIN_VALUE)
+@ZOrder(value = Integer.MIN_VALUE + 2)
 public class ZApplicationEventConfigurationProperties {
 
 	/**
