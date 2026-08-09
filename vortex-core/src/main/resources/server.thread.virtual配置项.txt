@@ -1,0 +1,16 @@
+1、启用虚拟线程，即：默认值true
+	server.thread.virtual=true
+   会对每个连接启用一个虚拟线程来处理，直到遇到请求头中带有Connection: close,
+   或者达到server.keep.alive.timeout配置值超过关闭连接，此虚拟线程结束。
+   
+2、启用平台线程，即：
+	server.thread.virtual=false
+   会对每个连接启用一个平台线程来处理，直到遇到请求头中带有Connection: close,
+   或者达到server.keep.alive.timeout配置值超过关闭连接，此平台线程结束。
+   注意：当连接数大于配置的server.thread.count时，会没法建立新连接/没法处理新请求，
+   因为池中的线程可能还在某个连接while(true)阻塞read，即使所有连接无数据可读，
+   cpu占用为0，新连接也无法建立，导致客户端迟迟得不到响应。
+   
+注意：
+	为了更高的的连接数，配置为true。
+	已确定连接数不多，可以配置为false，平台线程具有更高的性能。
