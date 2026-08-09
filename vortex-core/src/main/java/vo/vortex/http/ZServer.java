@@ -53,8 +53,8 @@ public class ZServer {
 
 	private static final ExecutorService es = ENABLE_VIRTUAL_THREAD ? null
 			: new ThreadPoolExecutor(
-					SERVER_CONFIGURATIONPROPERTIES.getThreadCount(),
-					SERVER_CONFIGURATIONPROPERTIES.getThreadCount(), 0, TimeUnit.MILLISECONDS,
+					1,
+					SERVER_CONFIGURATIONPROPERTIES.getThreadCount(), 10, TimeUnit.SECONDS,
 					new LinkedBlockingQueue<>(), (ThreadFactory) r -> {
 						Objects.requireNonNull(r);
 						final Thread thread = new Thread(r, gTName());
