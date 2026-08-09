@@ -111,10 +111,26 @@ public class ServerConfigurationProperties {
 	private String uploadTempDir;
 
 	/**
+	 * 处理http请求的线程是否用虚拟的
+	 */
+	@ZNotNull
+	private Boolean threadVirtual = true;
+
+	/**
 	 * 处理http请求的线程的名称前缀，生成的线程以此为前缀分别命名为1、2、3以此类推
 	 */
 	@ZNotEmtpy
 	private String threadName = "vhT-"; //$NON-NLS-1$
+
+	/**
+	 * 处理http请求的线程的平台线程的个数
+	 * 注意：是[平台]线程个数，仅当[server.thread.virtual]配置为false，即：使用平台线程的
+	 * 情况下，本配置项才生效
+	 */
+	@ZNotNull
+	@ZMin(min = 1)
+	@ZMax(max = 1000)
+	private Integer threadCount = Runtime.getRuntime().availableProcessors() * 4;
 
 	/**
 	 * 是否启用静态资源的缓存
@@ -845,5 +861,20 @@ public class ServerConfigurationProperties {
 		this.responseDate = responseDate;
 	}
 
+	public Boolean isThreadVirtual() {
+		return this.threadVirtual;
+	}
+
+	public void setThreadVirtual(final Boolean threadVirtual) {
+		this.threadVirtual = threadVirtual;
+	}
+
+	public Integer getThreadCount() {
+		return this.threadCount;
+	}
+
+	public void setThreadCount(final Integer threadCount) {
+		this.threadCount = threadCount;
+	}
 
 }

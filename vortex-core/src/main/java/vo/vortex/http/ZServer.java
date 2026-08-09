@@ -4,9 +4,14 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.ThreadPoolExecutor.AbortPolicy;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import vo.log.core.ZLog2;
@@ -28,6 +33,8 @@ public class ZServer {
 
 	private static final ServerConfigurationProperties SERVER_CONFIGURATIONPROPERTIES= ZContext.getBean(ServerConfigurationProperties.class);
 
+	private static final boolean ENABLE_VIRTUAL_THREAD = Boolean.TRUE.equals(SERVER_CONFIGURATIONPROPERTIES.isThreadVirtual());
+
 	private static final String THREAD_NAME = SERVER_CONFIGURATIONPROPERTIES.getThreadName();
 
 	private static final boolean ENABLE_SERVER_QPS_LIMITED = SERVER_CONFIGURATIONPROPERTIES.getQpsLimitEnabled();
@@ -45,7 +52,14 @@ public class ZServer {
 
 	private static final TaskRequestHandler requestHandler = new TaskRequestHandler();
 
-	private final ExecutorService ves = Executors.newVirtualThreadPerTaskExecutor();
+	private static final ExecutorService es = ENABLE_VIRTUAL_THREAD ? null
+			: new ThreadPoolExecutor(SERVER_CONFIGURATIONPROPERTIES.getThreadCount(),
+					SERVER_CONFIGURATIONPROPERTIES.getThreadCount(), 0, TimeUnit.MILLISECONDS,
+					new LinkedBlockingQueue<>(), (ThreadFactory) r -> {
+						Objects.requireNonNull(r);
+						final Thread thread = new Thread(gTName());
+						return thread;
+					},new AbortPolicy());
 
 	private volatile boolean serverStarted = false;
 
@@ -83,13 +97,12 @@ public class ZServer {
 		this.serverStarted = true;
 
 		while (true) {
-
 			final Socket socket = ZServer.accept(serverSocket);
-
-			this.ves.execute(() -> {
-				Thread.currentThread().setName(gTName());
-				ZServer.newConnection(socket);
-			});
+			if (ENABLE_VIRTUAL_THREAD) {
+				Thread.ofVirtual().name(gTName()).start(() -> ZServer.newConnection(socket));
+			} else {
+				ZServer.es.execute(() -> ZServer.newConnection(socket));
+			}
 		}
 	}
 
