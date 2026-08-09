@@ -53,9 +53,8 @@ public class ZControllerAdviceThrowable {
 		} catch (final UnknownHostException e) {
 			e.printStackTrace();
 		}
-		final String hostName = inetAddress.getHostName();
-
-		return hostName;
+		
+		return inetAddress == null ? null : inetAddress.getHostName();
 	}
 
 	public static Integer findHttpStatus(final Throwable e) {

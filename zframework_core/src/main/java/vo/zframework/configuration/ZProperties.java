@@ -361,9 +361,14 @@ public class ZProperties {
 
 			try {
 				writer.flush();
-				out.flush();
+				// XXX 为了eclipse中的设置编译通过
+				if (out != null) {
+					out.flush();
+				}
 				writer.close();
-				out.close();
+				if (out != null) {
+					out.close();
+				}
 			} catch (final IOException e) {
 				e.printStackTrace();
 			}

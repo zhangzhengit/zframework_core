@@ -23,15 +23,4 @@ public class M {
 		return projectName;
 	}
 
-	public static String getHostName() {
-		InetAddress inetAddress = null;
-		try {
-			inetAddress = InetAddress.getLocalHost();
-		} catch (final UnknownHostException e) {
-			e.printStackTrace();
-		}
-		final String hostName = inetAddress.getHostName();
-		return hostName;
-	}
-
 }
