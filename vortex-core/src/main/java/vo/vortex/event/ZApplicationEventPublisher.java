@@ -16,6 +16,7 @@ import vo.vortex.anno.ZComponent;
 import vo.vortex.common.AU;
 import vo.vortex.common.CU;
 import vo.vortex.common.ZHashBasedTable;
+import vo.vortex.configuration.properties.ZApplicationEventConfigurationProperties;
 import vo.vortex.core.ZApplicationStartupInfo;
 import vo.vortex.core.ZContext;
 import vo.vortex.exception.StartupException;
@@ -36,10 +37,10 @@ import vo.vortex.zclass.ZPackage;
 @ZComponent
 public final class ZApplicationEventPublisher {
 
-	private static final String TRREAD_NAME = "aeT-";
+	private static final ZApplicationEventConfigurationProperties configurationProperties = ZContext
+			.getBean(ZApplicationEventConfigurationProperties.class);
 
-//	private static final ExecutorService ves = Executors.newVirtualThreadPerTaskExecutor();
-	private static final ExecutorService ves = Executors.newFixedThreadPool(10);
+	private static final ExecutorService ves = Executors.newFixedThreadPool(configurationProperties.getThreadCount());
 
 	// FIXME 2026年7月17日 06:21:59 zhangzhen : 排除了这两个包名前缀，为了加快启动速度，因为当前的实现这两个包下无监听器
 	// 但是应该提示用户不可以把事件监听器放在这两个包下,不然就扫描不到了
@@ -57,8 +58,9 @@ public final class ZApplicationEventPublisher {
 	 *
 	 */
 	public void publishEvent(final ZApplicationEvent event) {
+
 		ves.execute(() -> {
-			Thread.currentThread().setName(TRREAD_NAME + VT_N.incrementAndGet());
+			Thread.currentThread().setName(configurationProperties.getThreadName() + VT_N.incrementAndGet());
 			final IEventRoute route = ZContext.getBean(IEventRoute.class);
 			route.route(event);
 		});
@@ -90,20 +92,16 @@ public final class ZApplicationEventPublisher {
 
 		final Set<Class<?>> csSet = ClassMap.scanPackage(startupInfo.getPackageNameArray());
 
-		final Set<Class<?>> noVOZFClsSet = csSet
-			.parallelStream()
-			// FIXME 2026年6月23日 15:36:40 zhangzhen : 因为当前没有内置的 @ZEventListener，所以把
-			// vo.zframework.XX和vo.log.XX包全排除，当然最好是精准匹配每个包名，暂时先这样
-			.filter(cs -> !cs.getPackage().getName().startsWith(VO_VORTEX))
-			.filter(cs -> !cs.getPackage().getName() .startsWith(VO_LOG))
-			.collect(Collectors.toSet());
+		final Set<Class<?>> noVOZFClsSet = csSet.parallelStream()
+				// FIXME 2026年6月23日 15:36:40 zhangzhen : 因为当前没有内置的 @ZEventListener，所以把
+				// vo.zframework.XX和vo.log.XX包全排除，当然最好是精准匹配每个包名，暂时先这样
+				.filter(cs -> !cs.getPackage().getName().startsWith(VO_VORTEX))
+				.filter(cs -> !cs.getPackage().getName().startsWith(VO_LOG)).collect(Collectors.toSet());
 
 		// FIXME 2026年7月17日 06:20:52 zhangzhen : 从常量改为局部的了，应该可以继续改，先暂时这样吧
 		final ZHashBasedTable<Class<? extends ZApplicationEvent>, Method, Class<?>> table = new ZHashBasedTable<>();
 
-		noVOZFClsSet
-		.parallelStream()
-		.forEach(cls ->{
+		noVOZFClsSet.parallelStream().forEach(cls -> {
 
 			final Method[] ms = cls.getDeclaredMethods();
 
@@ -113,8 +111,7 @@ public final class ZApplicationEventPublisher {
 					continue;
 				}
 
-				if ((method.getParameterCount() != 1)
-				|| !method.getParameterTypes()[0].equals(eventListener.value())) {
+				if ((method.getParameterCount() != 1) || !method.getParameterTypes()[0].equals(eventListener.value())) {
 					throw new StartupException("@" + ZEventListener.class.getSimpleName() + "方法[" + cls.getSimpleName()
 							+ "." + method.getName() + "]必须有且只有一个[" + eventListener.value().getSimpleName() + "]参数");
 				}
@@ -125,7 +122,6 @@ public final class ZApplicationEventPublisher {
 			}
 
 		});
-
 
 		new Thread(() -> {
 			final ZClass proxyZClass = gProxyZClass(table);
@@ -155,8 +151,7 @@ public final class ZApplicationEventPublisher {
 		proxyZClass.setMethodSet(CU.ofSet(routeMethod));
 
 		final StringBuilder routeBody = new StringBuilder(
-				 "String canonicalName = event.getClass().getCanonicalName();"
-					+ "switch (canonicalName) {");
+				"String canonicalName = event.getClass().getCanonicalName();" + "switch (canonicalName) {");
 
 		final Set<Class<? extends ZApplicationEvent>> rowKeySet = table.rowKeySet();
 
@@ -170,7 +165,8 @@ public final class ZApplicationEventPublisher {
 			for (final Class<?> cls : set) {
 				pI++;
 
-				final List<Entry<Method, Class<?>>> ml = es.stream().filter(e -> e.getValue().equals(cls)).collect(Collectors.toList());
+				final List<Entry<Method, Class<?>>> ml = es.stream().filter(e -> e.getValue().equals(cls))
+						.collect(Collectors.toList());
 
 				final String eName = class1.getCanonicalName();
 
@@ -179,31 +175,23 @@ public final class ZApplicationEventPublisher {
 				final String clscanonicalName = cls.getCanonicalName();
 				routeBody.append(clscanonicalName)
 
-				.append(" p").append(pI).append(" = (").append(clscanonicalName)
-				.append(")")
-				.append(ZContext.class.getCanonicalName())
-				.append(".getBean(\"")
-				.append(cls.getCanonicalName()).append("\");");
+						.append(" p").append(pI).append(" = (").append(clscanonicalName).append(")")
+						.append(ZContext.class.getCanonicalName()).append(".getBean(\"").append(cls.getCanonicalName())
+						.append("\");");
 
 				final String name = class1.getName();
 
 				for (final Entry<Method, Class<?>> e : ml) {
 					final Method method = e.getKey();
-					routeBody
-					.append("p").append(pI).append('.').append(method.getName())
-					.append("(")
-					.append("(").append(name).append(")")
-					.append("event")
-					.append(");");
+					routeBody.append("p").append(pI).append('.').append(method.getName()).append("(").append("(")
+							.append(name).append(")").append("event").append(");");
 				}
 			}
 
 			routeBody.append("break;");
 		}
 
-		routeBody.append("default:\r\n"
-							+ "	break;\r\n"
-							+ "}	");
+		routeBody.append("default:\r\n" + "	break;\r\n" + "}	");
 
 		routeMethod.setBody(routeBody.toString());
 		return proxyZClass;
