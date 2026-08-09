@@ -115,13 +115,13 @@ public class ServerConfigurationProperties {
 	 */
 	@ZMin(min = 1)
 	@ZMax(max = 2000)
-	private Integer threadCount = 100; 
+	private Integer threadCount = Runtime.getRuntime().availableProcessors() * 4;
 
 	/**
 	 * 处理http请求的线程的名称前缀，生成的线程以此为前缀分别命名为1、2、3以此类推
 	 */
 	@ZNotEmtpy
-	private String threadName = "vhT-"; //$NON-NLS-1$
+	private String threadName = "hT-"; //$NON-NLS-1$
 
 	/**
 	 * 是否启用静态资源的缓存
@@ -853,10 +853,10 @@ public class ServerConfigurationProperties {
 	}
 
 	public Integer getThreadCount() {
-		return threadCount;  
+		return this.threadCount;
 	}
 
-	public void setThreadCount(Integer threadCount) {
+	public void setThreadCount(final Integer threadCount) {
 		this.threadCount = threadCount;
 	}
 
