@@ -129,7 +129,7 @@ public class ServerConfigurationProperties {
 	 */
 	@ZNotNull
 	@ZMin(min = 1)
-	@ZMax(max = 1000)
+	@ZMax(max = 10000)
 	private Integer threadCount = Runtime.getRuntime().availableProcessors() * 4;
 
 	/**
