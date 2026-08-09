@@ -63,9 +63,10 @@ public class PackageScanner {
 			}
 		}
 
-		final Set<Class<?>> classSet = 
+		final Set<Class<?>> classSet =
 				classNameSet
 					.parallelStream()
+					.filter(cs -> cs != null)
 					.map(PackageScanner::load)
 					.collect(Collectors.toSet());
 		return classSet;
@@ -150,7 +151,7 @@ public class PackageScanner {
 				}
 			}
 		});
-		
+
 		return classNameSet;
 	}
 

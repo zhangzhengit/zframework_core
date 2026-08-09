@@ -139,8 +139,8 @@ public class ZAsyncScanner {
 
 		routeMethod.setBody(routeBody.toString());
 
-		System.out.println("proxyZClass = ");
-		System.out.println(proxyZClass.toString());
+//		System.out.println("proxyZClass = ");
+//		System.out.println(proxyZClass.toString());
 
 		ZContext.addBeanAsync(IAsyncRoute.class, () -> proxyZClass.newInstance());
 

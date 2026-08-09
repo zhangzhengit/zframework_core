@@ -59,6 +59,7 @@ public class ClassMap {
 				Arrays.asList(scanPackageArray)
 					.parallelStream()
 					.flatMap(png -> scanPackageWithCache(png).stream())
+					.filter(cs -> cs != null)
 					.collect(Collectors.toSet());
 
 		return r;
