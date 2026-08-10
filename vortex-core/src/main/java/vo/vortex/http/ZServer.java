@@ -24,14 +24,19 @@ import vo.vortex.http.response.ReU;
  * 	http服务器
  *
  * @author zhangzhen
- * @date 2026年5月26日 16:36:30
+ * @date 2026年5月26日 16:36:3 0
  */
 public class ZServer {
 
 	/**
+	 * 和server.thread.count 最小值保持一致
+	 */
+	public static final int MIN_CORE_POOL_SIZE = 8;
+
+	/**
 	 * 此值，恢复很久以前的配置项：允许等待的任务个数
 	 */
-	private static final int ABQ_CAPACITY = 10;
+	private static final int ABQ_CAPACITY = 100;
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
@@ -58,9 +63,8 @@ public class ZServer {
 
 	private static final ThreadPoolExecutor es = ENABLE_VIRTUAL_THREAD ? null
 			: new ThreadPoolExecutor(
-
-					SERVER_CONFIGURATIONPROPERTIES.getThreadCount(),
-					SERVER_CONFIGURATIONPROPERTIES.getThreadCount(), 10, TimeUnit.SECONDS,
+			Math.min(MIN_CORE_POOL_SIZE, SERVER_CONFIGURATIONPROPERTIES.getThreadCount()),
+					SERVER_CONFIGURATIONPROPERTIES.getThreadCount(), 1, TimeUnit.MINUTES,
 					new ArrayBlockingQueue<>(ABQ_CAPACITY), (ThreadFactory) r -> {
 						Objects.requireNonNull(r);
 						final Thread thread = new Thread(r, gTName());

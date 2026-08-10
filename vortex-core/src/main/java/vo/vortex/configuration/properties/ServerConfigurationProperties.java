@@ -128,9 +128,9 @@ public class ServerConfigurationProperties {
 	 * 情况下，本配置项才生效
 	 */
 	@ZNotNull
-	@ZMin(min = 1)
+	@ZMin(min = 8)
 	@ZMax(max = 10000)
-	private Integer threadCount = Runtime.getRuntime().availableProcessors() * 4;
+	private Integer threadCount = Runtime.getRuntime().availableProcessors() * 8;
 
 	/**
 	 * 是否启用静态资源的缓存
