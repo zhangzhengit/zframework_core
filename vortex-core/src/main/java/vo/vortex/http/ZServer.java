@@ -28,10 +28,7 @@ import vo.vortex.http.response.ReU;
  */
 public class ZServer {
 
-	/**
-	 * 和server.thread.count 最小值保持一致
-	 */
-	public static final int MIN_CORE_POOL_SIZE = 8;
+	public static final int MIN_CORE_POOL_SIZE = Runtime.getRuntime().availableProcessors() * 8;
 
 	/**
 	 * 此值，恢复很久以前的配置项：允许等待的任务个数
