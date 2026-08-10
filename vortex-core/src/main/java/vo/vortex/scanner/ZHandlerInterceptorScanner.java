@@ -6,6 +6,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -25,14 +27,20 @@ import vo.vortex.exception.StartupException;
  */
 public class ZHandlerInterceptorScanner {
 
+	/**
+	 * 缓存 <requestURI,此requestURI对应的拦截器>
+	 */
+	private static final ConcurrentMap<String, List<ZHandlerInterceptor>> hicmap = new ConcurrentHashMap<>();
+
 	private static final List<ZHandlerInterceptor> BEAN_LIST = new ArrayList<>();
 
 	/**
 	 * 扫描 ZHandlerInterceptor 的实现类
-	 * @param startupInfo TODO
+	 *
+	 * @param startupInfo
 	 *
 	 */
-	public static void scan(ZApplicationStartupInfo startupInfo) {
+	public static void scan(final ZApplicationStartupInfo startupInfo) {
 
 		final Collection<Object> values = ZContext.all().values();
 		final HashSet<Integer> ovSet = new HashSet<>();
@@ -81,8 +89,7 @@ public class ZHandlerInterceptorScanner {
 	 *
 	 */
 	public static List<ZHandlerInterceptor> match(final String requestURI) {
-		final String key = "match-" + requestURI;
-		return ZRC.singleton().computeIfAbsent(key, () ->  match0(requestURI));
+		return hicmap.computeIfAbsent(requestURI, ZHandlerInterceptorScanner::match0);
 	}
 
 	private static List<ZHandlerInterceptor> match0(final String requestURI) {
