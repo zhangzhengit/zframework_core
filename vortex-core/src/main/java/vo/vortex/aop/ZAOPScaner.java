@@ -372,10 +372,14 @@ public class ZAOPScaner {
 						if (CU.isEmpty(cl)) {
 							final ArrayList<Class<?>> an = new ArrayList<>();
 							an.add(aL.get(0));
-							table.put(c, m, an);
+							synchronized (table) {
+								table.put(c, m, an);
+							}
 						} else {
-							cl.add(aL.get(0));
-							table.put(c, m, cl);
+							synchronized (table) {
+								cl.add(aL.get(0));
+								table.put(c, m, cl);
+							}
 						}
 
 					}
