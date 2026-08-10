@@ -5,8 +5,8 @@ import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Objects;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -27,6 +27,11 @@ import vo.vortex.http.response.ReU;
  * @date 2026年5月26日 16:36:30
  */
 public class ZServer {
+
+	/**
+	 * 此值，恢复很久以前的配置项：允许等待的任务个数
+	 */
+	private static final int ABQ_CAPACITY = 10;
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
@@ -51,16 +56,19 @@ public class ZServer {
 
 	private static final TaskRequestHandler requestHandler = new TaskRequestHandler();
 
-	private static final ExecutorService es = ENABLE_VIRTUAL_THREAD ? null
+	private static final ThreadPoolExecutor es = ENABLE_VIRTUAL_THREAD ? null
 			: new ThreadPoolExecutor(
-					1,
+
+					SERVER_CONFIGURATIONPROPERTIES.getThreadCount(),
 					SERVER_CONFIGURATIONPROPERTIES.getThreadCount(), 10, TimeUnit.SECONDS,
-					new LinkedBlockingQueue<>(), (ThreadFactory) r -> {
+					new ArrayBlockingQueue<>(ABQ_CAPACITY), (ThreadFactory) r -> {
 						Objects.requireNonNull(r);
 						final Thread thread = new Thread(r, gTName());
 						thread.setDaemon(true);
 						return thread;
-					});
+					}
+//					,new ZServerRejectedExecutionHandler()
+					);
 
 	private volatile boolean serverStarted = false;
 
@@ -102,7 +110,27 @@ public class ZServer {
 			if (ENABLE_VIRTUAL_THREAD) {
 				Thread.ofVirtual().name(gTName()).start(() -> ZServer.newConnection(socket));
 			} else {
-				ZServer.es.execute(() -> ZServer.newConnection(socket));
+				try {
+					ZServer.es.execute(() -> ZServer.newConnection(socket));
+				} catch (final RejectedExecutionException e) {
+					LOG.warn("线程池拒绝任务", e);
+
+					try (OutputStream outputStream = socket.getOutputStream()) {
+						outputStream.write(ReU.g503Bytes());
+						outputStream.flush();
+					} catch (final IOException ingore) {
+						// ingore
+					} finally {
+						try {
+							socket.close();
+						} catch (final IOException ingore) {
+							// ingore
+						}
+						LOG.warn("等待任务个数过多{},已关闭连接", ABQ_CAPACITY);
+					}
+
+				}
+
 			}
 		}
 	}
