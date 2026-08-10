@@ -12,6 +12,6 @@
 强烈推荐在工程中加入一下依赖来使用jni的zstd压缩
 <dependency>
 	<groupId>vo</groupId>
-	<artifactId>zframework_starter_zstd</artifactId>
+	<artifactId>vortext-starter-zstd</artifactId>
 	<version>1.0.0-SNAPSHOT-jdk21</version>
 </dependency>

@@ -2,7 +2,7 @@ package vo.vortex.exception;
 
 /**
  *
- * zframework 统一异常类
+ * vortex 统一异常类
  *
  * @author zhangzhen
  * @date 2023年10月22日
