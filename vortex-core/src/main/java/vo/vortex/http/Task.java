@@ -470,10 +470,16 @@ public class Task {
 		}
 
 		try {
-			// 先直接调用(当前只支持了不带@ZPV的)
-			final APIRouteR route = apiRoute.route(path, zControllerObject, zrMethod, parameters);
-			if ((route != null) && route.isMatched()) {
-				return route.getRv();
+			// FIXME 2026年8月11日 18:53:23 zhangzhen : 在此再次判断apiRoute != null，
+			// 因为当前实现为代理类异步addBean，在低配置机器上ZClass.newInstance执行太慢，
+			// 会在http服务器启动后，还无此类，访问会NPE
+			// 记得在jdk25版本也改掉
+			if (apiRoute != null) {
+				// 先直接调用(当前只支持了不带@ZPV的)
+				final APIRouteR route = apiRoute.route(path, zControllerObject, zrMethod, parameters);
+				if ((route != null) && route.isMatched()) {
+					return route.getRv();
+				}
 			}
 
 			// 没找到再使用方法句柄
