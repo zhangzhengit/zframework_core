@@ -1,15 +1,15 @@
 package vo.vortex.common;
 
-import java.lang.annotation.Annotation;
+import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodHandles.Lookup;
+import java.lang.invoke.MethodType;
 import java.lang.invoke.VarHandle;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -25,6 +25,11 @@ import vo.vortex.cache.ZRC;
 public class RU {
 
 	private static final ConcurrentHashMap<Field, VarHandle> VAR_HANDLE_CACHE = new ConcurrentHashMap<>(16, 1F);
+
+	/**
+	 * 缓存：<Class,Class的默认构造方法>
+	 */
+	private static final ConcurrentHashMap<Class<?>, MethodHandle> CONSTRUCTOR_CHACHE = new ConcurrentHashMap<>(16, 1F);
 
 	public static String ptToBox(final String typeName) {
 		switch (typeName) {
@@ -92,6 +97,24 @@ public class RU {
 	public static void setFiledValue(final Field field, final Object object, final Object value) {
 		final VarHandle varHandle = getVarHandle(field);
 		varHandle.set(object,value);
+	}
+
+	public static MethodHandle getConstructor(final Class<?> cls) {
+
+		final MethodHandle constructor = CONSTRUCTOR_CHACHE.computeIfAbsent(cls, c -> {
+			try {
+				final MethodHandle asType = MethodHandles.lookup()
+						.findConstructor(c, MethodType.methodType(void.class))
+						.asType(MethodType.methodType(Object.class));
+				return asType;
+			} catch (NoSuchMethodException | IllegalAccessException e) {
+				e.printStackTrace();
+			}
+
+			return null;
+		});
+
+		return constructor;
 	}
 
 	private static VarHandle getVarHandle(final Field field) {
