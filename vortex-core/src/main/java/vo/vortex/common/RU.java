@@ -95,18 +95,23 @@ public class RU {
 		return ZRC.singleton().computeIfAbsent(key, () -> method.getParameters());
 	}
 
-	public static Optional<Field> getDeclaredField(final Class<?> type, final String javaFieldName)
+	public static Field getDeclaredField(final Class<?> type, final String javaFieldName)
 			throws SecurityException {
 
 		final String key = type.getName() + '-' + javaFieldName;
 
 		return ZRC.singleton().computeIfAbsent(key, () -> {
 			try {
-				return Optional.of(type.getDeclaredField(javaFieldName));
+				return type.getDeclaredField(javaFieldName);
 			} catch (NoSuchFieldException | SecurityException e) {
 			}
-			return Optional.empty();
+			return null;
 		});
+	}
+
+	public static Optional<Field> getDeclaredFieldOptional(final Class<?> type, final String javaFieldName)
+			throws SecurityException {
+		return Optional.ofNullable(getDeclaredField(type, javaFieldName));
 	}
 
 	public static void setFiledValue(final Field field, final Object object, final Object value) {
@@ -165,9 +170,9 @@ public class RU {
 	}
 
 	public static Field getDeclaredField(final Object object, final String fieldName) {
+
 		try {
-			final Field declaredField = object.getClass().getDeclaredField(fieldName);
-			return declaredField;
+			return object.getClass().getDeclaredField(fieldName);
 		} catch (final NoSuchFieldException e) {
 			e.printStackTrace();
 		}

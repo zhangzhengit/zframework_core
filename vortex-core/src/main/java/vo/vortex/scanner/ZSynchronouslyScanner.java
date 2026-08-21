@@ -222,7 +222,7 @@ public class ZSynchronouslyScanner {
 				}
 
 				final String suffix = key.substring(x + 1);
-				final Optional<Field> declaredField = RU.getDeclaredField(p.getType(), suffix);
+				final Optional<Field> declaredField = RU.getDeclaredFieldOptional(p.getType(), suffix);
 				if (!declaredField.isPresent()) {
 
 					final String me =
