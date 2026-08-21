@@ -31,6 +31,21 @@ public class RU {
 	 */
 	private static final ConcurrentHashMap<Class<?>, MethodHandle> CONSTRUCTOR_CHACHE = new ConcurrentHashMap<>(16, 1F);
 
+	/**
+	 * 使用默认构造方法创建对象
+	 *
+	 * @param cls
+	 * @return
+	 */
+	public static Object newInstance(final Class<?> cls) {
+		try {
+			return getConstructor(cls).invokeExact();
+		} catch (final Throwable e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
 	public static String ptToBox(final String typeName) {
 		switch (typeName) {
 		case "int":
@@ -99,6 +114,12 @@ public class RU {
 		varHandle.set(object,value);
 	}
 
+	/**
+	 * 获取默认构造方法
+	 *
+	 * @param cls
+	 * @return
+	 */
 	public static MethodHandle getConstructor(final Class<?> cls) {
 
 		final MethodHandle constructor = CONSTRUCTOR_CHACHE.computeIfAbsent(cls, c -> {
