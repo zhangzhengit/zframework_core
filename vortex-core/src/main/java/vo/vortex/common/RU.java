@@ -116,7 +116,7 @@ public class RU {
 
 	public static void setFiledValue(final Field field, final Object object, final Object value) {
 		final VarHandle varHandle = getVarHandle(field);
-		varHandle.set(object,value);
+		varHandle.set(object, value);
 	}
 
 	/**
@@ -143,7 +143,7 @@ public class RU {
 		return constructor;
 	}
 
-	private static VarHandle getVarHandle(final Field field) {
+	public static VarHandle getVarHandle(final Field field) {
 		final VarHandle v = VAR_HANDLE_CACHE.computeIfAbsent(field, f -> {
 			try {
 				final Lookup privateLookupIn = MethodHandles.privateLookupIn(f.getDeclaringClass(),
